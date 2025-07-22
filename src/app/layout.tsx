@@ -1,15 +1,20 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
+import { IBM_Plex_Sans, Fraunces } from "next/font/google";
+import "./styles/theme.css";
+import "./styles/globals.css";
+import Navbar from "./components/layouts/Navbar";
+import NavigationMenu from "./components/layouts/NavigationMenu";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const ibmPlexSans = IBM_Plex_Sans({
+  variable: "--font-body",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const fraunces = Fraunces({
+  variable: "--font-heading",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -25,9 +30,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${ibmPlexSans.variable} ${fraunces.variable} font-body antialiased`}
       >
-        {children}
+        <div className="h-[106px]">
+          <Navbar />
+          <NavigationMenu />
+        </div>
+        <main className="h-[calc(100vh-106px)] ">{children}</main>
       </body>
     </html>
   );
