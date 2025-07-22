@@ -14,7 +14,7 @@ const ibmPlexSans = IBM_Plex_Sans({
 const fraunces = Fraunces({
   variable: "--font-heading",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["200", "300", "400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {

@@ -206,7 +206,7 @@ const NavigationMenu = () => {
         scrollDir === "down" ? "-translate-y-full" : "translate-y-3"
       }`}
     >
-      <div className="bg-white ">
+      <div className="bg-white pb-1">
         <Container>
           <nav className="flex items-center justify-between gap-2 relative z-20">
             {menuItems.map((item) => (

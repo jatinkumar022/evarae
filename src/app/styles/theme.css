@@ -13,6 +13,8 @@
   /* Text */
   --text-primary: #413f3a;
   --text-white: #ffffff;
+  --text-dark: #222;
+  --text-heading: #300708;
 
   /* Fonts */
   --font-body: "IBM Plex Sans", sans-serif;
@@ -32,14 +34,7 @@ body {
   padding: 0;
 }
 
-h1,
-h2,
-h3,
-h4 {
-  font-family: var(--font-heading);
-  font-weight: 600;
-  color: var(--color-primary);
-}
+
 
 p,
 li {
@@ -48,6 +43,38 @@ li {
   line-height: 1.6;
   color: var(--text-primary);
 }
+
+.heading-component-main-container {
+
+  width: 100%;
+  color: var(--text-dark);
+  height: -webkit-fit-content;
+  height: -moz-fit-content;
+  height: fit-content;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+  -ms-flex-direction: column;
+  flex-direction: column;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  margin: 45px 0;
+}
+
+.heading-component-main-heading {
+  font: 400 40px var(--font-heading);
+  color: var(--text-heading);
+}
+
+.heading-component-main-subheading {
+  font: 300 24px var(--font-heading);
+
+  color: var(--text-dark);
+}
+
 
 /* Containers */
 .container {
