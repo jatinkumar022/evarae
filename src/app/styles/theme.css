@@ -3,6 +3,7 @@
   --color-primary: #631517;
   --color-primary-dark: #832729;
   --color-accent: #85591c;
+  --color-heading: #300708;
 
   /* Backgrounds */
   --bg-cart: #f2e7e9;
@@ -36,12 +37,11 @@ body {
 
 
 
-p,
-li {
+
+.list-item {
   font-family: var(--font-body);
   font-size: 16px;
   line-height: 1.6;
-  color: var(--text-primary);
 }
 
 .heading-component-main-container {
@@ -73,6 +73,27 @@ li {
   font: 300 24px var(--font-heading);
 
   color: var(--text-dark);
+}
+
+@media (max-width: 1023.98px) {
+
+  .heading-component-main-container {
+    margin: 25px 0;
+
+  }
+
+  .heading-component-main-subheading {
+    font: 400 12px "IBM Plex Sans", sans-serif;
+  }
+
+  .heading-component-main-heading {
+    font: 400 20px "Fraunces", serif;
+
+  }
+}
+
+.font-heading {
+  font-family: var(--font-heading);
 }
 
 
@@ -121,7 +142,9 @@ li {
   background-color: var(--bg-cart);
 }
 
-
+.bg-gradiant {
+  background: linear-gradient(179deg, #3c0101 1.1%, var(--color-heading) 55.9%);
+}
 
 
 

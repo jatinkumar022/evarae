@@ -79,12 +79,13 @@
   --color-primary: #631517;
   --color-primary-dark: #832729;
   --color-accent: #85591c;
+  --color-heading: #300708;
 
   --bg-cart: #f2e7e9;
   --bg-menu: #f5f5f4;
+  --bg-footer: #300708;
   --bg-button-accent: #fff2e0;
   --bg-close: #f6f6f6;
-
   --text-dark: #413f3a;
   --text-white: #ffffff;
 
@@ -100,9 +101,32 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    box-sizing: border-box;
   }
 
   body {
     @apply bg-background text-foreground;
   }
+}
+
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 3s linear infinite;
+}
+
+.border-dashed {
+  border-style: dashed;
+}
+
+.bg-footer {
+  background-color: var(--bg-footer);
 }

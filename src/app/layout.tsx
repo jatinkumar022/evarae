@@ -4,6 +4,7 @@ import "./styles/theme.css";
 import "./styles/globals.css";
 import Navbar from "./components/layouts/Navbar";
 import NavigationMenu from "./components/layouts/NavigationMenu";
+import Footer from "./components/layouts/Footer";
 
 const ibmPlexSans = IBM_Plex_Sans({
   variable: "--font-body",
@@ -36,7 +37,12 @@ export default function RootLayout({
           <Navbar />
           <NavigationMenu />
         </div>
-        <main className="h-[calc(100vh-106px)] ">{children}</main>
+        <main className="">
+          {children}
+          <div className="">
+            <Footer />
+          </div>
+        </main>
       </body>
     </html>
   );

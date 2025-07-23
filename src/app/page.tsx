@@ -1,20 +1,22 @@
 import Hero from "./components/home/Hero";
 import Container from "./components/layouts/Container";
+import ImageGrid from "./components/home/ImageGrid";
+import CircleCategories from "./components/home/Category";
+import { Devider } from "./assets/Common";
+import Image from "next/image";
+import CategoryGrid from "./components/home/CategoryGrid";
 
 export default function Home() {
   return (
     <>
+      <CircleCategories />
       <Hero />
-      <div className="mt-10 h-[calc(100vh-106px)]">
-        <Container>
-          <div className="heading-component-main-container">
-            <h1 className="heading-component-main-heading">
-              Tanishq Collections
-            </h1>
-            <h2 className="heading-component-main-subheading">
-              Explore our newly launched collection
-            </h2>
-          </div>
+      <div className="">
+        <Container className="my-10">
+          <Image src={Devider} alt="divider" className="w-full md:hidden" />
+
+          <ImageGrid />
+          <CategoryGrid />
         </Container>
       </div>
     </>
