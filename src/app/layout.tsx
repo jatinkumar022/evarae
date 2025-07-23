@@ -35,7 +35,9 @@ export default function RootLayout({
       >
         <div className="h-[106px]">
           <Navbar />
-          <NavigationMenu />
+          <div className="hidden">
+            <NavigationMenu />
+          </div>
         </div>
         <main className="">
           {children}

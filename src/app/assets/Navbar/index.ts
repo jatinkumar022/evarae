@@ -6,5 +6,15 @@ import User from "./user-light.svg";
 import Camera from "./camera-plus-light.svg";
 import Search from "./magnifying-glass-light.svg";
 import Microphone from "./microphone-light.svg";
-
-export { Heart, ShoppingBag, Diamond, Store, User, Camera, Search, Microphone };
+import NavLogoMobile from "./nav-logo-mobile.svg";
+export {
+  Heart,
+  ShoppingBag,
+  Diamond,
+  Store,
+  User,
+  Camera,
+  Search,
+  Microphone,
+  NavLogoMobile,
+};

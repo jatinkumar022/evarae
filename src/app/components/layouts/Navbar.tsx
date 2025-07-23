@@ -11,7 +11,9 @@ import {
   Camera,
   Microphone,
   Search,
+  NavLogoMobile,
 } from "@/app/assets/Navbar";
+import { SlMenu } from "react-icons/sl";
 
 export default function Navbar() {
   return (
@@ -19,13 +21,21 @@ export default function Navbar() {
       <Container>
         <div className="flex items-center justify-between py-3">
           {/* Left: Logo */}
-          <div className="flex-shrink-0">
+          <div className="flex-shrink-0 hidden lg:block">
             <img src="/logo.svg" alt="Logo" className="h-[45px]" />
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="lg:hidden block text-primary rounded-full p-2">
+              <SlMenu />
+            </div>
+            <div className="lg:hidden block flex-shrink-0">
+              <NavLogoMobile className="h-[22px]" />
+            </div>
           </div>
 
           {/* Center: Search */}
           <div className=" max-w-xl ml-[10vw] ">
-            <div className="flex items-center rounded-full border border-gray-200 w-[540px] h-[45px] px-4">
+            <div className="hidden lg:flex items-center rounded-full border border-gray-200 w-[540px] h-[45px] px-4">
               <Search className="text-primary  mr-2 w-5 h-5" />
               <input
                 type="text"
