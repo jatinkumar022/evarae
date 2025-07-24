@@ -35,7 +35,7 @@ export default function RootLayout({
       >
         <div className="h-[106px]">
           <Navbar />
-          <div className="hidden">
+          <div className="max-lg:hidden">
             <NavigationMenu />
           </div>
         </div>

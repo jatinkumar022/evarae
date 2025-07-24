@@ -14,6 +14,15 @@ import {
   RivaahSouth,
   Rir,
 } from "@/app/assets/Carousel";
+import {
+  Md18KtJewMobile,
+  MdDailywearMobile1,
+  MdFestivalsOfDiamondOfferMobile,
+  MdRirMobileNew,
+  MdRivaahSouthGeoM1,
+  MdSparklingAvenuesMobile,
+} from "@/app/assets/Carousel/mobile";
+import Container from "../layouts/Container";
 
 const images = [
   FestivalsOfDiamond,
@@ -22,6 +31,15 @@ const images = [
   SparklingAvenues,
   RivaahSouth,
   Rir,
+];
+
+const mobileImages = [
+  Md18KtJewMobile,
+  MdDailywearMobile1,
+  MdFestivalsOfDiamondOfferMobile,
+  MdRirMobileNew,
+  MdRivaahSouthGeoM1,
+  MdSparklingAvenuesMobile,
 ];
 
 export default function HeroCarousel() {
@@ -63,7 +81,7 @@ export default function HeroCarousel() {
   return (
     <div className="w-full mt-1.5 mb-28">
       {/* Carousel Container */}
-      <div className="relative overflow-hidden aspect-[2.5/1]">
+      <div className="relative overflow-hidden aspect-[2.5/1] hidden md:block">
         <AnimatePresence initial={false} custom={direction}>
           <motion.div
             key={current}
@@ -104,7 +122,29 @@ export default function HeroCarousel() {
           </Button>
         </div>
       </div>
-
+      <Container>
+        <div className="relative overflow-hidden aspect-square md:hidden m-auto max-w-[600px]">
+          <AnimatePresence initial={false} custom={direction}>
+            <motion.div
+              key={current}
+              custom={direction}
+              initial={{ x: direction > 0 ? "100%" : "-100%", opacity: 0.8 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: direction > 0 ? "-100%" : "100%", opacity: 0.8 }}
+              transition={{ duration: 0.5, ease: "easeInOut" }}
+              className="absolute top-0 left-0 w-full h-full"
+            >
+              <Image
+                src={mobileImages[current]}
+                alt={`Slide ${current}`}
+                fill
+                className="object-cover"
+                priority
+              />
+            </motion.div>
+          </AnimatePresence>
+        </div>
+      </Container>
       {/* Dot Indicators */}
       <div className="mt-6 flex justify-center gap-8">
         {images.map((_, index) => (
