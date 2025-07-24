@@ -49,7 +49,7 @@ const CircleCategories = () => {
   };
 
   return (
-    <section className="py-10 lg:hidden block ">
+    <section className="py-5 sm:py-10 lg:hidden block ">
       <Container className="flex justify-center">
         <div
           className="flex gap-2 sm:gap-6 overflow-x-auto  px-3 md:gap-10"

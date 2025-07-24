@@ -329,3 +329,7 @@ body {
   background-color: #ffffff;
   /* hover:bg-white */
 }
+
+.best-seller-tag {
+  background: linear-gradient(90deg, rgba(131, 39, 41) 0%, rgba(245, 206, 155) 135%) !important;
+}

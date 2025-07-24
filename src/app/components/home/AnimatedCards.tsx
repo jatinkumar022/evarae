@@ -12,6 +12,7 @@ import {
   mangalsutraWhite,
   dazzlingWhite,
 } from "@/app/assets/Animatedgrid";
+import { GiCrystalShine } from "react-icons/gi";
 
 const savedItems = [
   {
@@ -132,8 +133,10 @@ export default function PickUpWhereYouLeft() {
         </motion.div>
 
         {item.tag && (
-          <span className="absolute top-2 left-2 bg-red-600 text-white text-[11px] px-2 py-1 rounded uppercase font-semibold tracking-wide">
-            {item.tag}
+          <span className="absolute top-0 left-0 best-seller-tag text-white text-[11px] px-3 py-1.5 rounded-tl-xl rounded-br-xl uppercase font-semibold tracking-wide">
+            <div className="flex items-center gap-1">
+              <GiCrystalShine size={15} /> {item.tag}
+            </div>
           </span>
         )}
 
@@ -152,8 +155,8 @@ export default function PickUpWhereYouLeft() {
           Pick up where you left
         </h1>
         <h2 className="heading-component-main-subheading">
-          Our products tend to sell out quickly, so don't delay in completing
-          your purchase.
+          Our products tend to sell out quickly, so don&rsquo;t delay in
+          completing your purchase.
         </h2>
       </div>
 
