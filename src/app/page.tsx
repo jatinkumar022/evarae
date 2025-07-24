@@ -7,6 +7,8 @@ import CategoryGrid from "./components/home/CategoryGrid";
 import Trending from "./components/home/Trending";
 import ImageDevider from "./components/layouts/ImageDevider";
 import AnimatedCards from "./components/home/AnimatedCards";
+import EvaraeWorld from "./components/home/EvaraeWorld";
+import NewArrival from "./components/home/NewArrival";
 
 export default function Home() {
   return (
@@ -24,7 +26,10 @@ export default function Home() {
           <CategoryGrid />
           <ImageDevider />
           <Trending />
+          <ImageDevider />
+          <EvaraeWorld />
         </Container>
+        <NewArrival />
       </div>
     </>
   );
