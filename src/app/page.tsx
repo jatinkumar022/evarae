@@ -20,13 +20,10 @@ export default function Home() {
           <ImageDevider />
 
           <ImageGrid />
-          <ImageDevider />
           <AnimatedCards />
-          <ImageDevider />
           <CategoryGrid />
           <ImageDevider />
           <Trending />
-          <ImageDevider />
           <EvaraeWorld />
         </Container>
         <NewArrival />

@@ -61,7 +61,7 @@ body {
   -webkit-box-align: center;
   -ms-flex-align: center;
   align-items: center;
-  margin: 65px 0 45px 0;
+  margin: 45px 0 45px 0;
 }
 
 .heading-component-main-heading {
@@ -71,7 +71,7 @@ body {
 
 .heading-component-main-subheading {
   font: 300 24px var(--font-heading);
-
+  text-align: center;
   color: var(--text-dark);
 }
 
