@@ -79,7 +79,7 @@ export default function HeroCarousel() {
     resetTimer(); // reset timer on dot click
   };
   return (
-    <div className="w-full mt-1.5 mb-28">
+    <div className="w-full mt-1.5 ">
       {/* Carousel Container */}
       <div className="relative overflow-hidden aspect-[2.5/1] hidden md:block">
         <AnimatePresence initial={false} custom={direction}>

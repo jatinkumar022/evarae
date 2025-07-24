@@ -11,6 +11,7 @@ import {
   ringsCat,
   braceletsCat,
 } from "@/app/assets/CategoryGrid";
+import Container from "../layouts/Container";
 
 interface Category {
   title: string;
@@ -50,7 +51,7 @@ const categories: Category[] = [
 
 export default function CategoriesGrid() {
   return (
-    <section className="py-14 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-center">
+    <>
       <div className="heading-component-main-container">
         <h1 className="heading-component-main-heading">
           Find Your Perfect Match
@@ -60,7 +61,7 @@ export default function CategoriesGrid() {
         </h2>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-8 md:gap-6 justify-items-center mt-12">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-8 md:gap-6 justify-items-center ">
         {categories.map((cat, idx) => (
           <div key={idx} className="w-full p-1">
             <a href="#" className="group">
@@ -73,7 +74,7 @@ export default function CategoriesGrid() {
                 />
               </div>
               <div className="text-center py-3">
-                <h6 className="text-sm font-medium text-black uppercase tracking-wider">
+                <h6 className="text-sm font-medium  uppercase tracking-wider">
                   {cat.title}
                 </h6>
               </div>
@@ -93,12 +94,14 @@ export default function CategoriesGrid() {
                 Categories to chose from
               </span>
             </div>
-            <h6 className="text-sm font-medium text-black uppercase tracking-wider">
+          </a>
+          <div className="text-center py-3">
+            <h6 className="text-sm font-medium  uppercase tracking-wider">
               VIEW ALL
             </h6>
-          </a>
+          </div>
         </div>
       </div>
-    </section>
+    </>
   );
 }

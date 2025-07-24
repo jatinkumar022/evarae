@@ -2,9 +2,11 @@ import Hero from "./components/home/Hero";
 import Container from "./components/layouts/Container";
 import ImageGrid from "./components/home/ImageGrid";
 import CircleCategories from "./components/home/Category";
-import { Devider } from "./assets/Common";
-import Image from "next/image";
+
 import CategoryGrid from "./components/home/CategoryGrid";
+import Trending from "./components/home/Trending";
+import ImageDevider from "./components/layouts/ImageDevider";
+import AnimatedCards from "./components/home/AnimatedCards";
 
 export default function Home() {
   return (
@@ -12,11 +14,16 @@ export default function Home() {
       <CircleCategories />
       <Hero />
       <div className="">
-        <Container className="my-10">
-          <Image src={Devider} alt="divider" className="w-full md:hidden" />
+        <Container>
+          <ImageDevider />
 
           <ImageGrid />
+          <ImageDevider />
+          <AnimatedCards />
+          <ImageDevider />
           <CategoryGrid />
+          <ImageDevider />
+          <Trending />
         </Container>
       </div>
     </>
