@@ -51,32 +51,32 @@ const slidesData = [
       {
         name: "Eternal Ember Diamond Ring",
         image: dazzling,
-        href: "/products/eternal-ember",
+        href: "/",
       },
       {
         name: "Lustre Royale Diamond Necklace Set",
         image: star,
-        href: "/products/lustre-royale",
+        href: "/",
       },
       {
         name: "Eternal Ember Diamond Ring",
         image: dazzling,
-        href: "/products/eternal-ember",
+        href: "/",
       },
       {
         name: "Lustre Royale Diamond Necklace Set",
         image: star,
-        href: "/products/lustre-royale",
+        href: "/",
       },
       {
         name: "Eternal Ember Diamond Ring",
         image: dazzling,
-        href: "/products/eternal-ember",
+        href: "/",
       },
       {
         name: "Lustre Royale Diamond Necklace Set",
         image: star,
-        href: "/products/lustre-royale",
+        href: "/",
       },
     ],
   },
@@ -97,7 +97,11 @@ const slidesData = [
     isMain: true,
     title: "Tanishq Radiance in Rhythm x Rahul Mishra...",
     products: [
-      { name: "Mirage Flame Diamond Necklace Set", image: starWhite, href: "" },
+      {
+        name: "Mirage Flame Diamond Necklace Set",
+        image: starWhite,
+        href: "/",
+      },
       {
         name: "Regal Crown Diamond Necklace Set",
         image: mangalsutraWhite,
@@ -112,12 +116,12 @@ const slidesData = [
       {
         name: "Glimmering Blossom Diamond Studs",
         image: dazzling,
-        href: "/products/glimmering-blossom",
+        href: "/",
       },
       {
         name: "Enchanted Vine Diamond Bracelet",
         image: star,
-        href: "/products/enchanted-vine",
+        href: "/",
       },
     ],
   },
@@ -128,12 +132,12 @@ const slidesData = [
       {
         name: "Cosmic Swirl Diamond Pendant",
         image: mangalsutra,
-        href: "/products/cosmic-swirl",
+        href: "/",
       },
       {
         name: "Stardust Solitaire Diamond Ring",
         image: dazzling,
-        href: "/products/stardust-solitaire",
+        href: "/",
       },
     ],
   },
@@ -144,12 +148,12 @@ const slidesData = [
       {
         name: "Maharani's Choice Diamond Choker",
         image: star,
-        href: "/products/maharanis-choice",
+        href: "/",
       },
       {
         name: "Princely Cut Diamond Cufflinks",
         image: mangalsutra,
-        href: "/products/princely-cut",
+        href: "/",
       },
     ],
   },
@@ -160,12 +164,12 @@ const slidesData = [
       {
         name: "Willow Grace Diamond Hoops",
         image: dazzling,
-        href: "/products/willow-grace",
+        href: "/",
       },
       {
         name: "Whispering Leaf Diamond Lariat",
         image: star,
-        href: "/products/whispering-leaf",
+        href: "/",
       },
     ],
   },
