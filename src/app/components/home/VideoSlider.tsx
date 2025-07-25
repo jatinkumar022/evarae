@@ -248,8 +248,8 @@ const SlideCard = ({
             pagination={{ clickable: true }}
             className="product-slider !pb-6"
           >
-            {slide.products?.map((product) => (
-              <SwiperSlide key={product.name}>
+            {slide.products?.map((product, productIndex) => (
+              <SwiperSlide key={`${product.name}-${productIndex}`}>
                 <Link href={product.href}>
                   <div className="bg-white/80 backdrop-blur-sm rounded-lg p-2 flex items-center gap-2 text-black text-[10px] w-full h-14">
                     <Image
