@@ -13,7 +13,15 @@ import {
   dazzlingWhite,
 } from "@/app/assets/Animatedgrid";
 import { GiCrystalShine } from "react-icons/gi";
-
+import {
+  ad1,
+  ad2,
+  ad3,
+  ad4,
+  ad5,
+  ad6,
+  ad7,
+} from "@/app/assets/Videos/Homepage";
 const savedItems = [
   {
     id: 1,
@@ -22,6 +30,7 @@ const savedItems = [
     image: dazzling,
     hoverImage: dazzlingWhite,
     tag: null,
+    video: ad1,
   },
   {
     id: 2,
@@ -30,6 +39,7 @@ const savedItems = [
     image: mangalsutra,
     hoverImage: mangalsutraWhite,
     tag: "BESTSELLERS",
+    video: ad2,
   },
   {
     id: 3,
@@ -38,6 +48,43 @@ const savedItems = [
     image: star,
     hoverImage: starWhite,
     tag: null,
+    video: ad3,
+  },
+  {
+    id: 4,
+    title: "Sunbeam Bloom Gold Mangalsutra",
+    price: "72049",
+    image: star,
+    hoverImage: starWhite,
+    tag: null,
+    video: ad4,
+  },
+  {
+    id: 5,
+    title: "Sunbeam Bloom Gold Mangalsutra",
+    price: "72049",
+    image: star,
+    hoverImage: starWhite,
+    tag: null,
+    video: ad5,
+  },
+  {
+    id: 6,
+    title: "Sunbeam Bloom Gold Mangalsutra",
+    price: "72049",
+    image: star,
+    hoverImage: starWhite,
+    tag: null,
+    video: ad6,
+  },
+  {
+    id: 7,
+    title: "Sunbeam Bloom Gold Mangalsutra",
+    price: "72049",
+    image: star,
+    hoverImage: starWhite,
+    tag: null,
+    video: ad7,
   },
 ];
 
@@ -183,8 +230,6 @@ export default function PickUpWhereYouLeft() {
           ))}
         </div>
 
-        {/* Pagination Dots */}
-        {/* Pagination Dots */}
         {totalPages > 1 && (
           <div className="flex justify-center gap-2 mt-2">
             {Array.from({ length: totalPages }).map((_, i) => {

@@ -9,6 +9,7 @@ import ImageDevider from "./components/layouts/ImageDevider";
 import AnimatedCards from "./components/home/AnimatedCards";
 import EvaraeWorld from "./components/home/EvaraeWorld";
 import NewArrival from "./components/home/NewArrival";
+import Styling101Carousel from "./components/home/VideoSlider";
 
 export default function Home() {
   return (
@@ -27,6 +28,11 @@ export default function Home() {
           <EvaraeWorld />
         </Container>
         <NewArrival />
+        <Container>
+          <ImageDevider />
+
+          <Styling101Carousel />
+        </Container>
       </div>
     </>
   );

@@ -3,7 +3,6 @@
 import * as React from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -146,19 +145,28 @@ export default function HeroCarousel() {
         </div>
       </Container>
       {/* Dot Indicators */}
-      <div className="mt-6 flex justify-center gap-8">
-        {images.map((_, index) => (
-          <Button
-            key={index}
-            variant="ghost"
-            size="icon"
-            onClick={() => goToSlide(index)}
-            className={cn(
-              "h-2 w-2 rounded-full p-0 bg-black/20 hover:bg-black transition-all cursor-pointer",
-              current === index && "bg-black"
-            )}
-          />
-        ))}
+      <div className="mt-6 flex justify-center gap-2">
+        {images.map((_, i) => {
+          const isActive = current === i;
+          return (
+            <button
+              key={i}
+              onClick={() => goToSlide(i)}
+              className="p-0 m-0 transition-all duration-300 ease-in-out  cursor-pointer"
+              style={{
+                width: isActive ? 28 : 10,
+                height: 10,
+                backgroundColor: isActive ? "#832729" : "#d9bdbe",
+                clipPath: isActive
+                  ? "polygon(5px 0%, 23px 0%, 28px 50%, 23px 100%, 5px 100%, 0 50%)"
+                  : "polygon(0 50%, 50% 0%, 100% 50%, 50% 100%)",
+                transform: isActive ? "rotate(0deg)" : "rotate(90deg)",
+                transformOrigin: "center",
+                transition: "all 300ms ease",
+              }}
+            />
+          );
+        })}
       </div>
     </div>
   );

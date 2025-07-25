@@ -109,6 +109,20 @@
   }
 }
 
+.product-slider .swiper-pagination-bullet {
+  width: 24px;
+  height: 4px;
+  border-radius: 2px;
+  background-color: #a0a0a0;
+  opacity: 1;
+  transition: background-color 0.3s ease;
+}
+
+.product-slider .swiper-pagination-bullet-active {
+  background-color: #ffffff;
+}
+
+
 @keyframes spin-slow {
   from {
     transform: rotate(0deg);
@@ -129,4 +143,11 @@
 
 .bg-footer {
   background-color: var(--bg-footer);
+}
+
+.line-clamp-2 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
