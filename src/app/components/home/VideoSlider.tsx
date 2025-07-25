@@ -171,10 +171,14 @@ const slidesData = [
   },
 ];
 
+interface SlideWithProgress extends HTMLElement {
+  progress: number;
+}
+
 const setSlideStyles = (swiper: SwiperClass) => {
   for (let i = 0; i < swiper.slides.length; i++) {
-    const slide = swiper.slides[i] as HTMLElement;
-    const progress = (slide as any).progress;
+    const slide = swiper.slides[i] as SlideWithProgress;
+    const progress = slide.progress;
     const absProgress = Math.abs(progress);
     const blur = absProgress * 2;
     const opacity = Math.max(1 - absProgress, 0.5);
