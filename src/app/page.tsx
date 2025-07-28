@@ -53,7 +53,7 @@ export default function Home() {
 
             <div className="text-center break-words">
               Trust us to be part of your precious moments and to deliver
-              jewellery that you'll cherish forever.
+              jewellery that you&apos;ll cherish forever.
             </div>
             <div className=" block lg:hidden ">
               <FlowerCombo className="w-full h-7" />
