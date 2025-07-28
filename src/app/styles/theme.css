@@ -93,6 +93,9 @@ body {
   font-family: var(--font-heading);
 }
 
+.text-heading {
+  color: var(--text-heading);
+}
 
 /* Containers */
 .container {
