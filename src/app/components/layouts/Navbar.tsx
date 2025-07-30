@@ -110,16 +110,20 @@ export default function Navbar() {
         <Container>
           <div className="flex h-20 items-center justify-between">
             {/* Left Group */}
-            <div className="flex items-center gap-4 lg:flex-1">
+            <div className="flex items-center gap-2 lg:flex-1">
               <div className="lg:hidden">
                 <IconButton onClick={() => {}} ariaLabel="Open menu">
-                  <SlMenu className="h-5 w-5" />
+                  <SlMenu className="h-5 w-5 max-lg:text-primary" />
                 </IconButton>
               </div>
-              <Link href="/" className="lg:hidden">
-                <NavLogoMobile className="h-7" />
-              </Link>
-              <nav className="hidden items-center gap-8 lg:flex">
+              <div className="lg:hidden">
+                <Link href="/">
+                  <h1 className="text-2xl  font-heading text-primary">
+                    Caelvi
+                  </h1>
+                </Link>
+              </div>
+              <nav className="hidden items-center gap-2 lg:flex ">
                 <NavLink href="#">Shop</NavLink>
                 <NavLink href="#">New Arrivals</NavLink>
                 <NavLink href="#">Collections</NavLink>
@@ -128,13 +132,11 @@ export default function Navbar() {
 
             {/* Centered Logo (Desktop-only) */}
             <div className="hidden lg:block">
-              <h1 className="text-2xl font-bold font-heading text-primary">
-                Caelvi
-              </h1>
+              <h1 className="text-2xl  font-heading text-primary">Caelvi</h1>
             </div>
 
             {/* Right Group */}
-            <div className="flex items-center justify-end gap-2 lg:flex-1">
+            <div className="flex items-center justify-end gap-2 lg:flex-1 max-lg:text-primary">
               <IconButton
                 onClick={() => setIsSearchOpen(true)}
                 ariaLabel="Open search"
