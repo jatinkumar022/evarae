@@ -1,0 +1,13 @@
+<svg  viewBox="0 0 400 60" xmlns="http://www.w3.org/2000/svg">
+  <!-- Left line -->
+  <line y1="30" x2="190" y2="30" stroke="#d0d0d0" stroke-width="1"/>
+  
+  <!-- Right line -->
+  <line x1="210" y1="30" x2="400" y2="30" stroke="#d0d0d0" stroke-width="1"/>
+  
+  <!-- Circle in middle -->
+  <circle cx="200" cy="30" r="10" fill="none" stroke="#d0d0d0" stroke-width="1"/>
+  
+  <!-- Inner circle (optional decorative element) -->
+  <circle cx="200" cy="30" r="5" fill="none" stroke="#d0d0d0" stroke-width="0.5"/>
+</svg>

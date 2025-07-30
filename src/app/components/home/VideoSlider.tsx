@@ -194,10 +194,8 @@ const setSlideStyles = (swiper: SwiperClass) => {
 
 const SlideCard = ({
   slide,
-  isActive,
 }: {
   slide: (typeof slidesData)[number] & { isMain?: boolean };
-  isActive: boolean;
 }) => {
   const videoRef = React.useRef<HTMLVideoElement>(null);
   const [isMuted, setIsMuted] = useState(true);
@@ -323,9 +321,7 @@ export default function Styling101Carousel() {
               key={index}
               className="!w-auto transition-all duration-300"
             >
-              {({ isActive }) => (
-                <SlideCard slide={slide} isActive={isActive} />
-              )}
+              <SlideCard slide={slide} />
             </SwiperSlide>
           ))}
         </Swiper>

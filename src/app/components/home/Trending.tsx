@@ -1,54 +1,73 @@
 import React from "react";
-import { Keret, gifting, rathYatra } from "@/app/assets/Trending"; // Assuming these are React components or image imports
-import Image from "next/image";
+import { gifting, rathYatra } from "@/app/assets/Trending"; // Assuming these are React components or image imports
+import Image, { StaticImageData } from "next/image";
 
 const trendingItems = [
   {
     id: 1,
-    title: "Auspicious Occasion",
+    title: "Auspicious Occasions",
     image: rathYatra,
     alt: "Auspicious Occasion",
   },
   {
     id: 2,
-    title: "Gifting Jewellery",
+    title: "Jewellery for Gifting",
     image: gifting,
     alt: "Gifting Jewellery",
   },
   {
     id: 3,
     title: "18Kt Jewellery",
-    image: Keret,
+    image: rathYatra,
     alt: "18Kt Jewellery",
   },
 ];
 
+const TrendingItem = ({
+  image,
+  title,
+  alt,
+}: {
+  image: StaticImageData;
+  title: string;
+  alt: string;
+}) => (
+  <div className="group text-center">
+    <a href="#">
+      <div className="bg-muted rounded-t-full overflow-hidden">
+        <Image
+          src={image}
+          alt={alt}
+          className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-500 ease-in-out"
+        />
+      </div>
+      <div className="py-4">
+        <h3 className="font-medium text-foreground tracking-wider uppercase text-sm group-hover:text-primary transition-colors">
+          {title}
+        </h3>
+      </div>
+    </a>
+  </div>
+);
+
 function Trending() {
   return (
-    <section>
+    <section className="mt-20">
       <div className="heading-component-main-container">
-        <h1 className="heading-component-main-heading">Trending Now</h1>
+        <h1 className="heading-component-main-heading">Currently Trending</h1>
         <h2 className="heading-component-main-subheading">
-          Explore our trending collection
+          Our most popular pieces, chosen for you.
         </h2>
       </div>
 
-      <div className="grid grid-cols-3 gap-4 md:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 md:gap-6">
         {trendingItems.map((item) => (
-          <div key={item.id} className="flex flex-col items-center text-center">
-            <div className="w-full overflow-hidden rounded-xl">
-              <Image
-                src={item.image}
-                alt={item.alt}
-                className="w-full h-auto object-cover"
-              />
-            </div>
-            <div className="text-center py-3">
-              <h6 className="text-[12px] sm:text-sm font-medium  uppercase tracking-wider">
-                {item.title}
-              </h6>
-            </div>
-          </div>
+          <TrendingItem
+            key={item.id}
+            image={item.image}
+            title={item.title}
+            alt={item.alt}
+          />
         ))}
       </div>
     </section>

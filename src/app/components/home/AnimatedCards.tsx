@@ -13,15 +13,6 @@ import {
   dazzlingWhite,
 } from "@/app/assets/Animatedgrid";
 import { GiCrystalShine } from "react-icons/gi";
-import {
-  ad1,
-  ad2,
-  ad3,
-  ad4,
-  ad5,
-  ad6,
-  ad7,
-} from "@/app/assets/Videos/Homepage";
 const savedItems = [
   {
     id: 1,
@@ -30,7 +21,6 @@ const savedItems = [
     image: dazzling,
     hoverImage: dazzlingWhite,
     tag: null,
-    video: ad1,
   },
   {
     id: 2,
@@ -39,7 +29,6 @@ const savedItems = [
     image: mangalsutra,
     hoverImage: mangalsutraWhite,
     tag: "BESTSELLERS",
-    video: ad2,
   },
   {
     id: 3,
@@ -48,47 +37,10 @@ const savedItems = [
     image: star,
     hoverImage: starWhite,
     tag: null,
-    video: ad3,
-  },
-  {
-    id: 4,
-    title: "Sunbeam Bloom Gold Mangalsutra",
-    price: "72049",
-    image: star,
-    hoverImage: starWhite,
-    tag: null,
-    video: ad4,
-  },
-  {
-    id: 5,
-    title: "Sunbeam Bloom Gold Mangalsutra",
-    price: "72049",
-    image: star,
-    hoverImage: starWhite,
-    tag: null,
-    video: ad5,
-  },
-  {
-    id: 6,
-    title: "Sunbeam Bloom Gold Mangalsutra",
-    price: "72049",
-    image: star,
-    hoverImage: starWhite,
-    tag: null,
-    video: ad6,
-  },
-  {
-    id: 7,
-    title: "Sunbeam Bloom Gold Mangalsutra",
-    price: "72049",
-    image: star,
-    hoverImage: starWhite,
-    tag: null,
-    video: ad7,
   },
 ];
 
-export default function PickUpWhereYouLeft() {
+export default function AnimatedCards() {
   const sliderRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [cardsPerPage, setCardsPerPage] = useState(1);
@@ -187,8 +139,8 @@ export default function PickUpWhereYouLeft() {
           </span>
         )}
 
-        <button className="common-wishlist-btn">
-          <GoHeart />
+        <button className="absolute top-3 right-3 bg-white/50 backdrop-blur-sm text-foreground/70 hover:bg-white hover:text-foreground rounded-full p-2 transition-all duration-300">
+          <GoHeart size={18} />
         </button>
       </div>
     );
@@ -198,12 +150,9 @@ export default function PickUpWhereYouLeft() {
     <section>
       {/* Headings */}
       <div className="heading-component-main-container">
-        <h1 className="heading-component-main-heading">
-          Pick up where you left
-        </h1>
+        <h1 className="heading-component-main-heading">Our Bestsellers</h1>
         <h2 className="heading-component-main-subheading">
-          Our products tend to sell out quickly, so don&rsquo;t delay in
-          completing your purchase.
+          Discover our most-loved pieces, adored by our customers.
         </h2>
       </div>
 
@@ -220,36 +169,29 @@ export default function PickUpWhereYouLeft() {
               className="flex-shrink-0 w-64 snap-start scroll-item"
             >
               <ImageCard item={item} />
-              <div className="mt-3">
-                <p className="text-[15px] font-medium text-black truncate">
+              <div className="mt-4 text-center">
+                <p className="text-sm font-medium text-foreground truncate">
                   {item.title}
                 </p>
-                <p className="text-[17px] font-normal mt-1">₹ {item.price}</p>
+                <p className="text-base font-semibold text-accent mt-1">
+                  ₹{item.price}
+                </p>
               </div>
             </div>
           ))}
         </div>
 
         {totalPages > 1 && (
-          <div className="flex justify-center gap-2 mt-2">
+          <div className="flex justify-center items-center gap-2 mt-4">
             {Array.from({ length: totalPages }).map((_, i) => {
               const isActive = activeIndex === i;
               return (
                 <button
                   key={i}
                   onClick={() => scrollToPage(i)}
-                  className="p-0 m-0 transition-all duration-300 ease-in-out  cursor-pointer"
-                  style={{
-                    width: isActive ? 28 : 10,
-                    height: 10,
-                    backgroundColor: isActive ? "#832729" : "#d9bdbe",
-                    clipPath: isActive
-                      ? "polygon(5px 0%, 23px 0%, 28px 50%, 23px 100%, 5px 100%, 0 50%)"
-                      : "polygon(0 50%, 50% 0%, 100% 50%, 50% 100%)",
-                    transform: isActive ? "rotate(0deg)" : "rotate(90deg)",
-                    transformOrigin: "center",
-                    transition: "all 300ms ease",
-                  }}
+                  className={`h-1.5 rounded-full transition-all duration-300 ease-in-out ${
+                    isActive ? "w-6 bg-primary" : "w-2.5 bg-primary/30"
+                  }`}
                 />
               );
             })}
@@ -262,11 +204,13 @@ export default function PickUpWhereYouLeft() {
         {savedItems.map((item) => (
           <div key={item.id + "-desktop"} className="flex flex-col">
             <ImageCard item={item} />
-            <div className="mt-3">
-              <p className="text-[15px] font-medium text-black truncate">
+            <div className="mt-4 text-center">
+              <p className="text-sm font-medium text-foreground truncate">
                 {item.title}
               </p>
-              <p className="text-[17px] font-normal mt-1">₹ {item.price}</p>
+              <p className="text-base font-semibold text-accent mt-1">
+                ₹{item.price}
+              </p>
             </div>
           </div>
         ))}

@@ -6,7 +6,6 @@ import Earrings from "./ear-ring.svg";
 import Gifting from "./gifting.svg";
 import Gold from "./gold.svg";
 import Ring from "./ring.svg";
-import Tanishq from "./tanishq.svg";
 import Wedding from "./wedding.svg";
 
 export {
@@ -18,6 +17,5 @@ export {
   Gifting,
   Gold,
   Ring,
-  Tanishq,
   Wedding,
 };

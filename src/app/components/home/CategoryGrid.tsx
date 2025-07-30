@@ -11,7 +11,6 @@ import {
   ringsCat,
   braceletsCat,
 } from "@/app/assets/CategoryGrid";
-import Container from "../layouts/Container";
 
 interface Category {
   title: string;
@@ -20,88 +19,94 @@ interface Category {
 
 const categories: Category[] = [
   {
-    title: "EARRINGS",
+    title: "Earrings",
     image: earringsCat,
   },
   {
-    title: "FINGER RINGS",
+    title: "Rings",
     image: ringsCat,
   },
   {
-    title: "PENDANTS",
+    title: "Pendants",
     image: pendantsCat,
   },
   {
-    title: "MANGALSUTRA",
+    title: "Mangalsutra",
     image: mangalsutraCat,
   },
   {
-    title: "BRACELETS",
+    title: "Bracelets",
     image: braceletsCat,
   },
   {
-    title: "BANGLES",
+    title: "Bangles",
     image: banglesCat,
   },
   {
-    title: "CHAINS",
+    title: "Chains",
     image: chainsCat,
   },
 ];
 
+const CategoryItem = ({
+  image,
+  title,
+}: {
+  image: StaticImageData;
+  title: string;
+}) => (
+  <div className="text-center group">
+    <a href="#" className="inline-block">
+      <div className="w-36 h-36 md:w-44 md:h-44 lg:w-52 lg:h-52 rounded-full overflow-hidden border-2 border-transparent group-hover:border-primary/30 transition-all duration-300 p-2 bg-background/70 shadow-sm">
+        <div className="w-full h-full rounded-full overflow-hidden relative">
+          <Image
+            src={image}
+            alt={title}
+            fill
+            className="object-cover transition-transform duration-500 ease-in-out group-hover:scale-110"
+          />
+        </div>
+      </div>
+      <h3 className="mt-4 font-medium text-foreground tracking-wider uppercase text-sm">
+        {title}
+      </h3>
+    </a>
+  </div>
+);
+
+const ViewAllItem = () => (
+  <div className="text-center group">
+    <a
+      href="#"
+      className=" w-36 h-36 md:w-44 md:h-44 lg:w-52 lg:h-52 rounded-full border-2 border-border border-dashed group-hover:border-primary group-hover:border-solid transition-all duration-300 flex items-center justify-center text-center bg-background/70"
+    >
+      <div className="text-foreground/70 group-hover:text-primary transition-colors duration-300">
+        <p className="font-heading text-xl font-bold">10+</p>
+        <p className="text-xs uppercase tracking-wider">Categories</p>
+      </div>
+    </a>
+    <h3 className="mt-4 font-medium text-foreground tracking-wider uppercase text-sm">
+      View All
+    </h3>
+  </div>
+);
+
 export default function CategoriesGrid() {
   return (
-    <>
+    <section className="mt-20">
       <div className="heading-component-main-container">
-        <h1 className="heading-component-main-heading">
-          Find Your Perfect Match
-        </h1>
+        <h1 className="heading-component-main-heading">Explore by Category</h1>
         <h2 className="heading-component-main-subheading">
-          Shop by Categories
+          Find the perfect piece to tell your story.
         </h2>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-8 md:gap-6 justify-items-center ">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-y-12 gap-x-6 justify-items-center">
         {categories.map((cat, idx) => (
-          <div key={idx} className="w-full p-1">
-            <a href="#" className="group">
-              <div className="w-full aspect-[6/7] rounded-xl overflow-hidden relative shadow-sm transition-shadow duration-300 group-hover:shadow-lg">
-                <Image
-                  src={cat.image}
-                  alt={cat.title}
-                  fill
-                  className="object-cover transition-transform duration-300 group-hover:scale-105"
-                />
-              </div>
-              <div className="text-center py-3">
-                <h6 className="text-sm font-medium  uppercase tracking-wider">
-                  {cat.title}
-                </h6>
-              </div>
-            </a>
-          </div>
+          <CategoryItem key={idx} image={cat.image} title={cat.title} />
         ))}
-
-        {/* View All Card */}
-        <div className="w-full p-1">
-          <a
-            href="#"
-            className="group flex flex-col justify-between items-center w-full aspect-[6/7] rounded-xl border border-gray-200 p-4 hover:shadow-lg transition-shadow duration-300"
-          >
-            <div className="flex-grow flex flex-col justify-center items-center text-center">
-              <p className="text-2xl font-heading text-primary">10+</p>
-              <span className="text-sm text-gray-600 mt-1">
-                Categories to chose from
-              </span>
-            </div>
-          </a>
-          <div className="text-center py-3">
-            <h6 className="text-sm font-medium  uppercase tracking-wider">
-              VIEW ALL
-            </h6>
-          </div>
-        </div>
+        <ViewAllItem />
       </div>
-    </>
+    </section>
   );
 }

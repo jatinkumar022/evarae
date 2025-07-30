@@ -52,33 +52,33 @@ const CircleCategories = () => {
     <section className="py-5 sm:py-10 lg:hidden block ">
       <Container className="flex justify-center">
         <div
-          className="flex gap-2 sm:gap-6 overflow-x-auto  px-3 md:gap-10"
+          className="flex gap-4 sm:gap-6 overflow-x-auto  md:gap-10"
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         >
           {categories.map((item, idx) => (
             <a
               href={item.href}
               key={idx}
-              className="flex-shrink-0 flex flex-col items-center text-center w-[80px] md:w-[110px]"
+              className="flex-shrink-0 flex flex-col items-center text-center w-24 md:w-28"
               onClick={(e) => handleClick(e, idx)}
             >
               <div className="relative group">
-                <div className="w-[70px] h-[70px] md:w-[110px] md:h-[110px]  rounded-full flex items-center justify-center relative z-10 overflow-hidden">
+                <div className="w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center relative z-10 overflow-hidden">
                   <img
                     src={item.image}
                     alt={item.title}
-                    className="w-[60px] h-[60px] md:w-[90px] md:h-[90px] object-cover rounded-full"
+                    className="w-16 h-16 md:w-20 md:h-20 object-cover rounded-full"
                   />
                 </div>
                 <div
-                  className={`absolute top-0 left-0 w-[70px] h-[70px] md:w-[110px] md:h-[110px] rounded-full border-2 border-[#5B0438] z-0 group-hover:animate-spin-slow ${
+                  className={`absolute top-0 left-0 w-20 h-20 md:w-24 md:h-24 rounded-full border-2 border-primary z-0 group-hover:animate-spin-slow ${
                     clickedIndex === idx
                       ? "animate-spin-slow border-dashed"
                       : ""
                   }`}
                 />
               </div>
-              <div className="pt-2 text-[12px] md:text-[14px]  text-black leading-tight">
+              <div className="pt-2 text-xs md:text-sm text-foreground leading-tight">
                 <h4 dangerouslySetInnerHTML={{ __html: item.title }} />
               </div>
             </a>

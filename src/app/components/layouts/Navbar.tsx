@@ -1,133 +1,266 @@
 "use client";
-
 import Container from "@/app/components/layouts/Container";
-import { AnimatePresence, motion } from "framer-motion"; // Add this import
-
+import { AnimatePresence, motion } from "framer-motion";
+import Image from "next/image";
 import {
   Heart,
   ShoppingBag,
-  Diamond,
-  Store,
   User,
-  Camera,
-  Microphone,
   Search,
   NavLogoMobile,
 } from "@/app/assets/Navbar";
+import {
+  ringsCat,
+  earringsCat,
+  braceletsCat,
+  pendantsCat,
+} from "@/app/assets/CategoryGrid";
 import { SlMenu } from "react-icons/sl";
 import { useEffect, useState } from "react";
+import { RxCross2 } from "react-icons/rx";
+import Link from "next/link";
+
+const NavLink = ({
+  href,
+  children,
+}: {
+  href: string;
+  children: React.ReactNode;
+}) => (
+  <Link
+    href={href}
+    className="rounded-md px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100/80 hover:text-primary cursor-pointer"
+  >
+    {children}
+  </Link>
+);
+
+const IconButton = ({
+  onClick,
+  children,
+  className = "",
+  ariaLabel,
+}: {
+  onClick?: () => void;
+  children: React.ReactNode;
+  className?: string;
+  ariaLabel: string;
+}) => (
+  <button
+    onClick={onClick}
+    className={`relative flex items-center justify-center rounded-full p-2  transition-colors hover:bg-gray-100/80  hover:text-primary cursor-pointer ${className}`}
+    aria-label={ariaLabel}
+  >
+    {children}
+  </button>
+);
+
+const popularCategories = [
+  { name: "Rings", href: "#", image: ringsCat },
+  { name: "Earrings", href: "#", image: earringsCat },
+  { name: "Bracelets", href: "#", image: braceletsCat },
+  { name: "Pendants", href: "#", image: pendantsCat },
+];
 
 export default function Navbar() {
   const placeholders = [
-    "Search for Gold Jewellery",
-    "Search for Diamond Jewellery",
-    "Search for Rings, Earrings and more...",
+    "Search Gold Jewellery",
+    "Search Diamond Jewellery",
+    "Search Rings, Earrings & more...",
+  ];
+  const trendingSearches = [
+    "Rings",
+    "Diamond Necklace",
+    "Gold Chains",
+    "22k Gold",
+    "Gifts for Her",
   ];
   const [currentPlaceholder, setCurrentPlaceholder] = useState(0);
   const [inputValue, setInputValue] = useState("");
-  // Rotate placeholder every 3s
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentPlaceholder((prev) => (prev + 1) % placeholders.length);
     }, 3000);
     return () => clearInterval(interval);
-  }, []);
+  }, [placeholders.length]);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsSearchOpen(false);
+      }
+    };
+    if (isSearchOpen) {
+      document.body.style.overflow = "hidden";
+      window.addEventListener("keydown", handleKeyDown);
+    } else {
+      document.body.style.overflow = "auto";
+    }
+    return () => {
+      document.body.style.overflow = "auto";
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isSearchOpen]);
+
   return (
-    <header className="bg-white fixed top-auto w-full z-30">
-      <Container>
-        <div className="flex items-center justify-between py-3">
-          {/* Left: Logo */}
-          <div className="flex-shrink-0 hidden lg:block">
-            <img src="/logo.svg" alt="Logo" className="h-[45px]" />
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="lg:hidden block text-primary rounded-full p-2">
-              <SlMenu />
+    <>
+      <header className="fixed top-0 z-30 w-full border-b border-gray-200/80 bg-white">
+        <Container>
+          <div className="flex h-20 items-center justify-between">
+            {/* Left Group */}
+            <div className="flex items-center gap-4 lg:flex-1">
+              <div className="lg:hidden">
+                <IconButton onClick={() => {}} ariaLabel="Open menu">
+                  <SlMenu className="h-5 w-5" />
+                </IconButton>
+              </div>
+              <Link href="/" className="lg:hidden">
+                <NavLogoMobile className="h-7" />
+              </Link>
+              <nav className="hidden items-center gap-8 lg:flex">
+                <NavLink href="#">Shop</NavLink>
+                <NavLink href="#">New Arrivals</NavLink>
+                <NavLink href="#">Collections</NavLink>
+              </nav>
             </div>
-            <div className="lg:hidden block flex-shrink-0">
-              <NavLogoMobile className="h-[22px]" />
-            </div>
-          </div>
 
-          {/* Center: Search */}
-          <div className=" max-w-xl ml-[10vw] ">
-            <div className="hidden lg:flex items-center rounded-full border border-gray-200 w-[540px] h-[45px] px-4">
-              <Search className="text-primary  mr-2 w-5 h-5" />
-              <div className="relative w-full">
-                <input
-                  type="text"
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  className="w-full text-sm focus:outline-none bg-transparent relative z-10"
-                />
-                {/* Animated Placeholder */}
-                <div className="absolute left-0 top-1/2 -translate-y-1/2 pl-1 pointer-events-none w-full">
-                  <AnimatePresence mode="wait">
-                    <motion.p
-                      key={currentPlaceholder}
-                      initial={{ opacity: 0, y: 4 }}
-                      animate={{ opacity: 0.6, y: 0 }}
-                      exit={{ opacity: 0, y: -4 }}
-                      transition={{ duration: 0.3 }}
-                      className="text-sm text-gray-400 truncate"
+            {/* Centered Logo (Desktop-only) */}
+            <div className="hidden lg:block">
+              <h1 className="text-2xl font-bold font-heading text-primary">
+                Caelvi
+              </h1>
+            </div>
+
+            {/* Right Group */}
+            <div className="flex items-center justify-end gap-2 lg:flex-1">
+              <IconButton
+                onClick={() => setIsSearchOpen(true)}
+                ariaLabel="Open search"
+              >
+                <Search className="h-5 w-5" />
+              </IconButton>
+              <IconButton onClick={() => {}} ariaLabel="Account">
+                <User className="h-5 w-5" />
+              </IconButton>
+              <IconButton onClick={() => {}} ariaLabel="Wishlist">
+                <Heart className="h-5 w-5" />
+              </IconButton>
+              <IconButton onClick={() => {}} ariaLabel="Shopping bag">
+                <ShoppingBag className="h-5 w-5" />
+                <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-white">
+                  5
+                </span>
+              </IconButton>
+            </div>
+          </div>
+        </Container>
+      </header>
+
+      {/* Search Overlay */}
+      <AnimatePresence>
+        {isSearchOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-40 bg-black/25 backdrop-blur-sm"
+            onClick={() => setIsSearchOpen(false)}
+          >
+            <motion.div
+              initial={{ y: "-100%" }}
+              animate={{ y: "0%" }}
+              exit={{ y: "-100%" }}
+              transition={{ duration: 0.4, ease: [0.25, 1, 0.5, 1] }}
+              className="bg-white"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Container>
+                <div className="py-8">
+                  {/* Search Input */}
+                  <div className="relative border border-border px-4 flex items-center rounded-md py-1">
+                    <Search className="h-5 w-5 flex-shrink-0 text-primary mr-4" />
+                    <input
+                      type="text"
+                      value={inputValue}
+                      onChange={(e) => setInputValue(e.target.value)}
+                      className="w-full bg-transparent text-lg placeholder-gray-400 focus:outline-none  relative z-10"
+                      autoFocus
+                    />
+                    {inputValue === "" && (
+                      <div className="absolute left-14 inset-y-0 flex items-center pointer-events-none">
+                        <AnimatePresence mode="wait">
+                          <motion.p
+                            key={currentPlaceholder}
+                            initial={{ opacity: 0, y: 5 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -5 }}
+                            transition={{ duration: 0.3 }}
+                            className="text-lg text-gray-400"
+                          >
+                            {placeholders[currentPlaceholder]}
+                          </motion.p>
+                        </AnimatePresence>
+                      </div>
+                    )}
+                    <button
+                      onClick={() => setIsSearchOpen(false)}
+                      className="p-2 text-gray-500 transition-colors hover:text-primary ml-4"
+                      aria-label="Close search"
                     >
-                      {placeholders[currentPlaceholder]}
-                    </motion.p>
-                  </AnimatePresence>
+                      <RxCross2 size={18} />
+                    </button>
+                  </div>
+                  {/* Content */}
+                  <div className="pt-10 grid sm:grid-cols-2 gap-5 sm:gap-12">
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500">
+                        Popular Categories
+                      </h3>
+                      <div className="mt-4 grid grid-cols-2 gap-4">
+                        {popularCategories.map((cat) => (
+                          <Link
+                            href={cat.href}
+                            key={cat.name}
+                            className="group block"
+                          >
+                            <div className="aspect-square w-full overflow-hidden rounded-md bg-gray-100">
+                              <Image
+                                src={cat.image}
+                                alt={cat.name}
+                                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                              />
+                            </div>
+                            <p className="mt-2 text-sm font-medium text-gray-800 transition-colors group-hover:text-primary">
+                              {cat.name}
+                            </p>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500">
+                        Trending Searches
+                      </h3>
+                      <div className="mt-4 flex flex-wrap gap-3">
+                        {trendingSearches.map((term) => (
+                          <button
+                            key={term}
+                            className="rounded-full bg-gray-100 px-4 py-1.5 text-sm text-gray-700 transition-colors hover:bg-gray-200 hover:text-gray-900"
+                          >
+                            {term}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-center ml-auto gap-3 text-primary">
-                <Camera className="w-5 h-5" />
-                <Microphone className="w-5 h-5" />
-              </div>
-            </div>
-          </div>
-
-          {/* Right: Icons */}
-          <div className="flex items-center gap-6 text-primary text-lg">
-            <Diamond className="w-5 h-5" />
-            <Store className="w-5 h-5" />
-            <Heart className="w-5 h-5" />
-            <User className="w-5 h-5" />
-            <div className="relative">
-              <ShoppingBag className="w-5 h-5" />
-              <span className="absolute -top-1 -right-1 bg-primary text-white text-[10px] rounded-full h-4 min-w-4 text-center ">
-                5
-              </span>
-            </div>
-          </div>
-        </div>
-        <div className="flex items-center rounded-sm border border-gray-200 mb-2  h-[42px] w-full lg:hidden px-4">
-          <Search className="text-primary  mr-2 w-5 h-5" />
-          <div className="relative w-full">
-            <input
-              type="text"
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              className="w-full text-sm focus:outline-none bg-transparent relative z-10"
-            />
-            {/* Animated Placeholder */}
-            <div className="absolute left-0 top-1/2 -translate-y-1/2 pl-1 pointer-events-none w-full">
-              <AnimatePresence mode="wait">
-                <motion.p
-                  key={currentPlaceholder}
-                  initial={{ opacity: 0, y: 4 }}
-                  animate={{ opacity: 0.6, y: 0 }}
-                  exit={{ opacity: 0, y: -4 }}
-                  transition={{ duration: 0.3 }}
-                  className="text-sm text-gray-400 truncate"
-                >
-                  {placeholders[currentPlaceholder]}
-                </motion.p>
-              </AnimatePresence>
-            </div>
-          </div>
-          <div className="flex items-center ml-auto gap-3 text-primary">
-            <Camera className="w-5 h-5" />
-            <Microphone className="w-5 h-5" />
-          </div>
-        </div>
-      </Container>
-    </header>
+              </Container>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 }

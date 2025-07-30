@@ -2,89 +2,83 @@ import React from "react";
 import Image from "next/image";
 import { FaRegGem } from "react-icons/fa6";
 import { mangalsutra, pendants, newArrival } from "@/app/assets/NewArrival";
+import Container from "../layouts/Container";
 
 function NewArrival() {
   return (
-    <section className="mt-8">
-      {/* Hero Section */}
-      <div className="relative h-[204px] lg:h-[412px]">
+    <section className="relative mt-20">
+      {/* Background Image */}
+      <div className="absolute inset-0">
         <Image
           src={newArrival}
           alt="New Arrivals Background"
           fill
           className="object-cover"
-          quality={100}
+          quality={90}
         />
-        {/* Overlay */}
-        <div className="absolute inset-0 " />
-        {/* Content */}
-        <div className="absolute inset-x-0 top-[24px] z-10 lg:top-[60px]">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="max-w-xl text-white">
-              <h2 className="font-heading text-2xl lg:text-4xl flex gap-2 items-center">
-                New Arrivals
-                <div className="my-2 inline-flex items-center gap-2 rounded-full bg-white/25 px-4 py-3">
-                  <FaRegGem className="h-3.5 w-3.5 lg:h-5 lg:w-5" />
-                  <span className="text-xs font-heading font-normal lg:text-sm lg:font-semibold">
-                    500+ New Items
-                  </span>
-                </div>
-              </h2>
-              <p className="w-[80%] max-w-[510px] text-xs leading-normal text-white/90 lg:w-auto lg:text-xl lg:leading-loose  font-heading">
-                New Arrivals Dropping Daily, Monday through Friday.
-                <br />
-                Explore the Latest Launches Now!
-              </p>
-            </div>
-          </div>
-        </div>
+        <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/20" />
       </div>
 
-      {/* Cards Section */}
-      <div className="relative z-20  -top-[40px] sm:-top-[50px] lg:-top-40">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex  gap-6 md:flex-row md:justify-between">
-            <div className="w-full rounded-xl bg-white p-2 sm:p-3  md:w-[49%]">
+      <Container>
+        <div className="relative grid grid-cols-1 lg:grid-cols-2 gap-12 items-center py-16 lg:py-24">
+          {/* Content */}
+          <div className="text-white text-center lg:text-left">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 mb-4">
+              <FaRegGem className="h-4 w-4" />
+              <span className="text-sm font-medium">500+ New Items</span>
+            </div>
+            <h2 className="font-heading text-4xl lg:text-5xl font-bold">
+              Freshly Minted
+            </h2>
+            <p className="mt-4 text-lg text-white/90 max-w-lg mx-auto lg:mx-0">
+              Discover the latest treasures to join the Caelvi family. New
+              arrivals dropping every week.
+            </p>
+          </div>
+
+          {/* Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div className="bg-white/5 backdrop-blur-sm rounded-xl p-2">
               <a
                 href="#"
-                className="relative block h-[150px] sm:h-[215px] overflow-hidden rounded-lg lg:h-[336px]"
+                className="relative block overflow-hidden rounded-lg group cursor-pointer"
               >
                 <Image
                   src={mangalsutra}
                   alt="Mangalsutra"
-                  fill
-                  className="object-cover"
-                  quality={100}
+                  width={400}
+                  height={500}
+                  className="w-full h-full object-cover"
                 />
-                <div className="absolute inset-0 flex items-end bg-gradient-to-t from-black/50 to-transparent p-2 lg:p-4">
-                  <h3 className="font-heading text-sm md:text-xl  text-white">
-                    Mangalsutra
+                <div className="absolute inset-0 flex items-end bg-gradient-to-t from-black/60 to-transparent p-4">
+                  <h3 className="font-heading text-lg text-white font-semibold">
+                    The Eternal Vow
                   </h3>
                 </div>
               </a>
             </div>
-            <div className="w-full rounded-xl bg-white p-3 md:w-[49%]">
+            <div className="bg-white/5 backdrop-blur-sm rounded-xl p-2">
               <a
                 href="#"
-                className="relative block h-[150px] sm:h-[215px] overflow-hidden rounded-lg lg:h-[336px]"
+                className="relative block overflow-hidden rounded-lg group cursor-pointer"
               >
                 <Image
                   src={pendants}
                   alt="Pendants"
-                  fill
-                  className="object-cover"
-                  quality={100}
+                  width={400}
+                  height={500}
+                  className="w-full h-full object-cover"
                 />
-                <div className="absolute inset-0 flex items-end bg-gradient-to-t from-black/50 to-transparent p-2 lg:p-4">
-                  <h3 className="font-heading text-sm md:text-xl  text-white">
-                    Pendants
+                <div className="absolute inset-0 flex items-end bg-gradient-to-t from-black/60 to-transparent p-4">
+                  <h3 className="font-heading text-lg text-white font-semibold">
+                    Delicate Statements
                   </h3>
                 </div>
               </a>
             </div>
           </div>
         </div>
-      </div>
+      </Container>
     </section>
   );
 }
