@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import Image, { StaticImageData } from "next/image";
-import React from "react";
-import Link from "next/link";
+import Image, { StaticImageData } from 'next/image';
+import React from 'react';
+import Link from 'next/link';
 import {
   banglesCat,
   chainsCat,
@@ -11,7 +11,7 @@ import {
   pendantsCat,
   ringsCat,
   braceletsCat,
-} from "@/app/assets/CategoryGrid";
+} from '@/app/assets/CategoryGrid';
 
 interface Category {
   title: string;
@@ -20,31 +20,31 @@ interface Category {
 
 const categories: Category[] = [
   {
-    title: "Earrings",
+    title: 'Earrings',
     image: earringsCat,
   },
   {
-    title: "Rings",
+    title: 'Rings',
     image: ringsCat,
   },
   {
-    title: "Pendants",
+    title: 'Pendants',
     image: pendantsCat,
   },
   {
-    title: "Mangalsutra",
+    title: 'Mangalsutra',
     image: mangalsutraCat,
   },
   {
-    title: "Bracelets",
+    title: 'Bracelets',
     image: braceletsCat,
   },
   {
-    title: "Bangles",
+    title: 'Bangles',
     image: banglesCat,
   },
   {
-    title: "Chains",
+    title: 'Chains',
     image: chainsCat,
   },
 ];
@@ -62,14 +62,13 @@ const CategoryItem = ({
       className="inline-block"
       aria-label={`Explore ${title} collection`}
     >
-      <div className="w-36 h-36 md:w-44 md:h-44 lg:w-52 lg:h-52 rounded-full overflow-hidden border-2 border-transparent group-hover:border-primary/30 transition-all duration-300 p-2 bg-background/70 shadow-sm">
+      <div className="w-32 h-32 md:w-44 md:h-44 lg:w-52 lg:h-52 rounded-full overflow-hidden border-2 border-transparent group-hover:border-primary/30 transition-all duration-300 p-2 bg-background/70 shadow-sm">
         <div className="w-full h-full rounded-full overflow-hidden relative">
           <Image
             src={image}
             alt={title}
             fill
             className="object-cover transition-transform duration-500 ease-in-out group-hover:scale-110"
-            
           />
         </div>
       </div>
@@ -84,7 +83,7 @@ const ViewAllItem = () => (
   <div className="text-center group">
     <Link
       href="#"
-      className=" w-36 h-36 md:w-44 md:h-44 lg:w-52 lg:h-52 rounded-full border-2 border-border border-dashed group-hover:border-primary group-hover:border-solid transition-all duration-300 flex items-center justify-center text-center bg-background/70"
+      className=" w-32 h-32 md:w-44 md:h-44 lg:w-52 lg:h-52 rounded-full border-2 border-border border-dashed group-hover:border-primary group-hover:border-solid transition-all duration-300 flex items-center justify-center text-center bg-background/70"
       aria-label="View all jewellery categories"
     >
       <div className="text-foreground/70 group-hover:text-primary transition-colors duration-300">
