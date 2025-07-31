@@ -2,6 +2,7 @@
 
 import { Visa, Mastercard, Paypal, Maestro } from "@/app/assets/Footer";
 import Container from "./Container";
+import Link from "next/link";
 import {
   FaFacebookF,
   FaYoutube,
@@ -21,9 +22,9 @@ const FooterLinkGroup = ({
     <ul className="space-y-3 text-muted-foreground text-sm">
       {links.map((link: string) => (
         <li key={link}>
-          <a href="#" className="hover:text-primary transition-colors">
+          <Link href="#" className="hover:text-primary transition-colors">
             {link}
-          </a>
+          </Link>
         </li>
       ))}
     </ul>
@@ -76,43 +77,37 @@ export default function Footer() {
             <FooterLinkGroup title="Customer Service" links={serviceLinks} />
           </div>
 
-          <div className="max-w-xl mx-auto mb-12 text-center">
-            <h4 className="font-heading font-semibold text-accent mb-2">
-              Join Our Newsletter
-            </h4>
-            <p className="text-muted-foreground text-sm mb-4">
-              Get exclusive updates, new arrivals, and insider-only discounts.
-            </p>
-            <form className="flex items-center">
-              <input
-                type="email"
-                placeholder="Your email address"
-                className="bg-background/50 border border-border rounded-l-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary text-foreground w-full text-sm"
-              />
-              <button
-                type="submit"
-                className="bg-primary hover:bg-primary/90 rounded-r-md px-4 py-2 font-semibold text-primary-foreground text-sm transition-colors whitespace-nowrap"
-              >
-                Sign Up
-              </button>
-            </form>
-          </div>
-
-          <div className=" mt-12 pt-8">
+          <div className=" pt-8">
             <div className="flex flex-col sm:flex-row justify-center sm:justify-between items-center gap-8">
               <div className="flex gap-6 items-center text-accent text-xl">
-                <a href="#" className="hover:text-primary transition-colors">
+                <Link
+                  href="#"
+                  className="hover:text-primary transition-colors"
+                  aria-label="Follow us on Instagram"
+                >
                   <FaInstagram />
-                </a>
-                <a href="#" className="hover:text-primary transition-colors">
+                </Link>
+                <Link
+                  href="#"
+                  className="hover:text-primary transition-colors"
+                  aria-label="Follow us on Twitter"
+                >
                   <FaXTwitter />
-                </a>
-                <a href="#" className="hover:text-primary transition-colors">
+                </Link>
+                <Link
+                  href="#"
+                  className="hover:text-primary transition-colors"
+                  aria-label="Follow us on Facebook"
+                >
                   <FaFacebookF />
-                </a>
-                <a href="#" className="hover:text-primary transition-colors">
+                </Link>
+                <Link
+                  href="#"
+                  className="hover:text-primary transition-colors"
+                  aria-label="Follow us on YouTube"
+                >
                   <FaYoutube />
-                </a>
+                </Link>
               </div>
               <div className="flex items-center gap-4 text-accent">
                 <Visa />

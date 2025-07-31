@@ -109,7 +109,11 @@ export default function GiftingMenu() {
               Save <span className="font-bold text-primary">₹500</span> on
               combos above ₹3999. Limited time!
             </p>
-            <Link href="#" className="btn btn-filled text-xs px-4 py-2">
+            <Link
+              href="#"
+              className="btn btn-filled text-xs px-4 py-2"
+              aria-label="Send a gift with ₹500 discount"
+            >
               Send a Gift
             </Link>
           </div>

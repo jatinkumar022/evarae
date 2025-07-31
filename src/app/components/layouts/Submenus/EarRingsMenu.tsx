@@ -77,7 +77,11 @@ export default function EarringsMenu() {
               Buy 2 Get 1 Free on select{" "}
               <span className="font-bold text-primary">Earring Sets</span>.
             </p>
-            <Link href="#" className="btn btn-filled text-xs px-4 py-2">
+            <Link
+              href="#"
+              className="btn btn-filled text-xs px-4 py-2"
+              aria-label="Shop earring sets with buy 2 get 1 free offer"
+            >
               Shop Now
             </Link>
           </div>

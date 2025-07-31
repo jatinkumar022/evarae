@@ -77,7 +77,11 @@ export default function RingsMenu() {
               Save <span className="font-bold text-primary">25%</span> on
               best-selling rings this season.
             </p>
-            <Link href="#" className="btn btn-filled text-xs px-4 py-2">
+            <Link
+              href="#"
+              className="btn btn-filled text-xs px-4 py-2"
+              aria-label="Shop rings with 25% discount"
+            >
               Shop Now
             </Link>
           </div>

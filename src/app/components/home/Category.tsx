@@ -2,6 +2,7 @@
 
 import React, { useState, MouseEvent } from "react";
 import Container from "../layouts/Container";
+import Link from "next/link";
 
 const categories = [
   {
@@ -56,7 +57,7 @@ const CircleCategories = () => {
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         >
           {categories.map((item, idx) => (
-            <a
+            <Link
               href={item.href}
               key={idx}
               className="flex-shrink-0 flex flex-col items-center text-center w-24 md:w-28"
@@ -81,7 +82,7 @@ const CircleCategories = () => {
               <div className="pt-2 text-xs md:text-sm text-foreground leading-tight">
                 <h4 dangerouslySetInnerHTML={{ __html: item.title }} />
               </div>
-            </a>
+            </Link>
           ))}
         </div>
       </Container>

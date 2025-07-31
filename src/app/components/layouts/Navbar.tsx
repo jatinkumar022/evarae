@@ -138,7 +138,7 @@ export default function Navbar() {
               </div>
               <nav className="hidden items-center gap-2 lg:flex ">
                 <NavLink href="#" icon={<Store className="h-4 w-4" />}>
-                  Shop
+                  All Jewellery
                 </NavLink>
                 <NavLink href="#" icon={<New className="h-4 w-4" />}>
                   New Arrivals
@@ -151,7 +151,7 @@ export default function Navbar() {
 
             {/* Centered Logo (Desktop-only) */}
             <div className="hidden lg:block">
-              <h1 className="text-2xl  font-heading text-primary">Caelvi</h1>
+              <h2 className="text-2xl  font-heading text-primary">Caelvi</h2>
             </div>
 
             {/* Right Group */}
@@ -162,15 +162,27 @@ export default function Navbar() {
               >
                 <Search className="h-5 w-5" />
               </IconButton>
-              <IconButton onClick={() => {}} ariaLabel="Account">
+              <IconButton
+                onClick={() => {}}
+                ariaLabel="My Account - Sign in or manage your account"
+              >
                 <User className="h-5 w-5" />
               </IconButton>
-              <IconButton onClick={() => {}} ariaLabel="Wishlist">
+              <IconButton
+                onClick={() => {}}
+                ariaLabel="Wishlist - View your saved items"
+              >
                 <Heart className="h-5 w-5" />
               </IconButton>
-              <IconButton onClick={() => {}} ariaLabel="Shopping bag">
+              <IconButton
+                onClick={() => {}}
+                ariaLabel="Shopping Bag - View cart with 5 items"
+              >
                 <ShoppingBag className="h-5 w-5" />
-                <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-white">
+                <span
+                  className="absolute top-0 right-0 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-white"
+                  aria-label="5 items in cart"
+                >
                   5
                 </span>
               </IconButton>
@@ -218,7 +230,7 @@ export default function Navbar() {
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -5 }}
                             transition={{ duration: 0.3 }}
-                            className="text-lg text-gray-400"
+                            className="text-lg text-gray-600"
                           >
                             {placeholders[currentPlaceholder]}
                           </motion.p>
@@ -227,7 +239,7 @@ export default function Navbar() {
                     )}
                     <button
                       onClick={() => setIsSearchOpen(false)}
-                      className="p-2 text-gray-500 transition-colors hover:text-primary ml-4"
+                      className="p-2 text-gray-600 transition-colors hover:text-primary ml-4"
                       aria-label="Close search"
                     >
                       <RxCross2 size={18} />
@@ -236,7 +248,7 @@ export default function Navbar() {
                   {/* Content */}
                   <div className="pt-10 grid sm:grid-cols-2 gap-5 sm:gap-12">
                     <div>
-                      <h3 className="text-sm font-medium text-gray-500">
+                      <h3 className="text-sm font-medium text-gray-700">
                         Popular Categories
                       </h3>
                       <div className="mt-4 grid grid-cols-2 gap-4">
@@ -261,7 +273,7 @@ export default function Navbar() {
                       </div>
                     </div>
                     <div>
-                      <h3 className="text-sm font-medium text-gray-500">
+                      <h3 className="text-sm font-medium text-gray-700">
                         Trending Searches
                       </h3>
                       <div className="mt-4 flex flex-wrap gap-3">
@@ -269,6 +281,7 @@ export default function Navbar() {
                           <button
                             key={term}
                             className="rounded-full bg-gray-100 px-4 py-1.5 text-sm text-gray-700 transition-colors hover:bg-gray-200 hover:text-gray-900"
+                            aria-label={`Search for ${term}`}
                           >
                             {term}
                           </button>

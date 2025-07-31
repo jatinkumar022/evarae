@@ -1,4 +1,5 @@
 import Container from "@/app/components/layouts/Container";
+import Link from "next/link";
 
 export default function Home() {
   return (
@@ -14,7 +15,7 @@ export default function Home() {
       <div className="navbar-bottom p-2 text-sm">
         <Container>
           <p>
-            Navbar Bottom — <a href="#">Hover Me</a>
+            Navbar Bottom — <Link href="#">Hover Me</Link>
           </p>
         </Container>
       </div>
@@ -35,11 +36,31 @@ export default function Home() {
 
           {/* Buttons Test */}
           <section className="section border-b mb-6">
-            <button className="btn btn-filled">Filled Button</button>
-            <button className="btn btn-accent">Accent Button</button>
-            <button className="btn btn-outline">Outline Button</button>
-            <button className="btn btn-ghost">Ghost Button</button>
-            <button className="btn btn-filled btn-animated">
+            <button
+              className="btn btn-filled"
+              aria-label="Filled button example"
+            >
+              Filled Button
+            </button>
+            <button
+              className="btn btn-accent"
+              aria-label="Accent button example"
+            >
+              Accent Button
+            </button>
+            <button
+              className="btn btn-outline"
+              aria-label="Outline button example"
+            >
+              Outline Button
+            </button>
+            <button className="btn btn-ghost" aria-label="Ghost button example">
+              Ghost Button
+            </button>
+            <button
+              className="btn btn-filled btn-animated"
+              aria-label="Animated filled button example"
+            >
               Animated Filled
             </button>
           </section>
@@ -65,7 +86,7 @@ export default function Home() {
           {/* Close Button Test */}
           <section className="section border-b mb-6">
             <h2>Close Button</h2>
-            <button className="btn-close">
+            <button className="btn-close" aria-label="Close dialog">
               <span className="sr-only">Close</span>✕
             </button>
           </section>

@@ -2,6 +2,7 @@
 
 import Image, { StaticImageData } from "next/image";
 import React from "react";
+import Link from "next/link";
 import {
   banglesCat,
   chainsCat,
@@ -56,7 +57,11 @@ const CategoryItem = ({
   title: string;
 }) => (
   <div className="text-center group">
-    <a href="#" className="inline-block">
+    <Link
+      href="#"
+      className="inline-block"
+      aria-label={`Explore ${title} collection`}
+    >
       <div className="w-36 h-36 md:w-44 md:h-44 lg:w-52 lg:h-52 rounded-full overflow-hidden border-2 border-transparent group-hover:border-primary/30 transition-all duration-300 p-2 bg-background/70 shadow-sm">
         <div className="w-full h-full rounded-full overflow-hidden relative">
           <Image
@@ -64,27 +69,29 @@ const CategoryItem = ({
             alt={title}
             fill
             className="object-cover transition-transform duration-500 ease-in-out group-hover:scale-110"
+            
           />
         </div>
       </div>
       <h3 className="mt-4 font-medium text-foreground tracking-wider uppercase text-sm">
         {title}
       </h3>
-    </a>
+    </Link>
   </div>
 );
 
 const ViewAllItem = () => (
   <div className="text-center group">
-    <a
+    <Link
       href="#"
       className=" w-36 h-36 md:w-44 md:h-44 lg:w-52 lg:h-52 rounded-full border-2 border-border border-dashed group-hover:border-primary group-hover:border-solid transition-all duration-300 flex items-center justify-center text-center bg-background/70"
+      aria-label="View all jewellery categories"
     >
       <div className="text-foreground/70 group-hover:text-primary transition-colors duration-300">
         <p className="font-heading text-xl font-bold">10+</p>
         <p className="text-xs uppercase tracking-wider">Categories</p>
       </div>
-    </a>
+    </Link>
     <h3 className="mt-4 font-medium text-foreground tracking-wider uppercase text-sm">
       View All
     </h3>

@@ -2,6 +2,7 @@ import React from "react";
 import Image from "next/image";
 import { pendantsCat, earringsCat } from "@/app/assets/CategoryGrid";
 import { Earrings, Ring } from "@/app/assets/NavigationMenu";
+import Link from "next/link";
 
 const filterLinks = ["Price", "Occasion", "Gold Coin", "Men", "Metal"];
 
@@ -37,12 +38,12 @@ const MegaMenuContent = () => (
         <ul className="space-y-2">
           {filterLinks.map((link) => (
             <li key={link}>
-              <a
+              <Link
                 href="#"
                 className="block px-4 py-2.5 rounded-md text-sm text-gray-700 hover:bg-primary/10 transition-colors"
               >
                 {link}
-              </a>
+              </Link>
             </li>
           ))}
         </ul>
@@ -52,7 +53,7 @@ const MegaMenuContent = () => (
       <div className="col-span-7 border-x border-gray-200 px-8">
         <div className="grid grid-cols-3 gap-5">
           {categoryLinks.map((item) => (
-            <a
+            <Link
               href="#"
               key={item.name}
               className="group flex items-center gap-4 px-2 py-1.5 rounded-lg bg-gray-50 "
@@ -63,7 +64,7 @@ const MegaMenuContent = () => (
               <span className="text-sm text-gray-800 group-hoverfont-medium group-hover:text-primary transition-colors">
                 {item.name}
               </span>
-            </a>
+            </Link>
           ))}
         </div>
 
@@ -73,14 +74,14 @@ const MegaMenuContent = () => (
               <div className="flex -space-x-4">
                 <Image
                   src={pendantsCat}
-                  alt="promo 1"
+                  alt=""
                   width={52}
                   height={52}
                   className="rounded-md border border-white shadow-sm"
                 />
                 <Image
                   src={earringsCat}
-                  alt="promo 2"
+                  alt=""
                   width={52}
                   height={52}
                   className="rounded-md border border-white shadow-sm"
@@ -95,19 +96,19 @@ const MegaMenuContent = () => (
                 </p>
               </div>
             </div>
-            <a
+            <Link
               href="#"
               className="px-5 py-2 text-sm font-semibold bg-primary text-white rounded-md shadow hover:bg-primary/90 transition"
             >
               View All
-            </a>
+            </Link>
           </div>
         </div>
       </div>
 
       {/* Promo Banner */}
       <div className="col-span-3">
-        <a
+        <Link
           href="#"
           className="group relative block w-full h-full rounded-lg overflow-hidden shadow-md"
         >
@@ -131,7 +132,7 @@ const MegaMenuContent = () => (
               </span>
             </p>
           </div>
-        </a>
+        </Link>
       </div>
     </div>
   </div>

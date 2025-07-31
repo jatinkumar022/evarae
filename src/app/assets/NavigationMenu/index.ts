@@ -1,4 +1,3 @@
-import AllJewellery from "./all-jewellery.svg";
 import Collections from "./collections.svg";
 import DailyWear from "./daily-wear.svg";
 import Diamond from "./diamond.svg";
@@ -9,7 +8,6 @@ import Ring from "./ring.svg";
 import Wedding from "./wedding.svg";
 
 export {
-  AllJewellery,
   Collections,
   DailyWear,
   Diamond,

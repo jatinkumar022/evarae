@@ -26,7 +26,10 @@ const GridItem = ({
         <h3 className="text-2xl lg:text-3xl font-heading text-white font-semibold">
           {title}
         </h3>
-        <button className="mt-4 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors px-6 py-2 rounded-full text-sm font-semibold">
+        <button
+          className="mt-4 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors px-6 py-2 rounded-full text-sm font-semibold"
+          aria-label={`Shop ${title} collection`}
+        >
           Shop Now
         </button>
       </div>

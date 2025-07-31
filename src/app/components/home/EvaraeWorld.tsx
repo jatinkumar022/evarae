@@ -1,5 +1,6 @@
 import Image, { StaticImageData } from "next/image";
 import { wedding, gold, diamond } from "@/app/assets/EvaraeWorld";
+import Link from "next/link";
 
 const categories = [
   {
@@ -36,9 +37,10 @@ const CategoryCard = ({
   label: string;
   isLarge?: boolean;
 }) => (
-  <a
+  <Link
     href={href}
     className="relative block overflow-hidden rounded-lg group cursor-pointer"
+    aria-label={`Explore ${label} collection`}
   >
     <Image
       src={src}
@@ -62,7 +64,7 @@ const CategoryCard = ({
         <p className="text-sm text-white/90 mt-1 hover:underline">Shop Now →</p>
       </div>
     </div>
-  </a>
+  </Link>
 );
 
 export default function CaelviWorld() {

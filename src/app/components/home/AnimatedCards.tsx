@@ -139,7 +139,10 @@ export default function AnimatedCards() {
           </span>
         )}
 
-        <button className="absolute top-3 right-3 bg-white/50 backdrop-blur-sm text-foreground/70 hover:bg-white hover:text-foreground rounded-full p-2 transition-all duration-300">
+        <button
+          className="absolute top-3 right-3 bg-white/50 backdrop-blur-sm text-foreground/70 hover:bg-white hover:text-foreground rounded-full p-2 transition-all duration-300"
+          aria-label={`Add ${item.title} to wishlist`}
+        >
           <GoHeart size={18} />
         </button>
       </div>
@@ -192,6 +195,8 @@ export default function AnimatedCards() {
                   className={`h-1.5 rounded-full transition-all duration-300 ease-in-out ${
                     isActive ? "w-6 bg-primary" : "w-2.5 bg-primary/30"
                   }`}
+                  aria-label={`Go to page ${i + 1} of ${totalPages}`}
+                  aria-current={isActive ? "true" : "false"}
                 />
               );
             })}

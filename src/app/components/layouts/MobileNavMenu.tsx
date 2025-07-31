@@ -369,10 +369,10 @@ const MobileNavMenu = ({ isOpen, onClose }: MobileNavMenuProps) => {
           >
             {/* Header */}
             <div className="flex h-20 items-center justify-between border-b border-gray-200 px-6">
-              <h1 className="text-2xl font-heading text-primary">Caelvi</h1>
+              <h2 className="text-2xl font-heading text-primary">Caelvi</h2>
               <button
                 onClick={onClose}
-                className="rounded-full p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-primary"
+                className="rounded-full p-3 text-gray-500 transition-colors hover:bg-gray-100 hover:text-primary"
                 aria-label="Close menu"
               >
                 <RxCross2 size={20} />
@@ -397,7 +397,7 @@ const MobileNavMenu = ({ isOpen, onClose }: MobileNavMenuProps) => {
 
               {/* Quick Links */}
               <div className="border-b border-gray-200 p-6">
-                <h3 className="mb-4 text-sm font-medium text-gray-500">
+                <h3 className="mb-4 text-sm font-medium text-gray-700">
                   Quick Links
                 </h3>
                 <div className="space-y-2">
@@ -417,7 +417,7 @@ const MobileNavMenu = ({ isOpen, onClose }: MobileNavMenuProps) => {
 
               {/* Main Navigation */}
               <div className="flex-1 p-6">
-                <h3 className="mb-4 text-sm font-medium text-gray-500">
+                <h3 className="mb-4 text-sm font-medium text-gray-700">
                   Categories
                 </h3>
                 <div className="space-y-1">
@@ -426,6 +426,8 @@ const MobileNavMenu = ({ isOpen, onClose }: MobileNavMenuProps) => {
                       <button
                         onClick={() => handleSubmenuToggle(item.name)}
                         className="flex w-full items-center justify-between rounded-md px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 hover:text-primary"
+                        aria-label={`Toggle ${item.name} submenu`}
+                        aria-expanded={activeSubmenu === item.name}
                       >
                         <span>{item.name}</span>
                         <motion.div
@@ -472,22 +474,34 @@ const MobileNavMenu = ({ isOpen, onClose }: MobileNavMenuProps) => {
 
               {/* User Actions */}
               <div className="border-t border-gray-200 p-6">
-                <h3 className="mb-4 text-sm font-medium text-gray-500">
+                <h3 className="mb-4 text-sm font-medium text-gray-700">
                   Account
                 </h3>
                 <div className="space-y-2">
-                  <button className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 hover:text-primary">
+                  <button
+                    className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 hover:text-primary"
+                    aria-label="My Account - Sign in or manage your account"
+                  >
                     <User className="h-4 w-4" />
                     My Account
                   </button>
-                  <button className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 hover:text-primary">
+                  <button
+                    className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 hover:text-primary"
+                    aria-label="Wishlist - View your saved items"
+                  >
                     <Heart className="h-4 w-4" />
                     Wishlist
                   </button>
-                  <button className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 hover:text-primary">
+                  <button
+                    className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 hover:text-primary"
+                    aria-label="Shopping Bag - View cart with 5 items"
+                  >
                     <ShoppingBag className="h-4 w-4" />
                     Shopping Bag
-                    <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] text-white">
+                    <span
+                      className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] text-white"
+                      aria-label="5 items in cart"
+                    >
                       5
                     </span>
                   </button>

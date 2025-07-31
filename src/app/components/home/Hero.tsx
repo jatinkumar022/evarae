@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import Image from "next/image";
-import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -96,7 +95,9 @@ export default function HeroCarousel() {
           >
             <Image
               src={images[current]}
-              alt={`Slide ${current}`}
+              alt={`Caelvi jewellery collection slide ${current + 1} of ${
+                images.length
+              }`}
               fill
               className="object-cover"
               priority
@@ -108,22 +109,20 @@ export default function HeroCarousel() {
 
         {/* Navigation Arrows */}
         <div className="absolute top-1/2 -translate-y-1/2 w-full px-4 flex justify-between items-center z-10">
-          <Button
-            variant="ghost"
-            size="icon"
+          <button
             onClick={prevSlide}
+            aria-label="Previous"
             className="bg-background/50 hover:bg-background/80 backdrop-blur-sm rounded-full cursor-pointer"
           >
             <ChevronLeft className="w-6 h-6 text-foreground" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
+          </button>
+          <button
             onClick={nextSlide}
+            aria-label="Next"
             className="bg-background/50 hover:bg-background/80 backdrop-blur-sm rounded-full cursor-pointer"
           >
             <ChevronRight className="w-6 h-6 text-foreground" />
-          </Button>
+          </button>
         </div>
       </div>
 
@@ -142,7 +141,9 @@ export default function HeroCarousel() {
             >
               <Image
                 src={mobileImages[current]}
-                alt={`Slide ${current}`}
+                alt={`Caelvi jewellery collection slide ${current + 1} of ${
+                  mobileImages.length
+                }`}
                 fill
                 className="object-cover"
                 priority
@@ -163,6 +164,8 @@ export default function HeroCarousel() {
             className={`w-2.5 h-2.5 rounded-full transition-all duration-300 cursor-pointer ${
               current === i ? "bg-primary  px-3" : "bg-primary/30"
             }`}
+            aria-label={`Go to slide ${i + 1} of ${images.length}`}
+            aria-current={current === i ? "true" : "false"}
           />
         ))}
       </div>

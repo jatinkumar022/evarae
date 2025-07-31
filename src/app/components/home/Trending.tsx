@@ -1,6 +1,7 @@
 import React from "react";
 import { gifting, rathYatra } from "@/app/assets/Trending"; // Assuming these are React components or image imports
 import Image, { StaticImageData } from "next/image";
+import Link from "next/link";
 
 const trendingItems = [
   {
@@ -33,7 +34,7 @@ const TrendingItem = ({
   alt: string;
 }) => (
   <div className="group text-center">
-    <a href="#">
+    <Link href="#" aria-label={`Explore ${title} collection`}>
       <div className="bg-muted rounded-t-full overflow-hidden">
         <Image
           src={image}
@@ -46,7 +47,7 @@ const TrendingItem = ({
           {title}
         </h3>
       </div>
-    </a>
+    </Link>
   </div>
 );
 

@@ -3,6 +3,7 @@ import Image from "next/image";
 import { FaRegGem } from "react-icons/fa6";
 import { mangalsutra, pendants, newArrival } from "@/app/assets/NewArrival";
 import Container from "../layouts/Container";
+import Link from "next/link";
 
 function NewArrival() {
   return (
@@ -39,9 +40,10 @@ function NewArrival() {
           {/* Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div className="bg-white/5 backdrop-blur-sm rounded-xl p-2">
-              <a
+              <Link
                 href="#"
                 className="relative block overflow-hidden rounded-lg group cursor-pointer"
+                aria-label="Explore The Eternal Vow mangalsutra collection"
               >
                 <Image
                   src={mangalsutra}
@@ -55,12 +57,13 @@ function NewArrival() {
                     The Eternal Vow
                   </h3>
                 </div>
-              </a>
+              </Link>
             </div>
             <div className="bg-white/5 backdrop-blur-sm rounded-xl p-2">
-              <a
+              <Link
                 href="#"
                 className="relative block overflow-hidden rounded-lg group cursor-pointer"
+                aria-label="Explore Delicate Statements pendant collection"
               >
                 <Image
                   src={pendants}
@@ -74,7 +77,7 @@ function NewArrival() {
                     Delicate Statements
                   </h3>
                 </div>
-              </a>
+              </Link>
             </div>
           </div>
         </div>

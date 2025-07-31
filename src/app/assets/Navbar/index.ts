@@ -3,22 +3,8 @@ import ShoppingBag from "./shopping-bag-light.svg";
 import Diamond from "./sketch-logo-light.svg";
 import Store from "./storefront-light.svg";
 import User from "./user-light.svg";
-import Camera from "./camera-plus-light.svg";
 import Search from "./magnifying-glass-light.svg";
-import Microphone from "./microphone-light.svg";
-import NavLogoMobile from "./nav-logo-mobile.svg";
 import Collections from "./collection.svg";
 import New from "./new.svg";
-export {
-  Heart,
-  ShoppingBag,
-  Diamond,
-  Store,
-  User,
-  Camera,
-  Search,
-  Microphone,
-  NavLogoMobile,
-  Collections,
-  New,
-};
+
+export { Heart, ShoppingBag, Diamond, Store, User, Search, Collections, New };
