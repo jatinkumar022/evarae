@@ -10,6 +10,7 @@ import Styling101Carousel from "./components/home/VideoSlider";
 import OurPromise from "./components/home/Assurance";
 import SectionDivider from "./components/layouts/SectionDivider";
 import CircleCategories from "./components/home/Category";
+import { Devider } from "./assets/Common";
 
 export default function Home() {
   return (
@@ -19,6 +20,10 @@ export default function Home() {
       </Container>
       <Hero />
       <Container>
+        <div className="my-16">
+          <Devider className="w-full " />
+        </div>
+
         <CategoryGrid />
         <AnimatedCards />
         <ImageGrid />

@@ -7,7 +7,9 @@ import {
   ShoppingBag,
   User,
   Search,
-  NavLogoMobile,
+  New,
+  Store,
+  Collections,
 } from "@/app/assets/Navbar";
 import {
   ringsCat,
@@ -19,19 +21,26 @@ import { SlMenu } from "react-icons/sl";
 import { useEffect, useState } from "react";
 import { RxCross2 } from "react-icons/rx";
 import Link from "next/link";
+import { BsInboxes } from "react-icons/bs";
+import MobileNavMenu from "./MobileNavMenu";
 
 const NavLink = ({
   href,
   children,
+  icon,
 }: {
   href: string;
   children: React.ReactNode;
+  icon: React.ReactNode;
 }) => (
   <Link
     href={href}
     className="rounded-md px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100/80 hover:text-primary cursor-pointer"
   >
-    {children}
+    <div className="flex items-center gap-2">
+      {icon}
+      {children}
+    </div>
   </Link>
 );
 
@@ -78,6 +87,7 @@ export default function Navbar() {
   const [currentPlaceholder, setCurrentPlaceholder] = useState(0);
   const [inputValue, setInputValue] = useState("");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -112,7 +122,10 @@ export default function Navbar() {
             {/* Left Group */}
             <div className="flex items-center gap-2 lg:flex-1">
               <div className="lg:hidden">
-                <IconButton onClick={() => {}} ariaLabel="Open menu">
+                <IconButton
+                  onClick={() => setIsMobileMenuOpen(true)}
+                  ariaLabel="Open menu"
+                >
                   <SlMenu className="h-5 w-5 max-lg:text-primary" />
                 </IconButton>
               </div>
@@ -124,9 +137,15 @@ export default function Navbar() {
                 </Link>
               </div>
               <nav className="hidden items-center gap-2 lg:flex ">
-                <NavLink href="#">Shop</NavLink>
-                <NavLink href="#">New Arrivals</NavLink>
-                <NavLink href="#">Collections</NavLink>
+                <NavLink href="#" icon={<Store className="h-4 w-4" />}>
+                  Shop
+                </NavLink>
+                <NavLink href="#" icon={<New className="h-4 w-4" />}>
+                  New Arrivals
+                </NavLink>
+                <NavLink href="#" icon={<BsInboxes size={13} />}>
+                  Collections
+                </NavLink>
               </nav>
             </div>
 
@@ -263,6 +282,12 @@ export default function Navbar() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Mobile Navigation Menu */}
+      <MobileNavMenu
+        isOpen={isMobileMenuOpen}
+        onClose={() => setIsMobileMenuOpen(false)}
+      />
     </>
   );
 }

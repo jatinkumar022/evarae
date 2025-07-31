@@ -31,7 +31,7 @@ const MegaMenuContent = () => (
     <div className="grid grid-cols-12 px-8 py-10 gap-8">
       {/* Filters */}
       <div className="col-span-2">
-        <h4 className="text-sm font-semibold text-primary mb-3 tracking-wide">
+        <h4 className="text-sm font-semibold text-primary mb-3 tracking-wide font-heading">
           Filter By
         </h4>
         <ul className="space-y-2">
@@ -55,12 +55,12 @@ const MegaMenuContent = () => (
             <a
               href="#"
               key={item.name}
-              className="group flex items-center gap-4 px-2 py-1.5 rounded-lg bg-gray-50"
+              className="group flex items-center gap-4 px-2 py-1.5 rounded-lg bg-gray-50 "
             >
               <div className="h-11 w-11 flex items-center justify-center rounded-full bg-gray-200/50 group-hover:bg-primary/10 transition-all">
                 <item.icon className="h-5 w-5 text-gray-600 group-hover:text-primary transition-colors" />
               </div>
-              <span className="text-sm text-gray-800 font-medium group-hover:text-primary transition-colors">
+              <span className="text-sm text-gray-800 group-hoverfont-medium group-hover:text-primary transition-colors">
                 {item.name}
               </span>
             </a>

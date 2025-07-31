@@ -93,7 +93,7 @@ const ViewAllItem = () => (
 
 export default function CategoriesGrid() {
   return (
-    <section className="mt-20">
+    <section className="">
       <div className="heading-component-main-container">
         <h1 className="heading-component-main-heading">Explore by Category</h1>
         <h2 className="heading-component-main-subheading">

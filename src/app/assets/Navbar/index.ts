@@ -7,6 +7,8 @@ import Camera from "./camera-plus-light.svg";
 import Search from "./magnifying-glass-light.svg";
 import Microphone from "./microphone-light.svg";
 import NavLogoMobile from "./nav-logo-mobile.svg";
+import Collections from "./collection.svg";
+import New from "./new.svg";
 export {
   Heart,
   ShoppingBag,
@@ -17,4 +19,6 @@ export {
   Search,
   Microphone,
   NavLogoMobile,
+  Collections,
+  New,
 };

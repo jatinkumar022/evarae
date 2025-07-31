@@ -5,20 +5,22 @@ import { motion, AnimatePresence } from "framer-motion";
 import useScrollDirection from "@/app/handlers/NavbarVisibilityHandler";
 import Link from "next/link";
 import Container from "./Container";
-import MegaMenuContent from "./MegaMenuContent";
-import GoldPlatedMenu from "./GoldPlatedMenu";
-import KundanPolkiMenu from "./KundanPolkiMenu";
-import CollectionsMenu from "./CollectionsMenu";
+import MegaMenuContent from "./Submenus/MegaMenuContent";
+import KundanPolkiMenu from "./Submenus/KundanPolkiMenu";
+import CollectionsMenu from "./Submenus/CollectionsMenu";
+import RingsMenu from "./Submenus/RingsMenu";
+import EarringsMenu from "./Submenus/EarRingsMenu";
+import GiftingMenu from "./Submenus/GiftingMenu";
+import MoreMenu from "./Submenus/MoreMenu";
 
 const menuItems = [
   { name: "All Jewellery", href: "#", submenu: MegaMenuContent },
-  { name: "Gold Plated", href: "#", submenu: GoldPlatedMenu },
   { name: "Kundan & Polki", href: "#", submenu: KundanPolkiMenu },
   { name: "Collections", href: "#", submenu: CollectionsMenu },
-  { name: "Earrings", href: "#" },
-  { name: "Rings", href: "#" },
-  { name: "Gifting", href: "#" },
-  { name: "More", href: "#" },
+  { name: "Earrings", href: "#", submenu: EarringsMenu },
+  { name: "Rings", href: "#", submenu: RingsMenu },
+  { name: "Gifting", href: "#", submenu: GiftingMenu },
+  { name: "More", href: "#", submenu: MoreMenu },
 ];
 
 const MenuItem = ({
@@ -71,7 +73,7 @@ const NavigationMenu = () => {
 
   return (
     <motion.div
-      className={`fixed z-20 w-full bg-white transition-transform duration-300 ${
+      className={`fixed z-20 w-full bg-white transition-transform duration-300 hidden lg:block ${
         scrollDir === "down" ? "-translate-y-full" : "translate-y-0"
       }`}
       style={{ top: 80 }}
