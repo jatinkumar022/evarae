@@ -6,7 +6,7 @@ import Trending from "./components/home/Trending";
 import AnimatedCards from "./components/home/AnimatedCards";
 import CaelviWorld from "./components/home/EvaraeWorld";
 import NewArrival from "./components/home/NewArrival";
-import Styling101Carousel from "./components/home/VideoSlider";
+// import Styling101Carousel from "./components/home/VideoSlider";
 import OurPromise from "./components/home/Assurance";
 import SectionDivider from "./components/layouts/SectionDivider";
 import CircleCategories from "./components/home/Category";
@@ -33,7 +33,7 @@ export default function Home() {
 
       <Container>
         <CaelviWorld />
-        <Styling101Carousel />
+        {/* <Styling101Carousel /> */}
       </Container>
       <Container>
         <SectionDivider />

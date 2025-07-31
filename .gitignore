@@ -17,6 +17,7 @@
 /.next/
 /out/
 src/app/assets/ExamplesIgnored/
+src\app\assets\Videos
 # production
 /build
 
