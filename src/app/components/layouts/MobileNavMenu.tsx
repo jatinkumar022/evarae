@@ -1,11 +1,10 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import Link from "next/link";
-import { RxCross2 } from "react-icons/rx";
-import { SlMenu } from "react-icons/sl";
-import { BsInboxes } from "react-icons/bs";
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import Link from 'next/link';
+import { RxCross2 } from 'react-icons/rx';
+import { BsInboxes } from 'react-icons/bs';
 import {
   Store,
   New,
@@ -13,39 +12,39 @@ import {
   Heart,
   ShoppingBag,
   User,
-} from "@/app/assets/Navbar";
-import MegaMenuContent from "./Submenus/MegaMenuContent";
-import KundanPolkiMenu from "./Submenus/KundanPolkiMenu";
-import CollectionsMenu from "./Submenus/CollectionsMenu";
-import RingsMenu from "./Submenus/RingsMenu";
-import EarringsMenu from "./Submenus/EarRingsMenu";
-import GiftingMenu from "./Submenus/GiftingMenu";
-import MoreMenu from "./Submenus/MoreMenu";
+} from '@/app/assets/Navbar';
+import MegaMenuContent from './Submenus/MegaMenuContent';
+import KundanPolkiMenu from './Submenus/KundanPolkiMenu';
+import CollectionsMenu from './Submenus/CollectionsMenu';
+import RingsMenu from './Submenus/RingsMenu';
+import EarringsMenu from './Submenus/EarRingsMenu';
+import GiftingMenu from './Submenus/GiftingMenu';
+import MoreMenu from './Submenus/MoreMenu';
 
 const menuItems = [
-  { name: "All Jewellery", href: "#", submenu: MegaMenuContent },
-  { name: "Kundan & Polki", href: "#", submenu: KundanPolkiMenu },
-  { name: "Collections", href: "#", submenu: CollectionsMenu },
-  { name: "Earrings", href: "#", submenu: EarringsMenu },
-  { name: "Rings", href: "#", submenu: RingsMenu },
-  { name: "Gifting", href: "#", submenu: GiftingMenu },
-  { name: "More", href: "#", submenu: MoreMenu },
+  { name: 'All Jewellery', href: '#', submenu: MegaMenuContent },
+  { name: 'Kundan & Polki', href: '#', submenu: KundanPolkiMenu },
+  { name: 'Collections', href: '#', submenu: CollectionsMenu },
+  { name: 'Earrings', href: '#', submenu: EarringsMenu },
+  { name: 'Rings', href: '#', submenu: RingsMenu },
+  { name: 'Gifting', href: '#', submenu: GiftingMenu },
+  { name: 'More', href: '#', submenu: MoreMenu },
 ];
 
 const quickLinks = [
   {
-    name: "Shop",
-    href: "#",
+    name: 'Shop',
+    href: '#',
     icon: <Store className="h-4 w-4" />,
   },
   {
-    name: "New Arrivals",
-    href: "#",
+    name: 'New Arrivals',
+    href: '#',
     icon: <New className="h-4 w-4" />,
   },
   {
-    name: "Collections",
-    href: "#",
+    name: 'Collections',
+    href: '#',
     icon: <BsInboxes size={13} />,
   },
 ];
@@ -57,33 +56,33 @@ interface MobileNavMenuProps {
 
 const MobileNavMenu = ({ isOpen, onClose }: MobileNavMenuProps) => {
   const [activeSubmenu, setActiveSubmenu] = useState<string | null>(null);
-  const [searchValue, setSearchValue] = useState("");
+  const [searchValue, setSearchValue] = useState('');
 
   useEffect(() => {
     if (isOpen) {
-      document.body.style.overflow = "hidden";
+      document.body.style.overflow = 'hidden';
     } else {
-      document.body.style.overflow = "auto";
+      document.body.style.overflow = 'auto';
     }
 
     return () => {
-      document.body.style.overflow = "auto";
+      document.body.style.overflow = 'auto';
     };
   }, [isOpen]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
+      if (event.key === 'Escape') {
         onClose();
       }
     };
 
     if (isOpen) {
-      window.addEventListener("keydown", handleKeyDown);
+      window.addEventListener('keydown', handleKeyDown);
     }
 
     return () => {
-      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener('keydown', handleKeyDown);
     };
   }, [isOpen, onClose]);
 
@@ -94,24 +93,24 @@ const MobileNavMenu = ({ isOpen, onClose }: MobileNavMenuProps) => {
   // Mobile-friendly submenu content
   const getMobileSubmenuContent = (itemName: string) => {
     switch (itemName) {
-      case "All Jewellery":
+      case 'All Jewellery':
         return (
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
               {[
-                "Bangles",
-                "Bracelets",
-                "Earrings",
-                "Gold Chains",
-                "Pendants",
-                "Rings",
-                "Engagement Rings",
-                "Necklaces",
-                "Nose Pins",
-                "Kadas",
-                "Mangalsutras",
-                "Jhumkas",
-              ].map((category) => (
+                'Bangles',
+                'Bracelets',
+                'Earrings',
+                'Gold Chains',
+                'Pendants',
+                'Rings',
+                'Engagement Rings',
+                'Necklaces',
+                'Nose Pins',
+                'Kadas',
+                'Mangalsutras',
+                'Jhumkas',
+              ].map(category => (
                 <Link
                   key={category}
                   href="#"
@@ -133,19 +132,19 @@ const MobileNavMenu = ({ isOpen, onClose }: MobileNavMenuProps) => {
             </div>
           </div>
         );
-      case "Kundan & Polki":
+      case 'Kundan & Polki':
         return (
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
               {[
-                "Kundan Sets",
-                "Polki Jewellery",
-                "Bridal Collection",
-                "Traditional Sets",
-                "Modern Kundan",
-                "Polki Rings",
-                "Kundan Necklaces",
-              ].map((category) => (
+                'Kundan Sets',
+                'Polki Jewellery',
+                'Bridal Collection',
+                'Traditional Sets',
+                'Modern Kundan',
+                'Polki Rings',
+                'Kundan Necklaces',
+              ].map(category => (
                 <Link
                   key={category}
                   href="#"
@@ -167,19 +166,19 @@ const MobileNavMenu = ({ isOpen, onClose }: MobileNavMenuProps) => {
             </div>
           </div>
         );
-      case "Collections":
+      case 'Collections':
         return (
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
               {[
-                "Wedding Collection",
-                "Daily Wear",
-                "Festival Special",
-                "Bridal Sets",
-                "Party Wear",
-                "Traditional",
-                "Contemporary",
-              ].map((category) => (
+                'Wedding Collection',
+                'Daily Wear',
+                'Festival Special',
+                'Bridal Sets',
+                'Party Wear',
+                'Traditional',
+                'Contemporary',
+              ].map(category => (
                 <Link
                   key={category}
                   href="#"
@@ -201,20 +200,20 @@ const MobileNavMenu = ({ isOpen, onClose }: MobileNavMenuProps) => {
             </div>
           </div>
         );
-      case "Earrings":
+      case 'Earrings':
         return (
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
               {[
-                "Studs",
-                "Jhumkas",
-                "Hoops",
-                "Chandbalis",
-                "Drops",
-                "Clusters",
-                "Traditional",
-                "Modern",
-              ].map((category) => (
+                'Studs',
+                'Jhumkas',
+                'Hoops',
+                'Chandbalis',
+                'Drops',
+                'Clusters',
+                'Traditional',
+                'Modern',
+              ].map(category => (
                 <Link
                   key={category}
                   href="#"
@@ -236,20 +235,20 @@ const MobileNavMenu = ({ isOpen, onClose }: MobileNavMenuProps) => {
             </div>
           </div>
         );
-      case "Rings":
+      case 'Rings':
         return (
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
               {[
-                "Engagement Rings",
-                "Wedding Rings",
-                "Diamond Rings",
-                "Gold Rings",
-                "Silver Rings",
-                "Solitaire",
-                "Three Stone",
-                "Eternity",
-              ].map((category) => (
+                'Engagement Rings',
+                'Wedding Rings',
+                'Diamond Rings',
+                'Gold Rings',
+                'Silver Rings',
+                'Solitaire',
+                'Three Stone',
+                'Eternity',
+              ].map(category => (
                 <Link
                   key={category}
                   href="#"
@@ -271,20 +270,20 @@ const MobileNavMenu = ({ isOpen, onClose }: MobileNavMenuProps) => {
             </div>
           </div>
         );
-      case "Gifting":
+      case 'Gifting':
         return (
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
               {[
-                "For Her",
-                "For Him",
-                "Wedding Gifts",
-                "Birthday Gifts",
-                "Anniversary",
-                "Festival Gifts",
-                "Corporate Gifts",
-                "Personalized",
-              ].map((category) => (
+                'For Her',
+                'For Him',
+                'Wedding Gifts',
+                'Birthday Gifts',
+                'Anniversary',
+                'Festival Gifts',
+                'Corporate Gifts',
+                'Personalized',
+              ].map(category => (
                 <Link
                   key={category}
                   href="#"
@@ -306,20 +305,20 @@ const MobileNavMenu = ({ isOpen, onClose }: MobileNavMenuProps) => {
             </div>
           </div>
         );
-      case "More":
+      case 'More':
         return (
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
               {[
-                "About Us",
-                "Store Locator",
-                "Customer Care",
-                "Track Order",
-                "Size Guide",
-                "Jewellery Care",
-                "Blog",
-                "Contact",
-              ].map((category) => (
+                'About Us',
+                'Store Locator',
+                'Customer Care',
+                'Track Order',
+                'Size Guide',
+                'Jewellery Care',
+                'Blog',
+                'Contact',
+              ].map(category => (
                 <Link
                   key={category}
                   href="#"
@@ -361,10 +360,10 @@ const MobileNavMenu = ({ isOpen, onClose }: MobileNavMenuProps) => {
 
           {/* Side Drawer */}
           <motion.div
-            initial={{ x: "-100%" }}
+            initial={{ x: '-100%' }}
             animate={{ x: 0 }}
-            exit={{ x: "-100%" }}
-            transition={{ duration: 0.3, ease: "easeOut" }}
+            exit={{ x: '-100%' }}
+            transition={{ duration: 0.3, ease: 'easeOut' }}
             className="fixed left-0 top-0 z-50 h-full w-80 max-w-[85vw] bg-white shadow-2xl lg:hidden"
           >
             {/* Header */}
@@ -388,7 +387,7 @@ const MobileNavMenu = ({ isOpen, onClose }: MobileNavMenuProps) => {
                   <input
                     type="text"
                     value={searchValue}
-                    onChange={(e) => setSearchValue(e.target.value)}
+                    onChange={e => setSearchValue(e.target.value)}
                     placeholder="Search Gold Jewellery..."
                     className="ml-3 flex-1 bg-transparent text-sm placeholder-gray-400 focus:outline-none"
                   />
@@ -401,7 +400,7 @@ const MobileNavMenu = ({ isOpen, onClose }: MobileNavMenuProps) => {
                   Quick Links
                 </h3>
                 <div className="space-y-2">
-                  {quickLinks.map((item) => (
+                  {quickLinks.map(item => (
                     <Link
                       key={item.name}
                       href={item.href}
@@ -421,7 +420,7 @@ const MobileNavMenu = ({ isOpen, onClose }: MobileNavMenuProps) => {
                   Categories
                 </h3>
                 <div className="space-y-1">
-                  {menuItems.map((item) => (
+                  {menuItems.map(item => (
                     <div key={item.name} className="relative">
                       <button
                         onClick={() => handleSubmenuToggle(item.name)}
@@ -456,7 +455,7 @@ const MobileNavMenu = ({ isOpen, onClose }: MobileNavMenuProps) => {
                         {activeSubmenu === item.name && (
                           <motion.div
                             initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: "auto" }}
+                            animate={{ opacity: 1, height: 'auto' }}
                             exit={{ opacity: 0, height: 0 }}
                             transition={{ duration: 0.3 }}
                             className="overflow-hidden"

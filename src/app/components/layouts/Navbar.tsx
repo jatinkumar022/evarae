@@ -1,7 +1,7 @@
-"use client";
-import Container from "@/app/components/layouts/Container";
-import { AnimatePresence, motion } from "framer-motion";
-import Image from "next/image";
+'use client';
+import Container from '@/app/components/layouts/Container';
+import { AnimatePresence, motion } from 'framer-motion';
+import Image from 'next/image';
 import {
   Heart,
   ShoppingBag,
@@ -9,20 +9,18 @@ import {
   Search,
   New,
   Store,
-  Collections,
-} from "@/app/assets/Navbar";
+} from '@/app/assets/Navbar';
 import {
   ringsCat,
   earringsCat,
   braceletsCat,
   pendantsCat,
-} from "@/app/assets/CategoryGrid";
-import { SlMenu } from "react-icons/sl";
-import { useEffect, useState } from "react";
-import { RxCross2 } from "react-icons/rx";
-import Link from "next/link";
-import { BsInboxes } from "react-icons/bs";
-import MobileNavMenu from "./MobileNavMenu";
+} from '@/app/assets/CategoryGrid';
+import { useEffect, useState } from 'react';
+import { RxCross2 } from 'react-icons/rx';
+import Link from 'next/link';
+import { BsInboxes } from 'react-icons/bs';
+import MobileNavMenu from './MobileNavMenu';
 
 const NavLink = ({
   href,
@@ -47,7 +45,7 @@ const NavLink = ({
 const IconButton = ({
   onClick,
   children,
-  className = "",
+  className = '',
   ariaLabel,
 }: {
   onClick?: () => void;
@@ -65,52 +63,52 @@ const IconButton = ({
 );
 
 const popularCategories = [
-  { name: "Rings", href: "#", image: ringsCat },
-  { name: "Earrings", href: "#", image: earringsCat },
-  { name: "Bracelets", href: "#", image: braceletsCat },
-  { name: "Pendants", href: "#", image: pendantsCat },
+  { name: 'Rings', href: '#', image: ringsCat },
+  { name: 'Earrings', href: '#', image: earringsCat },
+  { name: 'Bracelets', href: '#', image: braceletsCat },
+  { name: 'Pendants', href: '#', image: pendantsCat },
 ];
 
 export default function Navbar() {
   const placeholders = [
-    "Search Gold Jewellery",
-    "Search Diamond Jewellery",
-    "Search Rings, Earrings & more...",
+    'Search Gold Jewellery',
+    'Search Diamond Jewellery',
+    'Search Rings, Earrings & more...',
   ];
   const trendingSearches = [
-    "Rings",
-    "Diamond Necklace",
-    "Gold Chains",
-    "22k Gold",
-    "Gifts for Her",
+    'Rings',
+    'Diamond Necklace',
+    'Gold Chains',
+    '22k Gold',
+    'Gifts for Her',
   ];
   const [currentPlaceholder, setCurrentPlaceholder] = useState(0);
-  const [inputValue, setInputValue] = useState("");
+  const [inputValue, setInputValue] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentPlaceholder((prev) => (prev + 1) % placeholders.length);
+      setCurrentPlaceholder(prev => (prev + 1) % placeholders.length);
     }, 3000);
     return () => clearInterval(interval);
   }, [placeholders.length]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
+      if (event.key === 'Escape') {
         setIsSearchOpen(false);
       }
     };
     if (isSearchOpen) {
-      document.body.style.overflow = "hidden";
-      window.addEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = 'hidden';
+      window.addEventListener('keydown', handleKeyDown);
     } else {
-      document.body.style.overflow = "auto";
+      document.body.style.overflow = 'auto';
     }
     return () => {
-      document.body.style.overflow = "auto";
-      window.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = 'auto';
+      window.removeEventListener('keydown', handleKeyDown);
     };
   }, [isSearchOpen]);
 
@@ -126,7 +124,11 @@ export default function Navbar() {
                   onClick={() => setIsMobileMenuOpen(true)}
                   ariaLabel="Open menu"
                 >
-                  <SlMenu className="h-5 w-5 max-lg:text-primary" />
+                  <div className="h-5 w-5 max-lg:text-primary flex flex-col gap-1">
+                    <div className="w-5 h-0.5 bg-current"></div>
+                    <div className="w-5 h-0.5 bg-current"></div>
+                    <div className="w-5 h-0.5 bg-current"></div>
+                  </div>
                 </IconButton>
               </div>
               <div className="lg:hidden">
@@ -202,12 +204,12 @@ export default function Navbar() {
             onClick={() => setIsSearchOpen(false)}
           >
             <motion.div
-              initial={{ y: "-100%" }}
-              animate={{ y: "0%" }}
-              exit={{ y: "-100%" }}
+              initial={{ y: '-100%' }}
+              animate={{ y: '0%' }}
+              exit={{ y: '-100%' }}
               transition={{ duration: 0.4, ease: [0.25, 1, 0.5, 1] }}
               className="bg-white"
-              onClick={(e) => e.stopPropagation()}
+              onClick={e => e.stopPropagation()}
             >
               <Container>
                 <div className="py-8">
@@ -217,11 +219,11 @@ export default function Navbar() {
                     <input
                       type="text"
                       value={inputValue}
-                      onChange={(e) => setInputValue(e.target.value)}
+                      onChange={e => setInputValue(e.target.value)}
                       className="w-full bg-transparent text-lg placeholder-gray-400 focus:outline-none  relative z-10"
                       autoFocus
                     />
-                    {inputValue === "" && (
+                    {inputValue === '' && (
                       <div className="absolute left-14 inset-y-0 flex items-center pointer-events-none">
                         <AnimatePresence mode="wait">
                           <motion.p
@@ -252,7 +254,7 @@ export default function Navbar() {
                         Popular Categories
                       </h3>
                       <div className="mt-4 grid grid-cols-2 gap-4">
-                        {popularCategories.map((cat) => (
+                        {popularCategories.map(cat => (
                           <Link
                             href={cat.href}
                             key={cat.name}
@@ -277,7 +279,7 @@ export default function Navbar() {
                         Trending Searches
                       </h3>
                       <div className="mt-4 flex flex-wrap gap-3">
-                        {trendingSearches.map((term) => (
+                        {trendingSearches.map(term => (
                           <button
                             key={term}
                             className="rounded-full bg-gray-100 px-4 py-1.5 text-sm text-gray-700 transition-colors hover:bg-gray-200 hover:text-gray-900"
