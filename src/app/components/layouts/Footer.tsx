@@ -55,7 +55,7 @@ const ContactInfo = ({
   text,
   href,
 }: {
-  icon: any;
+  icon: React.ComponentType<{ className?: string }>;
   text: string;
   href?: string;
 }) => (
@@ -79,7 +79,7 @@ const FeatureCard = ({
   title,
   description,
 }: {
-  icon: any;
+  icon: React.ComponentType<{ className?: string }>;
   title: string;
   description: string;
 }) => (
@@ -281,7 +281,7 @@ export default function Footer() {
                 Why Choose Caelvi?
               </h4>
               <p className="text-muted-foreground text-sm md:text-base">
-                We're committed to providing the best shopping experience
+                We&apos;re committed to providing the best shopping experience
               </p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">

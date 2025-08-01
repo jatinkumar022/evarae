@@ -65,7 +65,10 @@ export default function HeroCarousel() {
     resetTimer();
   };
 
-  const handleDragEnd = (event: any, info: PanInfo) => {
+  const handleDragEnd = (
+    event: MouseEvent | TouchEvent | PointerEvent,
+    info: PanInfo
+  ) => {
     const offset = info.offset.x;
     const velocity = info.velocity.x;
 

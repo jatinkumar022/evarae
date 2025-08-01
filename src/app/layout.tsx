@@ -49,14 +49,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        {/* Preload critical resources */}
-        <link rel="preload" href="/logo.svg" as="image" type="image/svg+xml" />
-        <link
-          rel="preload"
-          href="/favicon.ico"
-          as="image"
-          type="image/x-icon"
-        />
+        {/* Favicon */}
+        <link rel="icon" href="/logo.svg" type="image/svg+xml" />
 
         {/* DNS prefetch for external domains */}
         <link rel="dns-prefetch" href="https://static.tanishq.com" />
