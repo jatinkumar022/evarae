@@ -192,7 +192,7 @@ export default function Footer() {
               </p>
 
               {/* Contact Info */}
-              <div className="space-y-2 md:space-y-3 mb-4 md:mb-6">
+              <div className="space-y-2 md:space-y-3 mb-4 md:mb-6 mx-auto flex flex-col max-sm:items-center">
                 <ContactInfo
                   icon={FaPhone}
                   text="+1 (555) 123-4567"
@@ -303,10 +303,10 @@ export default function Footer() {
                 We Accept:
               </span>
               <div className="flex items-center gap-2 md:gap-3">
-                <Visa className="h-4 md:h-6" />
-                <Mastercard className="h-4 md:h-6" />
-                <Paypal className="h-4 md:h-6" />
-                <Maestro className="h-4 md:h-6" />
+                <Visa className="h-3 md:h-4" />
+                <Mastercard className="h-3 md:h-4" />
+                <Paypal className="h-3 md:h-4" />
+                <Maestro className="h-3 md:h-4" />
               </div>
             </div>
             <p className="text-xs text-muted-foreground/80 text-center sm:text-right">

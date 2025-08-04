@@ -135,7 +135,7 @@ export default function HeroCarousel() {
                 images.length
               }`}
               fill
-              className="object-cover pointer-events-none"
+              className="object-cover pointer-events-none rounded-lg"
               priority
               quality={90}
               sizes="100vw"
@@ -201,7 +201,7 @@ export default function HeroCarousel() {
                   mobileImages.length
                 }`}
                 fill
-                className="object-cover pointer-events-none"
+                className="object-cover pointer-events-none rounded-lg"
                 priority
                 quality={90}
                 sizes="100vw"

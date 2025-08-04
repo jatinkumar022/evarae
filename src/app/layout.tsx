@@ -65,7 +65,7 @@ export default function RootLayout({
       <body
         className={`${ibmPlexSans.variable} ${fraunces.variable} font-body antialiased`}
       >
-        <div className=" h-[80px] lg:h-[116px]">
+        <div className=" h-[80px] lg:h-[137px]">
           <Navbar />
           <div className="max-lg:hidden">
             <NavigationMenu />

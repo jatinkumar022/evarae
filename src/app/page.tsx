@@ -17,7 +17,12 @@ export default function Home() {
     <>
       <Container>
         <CircleCategories />
+      </Container>
+
+      <div className="w-full xl:max-w-screen-xl mx-auto md:px-6">
         <Hero />
+      </div>
+      <Container>
         <div className="my-16 md:hidden">
           <Devider className="w-full " />
         </div>
