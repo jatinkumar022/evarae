@@ -304,3 +304,33 @@ body {
       var(--color-primary-dark) 0%,
       var(--color-primary) 135%) !important;
 }
+
+/* Main glassy dropdown style */
+.glass-select {
+  cursor: pointer;
+  appearance: none;
+  background-color: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(211, 76, 119, 0.2);
+  /* pink border */
+  border-radius: 9999px;
+  padding: 0.5rem 2rem 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  color: #300708;
+  /* primary-dark */
+  transition: box-shadow 0.2s ease-in-out, border-color 0.2s;
+}
+
+.glass-select:focus,
+.glass-select:hover {
+  outline: none;
+  box-shadow: 0 0 4px 4px rgba(161, 74, 101, 0.2);
+}
+
+/* Option text styling */
+.glass-option {
+  background-color: white;
+  color: #300708;
+  /* primary-dark */
+  font-size: 0.875rem;
+}

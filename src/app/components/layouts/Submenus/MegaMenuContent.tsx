@@ -1,32 +1,32 @@
-import React from "react";
-import Image from "next/image";
-import { pendantsCat, earringsCat } from "@/app/assets/CategoryGrid";
-import { Earrings, Ring } from "@/app/assets/NavigationMenu";
-import Link from "next/link";
+import React from 'react';
+import Image from 'next/image';
+import { pendantsCat, earringsCat } from '@/app/assets/CategoryGrid';
+import { Earrings, Ring } from '@/app/assets/NavigationMenu';
+import Link from 'next/link';
 
-const filterLinks = ["Price", "Occasion", "Gold Coin", "Men", "Metal"];
+const filterLinks = ['Price', 'Occasion', 'Gold Coin', 'Men', 'Metal'];
 
 const categoryLinks = [
-  { name: "Bangles", icon: Ring },
-  { name: "Bracelets", icon: Ring },
-  { name: "Earrings", icon: Earrings },
-  { name: "Gold Chains", icon: Ring },
-  { name: "Pendants", icon: Ring },
-  { name: "Rings", icon: Ring },
-  { name: "Engagement Rings", icon: Ring },
-  { name: "Necklaces", icon: Ring },
-  { name: "Nose Pins", icon: Ring },
-  { name: "Kadas", icon: Ring },
-  { name: "Mangalsutras", icon: Ring },
-  { name: "Jhumkas", icon: Earrings },
+  { name: 'Bangles', icon: Ring },
+  { name: 'Bracelets', icon: Ring },
+  { name: 'Earrings', icon: Earrings },
+  { name: 'Gold Chains', icon: Ring },
+  { name: 'Pendants', icon: Ring },
+  { name: 'Rings', icon: Ring },
+  { name: 'Engagement Rings', icon: Ring },
+  { name: 'Necklaces', icon: Ring },
+  { name: 'Nose Pins', icon: Ring },
+  { name: 'Kadas', icon: Ring },
+  { name: 'Mangalsutras', icon: Ring },
+  { name: 'Jhumkas', icon: Earrings },
 ];
 
 const MegaMenuContent = () => (
   <div
     className="bg-white rounded-b-xl "
     style={{
-      boxShadow: "rgba(0, 0, 0, 0.20) 0px 4px 12px",
-      clipPath: "inset(0px -30px -38px)",
+      boxShadow: 'rgba(0, 0, 0, 0.20) 0px 4px 12px',
+      clipPath: 'inset(0px -30px -38px)',
     }}
   >
     <div className="grid grid-cols-12 px-8 py-10 gap-8">
@@ -36,7 +36,7 @@ const MegaMenuContent = () => (
           Filter By
         </h4>
         <ul className="space-y-2">
-          {filterLinks.map((link) => (
+          {filterLinks.map(link => (
             <li key={link}>
               <Link
                 href="#"
@@ -52,9 +52,9 @@ const MegaMenuContent = () => (
       {/* Categories */}
       <div className="col-span-7 border-x border-gray-200 px-8">
         <div className="grid grid-cols-3 gap-5">
-          {categoryLinks.map((item) => (
+          {categoryLinks.map(item => (
             <Link
-              href="#"
+              href={`/shop/${item.name.toLowerCase()}`}
               key={item.name}
               className="group flex items-center gap-4 px-2 py-1.5 rounded-lg bg-gray-50 "
             >

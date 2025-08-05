@@ -47,33 +47,6 @@ const ChooseYourLookCarousel: React.FC<Props> = ({
     });
   }, []);
 
-  // Memoized slide card component to prevent unnecessary re-renders
-  const SlideCard = useMemo(() => {
-    return React.memo(({ product }: { product: LookCard }) => (
-      <div className="rounded-xl overflow-hidden shadow-lg bg-white border border-white/20 backdrop-blur-sm hover:-translate-y-1 transition-all duration-300 ease-out">
-        <div className="aspect-[3/4] relative">
-          <Image
-            src={product.image}
-            alt={product.name}
-            fill
-            className="object-cover"
-            sizes="(max-width: 768px) 180px, (max-width: 1024px) 220px, 280px"
-            priority={false}
-            loading="lazy"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent" />
-        </div>
-        <div className="p-4 text-center">
-          <p className="text-sm sm:text-base font-medium text-[#5b1314] tracking-wide">
-            {product.name}
-          </p>
-        </div>
-      </div>
-    ));
-  }, []);
-
-  SlideCard.displayName = 'SlideCard';
-
   // Memoized swiper configuration for better performance
   const swiperConfig = useMemo(
     () => ({
@@ -83,6 +56,7 @@ const ChooseYourLookCarousel: React.FC<Props> = ({
       centeredSlides: true,
       loop: true,
       slidesPerView: 'auto' as const,
+      slidesPerGroup: 1, // Add this to fix the warning
       initialSlide: Math.floor(products.length / 2),
       speed: 600, // Faster transitions
       autoplay: {
@@ -101,48 +75,101 @@ const ChooseYourLookCarousel: React.FC<Props> = ({
         nextEl: '.swiper-button-next-custom',
         prevEl: '.swiper-button-prev-custom',
       },
-      on: {
-        init: setSlideStyles,
-        slideChange: setSlideStyles,
-        transitionEnd: setSlideStyles,
+      onInit: setSlideStyles,
+      onProgress: setSlideStyles,
+      onSlideChange: setSlideStyles,
+      onTouchStart: () => {
+        // Pause autoplay on touch
+        if (swiperRef.current) {
+          swiperRef.current.autoplay.stop();
+        }
+      },
+      onTouchEnd: () => {
+        // Resume autoplay after touch
+        if (swiperRef.current) {
+          swiperRef.current.autoplay.start();
+        }
       },
     }),
     [products.length, setSlideStyles]
   );
 
   return (
-    <div className={`relative ${className}`}>
-      <Swiper
-        {...swiperConfig}
-        onSwiper={swiper => {
-          swiperRef.current = swiper;
-        }}
-      >
-        {products.map(product => (
-          <SwiperSlide key={product.id} className="w-auto">
-            <SlideCard product={product} />
-          </SwiperSlide>
-        ))}
-      </Swiper>
-
-      {/* Custom Navigation Buttons */}
-      <button
-        className="swiper-button-prev-custom absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-white/80 backdrop-blur-sm rounded-full p-2 shadow-lg hover:bg-white transition-all duration-200"
-        onClick={() => swiperRef.current?.slidePrev()}
-      >
-        <ChevronLeft className="w-4 h-4 text-gray-800" />
-      </button>
-
-      <button
-        className="swiper-button-next-custom absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-white/80 backdrop-blur-sm rounded-full p-2 shadow-lg hover:bg-white transition-all duration-200"
-        onClick={() => swiperRef.current?.slideNext()}
-      >
-        <ChevronRight className="w-4 h-4 text-gray-800" />
-      </button>
+    <div
+      className={`dw-espot relative bg-gradient-to-br from-[#ffe0f7] via-[#e0e7ff] to-[#fff7e0] rounded-2xl p-9 shadow-2xl overflow-hidden h-full border border-[#e9d6f7]/60 ${className}`}
+    >
+      {/* Decorative blurred gradient blobs */}
+      <div className="absolute -top-10 -left-10 w-40 h-40 bg-gradient-to-br from-[#e9d6f7] to-[#ffc9ee] opacity-40 rounded-full blur-2xl z-0" />
+      <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-gradient-to-tr from-[#ffc9ee] to-[#ffe0f7] opacity-30 rounded-full blur-2xl z-0" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-gradient-to-br from-[#ffe0f7]/60 via-[#e0e7ff]/40 to-[#fff7e0]/60 rounded-full blur-3xl z-0" />
+      <div className="text-center my-4 sm:my-8 relative z-10">
+        <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-primary font-heading">
+          Choose Your Look
+        </h2>
+        <p className="text-sm sm:text-base text-primary mt-1 font-medium ">
+          Discover your next favorite style
+        </p>
+      </div>
+      {/* Carousel Container */}
+      <div className="dw-swiper-container relative flex-1 z-10">
+        <Swiper
+          {...swiperConfig}
+          onSwiper={swiper => {
+            swiperRef.current = swiper;
+          }}
+          className="!py-6"
+          style={{
+            perspective: '1200px',
+            touchAction: 'pan-y',
+            willChange: 'transform',
+          }}
+        >
+          {products.map(product => (
+            <SwiperSlide
+              key={product.id}
+              className="!w-[200px] sm:!w-[240px] lg:!w-[140px] transition-all duration-300 ease-out group"
+              style={{
+                willChange: 'transform, opacity, filter',
+              }}
+            >
+              <div className="relative">
+                {/* Glow border for active card */}
+                <div className="absolute inset-0 rounded-xl pointer-events-none group-[.swiper-slide-active]:shadow-[0_0_0_4px_#ffc9ee80] group-[.swiper-slide-active]:ring-2 group-[.swiper-slide-active]:ring-[#ffc9ee] transition-all duration-300" />
+                <div className="rounded-xl overflow-hidden shadow-lg border border-white/30 backdrop-blur-md bg-white/60 group-[.swiper-slide-active]:bg-white/80 group-[.swiper-slide-active]:shadow-2xl transition-all duration-300">
+                  <div className="aspect-[3/4] relative">
+                    <Image
+                      src={product.image}
+                      alt={product.name}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 568px) 140px, (max-width: 1024px) 180px, 220px"
+                      priority={false}
+                      loading="lazy"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent" />
+                  </div>
+                  <div className="p-4 text-center">
+                    <p className="text-xs sm:text-xs font-semibold text-[#5b1314] tracking-wide">
+                      {product.name}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </SwiperSlide>
+          ))}
+        </Swiper>
+        {/* Navigation Arrows - Elegant Style */}
+        <div className="swiper-button-prev-custom absolute top-1/2 -translate-y-1/2 left-2 z-20 w-11 h-11 bg-white/80 backdrop-blur-md rounded-full shadow-lg border border-[#ffc9ee]/40 flex items-center justify-center cursor-pointer hover:bg-[#ffc9ee] hover:text-white hover:scale-110 transition-all duration-200">
+          <ChevronLeft className="w-6 h-6 text-[#5b1314] group-hover:text-white" />
+        </div>
+        <div className="swiper-button-next-custom absolute top-1/2 -translate-y-1/2 right-2 z-20 w-11 h-11 bg-white/80 backdrop-blur-md rounded-full shadow-lg border border-[#ffc9ee]/40 flex items-center justify-center cursor-pointer hover:bg-[#ffc9ee] hover:text-white hover:scale-110 transition-all duration-200">
+          <ChevronRight className="w-6 h-6 text-[#5b1314] group-hover:text-white" />
+        </div>
+      </div>
     </div>
   );
 };
 
-ChooseYourLookCarousel.displayName = 'ChooseYourLookCarousel';
+ChooseYourLookCarousel.displayName = 'ChooseYourLookSlider';
 
 export default ChooseYourLookCarousel;

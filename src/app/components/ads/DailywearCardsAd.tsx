@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import Image, { StaticImageData } from 'next/image';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { SparklingAvenues, RivaahSouth, Rir } from '@/app/assets/Carousel';
@@ -22,17 +22,32 @@ const DailywearCarousel: React.FC<DailywearCarouselProps> = ({
 }) => {
   const defaultProducts: DailywearProduct[] = [
     {
-      id: 'dw-earrings',
+      id: 'dw-earrings-1',
       name: 'Dailywear Earrings',
       image: SparklingAvenues,
     },
     {
-      id: 'dw-mangalsutra',
+      id: 'dw-mangalsutra-1',
       name: 'Dailywear Mangalsutra',
       image: RivaahSouth,
     },
     {
-      id: 'dw-pendants',
+      id: 'dw-pendants-1',
+      name: 'Dailywear Pendants',
+      image: Rir,
+    },
+    {
+      id: 'dw-earrings-2',
+      name: 'Dailywear Earrings',
+      image: SparklingAvenues,
+    },
+    {
+      id: 'dw-mangalsutra-2',
+      name: 'Dailywear Mangalsutra',
+      image: RivaahSouth,
+    },
+    {
+      id: 'dw-pendants-2',
       name: 'Dailywear Pendants',
       image: Rir,
     },
@@ -63,29 +78,32 @@ const DailywearCarousel: React.FC<DailywearCarouselProps> = ({
 
   const maxIndex = Math.max(0, products.length - cardsPerView);
 
-  const scrollToIndex = (index: number) => {
-    if (!trackRef.current) return;
+  const scrollToIndex = useCallback(
+    (index: number) => {
+      if (!trackRef.current) return;
 
-    const track = trackRef.current;
-    const cardWidth = track.scrollWidth / products.length;
-    const scrollPosition = index * cardWidth;
+      const track = trackRef.current;
+      const cardWidth = track.scrollWidth / products.length;
+      const scrollPosition = index * cardWidth;
 
-    track.scrollTo({
-      left: scrollPosition,
-      behavior: 'smooth',
-    });
-    setCurrentIndex(index);
-  };
+      track.scrollTo({
+        left: scrollPosition,
+        behavior: 'smooth',
+      });
+      setCurrentIndex(index);
+    },
+    [products.length]
+  );
 
-  const handlePrev = () => {
+  const handlePrev = useCallback(() => {
     const newIndex = Math.max(0, currentIndex - 1);
     scrollToIndex(newIndex);
-  };
+  }, [currentIndex, scrollToIndex]);
 
-  const handleNext = () => {
+  const handleNext = useCallback(() => {
     const newIndex = Math.min(maxIndex, currentIndex + 1);
     scrollToIndex(newIndex);
-  };
+  }, [currentIndex, maxIndex, scrollToIndex]);
 
   useEffect(() => {
     const track = trackRef.current;
@@ -129,9 +147,9 @@ const DailywearCarousel: React.FC<DailywearCarouselProps> = ({
         <div className="absolute inset-0 bg-white/20" />
       </div>
 
-      <div className="relative z-10 flex flex-col h-full p-3 sm:p-4 md:p-6">
-        <div className="text-center mb-4 sm:mb-6">
-          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-primary-dark">
+      <div className="relative z-10 flex flex-col h-full p-9 sm:p-10 md:p-12">
+        <div className="text-center my-4 sm:my-8">
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-primary-dark font-heading">
             Dailywear Jewellery
           </h2>
           <p className="text-xs sm:text-sm text-primary-dark mt-1 opacity-80">
@@ -145,7 +163,7 @@ const DailywearCarousel: React.FC<DailywearCarouselProps> = ({
             className="flex gap-3 sm:gap-4 md:gap-6 overflow-x-auto scroll-smooth snap-x snap-mandatory px-2 sm:px-4 py-2 sm:py-4 scrollbar-hide"
             style={{ scrollPaddingLeft: '0.5rem' }}
           >
-            {products.map((product, idx) => (
+            {products.map(product => (
               <div
                 key={product.id}
                 className="flex-shrink-0 snap-start w-[160px] xs:w-[180px] sm:w-[200px] md:w-[220px] lg:w-[240px] group transition-all"
@@ -196,23 +214,6 @@ const DailywearCarousel: React.FC<DailywearCarouselProps> = ({
             </>
           )}
         </div>
-
-        {products.length > cardsPerView && (
-          <div className="hidden sm:flex justify-center mt-3 sm:mt-4">
-            <div className="flex gap-1.5 sm:gap-2">
-              {Array.from({ length: maxIndex + 1 }).map((_, dotIdx) => (
-                <button
-                  key={dotIdx}
-                  aria-label={`Slide ${dotIdx + 1}`}
-                  onClick={() => scrollToIndex(dotIdx)}
-                  className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full transition-all ${
-                    dotIdx === currentIndex ? 'bg-primary' : 'bg-gray-300'
-                  }`}
-                />
-              ))}
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

@@ -113,7 +113,7 @@ const MobileNavMenu = ({ isOpen, onClose }: MobileNavMenuProps) => {
               ].map(category => (
                 <Link
                   key={category}
-                  href="#"
+                  href={`/shop/${category.toLowerCase()}`}
                   className="block px-3 py-2 text-sm text-gray-700 rounded-md hover:bg-gray-100 hover:text-primary transition-colors"
                   onClick={onClose}
                 >

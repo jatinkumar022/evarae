@@ -38,52 +38,32 @@ export interface Category {
   slug: string;
   description?: string;
   image?: string;
-  parentId?: string;
-  children?: Category[];
   productCount: number;
   isActive: boolean;
 }
 
-export interface ProductFilters {
-  category?: string;
-  subcategory?: string;
-  priceRange?: {
-    min: number;
-    max: number;
-  };
-  material?: string[];
-  brand?: string[];
-  inStock?: boolean;
-  isNew?: boolean;
-  isSale?: boolean;
-  rating?: number;
-  tags?: string[];
+// Filter-related interfaces
+export interface FilterState {
+  priceRange: string;
+  material: string[];
+  subcategory: string[];
+  isNew: boolean;
+  isSale: boolean;
+  isFeatured: boolean;
+}
+
+export interface FilterOptions {
+  priceRanges: Array<{ value: string; label: string }>;
+  materials: string[];
+  subcategories: string[];
 }
 
 export interface SortOption {
   value: string;
   label: string;
-  field: string;
-  order: 'asc' | 'desc';
 }
 
-export interface ProductListResponse {
-  products: Product[];
-  totalCount: number;
-  currentPage: number;
-  totalPages: number;
-  hasNextPage: boolean;
-  hasPreviousPage: boolean;
-  filters: ProductFilters;
-  sortBy: string;
-}
-
-export interface CategoryListResponse {
-  categories: Category[];
-  totalCount: number;
-}
-
-// Product categories mapping
+// Product categories mapping for static pages
 export const PRODUCT_CATEGORIES = {
   BANGLES: {
     id: 'bangles',
@@ -98,22 +78,22 @@ export const PRODUCT_CATEGORIES = {
     name: 'Rings',
     slug: 'rings',
     description: 'Beautiful rings for special moments',
-    productCount: 0,
+    productCount: 20,
     isActive: true,
   },
   EARRINGS: {
     id: 'earrings',
     name: 'Earrings',
     slug: 'earrings',
-    description: 'Stunning earrings to complement your style',
-    productCount: 0,
+    description: 'Stunning earrings for any occasion',
+    productCount: 15,
     isActive: true,
   },
   NECKLACES: {
     id: 'necklaces',
     name: 'Necklaces',
     slug: 'necklaces',
-    description: 'Timeless necklaces for every outfit',
+    description: 'Elegant necklaces for special moments',
     productCount: 0,
     isActive: true,
   },
@@ -121,15 +101,7 @@ export const PRODUCT_CATEGORIES = {
     id: 'pendants',
     name: 'Pendants',
     slug: 'pendants',
-    description: 'Elegant pendants to enhance your look',
-    productCount: 0,
-    isActive: true,
-  },
-  CHAINS: {
-    id: 'chains',
-    name: 'Chains',
-    slug: 'chains',
-    description: 'Classic chains for everyday wear',
+    description: 'Beautiful pendants for everyday wear',
     productCount: 0,
     isActive: true,
   },
@@ -137,7 +109,15 @@ export const PRODUCT_CATEGORIES = {
     id: 'mangalsutra',
     name: 'Mangalsutra',
     slug: 'mangalsutra',
-    description: 'Sacred mangalsutra designs',
+    description: 'Traditional mangalsutra designs',
+    productCount: 0,
+    isActive: true,
+  },
+  CHAINS: {
+    id: 'chains',
+    name: 'Chains',
+    slug: 'chains',
+    description: 'Classic chain designs',
     productCount: 0,
     isActive: true,
   },
@@ -145,7 +125,7 @@ export const PRODUCT_CATEGORIES = {
     id: 'bracelets',
     name: 'Bracelets',
     slug: 'bracelets',
-    description: 'Stylish bracelets for your wrist',
+    description: 'Elegant bracelets for every occasion',
     productCount: 0,
     isActive: true,
   },
