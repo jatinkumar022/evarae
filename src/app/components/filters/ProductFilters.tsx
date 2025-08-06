@@ -259,8 +259,9 @@ const FilterModal = ({
         </div>
 
         {/* Modal Footer - Fixed */}
-        <div className="flex items-center justify-between p-6 border-t border-primary/10 flex-shrink-0">
-          <div className="flex items-center gap-4">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 sm:gap-6 p-4 sm:p-6 border-t border-primary/10">
+          {/* Left side: Clear and Unsaved Notice */}
+          <div className="flex max-sm:justify-between items-start sm:items-center gap-2 sm:gap-4 w-full sm:w-auto">
             <button
               onClick={handleClearAll}
               className="text-sm text-primary hover:text-primary-dark underline"
@@ -273,16 +274,18 @@ const FilterModal = ({
               </span>
             )}
           </div>
-          <div className="flex items-center gap-3">
+
+          {/* Right side: Cancel and Apply buttons */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 w-full sm:w-auto">
             <button
               onClick={handleCancel}
-              className="px-4 py-2 text-sm font-medium text-primary border border-primary rounded-full hover:bg-primary hover:text-white transition-colors"
+              className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-primary border border-primary rounded-full hover:bg-primary hover:text-white transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleApplyFilters}
-              className="bg-primary text-white px-6 py-2 rounded-full text-sm font-medium hover:bg-primary-dark transition-colors"
+              className="w-full sm:w-auto bg-primary text-white px-6 py-2 rounded-full text-sm font-medium hover:bg-primary-dark transition-colors"
             >
               Apply Filters
             </button>
