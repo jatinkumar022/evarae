@@ -8,6 +8,7 @@ export interface Product {
   originalPrice: number | null;
   currency: string;
   images: (string | StaticImageData)[];
+  hoverImage?: string | StaticImageData;
   category: Category;
   subcategory?: string;
   brand: string;

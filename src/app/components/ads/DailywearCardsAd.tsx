@@ -2,7 +2,6 @@ import React, { useRef, useState, useEffect, useCallback } from 'react';
 import Image, { StaticImageData } from 'next/image';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { SparklingAvenues, RivaahSouth, Rir } from '@/app/assets/Carousel';
-import { adsBg } from '@/app/assets/Common';
 
 export interface DailywearProduct {
   id: string;

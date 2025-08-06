@@ -14,9 +14,9 @@ import Image from 'next/image';
 
 export default function RingsPage() {
   const [filteredProducts, setFilteredProducts] = useState(ringsProducts);
-  const [columns, setColumns] = useState(3); // default to 3 columns
+  const [columns, setColumns] = useState(3);
+  const [visibleProducts, setVisibleProducts] = useState(10);
 
-  // Responsive columns detection
   useEffect(() => {
     function updateColumns() {
       if (window.innerWidth < 640) {
@@ -32,7 +32,6 @@ export default function RingsPage() {
     return () => window.removeEventListener('resize', updateColumns);
   }, []);
 
-  // Filter options for rings
   const filterOptions: FilterOptions = {
     priceRanges: [
       { value: 'under-50k', label: 'Under ₹50,000' },
@@ -56,7 +55,6 @@ export default function RingsPage() {
     ],
   };
 
-  // Sort options
   const sortOptions: SortOption[] = [
     { value: 'best-matches', label: 'Best Matches' },
     { value: 'price-low-high', label: 'Price: Low to High' },
@@ -65,22 +63,25 @@ export default function RingsPage() {
     { value: 'rating', label: 'Highest Rated' },
   ];
 
-  // Function to render products with ads at row-based positions
-  const renderProductsWithAds = () => {
-    const products = filteredProducts;
-    const totalItems = products.length;
+  const handleLoadMore = () => {
+    setVisibleProducts(prev => prev + 10);
+  };
 
-    // Ad positions (0-based index)
-    const ad1Index = columns; // first item in 2nd row
+  const displayedProducts = filteredProducts.slice(0, visibleProducts);
+  const hasMoreProducts = visibleProducts < filteredProducts.length;
+
+  const renderProductsWithAds = () => {
+    const products = displayedProducts;
+    const totalItems = products.length;
+    const isLargeScreen = columns >= 3;
+
+    const ad1Index = isLargeScreen ? 3 : 2;
     let ad2Index;
-    if (totalItems >= columns * 4) {
-      ad2Index = columns * 3; // first item in 4th row
+
+    if (totalItems > 10) {
+      ad2Index = isLargeScreen ? 8 : 5;
     } else {
-      ad2Index = columns * Math.floor((totalItems - 1) / columns); // first item in last row
-    }
-    // If ad2Index would overlap ad1Index, place second ad after last product
-    if (ad2Index <= ad1Index) {
-      ad2Index = totalItems + 1; // after last product
+      ad2Index = Math.max(totalItems - 1, ad1Index + 1);
     }
 
     const items = [];
@@ -89,29 +90,28 @@ export default function RingsPage() {
     let insertedAd2 = false;
 
     for (let i = 0; productIndex < products.length || !insertedAd2; i++) {
-      // Insert first ad at start of 2nd row
       if (!insertedAd1 && i === ad1Index) {
         items.push(
-          <div key="ad-1" className="col-span-1 sm:col-span-2 ">
+          <div key="ad-1" className="col-span-2">
             <DailywearCardsAd />
           </div>
         );
         insertedAd1 = true;
         continue;
       }
-      // Insert second ad at calculated position or after last product
+
       if (!insertedAd2 && i === ad2Index) {
         items.push(
-          <div key="ad-2" className="col-span-1 sm:col-span-2 ">
-            <Image src={ad} alt="" className="h-[490px] rounded-xl" />
+          <div key="ad-2" className="col-span-2">
+            <Image src={ad} alt="" className="lg:h-[490px] rounded-xl" />
           </div>
         );
         insertedAd2 = true;
-        // If we're after the last product, break
+
         if (productIndex >= products.length) break;
         continue;
       }
-      // Add product
+
       if (productIndex < products.length) {
         items.push(
           <div key={products[productIndex].id} className="h-full">
@@ -133,19 +133,17 @@ export default function RingsPage() {
             <Link
               href="/"
               prefetch={true}
-              className=" hover:text-primary transition-colors"
+              className="hover:text-primary transition-colors"
             >
               Home
             </Link>
-
-            <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 " />
-
+            <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
             <span className="text-primary-dark cursor-default">Rings</span>
           </div>
         </nav>
         <div className="font-heading my-6 sm:my-8 md:flex justify-center items-center gap-2 flex-col text-accent">
           <h1 className="text-2xl lg:text-3xl">Rings Collection</h1>
-          <h2 className=" text-sm sm:text-base">
+          <h2 className="text-sm sm:text-base">
             ({filteredProducts.length} results)
           </h2>
         </div>
@@ -156,10 +154,21 @@ export default function RingsPage() {
           sortOptions={sortOptions}
           onFiltersChange={setFilteredProducts}
         >
-          {/* Product Grid with Ads */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6 items-center">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6 items-center">
             {renderProductsWithAds()}
           </div>
+
+          {hasMoreProducts && (
+            <div className="flex justify-center mt-8">
+              <button
+                onClick={handleLoadMore}
+                className="bg-primary text-white px-6 py-3 rounded-lg font-medium hover:bg-primary-dark transition-colors duration-300"
+              >
+                Load More ({displayedProducts.length} of{' '}
+                {filteredProducts.length})
+              </button>
+            </div>
+          )}
 
           {filteredProducts.length === 0 && (
             <div className="text-center py-12">

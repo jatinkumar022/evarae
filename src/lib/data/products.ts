@@ -19,6 +19,7 @@ export const ringsProducts: Product[] = [
     originalPrice: 180000,
     currency: 'INR',
     images: [star],
+    hoverImage: starWhite,
     category: {
       id: 'rings',
       name: 'Rings',
@@ -51,6 +52,7 @@ export const ringsProducts: Product[] = [
     originalPrice: 95000,
     currency: 'INR',
     images: [dazzling],
+    hoverImage: dazzlingWhite,
     category: {
       id: 'rings',
       name: 'Rings',
@@ -83,6 +85,7 @@ export const ringsProducts: Product[] = [
     originalPrice: 75000,
     currency: 'INR',
     images: [ringsCat],
+    hoverImage: ringsCat, // Using same image as fallback
     category: {
       id: 'rings',
       name: 'Rings',
@@ -115,6 +118,7 @@ export const ringsProducts: Product[] = [
     originalPrice: 110000,
     currency: 'INR',
     images: [starWhite],
+    hoverImage: star,
     category: {
       id: 'rings',
       name: 'Rings',
@@ -147,6 +151,7 @@ export const ringsProducts: Product[] = [
     originalPrice: 85000,
     currency: 'INR',
     images: [dazzlingWhite],
+    hoverImage: dazzling,
     category: {
       id: 'rings',
       name: 'Rings',
@@ -181,6 +186,7 @@ export const ringsProducts: Product[] = [
     originalPrice: 145000,
     currency: 'INR',
     images: [star],
+    hoverImage: starWhite,
     category: {
       id: 'rings',
       name: 'Rings',
@@ -213,6 +219,7 @@ export const ringsProducts: Product[] = [
     originalPrice: 112000,
     currency: 'INR',
     images: [starWhite],
+    hoverImage: star,
     category: {
       id: 'rings',
       name: 'Rings',
@@ -245,6 +252,7 @@ export const ringsProducts: Product[] = [
     originalPrice: 90000,
     currency: 'INR',
     images: [ringsCat],
+    hoverImage: ringsCat, // Using same image as fallback
     category: {
       id: 'rings',
       name: 'Rings',
@@ -277,6 +285,7 @@ export const ringsProducts: Product[] = [
     originalPrice: 99000,
     currency: 'INR',
     images: [dazzling],
+    hoverImage: dazzlingWhite,
     category: {
       id: 'rings',
       name: 'Rings',
@@ -309,6 +318,7 @@ export const ringsProducts: Product[] = [
     originalPrice: 92000,
     currency: 'INR',
     images: [dazzlingWhite],
+    hoverImage: dazzling,
     category: {
       id: 'rings',
       name: 'Rings',
@@ -341,6 +351,7 @@ export const ringsProducts: Product[] = [
     originalPrice: 79000,
     currency: 'INR',
     images: [star],
+    hoverImage: starWhite,
     category: {
       id: 'rings',
       name: 'Rings',
@@ -373,6 +384,7 @@ export const ringsProducts: Product[] = [
     originalPrice: 155000,
     currency: 'INR',
     images: [ringsCat],
+    hoverImage: ringsCat, // Using same image as fallback
     category: {
       id: 'rings',
       name: 'Rings',
@@ -409,6 +421,7 @@ export const earringsProducts: Product[] = [
     originalPrice: 95000,
     currency: 'INR',
     images: [StunningEveryEar],
+    hoverImage: StunningEveryEar, // Using same image as fallback
     category: {
       id: 'earrings',
       name: 'Earrings',
@@ -441,6 +454,7 @@ export const earringsProducts: Product[] = [
     originalPrice: 75000,
     currency: 'INR',
     images: [earringsCat],
+    hoverImage: earringsCat, // Using same image as fallback
     category: {
       id: 'earrings',
       name: 'Earrings',
@@ -473,6 +487,7 @@ export const earringsProducts: Product[] = [
     originalPrice: 85000,
     currency: 'INR',
     images: [SparklingAvenues],
+    hoverImage: SparklingAvenues, // Using same image as fallback
     category: {
       id: 'earrings',
       name: 'Earrings',
@@ -505,6 +520,7 @@ export const earringsProducts: Product[] = [
     originalPrice: 68000,
     currency: 'INR',
     images: [RivaahSouth],
+    hoverImage: RivaahSouth, // Using same image as fallback
     category: {
       id: 'earrings',
       name: 'Earrings',
@@ -537,6 +553,7 @@ export const earringsProducts: Product[] = [
     originalPrice: 105000,
     currency: 'INR',
     images: [Rir],
+    hoverImage: Rir, // Using same image as fallback
     category: {
       id: 'earrings',
       name: 'Earrings',
