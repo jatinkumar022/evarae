@@ -89,7 +89,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               </p>
               {product.originalPrice &&
                 product.originalPrice > product.price && (
-                  <p className="text-xs sm:text-sm text-accent/60 line-through">
+                  <p className="text-xs sm:text-sm text-primary-dark line-through">
                     ₹{product.originalPrice.toLocaleString()}
                   </p>
                 )}
