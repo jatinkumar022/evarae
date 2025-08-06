@@ -1,5 +1,5 @@
-import Container from "@/app/components/layouts/Container";
-import Link from "next/link";
+import Container from '@/app/components/layouts/Container';
+import Link from 'next/link';
 
 export default function Home() {
   return (
@@ -58,7 +58,7 @@ export default function Home() {
               Ghost Button
             </button>
             <button
-              className="btn btn-filled btn-animated"
+              className=" btn-animated"
               aria-label="Animated filled button example"
             >
               Animated Filled

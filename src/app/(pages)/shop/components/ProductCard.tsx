@@ -116,8 +116,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               </div>
             )}
           {product.inStock && product.stockCount <= 3 && (
-            <p className="text-xs text-primary font-medium text-center flex items-center gap-1">
-              <span className="inline-block w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+            <p className="text-xs text-primary font-medium text-center flex items-center gap-1 animate-caret-blink ">
+              <span className="inline-block w-2 h-2 bg-primary rounded-full "></span>
               Only {product.stockCount} left!
             </p>
           )}

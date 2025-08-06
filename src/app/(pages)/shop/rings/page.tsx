@@ -162,7 +162,7 @@ export default function RingsPage() {
             <div className="flex justify-center mt-8">
               <button
                 onClick={handleLoadMore}
-                className="bg-primary text-white px-6 py-3 rounded-lg font-medium hover:bg-primary-dark transition-colors duration-300"
+                className="btn btn-filled btn-animated"
               >
                 Load More ({displayedProducts.length} of{' '}
                 {filteredProducts.length})
