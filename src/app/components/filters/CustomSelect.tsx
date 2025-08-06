@@ -1,5 +1,6 @@
 'use client';
 
+import { Sort } from '@/app/assets/Shop-list';
 import React, { useState, useRef, useEffect } from 'react';
 
 interface Option {
@@ -74,12 +75,14 @@ export default function CustomSelect({
             value ? options.findIndex(o => o.value === value) : 0
           );
         }}
-        className="w-full px-4 py-2.5 text-sm font-medium text-primary-dark bg-white/80 backdrop-blur-md border border-primary/20 rounded-full shadow-sm hover:bg-white/90 hover:border-primary/30 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200"
+        className="md:w-full px-5 py-2 text-sm font-medium text-primary-dark bg-white/80 backdrop-blur-md border border-primary/20 rounded-full shadow-sm hover:bg-white/90 hover:border-primary/30 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200"
       >
-        <div className="flex items-center justify-between">
+        <Sort className="w-4 h-4 md:hidden" />
+        <div className=" items-center justify-between hidden md:flex">
           <span className={selected ? 'text-primary-dark' : 'text-primary/60'}>
             {selected?.label || placeholder}
           </span>
+
           <svg
             className={`w-4 h-4 text-primary transition-transform duration-200 ${
               isOpen ? 'rotate-180' : ''
@@ -111,7 +114,7 @@ export default function CustomSelect({
                     onChange(opt.value);
                     setIsOpen(false);
                   }}
-                  className={`relative px-4 py-2.5 cursor-pointer text-sm hover:bg-primary/5 hover:text-primary-dark transition-all duration-150 ease-out ${
+                  className={`relative px-5 py-2 cursor-pointer text-sm hover:bg-primary/5 hover:text-primary-dark transition-all duration-150 ease-out ${
                     opt.value === value
                       ? 'bg-primary/10 text-primary-dark font-semibold'
                       : 'text-primary-dark/80'

@@ -135,19 +135,9 @@ const DailywearCarousel: React.FC<DailywearCarouselProps> = ({
 
   return (
     <div
-      className={`relative rounded-xl overflow-hidden text-gray-800 ${className}`}
+      className={`relative rounded-xl overflow-hidden  border border-primary/10 bg-[#ffe2e229]  ${className}`}
     >
-      <div className="absolute inset-0 pointer-events-none">
-        <Image
-          src={adsBg}
-          alt="Background"
-          fill
-          className="object-cover blur-sm opacity-40"
-        />
-        <div className="absolute inset-0 bg-white/20" />
-      </div>
-
-      <div className="relative z-10 flex flex-col h-full p-9 sm:p-10 md:p-12">
+      <div className="relative z-10 flex flex-col h-full p-9 sm:p-10 md:p-12  ">
         <div className="text-center my-4 sm:my-8">
           <h2 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-primary-dark font-heading">
             Dailywear Jewellery
@@ -160,7 +150,7 @@ const DailywearCarousel: React.FC<DailywearCarouselProps> = ({
         <div className="relative flex-1">
           <div
             ref={trackRef}
-            className="flex gap-3 sm:gap-4 md:gap-6 overflow-x-auto scroll-smooth snap-x snap-mandatory px-2 sm:px-4 py-2 sm:py-4 scrollbar-hide"
+            className="flex gap-3 sm:gap-4 md:gap-6 overflow-x-auto scroll-smooth snap-x snap-mandatory py-4 scrollbar-hide"
             style={{ scrollPaddingLeft: '0.5rem' }}
           >
             {products.map(product => (
@@ -168,7 +158,7 @@ const DailywearCarousel: React.FC<DailywearCarouselProps> = ({
                 key={product.id}
                 className="flex-shrink-0 snap-start w-[160px] xs:w-[180px] sm:w-[200px] md:w-[220px] lg:w-[240px] group transition-all"
               >
-                <div className="rounded-lg sm:rounded-xl overflow-hidden bg-white/80 backdrop-blur-md border border-gray-200 shadow-lg hover:shadow-xl hover:border-gray-300 transition duration-300 h-full">
+                <div className="rounded-lg sm:rounded-xl overflow-hidden  border border-gray-200  h-full">
                   <div className="relative h-24 sm:h-32 md:h-36 lg:h-40 overflow-hidden">
                     <Image
                       src={product.image}
@@ -177,7 +167,6 @@ const DailywearCarousel: React.FC<DailywearCarouselProps> = ({
                       sizes="(max-width: 480px) 160px, (max-width: 640px) 180px, (max-width: 768px) 200px, (max-width: 1024px) 220px, 240px"
                       className="object-cover transform group-hover:scale-105 transition-transform duration-500 ease-in-out"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
                   </div>
                   <div className="p-2 sm:p-3 md:p-4 text-center">
                     <h3 className="text-xs sm:text-sm md:text-base font-semibold text-primary-dark leading-tight">

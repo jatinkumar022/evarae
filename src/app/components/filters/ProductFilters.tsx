@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Filter, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import {
   Product,
   FilterState,
@@ -8,6 +8,7 @@ import {
 } from '@/lib/types/product';
 
 import CustomSelect from './CustomSelect';
+import { Filter } from '@/app/assets/Shop-list';
 
 // Filter tag component
 const FilterTag = ({
@@ -463,47 +464,34 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({
       {/* Filter and Sort Controls */}
       <div className="mb-6 space-y-4">
         {/* Filter Button and Active Filters */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center md:justify-between  gap-4">
           <div className="flex items-center gap-4">
             <button
               onClick={() => setShowFilterModal(true)}
-              className="flex items-center gap-2 -primary  px-4 py-2.5 text-sm font-medium text-primary-dark bg-white/80 backdrop-blur-md 
+              className="flex items-center gap-2  px-5 py-2 text-sm font-medium text-primary-dark bg-white/80 backdrop-blur-md 
              border border-primary/20 rounded-full shadow-sm 
              hover:bg-white/90 hover:border-primary/30 hover:shadow-md 
              focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary 
              transition-all duration-200 cursor-pointer"
             >
               <Filter className="w-4 h-4" />
-              Filters
               {activeFilters.length > 0 && (
-                <span className="bg-white text-primary rounded-full w-5 h-5 text-xs flex items-center justify-center">
+                <span className="absolute -top-2 -right-2 text-white bg-primary rounded-full w-5 h-5 text-xs flex items-center justify-center md:hidden">
                   {activeFilters.length}
                 </span>
               )}
+              <div className=" items-center gap-2 hidden md:flex">
+                Filters
+                {activeFilters.length > 0 && (
+                  <span className=" text-primary bg-primary/10 rounded-full w-5 h-5 text-xs flex items-center justify-center">
+                    {activeFilters.length}
+                  </span>
+                )}
+              </div>
             </button>
-
-            {/* Active Filter Tags */}
-            <div className="flex items-center gap-2 flex-wrap">
-              {activeFilters.map((filter, index) => (
-                <FilterTag
-                  key={index}
-                  label={filter}
-                  onRemove={() => removeFilter(filter)}
-                />
-              ))}
-              {activeFilters.length > 0 && (
-                <button
-                  onClick={clearAllFilters}
-                  className="text-xs text-primary hover:text-primary-dark underline"
-                >
-                  Clear All
-                </button>
-              )}
-            </div>
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-sm text-primary-dark">Sort by:</span>
             <CustomSelect
               value={sortBy}
               onChange={setSortBy}
@@ -511,6 +499,23 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({
               placeholder="Best Matches"
             />
           </div>
+        </div>
+        <div className="flex  gap-2  flex-wrap  w-fit">
+          {activeFilters.map((filter, index) => (
+            <FilterTag
+              key={index}
+              label={filter}
+              onRemove={() => removeFilter(filter)}
+            />
+          ))}
+          {activeFilters.length > 0 && (
+            <button
+              onClick={clearAllFilters}
+              className="text-xs text-primary hover:text-primary-dark underline ml-1.5 cursor-pointer"
+            >
+              Clear All
+            </button>
+          )}
         </div>
       </div>
 
