@@ -145,10 +145,13 @@ export default function Navbar() {
                 >
                   All Jewellery
                 </NavLink>
-                <NavLink href="#" icon={<New className="h-4 w-4" />}>
+                <NavLink
+                  href="/new-arrivals"
+                  icon={<New className="h-4 w-4" />}
+                >
                   New Arrivals
                 </NavLink>
-                <NavLink href="#" icon={<BsInboxes size={13} />}>
+                <NavLink href="/collections" icon={<BsInboxes size={13} />}>
                   Collections
                 </NavLink>
               </nav>

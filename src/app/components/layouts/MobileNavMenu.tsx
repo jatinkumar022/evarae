@@ -33,18 +33,18 @@ const menuItems = [
 
 const quickLinks = [
   {
-    name: 'Shop',
-    href: '#',
+    name: 'All Jewellery',
+    href: '/all-jewellery',
     icon: <Store className="h-4 w-4" />,
   },
   {
     name: 'New Arrivals',
-    href: '#',
+    href: '/new-arrivals',
     icon: <New className="h-4 w-4" />,
   },
   {
     name: 'Collections',
-    href: '#',
+    href: '/collections',
     icon: <BsInboxes size={13} />,
   },
 ];
