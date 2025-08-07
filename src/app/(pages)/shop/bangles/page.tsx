@@ -6,14 +6,14 @@ import Container from '@/app/components/layouts/Container';
 import ProductFilters from '@/app/components/filters/ProductFilters';
 import DailywearCardsAd from '@/app/components/ads/DailywearCardsAd';
 import { FilterOptions, SortOption } from '@/lib/types/product';
-import { earringsProducts } from '@/lib/data/products';
+import { banglesProducts } from '@/lib/data/products';
 import BannerImage from '../components/Banner';
 import { ad, Banner, BannerMobile } from '@/app/assets/Shop-list';
 import { ProductCard } from '../components/ProductCard';
 import Image from 'next/image';
 
-export default function EarringsPage() {
-  const [filteredProducts, setFilteredProducts] = useState(earringsProducts);
+export default function BanglesPage() {
+  const [filteredProducts, setFilteredProducts] = useState(banglesProducts);
   const [columns, setColumns] = useState(3);
   const [visibleProducts, setVisibleProducts] = useState(10);
 
@@ -47,11 +47,11 @@ export default function EarringsPage() {
       '18K Gold',
     ],
     subcategories: [
-      'Diamond Earrings',
-      'Gold Earrings',
-      'Pearl Earrings',
-      'Crystal Earrings',
-      'Traditional Earrings',
+      'Gold Bangles',
+      'Diamond Bangles',
+      'Crystal Bangles',
+      'Designer Bangles',
+      'Traditional Bangles',
     ],
   };
 
@@ -138,18 +138,18 @@ export default function EarringsPage() {
               Home
             </Link>
             <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
-            <span className="text-primary-dark cursor-default">Earrings</span>
+            <span className="text-primary-dark cursor-default">Bangles</span>
           </div>
         </nav>
         <div className="font-heading my-6 sm:my-8 md:flex justify-center items-center gap-2 flex-col text-accent">
-          <h1 className="text-2xl lg:text-3xl">Earrings Collection</h1>
+          <h1 className="text-2xl lg:text-3xl">Bangles Collection</h1>
           <h2 className="text-sm sm:text-base">
             ({filteredProducts.length} results)
           </h2>
         </div>
 
         <ProductFilters
-          products={earringsProducts}
+          products={banglesProducts}
           filterOptions={filterOptions}
           sortOptions={sortOptions}
           onFiltersChange={setFilteredProducts}
