@@ -139,7 +139,10 @@ export default function Navbar() {
                 </Link>
               </div>
               <nav className="hidden items-center gap-2 lg:flex ">
-                <NavLink href="#" icon={<Store className="h-4 w-4" />}>
+                <NavLink
+                  href="/all-jewellery"
+                  icon={<Store className="h-4 w-4" />}
+                >
                   All Jewellery
                 </NavLink>
                 <NavLink href="#" icon={<New className="h-4 w-4" />}>

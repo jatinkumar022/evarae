@@ -134,59 +134,12 @@
 }
 
 .line-clamp-2 {
-  overflow: hidden;
   display: -webkit-box;
-  -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
-}
-
-.ribbon-vertical {
-  background: var(--primary);
-}
-
-
-.gift-btn {
-  @apply inline-flex items-center justify-between font-serif text-[10px] sm:text-base bg-white border border-primary rounded-full text-black hover:bg-gray-100 transition-colors;
-
-  position: relative;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  z-index: 0;
 }
 
-.gift-btn::before,
-.gift-btn::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 100%;
-  width: 100%;
-  border-radius: inherit;
-  transition: all 0.3s ease;
-  pointer-events: none;
-  z-index: -1;
-}
-
-.gift-btn::before {
-  background-color: var(--primary);
-  opacity: 0;
-  transform: scale(0.5);
-}
-
-.gift-btn::after {
-  border: 1px solid var(--primary);
-  opacity: 1;
-  transform: scale(1);
-}
-
-.gift-btn:hover::before {
-  opacity: 1;
-  transform: scale(1);
-}
-
-.gift-btn:hover {
-  color: white;
-}
 
 .footer-bg {
   position: relative;
@@ -350,4 +303,18 @@
 
 .custom-select-option:hover::before {
   left: 100%;
+}
+
+/* Brand Blurred Overlay for Hero Section */
+.hero-blur-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(120deg, var(--color-primary-dark) 0%, var(--color-primary) 60%, var(--color-accent) 100%);
+  opacity: 0.55;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  pointer-events: none;
+  border-bottom-left-radius: 1.5rem;
+  border-bottom-right-radius: 1.5rem;
 }

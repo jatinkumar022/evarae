@@ -58,7 +58,7 @@ export default function Home() {
               Ghost Button
             </button>
             <button
-              className=" btn-animated"
+              className="btn-animated"
               aria-label="Animated filled button example"
             >
               Animated Filled

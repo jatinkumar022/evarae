@@ -40,6 +40,13 @@ body {
   padding: 0 1.5rem;
 }
 
+.rose-foil-heading {
+  font-family: var(--font-heading);
+  background: linear-gradient(90deg, #a14a65, #d16b86, #7b3b3b);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
 .heading-component-main-heading {
   font: 400 40px var(--font-heading);
   color: var(--color-primary-dark);
