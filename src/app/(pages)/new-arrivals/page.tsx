@@ -4,23 +4,17 @@ import {
   ChevronRight,
   Sparkles,
   Star,
-  TrendingUp,
   Crown,
   ArrowRight,
-  Diamond,
-  Gem,
   Award,
   Truck,
   Shield,
   Users,
   Timer,
   Play,
-  Quote,
-  ChevronLeft,
   Instagram,
 } from 'lucide-react';
 import { wedding } from '@/app/assets/EvaraeWorld';
-import { rathYatra, Keret } from '@/app/assets/Trending';
 import Image from 'next/image';
 
 import Link from 'next/link';
@@ -28,35 +22,7 @@ import { FilterOptions, SortOption } from '@/lib/types/product';
 import ProductFilters from '@/app/components/filters/ProductFilters';
 import { ringsProducts } from '@/lib/data/products';
 import { ProductCard } from '../shop/components/ProductCard';
-import { ad } from '@/app/assets/Shop-list';
 import Container from '@/app/components/layouts/Container';
-
-const testimonials = [
-  {
-    id: 1,
-    name: 'Priya Sharma',
-    location: 'Mumbai',
-    rating: 5,
-    text: 'Absolutely love the quality! The designs are so elegant and the price is unbeatable.',
-    image: wedding,
-  },
-  {
-    id: 2,
-    name: 'Anita Desai',
-    location: 'Delhi',
-    rating: 5,
-    text: 'Perfect for my wedding functions. Everyone asked where I got these beautiful pieces from.',
-    image: rathYatra,
-  },
-  {
-    id: 3,
-    name: 'Kavya Reddy',
-    location: 'Bangalore',
-    rating: 5,
-    text: 'Fast delivery and amazing packaging. The jewelry looks even better in person!',
-    image: Keret,
-  },
-];
 
 // Main Component
 export default function EnhancedNewArrivalsPage() {
@@ -65,7 +31,6 @@ export default function EnhancedNewArrivalsPage() {
     minutes: 45,
     seconds: 30,
   });
-  const [currentTestimonial, setCurrentTestimonial] = useState(0);
 
   // Countdown timer effect
   useEffect(() => {
@@ -85,32 +50,8 @@ export default function EnhancedNewArrivalsPage() {
     return () => clearInterval(timer);
   }, []);
 
-  // Auto-rotate testimonials
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTestimonial(prev => (prev + 1) % testimonials.length);
-    }, 5000);
-    return () => clearInterval(timer);
-  }, []);
-
   const [filteredProducts, setFilteredProducts] = useState(ringsProducts);
-  const [columns, setColumns] = useState(3);
   const [visibleProducts, setVisibleProducts] = useState(10);
-
-  useEffect(() => {
-    function updateColumns() {
-      if (window.innerWidth < 640) {
-        setColumns(1);
-      } else if (window.innerWidth < 1024) {
-        setColumns(2);
-      } else {
-        setColumns(3);
-      }
-    }
-    updateColumns();
-    window.addEventListener('resize', updateColumns);
-    return () => window.removeEventListener('resize', updateColumns);
-  }, []);
 
   const filterOptions: FilterOptions = {
     priceRanges: [
@@ -206,7 +147,7 @@ export default function EnhancedNewArrivalsPage() {
                 className="text-xl font-light mb-6 font-serif"
                 style={{ color: 'var(--color-primary-dark)' }}
               >
-                "Where elegance meets affordability."
+                &ldquo;Where elegance meets affordability.&ldquo;
               </div>
 
               <p

@@ -249,7 +249,7 @@ export default function CollectionsPage() {
             <div className="w-3 h-3 rounded-full bg-gradient-to-br from-rose-400 to-purple-300"></div>
           </div>
           <p className="text-gray-500 font-light italic text-lg">
-            "Where elegance meets artistry"
+            &ldquo;Where elegance meets artistry&ldquo;
           </p>
         </div>
       </Container>
