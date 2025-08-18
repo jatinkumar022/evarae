@@ -1,8 +1,6 @@
 'use client';
-
 import Container from '@/app/components/layouts/Container';
 import Image from 'next/image';
-import React, { useEffect } from 'react';
 import { wedding, dailywear } from '@/app/assets/EvaraeWorld';
 import { rathYatra, Keret } from '@/app/assets/Trending';
 import { SparklingAvenues, RivaahSouth } from '@/app/assets/Carousel';

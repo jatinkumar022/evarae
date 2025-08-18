@@ -1,15 +1,10 @@
 'use client';
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { ChevronRight, Heart, Share2 } from 'lucide-react';
+import { useState } from 'react';
+import { Heart, Share2 } from 'lucide-react';
 import Container from '@/app/components/layouts/Container';
 import ProductFilters from '@/app/components/filters/ProductFilters';
-import DailywearCardsAd from '@/app/components/ads/DailywearCardsAd';
 import { FilterOptions, SortOption } from '@/lib/types/product';
 import { allProducts } from '@/lib/data/products';
-import BannerImage from '../shop/components/Banner';
-import { ad, Banner, BannerMobile } from '@/app/assets/Shop-list';
-import { ProductCard } from '../shop/components/ProductCard';
 import Image from 'next/image';
 import { GiCrystalShine } from 'react-icons/gi';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -34,23 +29,7 @@ const allJewelleryProducts = [
 export default function AllJewelleryPage() {
   const [filteredProducts, setFilteredProducts] =
     useState(allJewelleryProducts);
-  const [columns, setColumns] = useState(3);
   const [visibleProducts, setVisibleProducts] = useState(10);
-
-  useEffect(() => {
-    function updateColumns() {
-      if (window.innerWidth < 640) {
-        setColumns(1);
-      } else if (window.innerWidth < 1024) {
-        setColumns(2);
-      } else {
-        setColumns(3);
-      }
-    }
-    updateColumns();
-    window.addEventListener('resize', updateColumns);
-    return () => window.removeEventListener('resize', updateColumns);
-  }, []);
 
   const filterOptions: FilterOptions = {
     priceRanges: [
@@ -248,11 +227,12 @@ export default function AllJewelleryPage() {
           onFiltersChange={setFilteredProducts}
         >
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6 items-center">
-            {displayedProducts.map(product => (
+            {displayedProducts.map((product, index) => (
               <div
                 className="relative w-full h-full rounded-lg overflow-hidden cursor-pointer border border-primary/10 flex flex-col group"
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
+                key={index}
               >
                 <div className="relative aspect-square w-full flex-shrink-0 overflow-hidden">
                   <motion.div layout className="relative w-full h-full">
