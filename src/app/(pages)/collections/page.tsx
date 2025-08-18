@@ -2,7 +2,7 @@
 
 import Container from '@/app/components/layouts/Container';
 import Image from 'next/image';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { wedding, dailywear } from '@/app/assets/EvaraeWorld';
 import { rathYatra, Keret } from '@/app/assets/Trending';
 import { SparklingAvenues, RivaahSouth } from '@/app/assets/Carousel';
@@ -154,15 +154,15 @@ export default function CollectionsPage() {
               }}
             >
               {/* Main Card */}
-              <div className="relative bg-white/80 backdrop-blur-2xl rounded-3xl overflow-hidden shadow-2xl border border-white/30 transition-all duration-700 hover:shadow-[0_25px_80px_0_rgba(0,0,0,0.08)] hover:-translate-y-1 hover:bg-white/90 group">
+              <div className="relative bg-white/80 backdrop-blur-2xl rounded-xl h-full overflow-hidden shadow-sm border border-white/30 transition-all duration-700 hover:shadow-[0_10px_15px_0_rgba(0,0,0,0.08)]  hover:bg-white/90 group">
                 {/* Image Container */}
-                <div className="relative h-80 lg:h-96 overflow-hidden">
+                <div className="relative h-64 lg:h-80 overflow-hidden group-hover:scale-105  transition-all duration-500  ">
                   <Image
                     src={col.image}
                     alt={col.name}
                     fill
                     className="object-cover transition-all duration-700 "
-                    sizes="(max-width: 768px) 100vw, 33vw"
+                    sizes="(max-width: 768px) 100vw, 33vw "
                   />
 
                   {/* Elegant Gradient Overlay */}
@@ -185,7 +185,7 @@ export default function CollectionsPage() {
                 </div>
 
                 {/* Content Section */}
-                <div className="p-8 lg:p-10">
+                <div className="p-8 lg:p-10 ">
                   {/* Collection Title */}
                   <h3 className="text-2xl lg:text-3xl font-light text-gray-800 mb-4 tracking-wide group-hover:text-pink-600 transition-colors duration-300">
                     {col.name}

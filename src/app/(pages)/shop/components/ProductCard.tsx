@@ -5,6 +5,7 @@ import { Product } from '@/lib/types/product';
 import Image from 'next/image';
 import { GiCrystalShine } from 'react-icons/gi';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Cart } from '@/app/assets/Common';
 
 interface ProductCardProps {
   product: Product;
@@ -78,50 +79,56 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       )}
 
       <div className="flex-1 flex flex-col p-3 sm:p-4 gap-3">
-        <div className="flex flex-col gap-1 lg:items-center lg:text-center">
+        <div className="flex flex-col gap-1">
           <p className="font-semibold text-primary-dark truncate text-xs sm:text-sm leading-tight mb-1">
             {product.name}
           </p>
-          {product.price ? (
-            <div className="flex items-center gap-2 lg:justify-center">
-              <p className="text-sm sm:text-base font-bold text-accent">
-                ₹{product.price.toLocaleString()}
-              </p>
-              {product.originalPrice &&
-                product.originalPrice > product.price && (
-                  <p className="text-xs sm:text-sm text-primary-dark line-through">
-                    ₹{product.originalPrice.toLocaleString()}
-                  </p>
-                )}
-            </div>
-          ) : (
-            <button className="w-full bg-primary text-white py-2 px-3 rounded-md text-xs sm:text-sm font-medium hover:bg-primary-dark transition-colors">
-              REQUEST STORE AVAILABILITY
-            </button>
-          )}
-        </div>
-        <div className="flex flex-col w-full gap-2 lg:items-center">
-          {product.originalPrice &&
-            product.price &&
-            product.originalPrice > product.price && (
-              <div className="w-full inline-flex items-center gap-1 bg-accent/10 text-accent p-1.5 rounded-[5px] text-xs font-bold justify-center">
-                <span className="text-accent">★</span>
-                Flat{' '}
-                {Math.round(
-                  ((product.originalPrice - product.price) /
-                    product.originalPrice) *
-                    100
-                )}
-                % off
+          <div className="flex items-center gap-3 flex-wrap">
+            {product.price ? (
+              <div className="flex items-center gap-2 ">
+                <p className="text-sm sm:text-base font-bold text-accent">
+                  ₹{product.price.toLocaleString()}
+                </p>
+                {product.originalPrice &&
+                  product.originalPrice > product.price && (
+                    <p className="text-xs sm:text-sm text-primary-dark line-through">
+                      ₹{product.originalPrice.toLocaleString()}
+                    </p>
+                  )}
               </div>
+            ) : (
+              <button className="w-full bg-primary text-white py-2 px-3 rounded-md text-xs sm:text-sm font-medium hover:bg-primary-dark transition-colors">
+                REQUEST STORE AVAILABILITY
+              </button>
             )}
-          {product.inStock && product.stockCount <= 3 && (
-            <p className="text-xs text-primary font-medium text-center flex items-center gap-1 animate-caret-blink ">
-              <span className="inline-block w-2 h-2 bg-primary rounded-full "></span>
-              Only {product.stockCount} left!
-            </p>
-          )}
+
+            {product.originalPrice &&
+              product.price &&
+              product.originalPrice > product.price && (
+                <div className="text-xs sm:text-sm text-primary-dark">
+                  Flat{' '}
+                  {Math.round(
+                    ((product.originalPrice - product.price) /
+                      product.originalPrice) *
+                      100
+                  )}
+                  % off
+                </div>
+              )}
+          </div>
         </div>
+        <div className="w-full bg-primary text-white py-2 px-3 rounded-md text-xs sm:text-sm  hover:bg-primary-dark transition-colors flex items-center justify-center gap-1">
+          <span className="text-accent">
+            <Cart className="w-4 h-4 text-white" />
+          </span>
+          Add to Cart
+        </div>
+        {product.inStock && product.stockCount <= 3 && (
+          <p className="text-xs text-primary font-medium text-center flex items-center gap-1 animate-caret-blink ">
+            <span className="inline-block w-2 h-2 bg-primary rounded-full "></span>
+            Only {product.stockCount} left!
+          </p>
+        )}
       </div>
     </div>
   );

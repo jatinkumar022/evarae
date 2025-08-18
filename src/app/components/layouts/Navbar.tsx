@@ -21,6 +21,7 @@ import { RxCross2 } from 'react-icons/rx';
 import Link from 'next/link';
 import { BsInboxes } from 'react-icons/bs';
 import MobileNavMenu from './MobileNavMenu';
+import { useRouter } from 'next/navigation';
 
 const NavLink = ({
   href,
@@ -86,7 +87,7 @@ export default function Navbar() {
   const [inputValue, setInputValue] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
+  const router = useRouter();
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentPlaceholder(prev => (prev + 1) % placeholders.length);
@@ -171,13 +172,17 @@ export default function Navbar() {
                 <Search className="h-5 w-5" />
               </IconButton>
               <IconButton
-                onClick={() => {}}
+                onClick={() => {
+                  router.push('#');
+                }}
                 ariaLabel="My Account - Sign in or manage your account"
               >
                 <User className="h-5 w-5" />
               </IconButton>
               <IconButton
-                onClick={() => {}}
+                onClick={() => {
+                  router.push('/wishlist');
+                }}
                 ariaLabel="Wishlist - View your saved items"
               >
                 <Heart className="h-5 w-5" />

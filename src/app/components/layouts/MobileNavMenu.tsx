@@ -57,7 +57,6 @@ interface MobileNavMenuProps {
 const MobileNavMenu = ({ isOpen, onClose }: MobileNavMenuProps) => {
   const [activeSubmenu, setActiveSubmenu] = useState<string | null>(null);
   const [searchValue, setSearchValue] = useState('');
-
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
@@ -484,13 +483,14 @@ const MobileNavMenu = ({ isOpen, onClose }: MobileNavMenuProps) => {
                     <User className="h-4 w-4" />
                     My Account
                   </button>
-                  <button
+                  <Link
+                    href={'/wishlist'}
                     className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 hover:text-primary"
                     aria-label="Wishlist - View your saved items"
                   >
                     <Heart className="h-4 w-4" />
                     Wishlist
-                  </button>
+                  </Link>
                   <button
                     className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 hover:text-primary"
                     aria-label="Shopping Bag - View cart with 5 items"
