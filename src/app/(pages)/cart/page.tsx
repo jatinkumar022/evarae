@@ -50,8 +50,6 @@ export default function CartPage() {
   const [savedItems, setSavedItems] = useState<CartItem[]>(getInitialSaved());
   const [pincode, setPincode] = useState('');
   const [deliveryMsg, setDeliveryMsg] = useState<string>('');
-  const [giftWrap, setGiftWrap] = useState(false);
-  const [orderNote, setOrderNote] = useState('');
   const [couponCode, setCouponCode] = useState('');
   const [couponRate, setCouponRate] = useState(0);
 

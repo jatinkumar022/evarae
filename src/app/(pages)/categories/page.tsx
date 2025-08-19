@@ -17,49 +17,49 @@ const categories = [
   {
     title: 'Earrings',
     image: earringsCat,
-    href: '/earrings',
+    href: '/shop/earrings',
     subtitle: 'Artisanal Beauty',
     count: '120+ Designs',
   },
   {
     title: 'Rings',
     image: ringsCat,
-    href: '/rings',
+    href: '/shop/rings',
     subtitle: 'Eternal Symbols',
     count: '95+ Designs',
   },
   {
     title: 'Pendants',
     image: pendantsCat,
-    href: '/pendants',
+    href: '/shop/pendants',
     subtitle: 'Graceful Expressions',
     count: '80+ Designs',
   },
   {
     title: 'Mangalsutra',
     image: mangalsutraCat,
-    href: '/mangalsutra',
+    href: '/shop/mangalsutra',
     subtitle: 'Sacred Traditions',
     count: '45+ Designs',
   },
   {
     title: 'Bracelets',
     image: braceletsCat,
-    href: '/bracelets',
+    href: '/shop/bracelets',
     subtitle: 'Delicate Charm',
     count: '60+ Designs',
   },
   {
     title: 'Bangles',
     image: banglesCat,
-    href: '/bangles',
+    href: '/shop/bangles',
     subtitle: 'Traditional Elegance',
     count: '75+ Designs',
   },
   {
     title: 'Chains',
     image: chainsCat,
-    href: '/chains',
+    href: '/shop/chains',
     subtitle: 'Foundation Style',
     count: '55+ Designs',
   },
@@ -70,12 +70,10 @@ export default function CategoriesPage() {
     <div className=" relative overflow-hidden">
       <div className="relative z-10">
         {/* Hero Section */}
-        <section className="px-6 lg:px-12 pt-20 pb-16">
+        <section className="px-6 lg:px-12 py-16">
           <div className="max-w-7xl mx-auto text-center">
             <div className="font-heading my-6 sm:my-8 md:flex justify-center items-center gap-2 flex-col text-accent">
-              <h1 className="text-2xl text-amber-600 lg:text-5xl">
-                Categories
-              </h1>
+              <h1 className="text-2xl text-primary lg:text-5xl">Categories</h1>
             </div>
           </div>
         </section>
@@ -83,7 +81,7 @@ export default function CategoriesPage() {
         {/* Categories Grid */}
         <section className="px-6 lg:px-12 pb-20">
           <div className="max-w-7xl mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-12">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-12">
               {categories.map((category, index) => (
                 <Link
                   key={category.title}
@@ -109,11 +107,11 @@ export default function CategoriesPage() {
 
                     {/* Content */}
                     <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <span className="text-amber-600 text-sm tracking-wider uppercase font-medium">
+                      <div className="flex items-center justify-between flex-wrap gap-2">
+                        <span className="text-primary group-hover:!text-amber-600 text-sm tracking-wider uppercase font-medium text-nowrap">
                           {category.subtitle}
                         </span>
-                        <span className="text-slate-500 text-xs font-medium">
+                        <span className="text-slate-500 text-xs font-medium text-nowrap">
                           {category.count}
                         </span>
                       </div>
@@ -132,7 +130,7 @@ export default function CategoriesPage() {
                       <div className="pt-4">
                         <div className="inline-flex items-center space-x-2 text-slate-600 group-hover:text-amber-600 transition-colors duration-500">
                           <span className="text-sm font-medium tracking-wide">
-                            Explore Collection
+                            Explore Category
                           </span>
                           <div className="w-0 group-hover:w-6 transition-all duration-500 overflow-hidden">
                             <svg

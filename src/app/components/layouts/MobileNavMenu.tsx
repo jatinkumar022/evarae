@@ -56,7 +56,7 @@ interface MobileNavMenuProps {
 }
 
 const MobileNavMenu = ({ isOpen, onClose }: MobileNavMenuProps) => {
-  const [activeSubmenu, setActiveSubmenu] = useState<string | null>(null);
+  // const [activeSubmenu, setActiveSubmenu] = useState<string | null>(null);
   const [searchValue, setSearchValue] = useState('');
   useEffect(() => {
     if (isOpen) {
@@ -86,264 +86,264 @@ const MobileNavMenu = ({ isOpen, onClose }: MobileNavMenuProps) => {
     };
   }, [isOpen, onClose]);
 
-  const handleSubmenuToggle = (itemName: string) => {
-    setActiveSubmenu(activeSubmenu === itemName ? null : itemName);
-  };
+  // const handleSubmenuToggle = (itemName: string) => {
+  //   setActiveSubmenu(activeSubmenu === itemName ? null : itemName);
+  // };
 
-  // Mobile-friendly submenu content
-  const getMobileSubmenuContent = (itemName: string) => {
-    switch (itemName) {
-      case 'All Jewellery':
-        return (
-          <div className="space-y-3">
-            <div className="grid grid-cols-2 gap-3">
-              {[
-                'Bangles',
-                'Bracelets',
-                'Earrings',
-                'Gold Chains',
-                'Pendants',
-                'Rings',
-                'Engagement Rings',
-                'Necklaces',
-                'Nose Pins',
-                'Kadas',
-                'Mangalsutras',
-                'Jhumkas',
-              ].map(category => (
-                <Link
-                  key={category}
-                  href={`/shop/${category.toLowerCase()}`}
-                  className="block px-3 py-2 text-sm text-gray-700 rounded-md hover:bg-gray-100 hover:text-primary transition-colors"
-                  onClick={onClose}
-                >
-                  {category}
-                </Link>
-              ))}
-            </div>
-            <div className="pt-3 border-t border-gray-200">
-              <Link
-                href="#"
-                className="block px-3 py-2 text-sm font-medium text-primary hover:bg-primary/10 rounded-md transition-colors"
-                onClick={onClose}
-              >
-                View All Jewellery →
-              </Link>
-            </div>
-          </div>
-        );
-      case 'Kundan & Polki':
-        return (
-          <div className="space-y-3">
-            <div className="grid grid-cols-2 gap-3">
-              {[
-                'Kundan Sets',
-                'Polki Jewellery',
-                'Bridal Collection',
-                'Traditional Sets',
-                'Modern Kundan',
-                'Polki Rings',
-                'Kundan Necklaces',
-              ].map(category => (
-                <Link
-                  key={category}
-                  href="#"
-                  className="block px-3 py-2 text-sm text-gray-700 rounded-md hover:bg-gray-100 hover:text-primary transition-colors"
-                  onClick={onClose}
-                >
-                  {category}
-                </Link>
-              ))}
-            </div>
-            <div className="pt-3 border-t border-gray-200">
-              <Link
-                href="#"
-                className="block px-3 py-2 text-sm font-medium text-primary hover:bg-primary/10 rounded-md transition-colors"
-                onClick={onClose}
-              >
-                Explore Kundan & Polki →
-              </Link>
-            </div>
-          </div>
-        );
-      case 'Collections':
-        return (
-          <div className="space-y-3">
-            <div className="grid grid-cols-2 gap-3">
-              {[
-                'Wedding Collection',
-                'Daily Wear',
-                'Festival Special',
-                'Bridal Sets',
-                'Party Wear',
-                'Traditional',
-                'Contemporary',
-              ].map(category => (
-                <Link
-                  key={category}
-                  href="#"
-                  className="block px-3 py-2 text-sm text-gray-700 rounded-md hover:bg-gray-100 hover:text-primary transition-colors"
-                  onClick={onClose}
-                >
-                  {category}
-                </Link>
-              ))}
-            </div>
-            <div className="pt-3 border-t border-gray-200">
-              <Link
-                href="#"
-                className="block px-3 py-2 text-sm font-medium text-primary hover:bg-primary/10 rounded-md transition-colors"
-                onClick={onClose}
-              >
-                View All Collections →
-              </Link>
-            </div>
-          </div>
-        );
-      case 'Earrings':
-        return (
-          <div className="space-y-3">
-            <div className="grid grid-cols-2 gap-3">
-              {[
-                'Studs',
-                'Jhumkas',
-                'Hoops',
-                'Chandbalis',
-                'Drops',
-                'Clusters',
-                'Traditional',
-                'Modern',
-              ].map(category => (
-                <Link
-                  key={category}
-                  href="#"
-                  className="block px-3 py-2 text-sm text-gray-700 rounded-md hover:bg-gray-100 hover:text-primary transition-colors"
-                  onClick={onClose}
-                >
-                  {category}
-                </Link>
-              ))}
-            </div>
-            <div className="pt-3 border-t border-gray-200">
-              <Link
-                href="#"
-                className="block px-3 py-2 text-sm font-medium text-primary hover:bg-primary/10 rounded-md transition-colors"
-                onClick={onClose}
-              >
-                Shop All Earrings →
-              </Link>
-            </div>
-          </div>
-        );
-      case 'Rings':
-        return (
-          <div className="space-y-3">
-            <div className="grid grid-cols-2 gap-3">
-              {[
-                'Engagement Rings',
-                'Wedding Rings',
-                'Diamond Rings',
-                'Gold Rings',
-                'Silver Rings',
-                'Solitaire',
-                'Three Stone',
-                'Eternity',
-              ].map(category => (
-                <Link
-                  key={category}
-                  href="#"
-                  className="block px-3 py-2 text-sm text-gray-700 rounded-md hover:bg-gray-100 hover:text-primary transition-colors"
-                  onClick={onClose}
-                >
-                  {category}
-                </Link>
-              ))}
-            </div>
-            <div className="pt-3 border-t border-gray-200">
-              <Link
-                href="#"
-                className="block px-3 py-2 text-sm font-medium text-primary hover:bg-primary/10 rounded-md transition-colors"
-                onClick={onClose}
-              >
-                Shop All Rings →
-              </Link>
-            </div>
-          </div>
-        );
-      case 'Gifting':
-        return (
-          <div className="space-y-3">
-            <div className="grid grid-cols-2 gap-3">
-              {[
-                'For Her',
-                'For Him',
-                'Wedding Gifts',
-                'Birthday Gifts',
-                'Anniversary',
-                'Festival Gifts',
-                'Corporate Gifts',
-                'Personalized',
-              ].map(category => (
-                <Link
-                  key={category}
-                  href="#"
-                  className="block px-3 py-2 text-sm text-gray-700 rounded-md hover:bg-gray-100 hover:text-primary transition-colors"
-                  onClick={onClose}
-                >
-                  {category}
-                </Link>
-              ))}
-            </div>
-            <div className="pt-3 border-t border-gray-200">
-              <Link
-                href="#"
-                className="block px-3 py-2 text-sm font-medium text-primary hover:bg-primary/10 rounded-md transition-colors"
-                onClick={onClose}
-              >
-                Explore Gifting →
-              </Link>
-            </div>
-          </div>
-        );
-      case 'More':
-        return (
-          <div className="space-y-3">
-            <div className="grid grid-cols-2 gap-3">
-              {[
-                'About Us',
-                'Store Locator',
-                'Customer Care',
-                'Track Order',
-                'Size Guide',
-                'Jewellery Care',
-                'Blog',
-                'Contact',
-              ].map(category => (
-                <Link
-                  key={category}
-                  href="#"
-                  className="block px-3 py-2 text-sm text-gray-700 rounded-md hover:bg-gray-100 hover:text-primary transition-colors"
-                  onClick={onClose}
-                >
-                  {category}
-                </Link>
-              ))}
-            </div>
-            <div className="pt-3 border-t border-gray-200">
-              <Link
-                href="#"
-                className="block px-3 py-2 text-sm font-medium text-primary hover:bg-primary/10 rounded-md transition-colors"
-                onClick={onClose}
-              >
-                Help & Support →
-              </Link>
-            </div>
-          </div>
-        );
-      default:
-        return null;
-    }
-  };
+  // // Mobile-friendly submenu content
+  // const getMobileSubmenuContent = (itemName: string) => {
+  //   switch (itemName) {
+  //     case 'All Jewellery':
+  //       return (
+  //         <div className="space-y-3">
+  //           <div className="grid grid-cols-2 gap-3">
+  //             {[
+  //               'Bangles',
+  //               'Bracelets',
+  //               'Earrings',
+  //               'Gold Chains',
+  //               'Pendants',
+  //               'Rings',
+  //               'Engagement Rings',
+  //               'Necklaces',
+  //               'Nose Pins',
+  //               'Kadas',
+  //               'Mangalsutras',
+  //               'Jhumkas',
+  //             ].map(category => (
+  //               <Link
+  //                 key={category}
+  //                 href={`/shop/${category.toLowerCase()}`}
+  //                 className="block px-3 py-2 text-sm text-gray-700 rounded-md hover:bg-gray-100 hover:text-primary transition-colors"
+  //                 onClick={onClose}
+  //               >
+  //                 {category}
+  //               </Link>
+  //             ))}
+  //           </div>
+  //           <div className="pt-3 border-t border-gray-200">
+  //             <Link
+  //               href="#"
+  //               className="block px-3 py-2 text-sm font-medium text-primary hover:bg-primary/10 rounded-md transition-colors"
+  //               onClick={onClose}
+  //             >
+  //               View All Jewellery →
+  //             </Link>
+  //           </div>
+  //         </div>
+  //       );
+  //     case 'Kundan & Polki':
+  //       return (
+  //         <div className="space-y-3">
+  //           <div className="grid grid-cols-2 gap-3">
+  //             {[
+  //               'Kundan Sets',
+  //               'Polki Jewellery',
+  //               'Bridal Collection',
+  //               'Traditional Sets',
+  //               'Modern Kundan',
+  //               'Polki Rings',
+  //               'Kundan Necklaces',
+  //             ].map(category => (
+  //               <Link
+  //                 key={category}
+  //                 href="#"
+  //                 className="block px-3 py-2 text-sm text-gray-700 rounded-md hover:bg-gray-100 hover:text-primary transition-colors"
+  //                 onClick={onClose}
+  //               >
+  //                 {category}
+  //               </Link>
+  //             ))}
+  //           </div>
+  //           <div className="pt-3 border-t border-gray-200">
+  //             <Link
+  //               href="#"
+  //               className="block px-3 py-2 text-sm font-medium text-primary hover:bg-primary/10 rounded-md transition-colors"
+  //               onClick={onClose}
+  //             >
+  //               Explore Kundan & Polki →
+  //             </Link>
+  //           </div>
+  //         </div>
+  //       );
+  //     case 'Collections':
+  //       return (
+  //         <div className="space-y-3">
+  //           <div className="grid grid-cols-2 gap-3">
+  //             {[
+  //               'Wedding Collection',
+  //               'Daily Wear',
+  //               'Festival Special',
+  //               'Bridal Sets',
+  //               'Party Wear',
+  //               'Traditional',
+  //               'Contemporary',
+  //             ].map(category => (
+  //               <Link
+  //                 key={category}
+  //                 href="#"
+  //                 className="block px-3 py-2 text-sm text-gray-700 rounded-md hover:bg-gray-100 hover:text-primary transition-colors"
+  //                 onClick={onClose}
+  //               >
+  //                 {category}
+  //               </Link>
+  //             ))}
+  //           </div>
+  //           <div className="pt-3 border-t border-gray-200">
+  //             <Link
+  //               href="#"
+  //               className="block px-3 py-2 text-sm font-medium text-primary hover:bg-primary/10 rounded-md transition-colors"
+  //               onClick={onClose}
+  //             >
+  //               View All Collections →
+  //             </Link>
+  //           </div>
+  //         </div>
+  //       );
+  //     case 'Earrings':
+  //       return (
+  //         <div className="space-y-3">
+  //           <div className="grid grid-cols-2 gap-3">
+  //             {[
+  //               'Studs',
+  //               'Jhumkas',
+  //               'Hoops',
+  //               'Chandbalis',
+  //               'Drops',
+  //               'Clusters',
+  //               'Traditional',
+  //               'Modern',
+  //             ].map(category => (
+  //               <Link
+  //                 key={category}
+  //                 href="#"
+  //                 className="block px-3 py-2 text-sm text-gray-700 rounded-md hover:bg-gray-100 hover:text-primary transition-colors"
+  //                 onClick={onClose}
+  //               >
+  //                 {category}
+  //               </Link>
+  //             ))}
+  //           </div>
+  //           <div className="pt-3 border-t border-gray-200">
+  //             <Link
+  //               href="#"
+  //               className="block px-3 py-2 text-sm font-medium text-primary hover:bg-primary/10 rounded-md transition-colors"
+  //               onClick={onClose}
+  //             >
+  //               Shop All Earrings →
+  //             </Link>
+  //           </div>
+  //         </div>
+  //       );
+  //     case 'Rings':
+  //       return (
+  //         <div className="space-y-3">
+  //           <div className="grid grid-cols-2 gap-3">
+  //             {[
+  //               'Engagement Rings',
+  //               'Wedding Rings',
+  //               'Diamond Rings',
+  //               'Gold Rings',
+  //               'Silver Rings',
+  //               'Solitaire',
+  //               'Three Stone',
+  //               'Eternity',
+  //             ].map(category => (
+  //               <Link
+  //                 key={category}
+  //                 href="#"
+  //                 className="block px-3 py-2 text-sm text-gray-700 rounded-md hover:bg-gray-100 hover:text-primary transition-colors"
+  //                 onClick={onClose}
+  //               >
+  //                 {category}
+  //               </Link>
+  //             ))}
+  //           </div>
+  //           <div className="pt-3 border-t border-gray-200">
+  //             <Link
+  //               href="#"
+  //               className="block px-3 py-2 text-sm font-medium text-primary hover:bg-primary/10 rounded-md transition-colors"
+  //               onClick={onClose}
+  //             >
+  //               Shop All Rings →
+  //             </Link>
+  //           </div>
+  //         </div>
+  //       );
+  //     case 'Gifting':
+  //       return (
+  //         <div className="space-y-3">
+  //           <div className="grid grid-cols-2 gap-3">
+  //             {[
+  //               'For Her',
+  //               'For Him',
+  //               'Wedding Gifts',
+  //               'Birthday Gifts',
+  //               'Anniversary',
+  //               'Festival Gifts',
+  //               'Corporate Gifts',
+  //               'Personalized',
+  //             ].map(category => (
+  //               <Link
+  //                 key={category}
+  //                 href="#"
+  //                 className="block px-3 py-2 text-sm text-gray-700 rounded-md hover:bg-gray-100 hover:text-primary transition-colors"
+  //                 onClick={onClose}
+  //               >
+  //                 {category}
+  //               </Link>
+  //             ))}
+  //           </div>
+  //           <div className="pt-3 border-t border-gray-200">
+  //             <Link
+  //               href="#"
+  //               className="block px-3 py-2 text-sm font-medium text-primary hover:bg-primary/10 rounded-md transition-colors"
+  //               onClick={onClose}
+  //             >
+  //               Explore Gifting →
+  //             </Link>
+  //           </div>
+  //         </div>
+  //       );
+  //     case 'More':
+  //       return (
+  //         <div className="space-y-3">
+  //           <div className="grid grid-cols-2 gap-3">
+  //             {[
+  //               'About Us',
+  //               'Store Locator',
+  //               'Customer Care',
+  //               'Track Order',
+  //               'Size Guide',
+  //               'Jewellery Care',
+  //               'Blog',
+  //               'Contact',
+  //             ].map(category => (
+  //               <Link
+  //                 key={category}
+  //                 href="#"
+  //                 className="block px-3 py-2 text-sm text-gray-700 rounded-md hover:bg-gray-100 hover:text-primary transition-colors"
+  //                 onClick={onClose}
+  //               >
+  //                 {category}
+  //               </Link>
+  //             ))}
+  //           </div>
+  //           <div className="pt-3 border-t border-gray-200">
+  //             <Link
+  //               href="#"
+  //               className="block px-3 py-2 text-sm font-medium text-primary hover:bg-primary/10 rounded-md transition-colors"
+  //               onClick={onClose}
+  //             >
+  //               Help & Support →
+  //             </Link>
+  //           </div>
+  //         </div>
+  //       );
+  //     default:
+  //       return null;
+  //   }
+  // };
 
   return (
     <AnimatePresence>
