@@ -172,7 +172,7 @@ export default function CartPage() {
                 {cartItems.map(({ product, quantity }) => (
                   <div
                     key={product.id}
-                    className="flex flex-col sm:flex-row items-start sm:items-center gap-3 p-3 sm:p-4 border border-primary/10 rounded-lg bg-white/30"
+                    className="flex  items-start sm:items-center gap-3 p-3 sm:p-4 border border-primary/10 rounded-lg bg-white/30"
                   >
                     {/* Product Image */}
                     <div className="relative w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 flex-shrink-0 overflow-hidden rounded-md">
@@ -291,64 +291,6 @@ export default function CartPage() {
               </li>
             </ul>
           </div>
-
-          {/* Saved for later */}
-          {savedItems.length > 0 && (
-            <div className="p-3 sm:p-4 md:p-5 rounded-lg border border-primary/10 bg-white/60 backdrop-blur-xl">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
-                <h3 className="text-base sm:text-lg font-semibold text-primary-dark">
-                  Saved for later
-                </h3>
-                <span className="text-xs text-primary-dark self-start sm:self-auto">
-                  {savedItems.length} item(s)
-                </span>
-              </div>
-              <div className="space-y-3 md:space-y-4">
-                {savedItems.map(({ product }) => (
-                  <div
-                    key={product.id}
-                    className="flex flex-col sm:flex-row items-start sm:items-center gap-3 p-3 sm:p-4 border border-primary/10 rounded-lg bg-white/30"
-                  >
-                    <div className="relative w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0 overflow-hidden rounded-md">
-                      <Image
-                        src={product.images[0]}
-                        alt={product.name}
-                        fill
-                        className="object-cover"
-                        sizes="(max-width: 640px) 64px, 80px"
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-primary-dark line-clamp-2">
-                        {product.name}
-                      </p>
-                      <p className="text-xs mt-1 text-accent font-semibold">
-                        ₹{(product.price ?? 0).toLocaleString()}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2 self-start sm:self-auto">
-                      <button
-                        className=" p-2 rounded-full flex gap-2 items-center btn-outline btn-animated text-xs"
-                        onClick={() => moveToCart(product.id)}
-                      >
-                        Move to cart
-                      </button>
-                      <button
-                        className="p-2 rounded-full flex gap-2 items-center btn-outline btn-animated text-xs"
-                        onClick={() =>
-                          setSavedItems(prev =>
-                            prev.filter(i => i.product.id !== product.id)
-                          )
-                        }
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Order Summary */}
@@ -455,7 +397,63 @@ export default function CartPage() {
           </div>
         </aside>
       </div>
-
+      {/* Saved for later */}
+      {savedItems.length > 0 && (
+        <div className="p-3 sm:p-4 md:p-5 rounded-lg border border-primary/10 bg-white/60 backdrop-blur-xl mt-5">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
+            <h3 className="text-base sm:text-lg font-semibold text-primary-dark">
+              Saved for later
+            </h3>
+            <span className="text-xs text-primary-dark self-start sm:self-auto">
+              {savedItems.length} item(s)
+            </span>
+          </div>
+          <div className="space-y-3 md:space-y-4">
+            {savedItems.map(({ product }) => (
+              <div
+                key={product.id}
+                className="flex flex-col sm:flex-row items-start sm:items-center gap-3 p-3 sm:p-4 border border-primary/10 rounded-lg bg-white/30"
+              >
+                <div className="relative w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0 overflow-hidden rounded-md">
+                  <Image
+                    src={product.images[0]}
+                    alt={product.name}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 640px) 64px, 80px"
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-primary-dark line-clamp-2">
+                    {product.name}
+                  </p>
+                  <p className="text-xs mt-1 text-accent font-semibold">
+                    ₹{(product.price ?? 0).toLocaleString()}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 self-start sm:self-auto">
+                  <button
+                    className=" p-2 rounded-full flex gap-2 items-center btn-outline btn-animated text-xs"
+                    onClick={() => moveToCart(product.id)}
+                  >
+                    Move to cart
+                  </button>
+                  <button
+                    className="p-2 rounded-full flex gap-2 items-center btn-outline btn-animated text-xs"
+                    onClick={() =>
+                      setSavedItems(prev =>
+                        prev.filter(i => i.product.id !== product.id)
+                      )
+                    }
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
       {/* Recommendations */}
       <div className="mt-8 md:mt-10">
         <h3 className="text-lg sm:text-xl md:text-2xl font-semibold text-primary-dark mb-4">
