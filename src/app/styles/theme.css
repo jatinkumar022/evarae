@@ -193,7 +193,7 @@ body {
 .btn-outline {
   position: relative;
   overflow: hidden;
-  border: 1px solid var(--color-primary);
+  border: 0.5px solid var(--color-primary);
   background: transparent;
   color: var(--color-primary);
   transition: all 0.3s ease;
@@ -231,9 +231,7 @@ body {
   transform: scale(1);
 }
 
-.btn-outline:hover {
-  color: var(--text-white);
-}
+
 
 .btn-ghost {
   background-color: transparent;

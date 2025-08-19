@@ -188,7 +188,9 @@ export default function Navbar() {
                 <Heart className="h-5 w-5" />
               </IconButton>
               <IconButton
-                onClick={() => {}}
+                onClick={() => {
+                  router.push('/cart');
+                }}
                 ariaLabel="Shopping Bag - View cart with 5 items"
               >
                 <ShoppingBag className="h-5 w-5" />
