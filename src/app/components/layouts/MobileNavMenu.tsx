@@ -368,7 +368,7 @@ const MobileNavMenu = ({ isOpen, onClose }: MobileNavMenuProps) => {
           >
             {/* Header */}
             <div className="flex h-20 items-center justify-between border-b border-gray-200 px-6">
-              <h2 className="text-xs font-heading text-primary">
+              <h2 className="text-xs  text-primary">
                 <LogoCaelvi />
               </h2>
               <button

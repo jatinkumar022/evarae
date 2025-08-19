@@ -69,12 +69,26 @@ export default function CategoriesPage() {
   return (
     <div className=" relative overflow-hidden">
       <div className="relative z-10">
-        {/* Hero Section */}
-        <section className="px-6 lg:px-12 py-16">
+        <section className="px-6 lg:px-12 py-20">
           <div className="max-w-7xl mx-auto text-center">
-            <div className="font-heading my-6 sm:my-8 md:flex justify-center items-center gap-2 flex-col text-accent">
-              <h1 className="text-2xl text-primary lg:text-5xl">Categories</h1>
+            <div className="relative inline-block">
+              {/* Decorative line before */}
+              <div className="absolute -left-20 top-2/5 w-16 h-px bg-gradient-to-r from-transparent to-primary/30 hidden md:block"></div>
+
+              <h1 className="text-2xl lg:text-3xl font-heading text-primary tracking-wide">
+                Categories
+              </h1>
+
+              {/* Decorative line after */}
+              <div className="absolute -right-20 top-2/5 w-16 h-px bg-gradient-to-l from-transparent to-primary/30 hidden md:block"></div>
+
+              {/* Subtle underline */}
+              <div className="mt-4 w-24 h-px bg-primary/20 mx-auto"></div>
             </div>
+
+            <p className="mt-6 text-gray-600 text-lg font-light max-w-2xl mx-auto">
+              Discover our carefully curated jewelry categories
+            </p>
           </div>
         </section>
 

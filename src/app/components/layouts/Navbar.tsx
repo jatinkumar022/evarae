@@ -161,7 +161,9 @@ export default function Navbar() {
 
             {/* Centered Logo (Desktop-only) */}
             <div className="hidden lg:block">
-              <h2 className="text-2xl  font-heading text-primary">Caelvi</h2>
+              <h2 className=" font-heading text-[#e95a7f] mt-1">
+                <LogoCaelvi className="text-xs" />
+              </h2>
             </div>
 
             {/* Right Group */}
