@@ -22,6 +22,7 @@ import Link from 'next/link';
 import { BsInboxes } from 'react-icons/bs';
 import MobileNavMenu from './MobileNavMenu';
 import { useRouter } from 'next/navigation';
+import { LogoCaelvi } from '@/app/assets';
 
 const NavLink = ({
   href,
@@ -134,8 +135,8 @@ export default function Navbar() {
               </div>
               <div className="lg:hidden">
                 <Link href="/">
-                  <h1 className="text-2xl  font-heading text-primary">
-                    Caelvi
+                  <h1 className="text-xs  font-heading text-primary">
+                    <LogoCaelvi />
                   </h1>
                 </Link>
               </div>

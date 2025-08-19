@@ -1,26 +1,28 @@
-"use client";
+'use client';
 
-import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import useScrollDirection from "@/app/handlers/NavbarVisibilityHandler";
-import Link from "next/link";
-import Container from "./Container";
-import MegaMenuContent from "./Submenus/MegaMenuContent";
-import KundanPolkiMenu from "./Submenus/KundanPolkiMenu";
-import CollectionsMenu from "./Submenus/CollectionsMenu";
-import RingsMenu from "./Submenus/RingsMenu";
-import EarringsMenu from "./Submenus/EarRingsMenu";
-import GiftingMenu from "./Submenus/GiftingMenu";
-import MoreMenu from "./Submenus/MoreMenu";
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
+import useScrollDirection from '@/app/handlers/NavbarVisibilityHandler';
+import Link from 'next/link';
+import Container from './Container';
+// import MegaMenuContent from "./Submenus/MegaMenuContent";
+// import KundanPolkiMenu from "./Submenus/KundanPolkiMenu";
+// import CollectionsMenu from "./Submenus/CollectionsMenu";
+// import RingsMenu from "./Submenus/RingsMenu";
+// import EarringsMenu from "./Submenus/EarRingsMenu";
+// import GiftingMenu from "./Submenus/GiftingMenu";
+// import MoreMenu from "./Submenus/MoreMenu";
 
+// ✅ Just simple links for now
 const menuItems = [
-  { name: "All Jewellery", href: "#", submenu: MegaMenuContent },
-  { name: "Kundan & Polki", href: "#", submenu: KundanPolkiMenu },
-  { name: "Collections", href: "#", submenu: CollectionsMenu },
-  { name: "Earrings", href: "#", submenu: EarringsMenu },
-  { name: "Rings", href: "#", submenu: RingsMenu },
-  { name: "Gifting", href: "#", submenu: GiftingMenu },
-  { name: "More", href: "#", submenu: MoreMenu },
+  { name: 'Earrings', href: '/shop/earrings' },
+  { name: 'Rings', href: '/shop/rings' },
+  { name: 'Pendants', href: '/shop/pendants' },
+  { name: 'Mangalsutra', href: '/shop/mangalsutra' },
+  { name: 'Bracelets', href: '/shop/bracelets' },
+  { name: 'Bangles', href: '/shop/bangles' },
+  { name: 'Chains', href: '/shop/chains' },
+  { name: 'All Categories', href: '/categories' },
 ];
 
 const MenuItem = ({
@@ -28,37 +30,30 @@ const MenuItem = ({
   active,
   setActive,
 }: {
-  item: { name: string; href: string; submenu?: React.ComponentType };
+  item: { name: string; href: string };
   active: string | null;
   setActive: (item: string | null) => void;
 }) => {
   const isActive = active === item.name;
-  const handleMouseEnter = () => {
-    setActive(item.name);
-  };
 
   return (
-    <div
-      onMouseEnter={handleMouseEnter}
-      className="relative flex h-full items-center"
-    >
+    <div className="relative flex h-full items-center">
       <Link
         href={item.href}
+        onMouseEnter={() => setActive(item.name)}
         className={`relative text-[15px] transition-colors ${
-          isActive ? "text-primary" : "text-gray-700 hover:text-primary"
+          isActive ? 'text-primary' : 'text-gray-700 hover:text-primary'
         }`}
       >
         {item.name}
       </Link>
-      <AnimatePresence>
-        {isActive && (
-          <motion.div
-            className="absolute left-0 -bottom-px h-0.5 w-full bg-primary"
-            layoutId="underline"
-            transition={{ duration: 0.2 }}
-          />
-        )}
-      </AnimatePresence>
+      {isActive && (
+        <motion.div
+          className="absolute left-0 -bottom-px h-0.5 w-full bg-primary"
+          layoutId="underline"
+          transition={{ duration: 0.2 }}
+        />
+      )}
     </div>
   );
 };
@@ -67,14 +62,10 @@ const NavigationMenu = () => {
   const [active, setActive] = useState<string | null>(null);
   const scrollDir = useScrollDirection();
 
-  const ActiveSubMenu = active
-    ? menuItems.find((item) => item.name === active)?.submenu
-    : null;
-
   return (
     <motion.div
       className={`fixed z-20 w-full bg-white transition-transform duration-300 hidden lg:block ${
-        scrollDir === "down" ? "-translate-y-full" : "translate-y-0"
+        scrollDir === 'down' ? '-translate-y-full' : 'translate-y-0'
       }`}
       style={{ top: 80 }}
     >
@@ -83,7 +74,7 @@ const NavigationMenu = () => {
           className="relative flex h-14 items-center justify-center gap-10"
           onMouseLeave={() => setActive(null)}
         >
-          {menuItems.map((item) => (
+          {menuItems.map(item => (
             <MenuItem
               key={item.name}
               item={item}
@@ -91,6 +82,9 @@ const NavigationMenu = () => {
               setActive={setActive}
             />
           ))}
+
+          {/* 
+          🔽 Future dropdown submenu (commented for now)
           <AnimatePresence>
             {ActiveSubMenu && (
               <motion.div
@@ -105,6 +99,7 @@ const NavigationMenu = () => {
               </motion.div>
             )}
           </AnimatePresence>
+          */}
         </nav>
       </Container>
     </motion.div>

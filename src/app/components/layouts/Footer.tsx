@@ -17,6 +17,7 @@ import {
   FaGift,
 } from 'react-icons/fa6';
 import { motion } from 'framer-motion';
+import { LogoCaelvi } from '@/app/assets';
 
 const FooterLinkGroup = ({
   title,
@@ -183,8 +184,8 @@ export default function Footer() {
               transition={{ duration: 0.5 }}
               viewport={{ once: true }}
             >
-              <h3 className="text-2xl md:text-4xl font-bold mb-3 md:mb-4 font-heading text-accent">
-                Caelvi
+              <h3 className="text-2xl  mb-3 md:mb-4  text-accent flex justify-center p-2">
+                <LogoCaelvi className="text-sm" />
               </h3>
               <p className="text-muted-foreground text-xs md:text-sm mb-4 md:mb-6 leading-relaxed">
                 Exquisite Jewellery for Every Occasion. Crafted with passion,

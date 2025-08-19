@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" width="8em" height="2em">
+  <defs>
+    <style>
+      .logo-text {
+        font-family: Colabero-Regular, Colabero, sans-serif;
+        letter-spacing: 0.1em;
+      }
+    </style>
+  </defs>
+  <text class="logo-text" x="0.5em" y="1.3em" dominant-baseline="middle">CAELVI</text>
+</svg>

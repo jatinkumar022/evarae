@@ -13,23 +13,24 @@ import {
   ShoppingBag,
   User,
 } from '@/app/assets/Navbar';
-import MegaMenuContent from './Submenus/MegaMenuContent';
-import KundanPolkiMenu from './Submenus/KundanPolkiMenu';
-import CollectionsMenu from './Submenus/CollectionsMenu';
-import RingsMenu from './Submenus/RingsMenu';
-import EarringsMenu from './Submenus/EarRingsMenu';
-import GiftingMenu from './Submenus/GiftingMenu';
-import MoreMenu from './Submenus/MoreMenu';
+// import MegaMenuContent from './Submenus/MegaMenuContent';
+// import KundanPolkiMenu from './Submenus/KundanPolkiMenu';
+// import CollectionsMenu from './Submenus/CollectionsMenu';
+// import RingsMenu from './Submenus/RingsMenu';
+// import EarringsMenu from './Submenus/EarRingsMenu';
+// import GiftingMenu from './Submenus/GiftingMenu';
+// import MoreMenu from './Submenus/MoreMenu';
+import { LogoCaelvi } from '@/app/assets';
 
-const menuItems = [
-  { name: 'All Jewellery', href: '#', submenu: MegaMenuContent },
-  { name: 'Kundan & Polki', href: '#', submenu: KundanPolkiMenu },
-  { name: 'Collections', href: '#', submenu: CollectionsMenu },
-  { name: 'Earrings', href: '#', submenu: EarringsMenu },
-  { name: 'Rings', href: '#', submenu: RingsMenu },
-  { name: 'Gifting', href: '#', submenu: GiftingMenu },
-  { name: 'More', href: '#', submenu: MoreMenu },
-];
+// const menuItems = [
+//   { name: 'All Jewellery', href: '#', submenu: MegaMenuContent },
+//   { name: 'Kundan & Polki', href: '#', submenu: KundanPolkiMenu },
+//   { name: 'Collections', href: '#', submenu: CollectionsMenu },
+//   { name: 'Earrings', href: '#', submenu: EarringsMenu },
+//   { name: 'Rings', href: '#', submenu: RingsMenu },
+//   { name: 'Gifting', href: '#', submenu: GiftingMenu },
+//   { name: 'More', href: '#', submenu: MoreMenu },
+// ];
 
 const quickLinks = [
   {
@@ -367,7 +368,9 @@ const MobileNavMenu = ({ isOpen, onClose }: MobileNavMenuProps) => {
           >
             {/* Header */}
             <div className="flex h-20 items-center justify-between border-b border-gray-200 px-6">
-              <h2 className="text-2xl font-heading text-primary">Caelvi</h2>
+              <h2 className="text-xs font-heading text-primary">
+                <LogoCaelvi />
+              </h2>
               <button
                 onClick={onClose}
                 className="rounded-full p-3 text-gray-500 transition-colors hover:bg-gray-100 hover:text-primary"
@@ -419,7 +422,32 @@ const MobileNavMenu = ({ isOpen, onClose }: MobileNavMenuProps) => {
                   Categories
                 </h3>
                 <div className="space-y-1">
-                  {menuItems.map(item => (
+                  <div className="space-y-1">
+                    {[
+                      { name: 'Earrings', href: '/shop/earrings' },
+                      { name: 'Rings', href: '/shop/rings' },
+                      { name: 'Pendants', href: '/shop/pendants' },
+                      { name: 'Mangalsutra', href: '/shop/mangalsutra' },
+                    ].map(item => (
+                      <Link
+                        key={item.name}
+                        href={item.href}
+                        className="block rounded-md px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 hover:text-primary"
+                        onClick={onClose}
+                      >
+                        {item.name}
+                      </Link>
+                    ))}
+                    <Link
+                      href={'/categories'}
+                      className="block rounded-md px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 hover:text-primary"
+                      onClick={onClose}
+                    >
+                      All Categories
+                    </Link>
+                  </div>
+
+                  {/* {menuItems.map(item => (
                     <div key={item.name} className="relative">
                       <button
                         onClick={() => handleSubmenuToggle(item.name)}
@@ -466,7 +494,7 @@ const MobileNavMenu = ({ isOpen, onClose }: MobileNavMenuProps) => {
                         )}
                       </AnimatePresence>
                     </div>
-                  ))}
+                  ))} */}
                 </div>
               </div>
 

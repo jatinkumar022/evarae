@@ -14,13 +14,14 @@
   --color-card-foreground: var(--card-foreground);
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
+
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);
+  --color-accent: var(--accent);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
   --color-border: var(--border);
@@ -51,24 +52,21 @@
   --card-foreground: oklch(0.24 0.02 18.06);
   --popover: oklch(0.97 0.005 17.65);
   --popover-foreground: oklch(0.24 0.02 18.06);
-  --primary: oklch(0.66 0.14 358.91);
-  --primary-dark: #a14a65;
+
   /* Rosewood Pink */
   --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.87 0.04 7.6);
+
   /* Light Rosé */
   --secondary-foreground: oklch(0.24 0.02 18.06);
-  --muted: oklch(0.93 0.03 12.01);
+
   /* Soft Petal Pink */
   --muted-foreground: oklch(0.24 0.02 18.06);
-  --accent: oklch(0.39 0.09 17.83);
+
   /* Bordeaux */
   --accent-foreground: oklch(1 0 0);
   --destructive: oklch(0.65 0.22 17.5);
-  --border: oklch(0.84 0.04 10.35);
   /* Powder Rose */
   --input: oklch(0.84 0.04 10.35);
-  --ring: oklch(0.66 0.14 358.91);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
@@ -82,6 +80,17 @@
   --sidebar-accent-foreground: oklch(0.208 0.042 265.755);
   --sidebar-border: oklch(0.929 0.013 255.508);
   --sidebar-ring: oklch(0.704 0.04 256.788);
+
+
+  --primary: oklch(0.66 0.14 358.91);
+  --primary-dark: #a14a65;
+  --accent: oklch(0.39 0.09 17.83);
+  --secondary: oklch(0.87 0.04 7.6);
+  --muted: oklch(0.93 0.03 12.01);
+  --border: oklch(0.84 0.04 10.35);
+  --ring: oklch(0.66 0.14 358.91);
+
+
 }
 
 
