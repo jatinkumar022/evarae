@@ -229,7 +229,7 @@ export default function AllJewelleryPage() {
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6 items-center">
             {displayedProducts.map((product, index) => (
               <div
-                className="relative w-full h-full rounded-lg overflow-hidden cursor-pointer border border-primary/10 flex flex-col group"
+                className="relative w-full h-full rounded-lg overflow-hidden cursor-pointer border border-primary/10 flex flex-col "
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
                 key={index}

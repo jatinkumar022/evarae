@@ -134,8 +134,8 @@ export default function Navbar() {
                 </IconButton>
               </div>
               <div className="lg:hidden">
-                <Link href="/">
-                  <h1 className="text-xs  font-heading text-primary">
+                <Link href="/" className="cursor-pointer">
+                  <h1 className="text-xs  font-heading text-primary ">
                     <LogoCaelvi />
                   </h1>
                 </Link>
@@ -160,11 +160,11 @@ export default function Navbar() {
             </div>
 
             {/* Centered Logo (Desktop-only) */}
-            <div className="hidden lg:block">
+            <Link href="/" className="hidden lg:block cursor-pointer">
               <h2 className=" font-heading text-[#e95a7f] mt-1">
                 <LogoCaelvi className="text-xs" />
               </h2>
-            </div>
+            </Link>
 
             {/* Right Group */}
             <div className="flex items-center justify-end gap-2 lg:flex-1 max-lg:text-primary">
@@ -236,6 +236,14 @@ export default function Navbar() {
                       type="text"
                       value={inputValue}
                       onChange={e => setInputValue(e.target.value)}
+                      onKeyPress={e => {
+                        if (e.key === 'Enter' && inputValue.trim()) {
+                          router.push(
+                            `/search?q=${encodeURIComponent(inputValue.trim())}`
+                          );
+                          setIsSearchOpen(false);
+                        }
+                      }}
                       className="w-full bg-transparent text-lg placeholder-gray-400 focus:outline-none  relative z-10"
                       autoFocus
                     />
@@ -256,8 +264,22 @@ export default function Navbar() {
                       </div>
                     )}
                     <button
+                      onClick={() => {
+                        if (inputValue.trim()) {
+                          router.push(
+                            `/search?q=${encodeURIComponent(inputValue.trim())}`
+                          );
+                          setIsSearchOpen(false);
+                        }
+                      }}
+                      className="px-4 py-1.5 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors ml-4"
+                      aria-label="Search"
+                    >
+                      Search
+                    </button>
+                    <button
                       onClick={() => setIsSearchOpen(false)}
-                      className="p-2 text-gray-600 transition-colors hover:text-primary ml-4"
+                      className="p-2 text-gray-600 transition-colors hover:text-primary ml-2"
                       aria-label="Close search"
                     >
                       <RxCross2 size={18} />
@@ -298,6 +320,12 @@ export default function Navbar() {
                         {trendingSearches.map(term => (
                           <button
                             key={term}
+                            onClick={() => {
+                              router.push(
+                                `/search?q=${encodeURIComponent(term)}`
+                              );
+                              setIsSearchOpen(false);
+                            }}
                             className="rounded-full bg-gray-100 px-4 py-1.5 text-sm text-gray-700 transition-colors hover:bg-gray-200 hover:text-gray-900"
                             aria-label={`Search for ${term}`}
                           >
