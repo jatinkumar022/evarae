@@ -1,26 +1,26 @@
-import Image, { StaticImageData } from "next/image";
-import { wedding, gold, diamond } from "@/app/assets/EvaraeWorld";
-import Link from "next/link";
+import Image, { StaticImageData } from 'next/image';
+import { wedding, gold, diamond } from '@/app/assets/EvaraeWorld';
+import Link from 'next/link';
 
 const categories = [
   {
-    href: "",
+    href: '',
     src: wedding,
-    alt: "Wedding",
-    label: "Wedding Collection",
+    alt: 'Wedding',
+    label: 'Wedding Collection',
     isLarge: true,
   },
   {
-    href: "",
+    href: '',
     src: gold,
-    alt: "Gold",
-    label: "Gold Jewellery",
+    alt: 'Gold',
+    label: 'Gold Jewellery',
   },
   {
-    href: "",
+    href: '',
     src: diamond,
-    alt: "Diamond",
-    label: "Diamond Pieces",
+    alt: 'Diamond',
+    label: 'Diamond Pieces',
   },
 ];
 
@@ -47,13 +47,13 @@ const CategoryCard = ({
       alt={alt}
       className="w-full h-full object-cover transition-transform duration-500 ease-in-out group-hover:scale-105"
       quality={90}
-      sizes={isLarge ? "100vw" : "(max-width: 768px) 100vw, 50vw"}
+      sizes={isLarge ? '100vw' : '(max-width: 768px) 100vw, 50vw'}
     />
     <div
       className="absolute bottom-0 left-0 w-full h-1/4"
       style={{
         background:
-          "linear-gradient(to top, oklch(0.85 0.07 353.4 / 0.7) 0%, oklch(0.85 0.07 353.4 / 0) 100%)",
+          'linear-gradient(to top, oklch(0.85 0.07 353.4 / 0.7) 0%, oklch(0.85 0.07 353.4 / 0) 100%)',
       }}
     />
     <div className="absolute bottom-0 left-0 p-6 w-full">

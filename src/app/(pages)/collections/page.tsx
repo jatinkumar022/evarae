@@ -1,7 +1,7 @@
 'use client';
 import Container from '@/app/components/layouts/Container';
 import Image from 'next/image';
-import { wedding, dailywear } from '@/app/assets/EvaraeWorld';
+import { wedding, dailywear } from '@/app/assets/CaelviWorld';
 import { rathYatra, Keret } from '@/app/assets/Trending';
 import { SparklingAvenues, RivaahSouth } from '@/app/assets/Carousel';
 // Sample collection data with placeholder images

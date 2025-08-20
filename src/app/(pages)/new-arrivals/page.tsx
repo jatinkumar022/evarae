@@ -14,7 +14,7 @@ import {
   Play,
   Instagram,
 } from 'lucide-react';
-import { wedding } from '@/app/assets/EvaraeWorld';
+import { wedding } from '@/app/assets/CaelviWorld';
 import Image from 'next/image';
 
 import Link from 'next/link';

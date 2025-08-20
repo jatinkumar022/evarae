@@ -4,7 +4,7 @@ import ImageGrid from './components/home/ImageGrid';
 import CategoryGrid from './components/home/CategoryGrid';
 import Trending from './components/home/Trending';
 import AnimatedCards from './components/home/AnimatedCards';
-import CaelviWorld from './components/home/EvaraeWorld';
+import EvaraeWorld from './components/home/EvaraeWorld';
 import NewArrival from './components/home/NewArrival';
 // import Styling101Carousel from "./components/home/VideoSlider";
 import OurPromise from './components/home/Assurance';
@@ -35,7 +35,7 @@ export default function Home() {
       <NewArrival />
 
       <Container>
-        <CaelviWorld />
+        <EvaraeWorld />
         {/* <Styling101Carousel /> */}
       </Container>
       <Container>

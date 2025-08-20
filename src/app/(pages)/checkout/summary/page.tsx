@@ -323,7 +323,7 @@ export default function OrderSummaryPage() {
               </div>
               <div className="flex items-center gap-2">
                 <Mail className="w-4 h-4 text-primary" />
-                <span>support@evarae.com</span>
+                <span>support@caelvi.com</span>
               </div>
             </div>
           </div>
