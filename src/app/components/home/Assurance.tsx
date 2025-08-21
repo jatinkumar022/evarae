@@ -1,106 +1,164 @@
-"use client";
-import React from "react";
+'use client';
+import React from 'react';
+import { Heart, Gem, Shield, Sparkles, Award, Leaf } from 'lucide-react';
 
-const PromiseIcon = ({ children }: { children: React.ReactNode }) => (
-  <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center text-accent mb-4">
-    {children}
+const PromiseCard = ({
+  children,
+  title,
+  description,
+  index,
+}: {
+  children: React.ReactNode;
+  title: string;
+  description: string;
+  index: number;
+}) => (
+  <div
+    className={`group relative overflow-hidden rounded-3xl bg-gradient-to-br from-pink-100/90 to-white/70 backdrop-blur-xl border border-white/30 p-8 text-center transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-purple-100/50 ${
+      index % 2 === 0
+        ? 'hover:from-rose-50/90 hover:to-pink-50/70'
+        : 'hover:from-purple-50/90 hover:to-indigo-50/70'
+    }`}
+    style={{
+      animationDelay: `${index * 150}ms`,
+      animation: 'fadeInUp 0.6s ease-out forwards',
+    }}
+  >
+    {/* Decorative gradient orb */}
+    <div
+      className={`absolute -top-10 -right-10 w-20 h-20 rounded-full opacity-20 group-hover:opacity-30 transition-opacity duration-500 ${
+        index % 2 === 0
+          ? 'bg-gradient-to-br from-rose-400 to-pink-500'
+          : 'bg-gradient-to-br from-purple-400 to-indigo-500'
+      }`}
+    />
+
+    <div
+      className={`w-16 h-16 mx-auto mb-6 rounded-2xl bg-gradient-to-br ${
+        index % 2 === 0
+          ? 'from-rose-100 to-pink-100 group-hover:from-rose-200 group-hover:to-pink-200'
+          : 'from-purple-100 to-indigo-100 group-hover:from-purple-200 group-hover:to-indigo-200'
+      } flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg`}
+    >
+      <div
+        className={`${
+          index % 2 === 0 ? 'text-rose-600' : 'text-purple-600'
+        } transition-colors duration-300`}
+      >
+        {children}
+      </div>
+    </div>
+
+    <h3 className="font-medium text-foreground tracking-wider uppercase text-sm mb-3">
+      {title}
+    </h3>
+    <p className="text-gray-600 text-sm leading-relaxed group-hover:text-gray-700 transition-colors">
+      {description}
+    </p>
   </div>
 );
 
-const CustomGemIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="28"
-    height="28"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="1.5"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M6 3h12l4 6-10 12L2 9l4-6z" />
-    <path d="M12 22V9" />
-    <path d="M2 9h20" />
-  </svg>
-);
+type AssuranceItem = {
+  icon: React.ElementType;
+  title: string;
+  description: string;
+};
 
-const CustomLeafIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="28"
-    height="28"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="1.5"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M12 22c-3-3-4-4-4-9a4 4 0 014-4h0a4 4 0 014 4c0 5-1 6-4 9z" />
-    <path d="M12 22V13" />
-    <path d="M8 9a4 4 0 00-4 4" />
-    <path d="M16 9a4 4 0 014 4" />
-  </svg>
-);
-const CustomBadgeCheckIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="28"
-    height="28"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="1.5"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-    <path d="m9 12 2 2 4-4" />
-  </svg>
-);
-
-const promises = [
+const assurances: AssuranceItem[] = [
   {
-    icon: <CustomGemIcon />,
-    title: "Exquisite Craftsmanship",
-    description: "Every piece is meticulously crafted by master artisans.",
+    icon: Heart,
+    title: 'Skin-Loving Materials',
+    description:
+      'Hypoallergenic imitation alloys carefully selected for sensitive skin, ensuring comfort throughout your day.',
   },
   {
-    icon: <CustomLeafIcon />,
-    title: "Ethical Sourcing",
-    description: "We are committed to using responsibly sourced materials.",
+    icon: Gem,
+    title: 'Lustrous Beauty',
+    description:
+      'Premium finishes that capture light beautifully, giving you the glamorous look of fine jewelry.',
   },
   {
-    icon: <CustomBadgeCheckIcon />,
-    title: "Certified Authenticity",
-    description: "Each creation comes with a certificate of authenticity.",
+    icon: Shield,
+    title: 'Tarnish Resistant',
+    description:
+      'Advanced coating technology helps maintain the brilliant appearance with minimal maintenance required.',
+  },
+  {
+    icon: Sparkles,
+    title: 'Artisan Crafted',
+    description:
+      'Each piece is meticulously designed and crafted to mirror the elegance of precious jewelry.',
+  },
+  {
+    icon: Award,
+    title: 'Quality Assured',
+    description:
+      'Rigorous quality control ensures every piece meets our high standards before reaching you.',
+  },
+  {
+    icon: Leaf,
+    title: 'Mindfully Made',
+    description:
+      'Sustainable practices and eco-friendly packaging reflect our commitment to responsible fashion.',
   },
 ];
 
-export default function OurPromise() {
+export default function ElegantJewelryAssurance() {
   return (
-    <section className="pb-16">
-      <div className="heading-component-main-container mt-0 mb-12">
-        <h1 className="heading-component-main-heading">The Caelvi Promise</h1>
-        <h2 className="heading-component-main-subheading">
-          Our commitment to quality, ethics, and you.
-        </h2>
-      </div>
+    <section className="relative py-20 px-6 overflow-hidden">
+      <div className="relative max-w-7xl mx-auto">
+        {/* Header with same typography system */}
+        <div className="heading-component-main-container">
+          <h1 className="heading-component-main-heading">Our Promise to You</h1>
+          <h2 className="heading-component-main-subheading max-w-3xl mx-auto">
+            Exquisite fashion jewelry that delivers luxury aesthetics without
+            the premium price. Beautiful, accessible, and crafted with care.
+          </h2>
+        </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
-        {promises.map((promise, index) => (
-          <div key={index} className="flex flex-col items-center">
-            <PromiseIcon>{promise.icon}</PromiseIcon>
-            <h3 className="font-heading text-xl font-semibold text-accent">
-              {promise.title}
-            </h3>
-            <p className="text-muted-foreground mt-2 max-w-xs mx-auto text-sm">
-              {promise.description}
+        {/* Assurance Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+          {assurances.map((item, index) => {
+            const Icon = item.icon;
+            return (
+              <PromiseCard
+                key={index}
+                title={item.title}
+                description={item.description}
+                index={index}
+              >
+                <Icon size={32} strokeWidth={1.5} />
+              </PromiseCard>
+            );
+          })}
+        </div>
+
+        {/* Footer Note */}
+        <div className="text-center">
+          <div className="inline-block p-6 rounded-2xl bg-white/60 backdrop-blur-sm border border-white/40">
+            <p className="text-sm text-gray-500 leading-relaxed max-w-2xl">
+              <strong className="text-gray-700">Transparency Promise:</strong>{' '}
+              We proudly create beautiful imitation jewelry. Our pieces are not
+              made from real gold or gold-plated materials, but are designed to
+              give you the same elegant look and feel at an accessible price
+              point.
             </p>
           </div>
-        ))}
+        </div>
       </div>
+
+      <style jsx>{`
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      `}</style>
     </section>
   );
 }

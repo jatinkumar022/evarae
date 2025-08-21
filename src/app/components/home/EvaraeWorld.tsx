@@ -1,24 +1,23 @@
 import Image, { StaticImageData } from 'next/image';
-import { wedding, gold, diamond } from '@/app/assets/EvaraeWorld';
 import Link from 'next/link';
-
+import { worldOne, worldThree, worldTwo } from '@/app/assets/Home/World';
 const categories = [
   {
     href: '',
-    src: wedding,
+    src: worldOne,
     alt: 'Wedding',
     label: 'Wedding Collection',
     isLarge: true,
   },
   {
     href: '',
-    src: gold,
+    src: worldThree,
     alt: 'Gold',
     label: 'Gold Jewellery',
   },
   {
     href: '',
-    src: diamond,
+    src: worldTwo,
     alt: 'Diamond',
     label: 'Diamond Pieces',
   },

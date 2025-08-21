@@ -1,11 +1,7 @@
-"use client";
-import Image, { StaticImageData } from "next/image";
-import {
-  SparklingAvenues,
-  StunningEveryEar,
-  Dailywear,
-} from "@/app/assets/GridImages";
+'use client';
+import Image, { StaticImageData } from 'next/image';
 
+import { signOne, signTwo, signThree } from '@/app/assets/Home/Signature';
 const GridItem = ({
   src,
   alt,
@@ -50,21 +46,17 @@ const ImageGrid = () => {
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 md:grid-rows-2 gap-4">
         <div className="md:col-span-1 md:row-span-1">
-          <GridItem
-            src={StunningEveryEar}
-            alt="Stunning Every Ear"
-            title="Stunning Earrings"
-          />
+          <GridItem src={signOne} alt="Stunning " title="Stunning Necklace" />
         </div>
         <div className="md:col-span-1 md:row-span-2">
           <GridItem
-            src={SparklingAvenues}
+            src={signThree}
             alt="Sparkling Avenues"
             title="Sparkling Avenues"
           />
         </div>
         <div className="md:col-span-1 md:row-span-1">
-          <GridItem src={Dailywear} alt="Dailywear" title="Everyday Luxury" />
+          <GridItem src={signTwo} alt="Dailywear" title="Everyday Luxury" />
         </div>
       </div>
     </section>

@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import Image, { StaticImageData } from 'next/image';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { SparklingAvenues, RivaahSouth, Rir } from '@/app/assets/Carousel';
+import { one, two, three } from '@/app/assets/Home/CAROUSEL';
 
 export interface DailywearProduct {
   id: string;
@@ -23,32 +23,32 @@ const DailywearCarousel: React.FC<DailywearCarouselProps> = ({
     {
       id: 'dw-earrings-1',
       name: 'Dailywear Earrings',
-      image: SparklingAvenues,
+      image: one,
     },
     {
       id: 'dw-mangalsutra-1',
       name: 'Dailywear Mangalsutra',
-      image: RivaahSouth,
+      image: two,
     },
     {
       id: 'dw-pendants-1',
       name: 'Dailywear Pendants',
-      image: Rir,
+      image: three,
     },
     {
       id: 'dw-earrings-2',
       name: 'Dailywear Earrings',
-      image: SparklingAvenues,
+      image: one,
     },
     {
       id: 'dw-mangalsutra-2',
       name: 'Dailywear Mangalsutra',
-      image: RivaahSouth,
+      image: two,
     },
     {
       id: 'dw-pendants-2',
       name: 'Dailywear Pendants',
-      image: Rir,
+      image: three,
     },
   ];
 

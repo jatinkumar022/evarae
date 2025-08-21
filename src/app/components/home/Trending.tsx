@@ -1,26 +1,30 @@
-import React from "react";
-import { gifting, rathYatra } from "@/app/assets/Trending"; // Assuming these are React components or image imports
-import Image, { StaticImageData } from "next/image";
-import Link from "next/link";
+import React from 'react';
+import {
+  trendingOne,
+  trendingTwo,
+  trendingThree,
+} from '@/app/assets/Home/Trending';
+import Image, { StaticImageData } from 'next/image';
+import Link from 'next/link';
 
 const trendingItems = [
   {
     id: 1,
-    title: "Auspicious Occasions",
-    image: rathYatra,
-    alt: "Auspicious Occasion",
+    title: 'Auspicious Occasions',
+    image: trendingOne,
+    alt: 'Auspicious Occasion',
   },
   {
     id: 2,
-    title: "Jewellery for Gifting",
-    image: gifting,
-    alt: "Gifting Jewellery",
+    title: 'Jewellery for Gifting',
+    image: trendingTwo,
+    alt: 'Gifting Jewellery',
   },
   {
     id: 3,
-    title: "18Kt Jewellery",
-    image: rathYatra,
-    alt: "18Kt Jewellery",
+    title: '18Kt Jewellery',
+    image: trendingThree,
+    alt: '18Kt Jewellery',
   },
 ];
 
@@ -39,7 +43,7 @@ const TrendingItem = ({
         <Image
           src={image}
           alt={alt}
-          className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-500 ease-in-out"
+          className="w-full  object-cover group-hover:scale-105 transition-transform duration-500 ease-in-out h-[395px]"
         />
       </div>
       <div className="py-4">
@@ -62,7 +66,7 @@ function Trending() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 md:gap-6">
-        {trendingItems.map((item) => (
+        {trendingItems.map(item => (
           <TrendingItem
             key={item.id}
             image={item.image}

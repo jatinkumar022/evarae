@@ -102,8 +102,11 @@ export default function GoldChainsPage() {
 
       if (!insertedAd2 && i === ad2Index) {
         items.push(
-          <div key="ad-2" className="col-span-2">
-            <Image src={ad} alt="" className="lg:h-[490px] rounded-xl" />
+          <div
+            key="ad-2"
+            className="col-span-2 flex items-center justify-center h-full border border-primary/20 p-5 rounded-md"
+          >
+            <Image src={ad} alt="" className="lg:h-auto rounded-xl" />
           </div>
         );
         insertedAd2 = true;

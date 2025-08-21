@@ -4,41 +4,14 @@ import * as React from 'react';
 import Image from 'next/image';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence, PanInfo } from 'framer-motion';
-import {
-  FestivalsOfDiamond,
-  EighteenKtJew,
-  Dailywear,
-  SparklingAvenues,
-  RivaahSouth,
-  Rir,
-} from '@/app/assets/Carousel';
-import {
-  MdFestivalsOfDiamondOfferMobile,
-  Md18KtJewMobile,
-  MdDailywearMobile1,
-  MdSparklingAvenuesMobile,
-  MdRivaahSouthGeoM1,
-  MdRirMobileNew,
-} from '@/app/assets/Carousel/mobile';
+
+import { one, two, three, four, five } from '@/app/assets/Home/CAROUSEL';
+
 import Container from '../layouts/Container';
 
-const images = [
-  FestivalsOfDiamond,
-  EighteenKtJew,
-  Dailywear,
-  SparklingAvenues,
-  RivaahSouth,
-  Rir,
-];
+const images = [one, two, three, four, five];
 
-const mobileImages = [
-  MdFestivalsOfDiamondOfferMobile,
-  Md18KtJewMobile,
-  MdDailywearMobile1,
-  MdSparklingAvenuesMobile,
-  MdRivaahSouthGeoM1,
-  MdRirMobileNew,
-];
+const mobileImages = [one, two, three, four, five];
 
 export default function HeroCarousel() {
   const [current, setCurrent] = React.useState(0);

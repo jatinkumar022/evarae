@@ -1,9 +1,9 @@
-import React from "react";
-import Image from "next/image";
-import { FaRegGem } from "react-icons/fa6";
-import { mangalsutra, pendants, newArrival } from "@/app/assets/NewArrival";
-import Container from "../layouts/Container";
-import Link from "next/link";
+import React from 'react';
+import Image from 'next/image';
+import { FaRegGem } from 'react-icons/fa6';
+import { mintedBg, mintedOne, mintedTwo } from '@/app/assets/Home/Minted';
+import Container from '../layouts/Container';
+import Link from 'next/link';
 
 function NewArrival() {
   return (
@@ -11,15 +11,14 @@ function NewArrival() {
       {/* Background Image */}
       <div className="absolute inset-0">
         <Image
-          src={newArrival}
+          src={mintedBg}
           alt="New Arrivals Background"
           fill
-          className="object-cover"
+          className="object-cover blur-xs lg:blur-none"
           quality={90}
         />
         <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/20" />
       </div>
-
       <Container>
         <div className="relative grid grid-cols-1 lg:grid-cols-2 gap-12 items-center py-16 lg:py-24">
           {/* Content */}
@@ -46,11 +45,11 @@ function NewArrival() {
                 aria-label="Explore The Eternal Vow mangalsutra collection"
               >
                 <Image
-                  src={mangalsutra}
+                  src={mintedOne}
                   alt="Mangalsutra"
                   width={400}
                   height={500}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover aspect-square"
                 />
                 <div className="absolute inset-0 flex items-end bg-gradient-to-t from-black/60 to-transparent p-4">
                   <h3 className="font-heading text-lg text-white font-semibold">
@@ -66,11 +65,11 @@ function NewArrival() {
                 aria-label="Explore Delicate Statements pendant collection"
               >
                 <Image
-                  src={pendants}
+                  src={mintedTwo}
                   alt="Pendants"
                   width={400}
                   height={500}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover aspect-square"
                 />
                 <div className="absolute inset-0 flex items-end bg-gradient-to-t from-black/60 to-transparent p-4">
                   <h3 className="font-heading text-lg text-white font-semibold">

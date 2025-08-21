@@ -14,8 +14,8 @@ import {
   dazzling,
   dazzlingWhite,
 } from '@/app/assets/Animatedgrid';
-import { SparklingAvenues, RivaahSouth, Rir } from '@/app/assets/Carousel';
-import { StunningEveryEar } from '@/app/assets/GridImages';
+import { signOne } from '@/app/assets/Home/Signature';
+import { one, two, three } from '@/app/assets/Home/CAROUSEL';
 
 // Static product data for rings
 export const ringsProducts: Product[] = [
@@ -428,8 +428,8 @@ export const earringsProducts: Product[] = [
     price: 85000,
     originalPrice: 95000,
     currency: 'INR',
-    images: [StunningEveryEar],
-    hoverImage: StunningEveryEar, // Using same image as fallback
+    images: [signOne],
+    hoverImage: signOne, // Using same image as fallback
     category: {
       id: 'earrings',
       name: 'Earrings',
@@ -494,8 +494,8 @@ export const earringsProducts: Product[] = [
     price: 72000,
     originalPrice: 85000,
     currency: 'INR',
-    images: [SparklingAvenues],
-    hoverImage: SparklingAvenues, // Using same image as fallback
+    images: [one],
+    hoverImage: one, // Using same image as fallback
     category: {
       id: 'earrings',
       name: 'Earrings',
@@ -527,8 +527,8 @@ export const earringsProducts: Product[] = [
     price: 58000,
     originalPrice: 68000,
     currency: 'INR',
-    images: [RivaahSouth],
-    hoverImage: RivaahSouth, // Using same image as fallback
+    images: [two],
+    hoverImage: two, // Using same image as fallback
     category: {
       id: 'earrings',
       name: 'Earrings',
@@ -560,8 +560,8 @@ export const earringsProducts: Product[] = [
     price: 92000,
     originalPrice: 105000,
     currency: 'INR',
-    images: [Rir],
-    hoverImage: Rir, // Using same image as fallback
+    images: [three],
+    hoverImage: three, // Using same image as fallback
     category: {
       id: 'earrings',
       name: 'Earrings',

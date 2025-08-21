@@ -1,9 +1,9 @@
 'use client';
 import Container from '@/app/components/layouts/Container';
 import Image from 'next/image';
-import { wedding, dailywear } from '@/app/assets/CaelviWorld';
-import { rathYatra, Keret } from '@/app/assets/Trending';
-import { SparklingAvenues, RivaahSouth } from '@/app/assets/Carousel';
+import { wedding, dailywear } from '@/app/assets/EvaraeWorld';
+import { trendingOne, trendingTwo } from '@/app/assets/Home/Trending';
+import { one, two } from '@/app/assets/Home/CAROUSEL';
 // Sample collection data with placeholder images
 const collections = [
   {
@@ -16,7 +16,7 @@ const collections = [
     name: 'Party Wear',
     description: 'Sparkle and shine at every celebration.',
     href: '/shop/party-wear',
-    image: rathYatra,
+    image: trendingOne,
   },
   {
     name: 'Casual Wear',
@@ -28,19 +28,19 @@ const collections = [
     name: 'Office Wear',
     description: 'Sophisticated pieces for your workday.',
     href: '/shop/office',
-    image: Keret,
+    image: trendingTwo,
   },
   {
     name: 'Traditional',
     description: 'Timeless classics with a cultural touch.',
     href: '/shop/traditional',
-    image: RivaahSouth,
+    image: one,
   },
   {
     name: 'Modern',
     description: 'Contemporary styles for the trendsetter.',
     href: '/shop/modern',
-    image: SparklingAvenues,
+    image: two,
   },
 ];
 export default function CollectionsPage() {

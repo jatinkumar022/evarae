@@ -14,7 +14,7 @@ import {
   Play,
   Instagram,
 } from 'lucide-react';
-import { wedding } from '@/app/assets/CaelviWorld';
+import { worldOne } from '@/app/assets/Home/World';
 import Image from 'next/image';
 
 import Link from 'next/link';
@@ -409,7 +409,7 @@ export default function EnhancedNewArrivalsPage() {
                 className="aspect-square rounded-xl overflow-hidden bg-gradient-to-br from-[var(--bg-cart)] to-[var(--bg-menu)] group cursor-pointer"
               >
                 <Image
-                  src={wedding}
+                  src={worldOne}
                   alt={`Instagram post ${index + 1}`}
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                 />
