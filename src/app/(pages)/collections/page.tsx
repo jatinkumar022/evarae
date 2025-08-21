@@ -1,7 +1,7 @@
 'use client';
 import Container from '@/app/components/layouts/Container';
 import Image from 'next/image';
-import { wedding, dailywear } from '@/app/assets/EvaraeWorld';
+import { worldThree, worldOne } from '@/app/assets/Home/World';
 import { trendingOne, trendingTwo } from '@/app/assets/Home/Trending';
 import { one, two } from '@/app/assets/Home/CAROUSEL';
 // Sample collection data with placeholder images
@@ -10,7 +10,7 @@ const collections = [
     name: 'Wedding Collection',
     description: 'Opulent designs for your most cherished moments.',
     href: '/shop/wedding',
-    image: wedding,
+    image: worldThree,
   },
   {
     name: 'Party Wear',
@@ -22,7 +22,7 @@ const collections = [
     name: 'Casual Wear',
     description: 'Effortless elegance for every day.',
     href: '/shop/casual',
-    image: dailywear,
+    image: worldOne,
   },
   {
     name: 'Office Wear',
