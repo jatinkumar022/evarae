@@ -218,7 +218,7 @@ export default function Navbar() {
               <div className="lg:hidden">
                 <Menu
                   onClick={() => setIsMobileMenuOpen(true)}
-                  ariaLabel="Open menu"
+                  aria-label="Open menu"
                   className="h-5 w-5 max-lg:text-primary flex flex-col gap-1"
                 />
               </div>
