@@ -36,11 +36,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
     notFound();
   }
 
-  return (
-    <div className="min-h-screen bg-white">
-      <ProductDetails product={product} />
-    </div>
-  );
+  return <ProductDetails product={product} />;
 }
 
 // Generate static params for all products

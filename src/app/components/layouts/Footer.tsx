@@ -11,10 +11,6 @@ import {
   FaEnvelope,
   FaPhone,
   FaLocationDot,
-  FaShieldHalved,
-  FaTruck,
-  FaHeadset,
-  FaGift,
 } from 'react-icons/fa6';
 import { motion } from 'framer-motion';
 import { LogoCaelvi } from '@/app/assets';
@@ -75,31 +71,31 @@ const ContactInfo = ({
   </div>
 );
 
-const FeatureCard = ({
-  icon: Icon,
-  title,
-  description,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  title: string;
-  description: string;
-}) => (
-  <motion.div
-    className="text-center p-4 md:p-6 bg-background/30 backdrop-blur-sm rounded-xl border border-muted-foreground/10"
-    whileHover={{ scale: 1.02, y: -2 }}
-    transition={{ duration: 0.2 }}
-  >
-    <div className="w-12 h-12 md:w-16 md:h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-      <Icon className="text-primary text-xl md:text-2xl" />
-    </div>
-    <h4 className="font-semibold text-sm md:text-base mb-2 text-accent">
-      {title}
-    </h4>
-    <p className="text-muted-foreground text-xs md:text-sm leading-relaxed">
-      {description}
-    </p>
-  </motion.div>
-);
+// const FeatureCard = ({
+//   icon: Icon,
+//   title,
+//   description,
+// }: {
+//   icon: React.ComponentType<{ className?: string }>;
+//   title: string;
+//   description: string;
+// }) => (
+//   <motion.div
+//     className="text-center p-4 md:p-6 bg-background/30 backdrop-blur-sm rounded-xl border border-muted-foreground/10"
+//     whileHover={{ scale: 1.02, y: -2 }}
+//     transition={{ duration: 0.2 }}
+//   >
+//     <div className="w-12 h-12 md:w-16 md:h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+//       <Icon className="text-primary text-xl md:text-2xl" />
+//     </div>
+//     <h4 className="font-semibold text-sm md:text-base mb-2 text-accent">
+//       {title}
+//     </h4>
+//     <p className="text-muted-foreground text-xs md:text-sm leading-relaxed">
+//       {description}
+//     </p>
+//   </motion.div>
+// );
 
 export default function Footer() {
   const shopLinks = [
@@ -127,29 +123,6 @@ export default function Footer() {
     'Care Instructions',
   ];
 
-  const features = [
-    {
-      icon: FaShieldHalved,
-      title: 'Secure Shopping',
-      description: '100% secure payment processing with SSL encryption',
-    },
-    {
-      icon: FaTruck,
-      title: 'Free Shipping',
-      description: 'Free shipping on orders over ₹250 with tracking',
-    },
-    {
-      icon: FaHeadset,
-      title: '24/7 Support',
-      description: 'Round the clock customer support via chat & phone',
-    },
-    {
-      icon: FaGift,
-      title: 'Gift Wrapping',
-      description: 'Beautiful gift wrapping available for all orders',
-    },
-  ];
-
   return (
     <footer className="relative mt-32">
       {/* Enhanced Arch SVG */}
@@ -175,7 +148,7 @@ export default function Footer() {
       <div className="bg-gradient-to-b from-muted to-muted/95 text-foreground pt-12 md:pt-16 pb-6 md:pb-8">
         <Container>
           {/* Main Footer Content */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-12 mb-12 md:mb-16">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-12 mb-4 md:mb-5">
             {/* Brand Section */}
             <motion.div
               className="sm:col-span-2 lg:col-span-1 text-center sm:text-left"
@@ -270,32 +243,50 @@ export default function Footer() {
           </div>
 
           {/* Features Section */}
-          <motion.div
-            className="mb-12 md:mb-16"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            viewport={{ once: true }}
-          >
-            <div className="text-center mb-8">
-              <h4 className="text-xl md:text-2xl font-bold mb-2 font-heading text-accent">
-                Why Choose Caelvi?
-              </h4>
-              <p className="text-muted-foreground text-sm md:text-base">
-                We&apos;re committed to providing the best shopping experience
-              </p>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-              {features.map((feature, index) => (
-                <FeatureCard
-                  key={index}
-                  icon={feature.icon}
-                  title={feature.title}
-                  description={feature.description}
-                />
+          <div className="relative overflow-hidden py-6 bg-muted/30">
+            <div className="animate-marquee flex space-x-16 text-sm font-heading text-accent tracking-wide">
+              {[
+                'Ethically Sourced Diamonds',
+                'Exquisite Craftsmanship',
+                'Certified Authenticity',
+                'Lifetime Warranty',
+                'Free Insured Delivery',
+              ].map((text, i) => (
+                <span key={`first-${i}`} className="whitespace-nowrap">
+                  ✦ {text}
+                </span>
+              ))}
+
+              {/* Duplicate list for smooth infinite effect */}
+              {[
+                'Ethically Sourced Diamonds',
+                'Exquisite Craftsmanship',
+                'Certified Authenticity',
+                'Lifetime Warranty',
+                'Free Insured Delivery',
+              ].map((text, i) => (
+                <span key={`second-${i}`} className="whitespace-nowrap">
+                  ✦ {text}
+                </span>
               ))}
             </div>
-          </motion.div>
+          </div>
+
+          <style jsx>{`
+            .animate-marquee {
+              display: flex;
+              width: max-content;
+              animation: marquee 25s linear infinite;
+            }
+            @keyframes marquee {
+              0% {
+                transform: translateX(0);
+              }
+              100% {
+                transform: translateX(-50%);
+              }
+            }
+          `}</style>
 
           {/* Bottom Section */}
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4 md:gap-6 pt-6 md:pt-8 border-t border-muted-foreground/20">
