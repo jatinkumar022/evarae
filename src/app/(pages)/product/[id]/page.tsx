@@ -11,12 +11,14 @@ import {
 } from '@/lib/data/products';
 
 interface ProductPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
-export default function ProductPage({ params }: ProductPageProps) {
+export default async function ProductPage({ params }: ProductPageProps) {
+  const { id } = await params;
+
   // Combine all products to search for the specific product
   const allProducts = [
     ...ringsProducts,
@@ -28,7 +30,7 @@ export default function ProductPage({ params }: ProductPageProps) {
     ...pendantsProducts,
   ];
 
-  const product = allProducts.find(p => p.id === params.id);
+  const product = allProducts.find(p => p.id === id);
 
   if (!product) {
     notFound();

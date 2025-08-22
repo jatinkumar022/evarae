@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { IBM_Plex_Sans, Fraunces } from 'next/font/google';
 import './styles/theme.css';
 import './styles/globals.css';
@@ -18,6 +18,11 @@ const fraunces = Fraunces({
   weight: ['200', '300', '400', '500', '600', '700'],
 });
 
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+};
+
 export const metadata: Metadata = {
   title: 'Caelvi - Premium Jewellery Collection',
   description:
@@ -25,7 +30,6 @@ export const metadata: Metadata = {
   keywords:
     'jewellery, rings, earrings, necklaces, gold, diamond, premium jewellery, Caelvi',
   authors: [{ name: 'Caelvi' }],
-  viewport: 'width=device-width, initial-scale=1',
   robots: 'index, follow',
   openGraph: {
     title: 'Caelvi - Premium Jewellery Collection',
