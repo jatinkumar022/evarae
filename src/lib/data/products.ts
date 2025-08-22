@@ -26,7 +26,7 @@ export const ringsProducts: Product[] = [
     price: 150000,
     originalPrice: 180000,
     currency: 'INR',
-    images: [star],
+    images: [star, starWhite, dazzling, dazzlingWhite, ringsCat],
     hoverImage: starWhite,
     category: {
       id: 'rings',
@@ -59,7 +59,7 @@ export const ringsProducts: Product[] = [
     price: 85000,
     originalPrice: 95000,
     currency: 'INR',
-    images: [dazzling],
+    images: [dazzling, dazzlingWhite, star, starWhite, earringsCat],
     hoverImage: dazzlingWhite,
     category: {
       id: 'rings',
@@ -92,8 +92,8 @@ export const ringsProducts: Product[] = [
     price: 65000,
     originalPrice: 75000,
     currency: 'INR',
-    images: [ringsCat],
-    hoverImage: ringsCat, // Using same image as fallback
+    images: [ringsCat, star, dazzling, signOne, one],
+    hoverImage: ringsCat,
     category: {
       id: 'rings',
       name: 'Rings',
@@ -125,7 +125,7 @@ export const ringsProducts: Product[] = [
     price: 95000,
     originalPrice: 110000,
     currency: 'INR',
-    images: [starWhite],
+    images: [starWhite, star, dazzling, dazzlingWhite, two],
     hoverImage: star,
     category: {
       id: 'rings',
@@ -158,7 +158,7 @@ export const ringsProducts: Product[] = [
     price: 72000,
     originalPrice: 85000,
     currency: 'INR',
-    images: [dazzlingWhite],
+    images: [dazzlingWhite, dazzling, star, starWhite, three],
     hoverImage: dazzling,
     category: {
       id: 'rings',
@@ -193,7 +193,7 @@ export const ringsProducts: Product[] = [
     price: 132000,
     originalPrice: 145000,
     currency: 'INR',
-    images: [star],
+    images: [star, starWhite, dazzling, dazzlingWhite, signOne],
     hoverImage: starWhite,
     category: {
       id: 'rings',
@@ -428,8 +428,8 @@ export const earringsProducts: Product[] = [
     price: 85000,
     originalPrice: 95000,
     currency: 'INR',
-    images: [signOne],
-    hoverImage: signOne, // Using same image as fallback
+    images: [signOne, star, dazzling, starWhite, dazzlingWhite],
+    hoverImage: signOne,
     category: {
       id: 'earrings',
       name: 'Earrings',

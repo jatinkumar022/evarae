@@ -8,7 +8,6 @@ import EvaraeWorld from './components/home/EvaraeWorld';
 import NewArrival from './components/home/NewArrival';
 // import Styling101Carousel from "./components/home/VideoSlider";
 import OurPromise from './components/home/Assurance';
-import SectionDivider from './components/layouts/SectionDivider';
 import CircleCategories from './components/home/Category';
 import { Devider } from './assets/Common';
 
@@ -39,7 +38,6 @@ export default function Home() {
         {/* <Styling101Carousel /> */}
       </Container>
       <Container>
-        <SectionDivider />
         <OurPromise />
       </Container>
     </>

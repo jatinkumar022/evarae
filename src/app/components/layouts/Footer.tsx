@@ -136,7 +136,7 @@ export default function Footer() {
     {
       icon: FaTruck,
       title: 'Free Shipping',
-      description: 'Free shipping on orders over $50 with tracking',
+      description: 'Free shipping on orders over ₹250 with tracking',
     },
     {
       icon: FaHeadset,
@@ -196,17 +196,17 @@ export default function Footer() {
               <div className="space-y-2 md:space-y-3 mb-4 md:mb-6 mx-auto flex flex-col max-sm:items-center">
                 <ContactInfo
                   icon={FaPhone}
-                  text="+1 (555) 123-4567"
-                  href="tel:+15551234567"
+                  text="+91 9328901475"
+                  href="tel:+91 9328901475"
                 />
                 <ContactInfo
                   icon={FaEnvelope}
-                  text="hello@caelvi.com"
-                  href="mailto:hello@caelvi.com"
+                  text="support@caelvi.com"
+                  href="mailto:support@caelvi.com"
                 />
                 <ContactInfo
                   icon={FaLocationDot}
-                  text="123 Jewellery Lane, NY 10001"
+                  text="B22 247 - CAELVI, Ahmedabad 380063"
                 />
               </div>
 
