@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Heart, Share2 } from 'lucide-react';
 import Container from '@/app/components/layouts/Container';
 import ProductFilters from '@/app/components/filters/ProductFilters';
@@ -30,7 +30,15 @@ export default function AllJewelleryPage() {
   const [filteredProducts, setFilteredProducts] =
     useState(allJewelleryProducts);
   const [visibleProducts, setVisibleProducts] = useState(10);
+  const [isMobile, setIsMobile] = useState(false);
 
+  // Detect screen size
+  useEffect(() => {
+    const checkScreen = () => setIsMobile(window.innerWidth < 1024); // lg breakpoint
+    checkScreen();
+    window.addEventListener('resize', checkScreen);
+    return () => window.removeEventListener('resize', checkScreen);
+  }, []);
   const filterOptions: FilterOptions = {
     priceRanges: [
       { value: 'under-50k', label: 'Under ₹50,000' },
@@ -230,8 +238,8 @@ export default function AllJewelleryPage() {
             {displayedProducts.map((product, index) => (
               <div
                 className="relative w-full h-full rounded-lg overflow-hidden cursor-pointer border border-primary/10 flex flex-col "
-                onMouseEnter={() => setIsHovered(true)}
-                onMouseLeave={() => setIsHovered(false)}
+                onMouseEnter={() => !isMobile && setIsHovered(true)}
+                onMouseLeave={() => !isMobile && setIsHovered(false)}
                 key={index}
               >
                 <div className="relative aspect-square w-full flex-shrink-0 overflow-hidden">

@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import React, { useState, useRef, useEffect } from "react";
-import Image from "next/image";
-import { GoHeart } from "react-icons/go";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useState, useRef, useEffect } from 'react';
+import Image from 'next/image';
+import { GoHeart } from 'react-icons/go';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   star,
   mangalsutra,
@@ -11,29 +11,29 @@ import {
   starWhite,
   mangalsutraWhite,
   dazzlingWhite,
-} from "@/app/assets/Animatedgrid";
-import { GiCrystalShine } from "react-icons/gi";
+} from '@/app/assets/Animatedgrid';
+import { GiCrystalShine } from 'react-icons/gi';
 const savedItems = [
   {
     id: 1,
-    title: "Dazzling Grace Drop Earrings",
-    price: "59863",
+    title: 'Dazzling Grace Drop Earrings',
+    price: '59863',
     image: dazzling,
     hoverImage: dazzlingWhite,
     tag: null,
   },
   {
     id: 2,
-    title: "Girlish Star Shaped Gold Stud Earrings",
-    price: "23796",
+    title: 'Girlish Star Shaped Gold Stud Earrings',
+    price: '23796',
     image: mangalsutra,
     hoverImage: mangalsutraWhite,
-    tag: "BESTSELLERS",
+    tag: 'BESTSELLERS',
   },
   {
     id: 3,
-    title: "Sunbeam Bloom Gold Mangalsutra",
-    price: "72049",
+    title: 'Sunbeam Bloom Gold Mangalsutra',
+    price: '72049',
     image: star,
     hoverImage: starWhite,
     tag: null,
@@ -51,7 +51,7 @@ export default function AnimatedCards() {
     if (!container) return;
 
     const calculatePagination = () => {
-      const card = container.querySelector(".scroll-item") as HTMLElement;
+      const card = container.querySelector('.scroll-item') as HTMLElement;
       if (!card) return;
 
       const visibleWidth = container.clientWidth;
@@ -64,8 +64,8 @@ export default function AnimatedCards() {
     };
 
     calculatePagination();
-    window.addEventListener("resize", calculatePagination);
-    return () => window.removeEventListener("resize", calculatePagination);
+    window.addEventListener('resize', calculatePagination);
+    return () => window.removeEventListener('resize', calculatePagination);
   }, []);
 
   useEffect(() => {
@@ -73,7 +73,7 @@ export default function AnimatedCards() {
     if (!container) return;
 
     const handleScroll = () => {
-      const card = container.querySelector(".scroll-item") as HTMLElement;
+      const card = container.querySelector('.scroll-item') as HTMLElement;
       if (!card) return;
 
       const cardWidth = card.offsetWidth + 16;
@@ -82,24 +82,33 @@ export default function AnimatedCards() {
       setActiveIndex(page);
     };
 
-    container.addEventListener("scroll", handleScroll);
-    return () => container.removeEventListener("scroll", handleScroll);
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
   }, [cardsPerPage]);
 
   const scrollToPage = (index: number) => {
     const container = sliderRef.current;
-    const card = container?.querySelector(".scroll-item") as HTMLElement;
+    const card = container?.querySelector('.scroll-item') as HTMLElement;
     if (!container || !card) return;
 
     const cardWidth = card.offsetWidth + 16;
     container.scrollTo({
       left: index * cardWidth * cardsPerPage,
-      behavior: "smooth",
+      behavior: 'smooth',
     });
   };
 
   const ImageCard = ({ item }: { item: (typeof savedItems)[0] }) => {
     const [isHovered, setIsHovered] = useState(false);
+    const [isMobile, setIsMobile] = useState(false);
+
+    // Detect screen size
+    useEffect(() => {
+      const checkScreen = () => setIsMobile(window.innerWidth < 1024); // lg breakpoint
+      checkScreen();
+      window.addEventListener('resize', checkScreen);
+      return () => window.removeEventListener('resize', checkScreen);
+    }, []);
     const variants = {
       initial: { opacity: 0, y: 20 },
       animate: { opacity: 1, y: 0 },
@@ -109,18 +118,18 @@ export default function AnimatedCards() {
     return (
       <div
         className="relative w-full rounded-xl overflow-hidden cursor-pointer "
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
+        onMouseEnter={() => !isMobile && setIsHovered(true)}
+        onMouseLeave={() => !isMobile && setIsHovered(false)}
       >
         <motion.div layout className="relative">
           <AnimatePresence mode="wait">
             <motion.div
-              key={isHovered ? "hover" : "default"}
+              key={isHovered ? 'hover' : 'default'}
               variants={variants}
               initial="initial"
               animate="animate"
               exit="exit"
-              transition={{ duration: 0.2, ease: "easeInOut" }}
+              transition={{ duration: 0.2, ease: 'easeInOut' }}
             >
               <Image
                 src={isHovered ? item.hoverImage : item.image}
@@ -164,7 +173,7 @@ export default function AnimatedCards() {
         <div
           ref={sliderRef}
           className="flex gap-4 overflow-x-auto pb-4 scroll-smooth snap-x snap-mandatory no-scrollbar"
-          style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
           {savedItems.map((item, index) => (
             <div
@@ -193,10 +202,10 @@ export default function AnimatedCards() {
                   key={i}
                   onClick={() => scrollToPage(i)}
                   className={`h-1.5 rounded-full transition-all duration-300 ease-in-out ${
-                    isActive ? "w-6 bg-primary" : "w-2.5 bg-primary/30"
+                    isActive ? 'w-6 bg-primary' : 'w-2.5 bg-primary/30'
                   }`}
                   aria-label={`Go to page ${i + 1} of ${totalPages}`}
-                  aria-current={isActive ? "true" : "false"}
+                  aria-current={isActive ? 'true' : 'false'}
                 />
               );
             })}
@@ -206,8 +215,8 @@ export default function AnimatedCards() {
 
       {/* Desktop Grid */}
       <div className="hidden lg:grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-6">
-        {savedItems.map((item) => (
-          <div key={item.id + "-desktop"} className="flex flex-col">
+        {savedItems.map(item => (
+          <div key={item.id + '-desktop'} className="flex flex-col">
             <ImageCard item={item} />
             <div className="mt-4 text-center">
               <p className="text-sm font-medium text-foreground truncate">

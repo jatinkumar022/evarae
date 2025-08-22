@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Heart } from '@/app/assets/Navbar';
 import { Product } from '@/lib/types/product';
 import Image from 'next/image';
@@ -14,6 +14,14 @@ interface ProductCardProps {
 
 export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const [isHovered, setIsHovered] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkScreen = () => setIsMobile(window.innerWidth < 1024); // lg breakpoint
+    checkScreen();
+    window.addEventListener('resize', checkScreen);
+    return () => window.removeEventListener('resize', checkScreen);
+  }, []);
 
   const variants = {
     initial: { opacity: 0 },
@@ -25,8 +33,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     <Link href={`/product/${product.id}`} className="block h-full">
       <div
         className="relative w-full h-full rounded-lg overflow-hidden cursor-pointer border border-primary/10 flex flex-col group"
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
+        onMouseEnter={() => !isMobile && setIsHovered(true)}
+        onMouseLeave={() => !isMobile && setIsHovered(false)}
       >
         <div className="relative aspect-square w-full flex-shrink-0 overflow-hidden">
           <motion.div layout className="relative w-full h-full">
