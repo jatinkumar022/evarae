@@ -101,26 +101,16 @@ export default function Footer() {
   const shopLinks = [
     'All Jewellery',
     'New Arrivals',
-    'Best Sellers',
     'Collections',
     'Wedding Collection',
     'Daily Wear',
   ];
-  const aboutLinks = [
-    'Our Story',
-    'Blog',
-    'Store Locator',
-    'Careers',
-    'Press',
-    'Sustainability',
-  ];
+  const aboutLinks = ['Our Story', 'Blog', 'Sustainability'];
   const serviceLinks = [
     'Contact Us',
     'Help & FAQs',
     'Shipping & Returns',
     'Track your Order',
-    'Size Guide',
-    'Care Instructions',
   ];
 
   return (
@@ -177,10 +167,7 @@ export default function Footer() {
                   text="support@caelvi.com"
                   href="mailto:support@caelvi.com"
                 />
-                <ContactInfo
-                  icon={FaLocationDot}
-                  text="B22 247 - CAELVI, Ahmedabad 380063"
-                />
+                <ContactInfo icon={FaLocationDot} text="Ahmedabad" />
               </div>
 
               {/* Social Links */}

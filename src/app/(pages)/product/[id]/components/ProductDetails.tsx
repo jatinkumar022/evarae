@@ -13,6 +13,7 @@ import { ProductFAQ } from './ProductFAQ';
 import Container from '@/app/components/layouts/Container';
 import { ManufacturerImages } from './ManufacturerImages';
 import { one, two, four } from '@/app/assets/Home/CAROUSEL';
+import { PeopleAlsoBought } from './PeopleAlsoBought';
 
 interface ProductDetailsProps {
   product: Product;
@@ -20,15 +21,23 @@ interface ProductDetailsProps {
 
 export function ProductDetails({ product }: ProductDetailsProps) {
   const [selectedTab, setSelectedTab] = useState('description');
-
+  const [isGallaryModelOpen, setIsGallaryModelOpen] = useState(false);
   return (
     <Container>
       {/* Main Product Section */}
       <div className=" my-6 lg:my-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-8">
           {/* LEFT: Product Gallery (scrolls normally) */}
-          <div className="lg:sticky lg:top-32 self-start ">
-            <ProductGallery product={product} />
+          <div
+            className={`${
+              isGallaryModelOpen ? '' : 'lg:sticky lg:top-32'
+            }  self-start `}
+          >
+            <ProductGallery
+              product={product}
+              isModalOpen={isGallaryModelOpen}
+              setIsModalOpen={setIsGallaryModelOpen}
+            />
           </div>
           <div>
             <ProductInfo product={product} />
@@ -66,10 +75,9 @@ export function ProductDetails({ product }: ProductDetailsProps) {
       <div className="mb-6 lg:mb-8">
         <ProductFAQ />
       </div>
-      {/* HERE I WANT THAT */}
-      @ProductDetails.tsx
-      {/* 
-i WANT THIS TYPE OF TWO SECTIONS HERE I MEAN  NOT COPY PASTE DIFFERERNT WITH DIFFERENT PURPOSE LIKE WE HAVE You Might Also Like WE CAN ADD PEOPLE ALSO BOUGHT AND DONT COPYPASTE LAYOUT ALSO LIKE CAROUSEL PLEASE CREATE 2 SECTION COMPONENTS AND ADD THERE */}
+      <div className="mb-6 lg:mb-8">
+        <PeopleAlsoBought currentProduct={product} />
+      </div>
     </Container>
   );
 }

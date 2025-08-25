@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import { ZoomIn, X } from 'lucide-react';
 import { Lens } from '@/app/components/ui/lens';
@@ -8,12 +8,17 @@ import { Product } from '@/lib/types/product';
 
 interface ProductGalleryProps {
   product: Product;
+  isModalOpen: boolean;
+  setIsModalOpen: (open: boolean) => void;
 }
 
-export function ProductGallery({ product }: ProductGalleryProps) {
+export function ProductGallery({
+  product,
+  isModalOpen,
+  setIsModalOpen,
+}: ProductGalleryProps) {
   const [selectedImage, setSelectedImage] = useState(0);
   // const [isMobile, setIsMobile] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const imageRef = useRef<HTMLDivElement>(null);
 
   // // Detect mobile
@@ -25,7 +30,18 @@ export function ProductGallery({ product }: ProductGalleryProps) {
   //   window.addEventListener('resize', checkMobile);
   //   return () => window.removeEventListener('resize', checkMobile);
   // }, []);
+  useEffect(() => {
+    if (isModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
 
+    // cleanup in case modal unmounts
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isModalOpen]);
   const openModal = (index: number) => {
     setSelectedImage(index);
     setIsModalOpen(true);
@@ -138,11 +154,11 @@ export function ProductGallery({ product }: ProductGalleryProps) {
       {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-[9999] bg-black/70 flex items-center justify-center p-4">
-          <div className="relative bg-white rounded-lg w-full max-w-5xl h-[90vh] flex flex-col lg:flex-row overflow-hidden">
+          <div className="relative bg-white rounded-lg w-full max-w-6xl h-[90vh] grid grid-cols-1 lg:grid-cols-[1fr_380px] overflow-hidden">
             {/* Close */}
             <button
               onClick={() => setIsModalOpen(false)}
-              className="absolute top-3 right-3 bg-black/70 text-white rounded-full p-2 z-10"
+              className="absolute top-3 right-3 p-1 bg-black/20 rounded-full text-sm text-white  z-20"
             >
               <X className="w-5 h-5" />
             </button>
@@ -163,26 +179,40 @@ export function ProductGallery({ product }: ProductGalleryProps) {
             </div>
 
             {/* Thumbnails */}
-            <div className="flex lg:flex-col gap-2 w-full lg:w-24 overflow-y-auto lg:overflow-x-hidden overflow-x-auto p-4">
-              {product.images.map((image, index) => (
-                <div
-                  key={index}
-                  onClick={() => setSelectedImage(index)}
-                  className={`relative aspect-square w-16 lg:w-full flex-shrink-0 overflow-hidden rounded-lg border-2 cursor-pointer ${
-                    selectedImage === index
-                      ? 'border-primary'
-                      : 'border-transparent hover:border-primary/50'
-                  }`}
-                >
-                  <Image
-                    src={image}
-                    alt={`${product.name} thumbnail ${index + 1}`}
-                    fill
-                    className="object-cover"
-                  />
+
+            {/* aside */}
+            <aside className="relative border-t lg:border-t-0 lg:border-l p-4 lg:p-6 bg-white overflow-y-auto">
+              <h2 className="text-xl font-semibold mb-2">{product.name}</h2>
+              <p className="text-lg font-bold text-primary mb-4">
+                ₹{product.price}
+              </p>
+              <p className="text-sm text-gray-600 mb-4">
+                {product.description}
+              </p>
+
+              <div className="flex flex-col gap-3">
+                <div className="flex lg:flex-col gap-2 w-full lg:w-24 overflow-y-auto lg:overflow-x-hidden overflow-x-auto p-4">
+                  {product.images.map((image, index) => (
+                    <div
+                      key={index}
+                      onClick={() => setSelectedImage(index)}
+                      className={`relative aspect-square w-16 lg:w-full flex-shrink-0 overflow-hidden rounded-lg border-2 cursor-pointer ${
+                        selectedImage === index
+                          ? 'border-primary'
+                          : 'border-transparent hover:border-primary/50'
+                      }`}
+                    >
+                      <Image
+                        src={image}
+                        alt={`${product.name} thumbnail ${index + 1}`}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </div>
+            </aside>
           </div>
         </div>
       )}
