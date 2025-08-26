@@ -20,7 +20,7 @@ const FooterLinkGroup = ({
   links,
 }: {
   title: string;
-  links: string[];
+  links: { name: string; to: string }[];
 }) => (
   <motion.div
     className="text-center md:text-left"
@@ -33,13 +33,13 @@ const FooterLinkGroup = ({
       {title}
     </h3>
     <ul className="space-y-2 md:space-y-4 text-muted-foreground text-xs md:text-sm">
-      {links.map((link: string) => (
-        <li key={link}>
+      {links.map((link: { name: string; to: string }) => (
+        <li key={link.to}>
           <Link
-            href="#"
+            href={link.to}
             className="hover:text-primary transition-colors duration-200 hover:translate-x-1 inline-block"
           >
-            {link}
+            {link.name}
           </Link>
         </li>
       ))}
@@ -71,46 +71,24 @@ const ContactInfo = ({
   </div>
 );
 
-// const FeatureCard = ({
-//   icon: Icon,
-//   title,
-//   description,
-// }: {
-//   icon: React.ComponentType<{ className?: string }>;
-//   title: string;
-//   description: string;
-// }) => (
-//   <motion.div
-//     className="text-center p-4 md:p-6 bg-background/30 backdrop-blur-sm rounded-xl border border-muted-foreground/10"
-//     whileHover={{ scale: 1.02, y: -2 }}
-//     transition={{ duration: 0.2 }}
-//   >
-//     <div className="w-12 h-12 md:w-16 md:h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-//       <Icon className="text-primary text-xl md:text-2xl" />
-//     </div>
-//     <h4 className="font-semibold text-sm md:text-base mb-2 text-accent">
-//       {title}
-//     </h4>
-//     <p className="text-muted-foreground text-xs md:text-sm leading-relaxed">
-//       {description}
-//     </p>
-//   </motion.div>
-// );
-
 export default function Footer() {
   const shopLinks = [
-    'All Jewellery',
-    'New Arrivals',
-    'Collections',
-    'Wedding Collection',
-    'Daily Wear',
+    { name: 'All Jewellery', to: '/all-jewellery' },
+    { name: 'New Arrivals', to: '/new-arrivals' },
+    { name: 'Collections', to: '/collections' },
+    { name: 'Wedding Collection', to: '/wedding-collection' },
+    { name: 'Daily Wear', to: '/daily-wear' },
   ];
-  const aboutLinks = ['Our Story', 'Blog', 'Sustainability'];
+  const aboutLinks = [
+    { name: 'Our Story', to: '/our-story' },
+    { name: 'Blog', to: '/blog' },
+    { name: 'Sustainability', to: '/sustainability' },
+  ];
   const serviceLinks = [
-    'Contact Us',
-    'Help & FAQs',
-    'Shipping & Returns',
-    'Track your Order',
+    { name: 'Contact Us', to: '/contact-us' },
+    { name: 'Help & FAQs', to: '/faqs' },
+    { name: 'Shipping & Returns', to: '/returns' },
+    { name: 'Track your Order', to: '/track' },
   ];
 
   return (
@@ -147,8 +125,8 @@ export default function Footer() {
               transition={{ duration: 0.5 }}
               viewport={{ once: true }}
             >
-              <h3 className="text-2xl  mb-3 md:mb-4  text-accent flex justify-center p-2">
-                <LogoCaelvi className="text-sm" />
+              <h3 className="text-2xl  mb-3 md:mb-4  text-accent flex ">
+                <LogoCaelvi className="h-5" />
               </h3>
               <p className="text-muted-foreground text-xs md:text-sm mb-4 md:mb-6 leading-relaxed">
                 Exquisite Jewellery for Every Occasion. Crafted with passion,

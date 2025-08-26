@@ -98,7 +98,7 @@ export default function OurStoryPage() {
   return (
     <div className="bg-white text-text-primary">
       {/* Enhanced Hero Section */}
-      <section className="relative h-[80vh] w-full overflow-hidden">
+      <section className="relative h-[40vh] sm:h-[50vh] md:h-[60vh] lg:h-[80vh] w-full overflow-hidden">
         <Image
           src={one}
           alt="Caelvi Jewellery Atelier"
@@ -109,36 +109,36 @@ export default function OurStoryPage() {
         <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/40 to-black/60"></div>
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-center max-w-4xl px-4">
-            <h1 className="text-5xl lg:text-7xl font-fraunces text-white mb-6 drop-shadow-2xl tracking-wide">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-fraunces text-white mb-4 sm:mb-6 drop-shadow-2xl tracking-wide">
               Our Story
             </h1>
-            <p className="text-xl lg:text-2xl text-white/90 font-light leading-relaxed drop-shadow-lg">
+            <p className="text-sm sm:text-lg md:text-xl lg:text-2xl text-white/90 font-light leading-relaxed drop-shadow-lg px-2">
               Where heritage meets innovation, and every piece tells a story
             </p>
           </div>
         </div>
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
-          <div className="w-6 h-10 border-2 border-white/50 rounded-full flex justify-center">
-            <div className="w-1 h-3 bg-white/70 rounded-full mt-2 animate-pulse"></div>
+        <div className="absolute bottom-4 sm:bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
+          <div className="w-4 h-8 sm:w-6 sm:h-10 border-2 border-white/50 rounded-full flex justify-center">
+            <div className="w-0.5 h-2 sm:w-1 sm:h-3 bg-white/70 rounded-full mt-2 animate-pulse"></div>
           </div>
         </div>
       </section>
 
       {/* Brand Philosophy Section */}
       <Container>
-        <div className="py-20">
-          <div className="text-center max-w-4xl mx-auto mb-16">
-            <h2 className="heading-component-main-heading mb-10">
+        <div className="py-10 sm:py-16 md:py-20">
+          <div className="text-center max-w-4xl mx-auto mb-10 sm:mb-16">
+            <h2 className="heading-component-main-heading mb-6 sm:mb-10">
               The Essence of Caelvi
             </h2>
-            <p className=" lg:text-lg leading-relaxed text-text-primary/80 mb-6">
-              At <span className="font-semibold text-primary">Caelvi</span>, we
+            <p className="text-sm sm:text-base md:text-lg leading-relaxed text-text-primary/80 mb-4 sm:mb-6 px-2">
+              At <span className="font-medium text-primary">Caelvi</span>, we
               believe that jewellery is the most intimate form of art. It lives
               on your skin, moves with your body, and becomes part of your
               story. Each piece we create is a testament to the belief that
               luxury should be personal, meaningful, and timeless.
             </p>
-            <p className="lg:text-lg leading-relaxed text-text-primary/80">
+            <p className="text-sm sm:text-base md:text-lg leading-relaxed text-text-primary/80 px-2">
               Our name, derived from the Latin "caelum" meaning heaven, reflects
               our aspiration to create pieces that elevate the everyday into
               something extraordinary – jewellery that doesn't just accessorize,
@@ -146,10 +146,10 @@ export default function OurStoryPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            <div className="relative">
-              <div className="absolute -inset-4 bg-gradient-to-r from-primary/10 to-accent/10 rounded-3xl blur-xl"></div>
-              <div className="relative aspect-[4/5] w-full rounded-2xl overflow-hidden shadow-2xl">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 md:gap-16 items-center">
+            <div className="relative order-2 lg:order-1">
+              <div className="absolute -inset-2 sm:-inset-4 bg-gradient-to-r from-primary/10 to-accent/10 rounded-2xl sm:rounded-3xl blur-xl"></div>
+              <div className="relative aspect-[4/5] w-full rounded-xl sm:rounded-2xl overflow-hidden shadow-xl sm:shadow-2xl">
                 <Image
                   src={two}
                   alt="Caelvi Craftsmanship Detail"
@@ -158,23 +158,23 @@ export default function OurStoryPage() {
                 />
               </div>
             </div>
-            <div className="space-y-8">
-              <div className="p-6 rounded-xl bg-bg-menu/50 border border-primary/10">
-                <h3 className="text-2xl font-heading font-semibold mb-4 text-primary ">
+            <div className="order-1 lg:order-2 space-y-6 sm:space-y-8">
+              <div className="p-4 sm:p-6 rounded-xl bg-bg-menu/50 border border-primary/10">
+                <h3 className="text-lg sm:text-xl md:text-2xl font-heading font-medium mb-3 sm:mb-4 text-primary">
                   Our Vision
                 </h3>
-                <p className="text-text-primary/80 leading-relaxed">
+                <p className="text-sm sm:text-base text-text-primary/80 leading-relaxed">
                   To redefine luxury jewellery by making it accessible,
                   sustainable, and deeply personal. We envision a world where
                   every piece of jewellery carries meaning and connects the
                   wearer to their authentic self.
                 </p>
               </div>
-              <div className="p-6 rounded-xl bg-primary/5 border border-primary/10">
-                <h3 className="text-2xl font-heading font-semibold mb-4 text-primary">
+              <div className="p-4 sm:p-6 rounded-xl bg-primary/5 border border-primary/10">
+                <h3 className="text-lg sm:text-xl md:text-2xl font-heading font-medium mb-3 sm:mb-4 text-primary">
                   Our Mission
                 </h3>
-                <p className="text-text-primary/80 leading-relaxed">
+                <p className="text-sm sm:text-base text-text-primary/80 leading-relaxed">
                   To craft exceptional jewellery that celebrates individuality,
                   preserves traditional artistry, and creates lasting
                   connections between our pieces and the stories they help tell.
@@ -188,27 +188,27 @@ export default function OurStoryPage() {
       {/* Values Section */}
       <div className="bg-bg-menu">
         <Container>
-          <div className="py-20">
-            <div className="text-center mb-16">
-              <h2 className="heading-component-main-heading mb-5">
+          <div className="py-10 sm:py-16 md:py-20">
+            <div className="text-center mb-10 sm:mb-16">
+              <h2 className="heading-component-main-heading mb-4 sm:mb-5">
                 Our Values
               </h2>
-              <p className="lg:text-lg text-text-primary/80 max-w-3xl mx-auto">
+              <p className="text-sm sm:text-base md:text-lg text-text-primary/80 max-w-3xl mx-auto px-2">
                 These principles guide every decision we make, from design
                 conception to the moment our jewellery finds its home with you.
               </p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
               {values.map((value, index) => (
                 <div key={index} className="group">
-                  <div className="bg-white rounded-2xl p-8 shadow-sm hover:shadow-md transition-all duration-300  border border-primary/10">
-                    <div className="lg:text-4xl mb-4 group-hover:scale-110 transition-transform duration-300">
+                  <div className="bg-white rounded-xl sm:rounded-2xl p-6 sm:p-8 shadow-sm hover:shadow-md transition-all duration-300 border border-primary/10">
+                    <div className="text-2xl sm:text-3xl md:text-4xl mb-3 sm:mb-4 group-hover:scale-110 transition-transform duration-300">
                       {value.icon}
                     </div>
-                    <h3 className="md:text-xl font-heading font-semibold mb-3 text-primary">
+                    <h3 className="text-base sm:text-lg md:text-xl font-heading font-medium mb-2 sm:mb-3 text-primary">
                       {value.title}
                     </h3>
-                    <p className="text-text-primary/80 text-sm leading-relaxed">
+                    <p className="text-xs sm:text-sm text-text-primary/80 leading-relaxed">
                       {value.description}
                     </p>
                   </div>
@@ -221,10 +221,12 @@ export default function OurStoryPage() {
 
       {/* Journey Timeline */}
       <Container>
-        <div ref={ref} className="py-20 relative">
-          <div className="text-center mb-16">
-            <h2 className="heading-component-main-heading mb-5">Our Journey</h2>
-            <p className="lg:text-lg text-text-primary/80 max-w-3xl mx-auto">
+        <div ref={ref} className="py-10 sm:py-16 md:py-20 relative">
+          <div className="text-center mb-10 sm:mb-16">
+            <h2 className="heading-component-main-heading mb-4 sm:mb-5">
+              Our Journey
+            </h2>
+            <p className="text-sm sm:text-base md:text-lg text-text-primary/80 max-w-3xl mx-auto px-2">
               From a small atelier with big dreams to an internationally
               recognized brand, our story is one of passion, perseverance, and
               unwavering commitment to excellence.
@@ -233,16 +235,16 @@ export default function OurStoryPage() {
 
           <div className="relative">
             {/* Static grey line - Desktop: center, Mobile: left */}
-            <div className="absolute left-8 lg:left-1/2 lg:transform lg:-translate-x-1/2 h-full w-0.5 bg-primary/20"></div>
+            <div className="absolute left-4 sm:left-8 lg:left-1/2 lg:transform lg:-translate-x-1/2 h-full w-0.5 bg-primary/20"></div>
 
             {/* Animated line that fills as you scroll - Desktop: center, Mobile: left */}
             <motion.div
               style={{ height: lineHeight }}
-              className="absolute left-8 lg:left-1/2 lg:transform lg:-translate-x-1/2 w-0.5 bg-gradient-to-b from-primary to-pink-700 origin-top"
+              className="absolute left-4 sm:left-8 lg:left-1/2 lg:transform lg:-translate-x-1/2 w-0.5 bg-gradient-to-b from-primary to-pink-700 origin-top"
             />
 
             {/* Timeline items */}
-            <div className="space-y-12 relative z-10">
+            <div className="space-y-8 sm:space-y-12 relative z-10">
               {milestones.map((milestone, index) => (
                 <div
                   key={index}
@@ -258,25 +260,25 @@ export default function OurStoryPage() {
                     className={`w-full lg:w-1/2 ${
                       // Desktop: alternating alignment, Mobile: always left-aligned with padding
                       index % 2 === 0
-                        ? 'pl-20 lg:pl-0 lg:pr-8 text-left lg:text-right'
-                        : 'pl-20 lg:pl-8 lg:pr-0 text-left'
+                        ? 'pl-12 sm:pl-20 lg:pl-0 lg:pr-8 text-left lg:text-right'
+                        : 'pl-12 sm:pl-20 lg:pl-8 lg:pr-0 text-left'
                     }`}
                   >
-                    <div className="bg-white rounded-xl p-6 shadow-lg border border-primary/10">
-                      <span className="inline-block bg-primary text-white px-3 py-1 rounded-full text-xs lg:text-sm font-semibold mb-3">
+                    <div className="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-lg border border-primary/10">
+                      <span className="inline-block bg-primary text-white px-2 sm:px-3 py-1 rounded-full text-xs font-medium mb-2 sm:mb-3">
                         {milestone.year}
                       </span>
-                      <h3 className="lg:text-xl font-fraunces font-semibold mb-2 text-primary">
+                      <h3 className="text-base sm:text-lg md:text-xl font-fraunces font-medium mb-2 text-primary">
                         {milestone.title}
                       </h3>
-                      <p className="text-text-primary/80 text-sm leading-relaxed">
+                      <p className="text-xs sm:text-sm text-text-primary/80 leading-relaxed">
                         {milestone.description}
                       </p>
                     </div>
                   </div>
 
                   {/* Timeline dot - Desktop: center, Mobile: left */}
-                  <div className="absolute left-[25px] lg:relative lg:left-auto w-4 h-4 bg-primary rounded-full border-4 border-white shadow-lg z-10 flex-shrink-0"></div>
+                  <div className="absolute left-[11px] sm:left-[25px] lg:relative lg:left-auto w-3 h-3 sm:w-4 sm:h-4 bg-primary rounded-full border-2 sm:border-4 border-white shadow-lg z-10 flex-shrink-0"></div>
 
                   {/* Spacer for desktop alternating layout */}
                   <div className="hidden lg:block lg:w-1/2"></div>
@@ -290,20 +292,20 @@ export default function OurStoryPage() {
       {/* Team Section */}
       <div className="bg-gradient-to-b from-bg-menu to-white">
         <Container>
-          <div className="py-20">
-            <div className="text-center mb-16">
-              <h2 className="heading-component-main-heading mb-5">
+          <div className="py-10 sm:py-16 md:py-20">
+            <div className="text-center mb-10 sm:mb-16">
+              <h2 className="heading-component-main-heading mb-4 sm:mb-5">
                 Meet Our Artisans
               </h2>
-              <p className="lg:text-lg text-text-primary/80 max-w-3xl mx-auto ">
+              <p className="text-sm sm:text-base md:text-lg text-text-primary/80 max-w-3xl mx-auto px-2">
                 The passionate individuals behind every Caelvi creation,
                 bringing decades of expertise and artistic vision to each piece.
               </p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
               {team.map((member, index) => (
                 <div key={index} className="group">
-                  <div className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border border-primary/10">
+                  <div className="bg-white rounded-xl sm:rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border border-primary/10">
                     <div className="relative aspect-square overflow-hidden">
                       <Image
                         src={member.image}
@@ -313,14 +315,14 @@ export default function OurStoryPage() {
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
                     </div>
-                    <div className="p-6">
-                      <h3 className="text-xl font-fraunces font-semibold mb-1 text-primary">
+                    <div className="p-4 sm:p-6">
+                      <h3 className="text-lg sm:text-xl font-fraunces font-medium mb-1 text-primary">
                         {member.name}
                       </h3>
-                      <p className="text-accent font-medium mb-3 text-sm">
+                      <p className="text-accent font-medium mb-2 sm:mb-3 text-xs sm:text-sm">
                         {member.role}
                       </p>
-                      <p className="text-text-primary/80 text-sm leading-relaxed">
+                      <p className="text-xs sm:text-sm text-text-primary/80 leading-relaxed">
                         {member.bio}
                       </p>
                     </div>
@@ -334,11 +336,11 @@ export default function OurStoryPage() {
 
       {/* Craftsmanship Section */}
       <Container>
-        <div className="py-20">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+        <div className="py-10 sm:py-16 md:py-20">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 md:gap-16 items-center">
             <div className="relative order-2 lg:order-1">
-              <div className="absolute -inset-4 bg-gradient-to-r from-accent/10 to-primary/10 rounded-3xl blur-xl"></div>
-              <div className="relative aspect-[4/5] w-full rounded-2xl overflow-hidden shadow-2xl">
+              <div className="absolute -inset-2 sm:-inset-4 bg-gradient-to-r from-accent/10 to-primary/10 rounded-2xl sm:rounded-3xl blur-xl"></div>
+              <div className="relative aspect-[4/5] w-full rounded-xl sm:rounded-2xl overflow-hidden shadow-xl sm:shadow-2xl">
                 <Image
                   src={mangalsutra}
                   alt="Master Craftsman at Work"
@@ -347,45 +349,47 @@ export default function OurStoryPage() {
                 />
               </div>
             </div>
-            <div className="order-1 lg:order-2 space-y-6">
-              <h2 className=" font-heading text-4xl lg:text-5xl font-fraunces font-semibold text-primary">
+            <div className="order-1 lg:order-2 space-y-4 sm:space-y-6">
+              <h2 className="font-heading text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-fraunces font-medium text-primary text-center">
                 Mastering the Art
               </h2>
-              <p className="text-lg leading-relaxed text-text-primary/80">
+              <p className="text-sm sm:text-base md:text-lg leading-relaxed text-text-primary/80">
                 Each Caelvi piece begins its journey in our atelier, where
                 master craftsmen with decades of experience transform raw
                 materials into works of art. Our process combines time-honored
                 techniques passed down through generations with cutting-edge
                 technology to ensure precision and perfection.
               </p>
-              <div className="grid grid-cols-2 gap-6">
-                <div className="text-center p-4 rounded-xl bg-primary/5 border border-primary/10">
-                  <div className="text-3xl font-bold text-primary mb-2">
+              <div className="grid grid-cols-2 gap-4 sm:gap-6">
+                <div className="text-center p-3 sm:p-4 rounded-lg sm:rounded-xl bg-primary/5 border border-primary/10">
+                  <div className="text-xl sm:text-2xl md:text-3xl font-medium text-primary mb-1 sm:mb-2">
                     15+
                   </div>
-                  <div className="text-sm text-text-primary/80">
+                  <div className="text-xs sm:text-sm text-text-primary/80">
                     Years of Excellence
                   </div>
                 </div>
-                <div className="text-center p-4 rounded-xl bg-primary/5 border border-primary/10">
-                  <div className="text-3xl font-bold text-primary mb-2">
+                <div className="text-center p-3 sm:p-4 rounded-lg sm:rounded-xl bg-primary/5 border border-primary/10">
+                  <div className="text-xl sm:text-2xl md:text-3xl font-medium text-primary mb-1 sm:mb-2">
                     100%
                   </div>
-                  <div className="text-sm text-text-primary/80">
+                  <div className="text-xs sm:text-sm text-text-primary/80">
                     Handcrafted Pieces
                   </div>
                 </div>
-                <div className="text-center p-4 rounded-xl bg-primary/5 border border-primary/10">
-                  <div className="text-3xl font-bold text-primary mb-2">
+                <div className="text-center p-3 sm:p-4 rounded-lg sm:rounded-xl bg-primary/5 border border-primary/10">
+                  <div className="text-xl sm:text-2xl md:text-3xl font-medium text-primary mb-1 sm:mb-2">
                     50+
                   </div>
-                  <div className="text-sm text-text-primary/80">
+                  <div className="text-xs sm:text-sm text-text-primary/80">
                     Master Artisans
                   </div>
                 </div>
-                <div className="text-center p-4 rounded-xl bg-primary/5 border border-primary/10">
-                  <div className="text-3xl font-bold text-primary mb-2">25</div>
-                  <div className="text-sm text-text-primary/80">
+                <div className="text-center p-3 sm:p-4 rounded-lg sm:rounded-xl bg-primary/5 border border-primary/10">
+                  <div className="text-xl sm:text-2xl md:text-3xl font-medium text-primary mb-1 sm:mb-2">
+                    25
+                  </div>
+                  <div className="text-xs sm:text-sm text-text-primary/80">
                     Countries Served
                   </div>
                 </div>
@@ -396,15 +400,15 @@ export default function OurStoryPage() {
       </Container>
 
       {/* Bottom Decorative Section */}
-      <div className="mt-24 text-center">
-        <div className="inline-flex items-center space-x-4 mb-8">
-          <div className="w-3 h-3 rounded-full bg-gradient-to-br from-pink-300 to-rose-400"></div>
-          <div className="w-2 h-2 rounded-full bg-gradient-to-br from-rose-300 to-purple-400"></div>
-          <div className="w-4 h-4 rounded-full bg-gradient-to-br from-purple-300 to-pink-400"></div>
-          <div className="w-2 h-2 rounded-full bg-gradient-to-br from-pink-400 to-rose-300"></div>
-          <div className="w-3 h-3 rounded-full bg-gradient-to-br from-rose-400 to-purple-300"></div>
+      <div className="mt-12 sm:mt-16 md:mt-24 text-center">
+        <div className="inline-flex items-center space-x-2 sm:space-x-4 mb-6 sm:mb-8">
+          <div className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-gradient-to-br from-pink-300 to-rose-400"></div>
+          <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-gradient-to-br from-rose-300 to-purple-400"></div>
+          <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-gradient-to-br from-purple-300 to-pink-400"></div>
+          <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-gradient-to-br from-pink-400 to-rose-300"></div>
+          <div className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-gradient-to-br from-rose-400 to-purple-300"></div>
         </div>
-        <p className="text-gray-500 font-light italic text-lg">
+        <p className="text-sm sm:text-base md:text-lg text-gray-500 font-light italic px-2">
           &ldquo;Where elegance meets artistry&ldquo;
         </p>
       </div>

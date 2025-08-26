@@ -225,7 +225,7 @@ export default function Navbar() {
               <div className="lg:hidden">
                 <Link href="/" className="cursor-pointer">
                   <h1 className="text-xs  font-heading text-primary ">
-                    <LogoCaelvi />
+                    <LogoCaelvi className="h-4" />
                   </h1>
                 </Link>
               </div>
@@ -251,7 +251,7 @@ export default function Navbar() {
             {/* Centered Logo (Desktop-only) */}
             <Link href="/" className="hidden lg:block cursor-pointer">
               <h2 className=" font-heading text-[#e95a7f] mt-1">
-                <LogoCaelvi className="text-xs" />
+                <LogoCaelvi className="text-xs h-4" />
               </h2>
             </Link>
 
