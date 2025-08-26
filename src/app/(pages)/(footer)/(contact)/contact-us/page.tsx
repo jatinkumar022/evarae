@@ -1,10 +1,8 @@
 'use client';
-
 import React, { useState } from 'react';
 import Link from 'next/link';
 import Container from '@/app/components/layouts/Container';
-import Image from 'next/image';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useRef } from 'react';
 
 // You'll need to import your actual images
@@ -117,8 +115,8 @@ const ContactInfo = () => {
           </div>
           <div className="pt-4 mt-4 border-t border-primary/10">
             <p className="text-sm text-text-primary/70 italic">
-              "Experience our collections in person and meet our master
-              craftsmen"
+              &quot;Experience our collections in person and meet our master
+              craftsmen&quot;
             </p>
           </div>
         </div>
@@ -246,13 +244,6 @@ export default function ContactUsPage() {
   const [isSubmitted, setIsSubmitted] = useState(false);
 
   const ref = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ['start end', 'end start'],
-  });
-
-  const y = useTransform(scrollYProgress, [0, 1], ['0%', '-10%']);
-
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -337,7 +328,7 @@ export default function ContactUsPage() {
                   Send us a Message
                 </h3>
                 <p className="text-sm md:text-lg text-text-primary/70">
-                  Share your vision with us, and let's bring it to life
+                  Share your vision with us, and let&apos;s bring it to life
                   together.
                 </p>
               </div>
@@ -365,7 +356,7 @@ export default function ContactUsPage() {
                         Message sent successfully!
                       </p>
                       <p className="text-green-700 text-sm">
-                        We'll get back to you within 24 hours.
+                        We&apos;ll get back to you within 24 hours.
                       </p>
                     </div>
                   </div>
@@ -546,7 +537,7 @@ export default function ContactUsPage() {
           <div className="w-3 h-3 rounded-full bg-gradient-to-br from-rose-400 to-purple-300"></div>
         </motion.div>
         <p className="text-text-primary/60 font-light italic  text-sm md:text-lg font-fraunces">
-          &ldquo;Let's create something extraordinary together&rdquo;
+          &ldquo;Let&apos;s create something extraordinary together&rdquo;
         </p>
       </div>
     </div>

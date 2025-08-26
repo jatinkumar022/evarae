@@ -139,10 +139,10 @@ export default function OurStoryPage() {
               luxury should be personal, meaningful, and timeless.
             </p>
             <p className="text-sm sm:text-base md:text-lg leading-relaxed text-text-primary/80 px-2">
-              Our name, derived from the Latin "caelum" meaning heaven, reflects
-              our aspiration to create pieces that elevate the everyday into
-              something extraordinary – jewellery that doesn't just accessorize,
-              but inspires.
+              Our name, derived from the Latin &quot;caelum&quot; meaning
+              heaven, reflects our aspiration to create pieces that elevate the
+              everyday into something extraordinary – jewellery that
+              doesn&apos;t just accessorize, but inspires.
             </p>
           </div>
 

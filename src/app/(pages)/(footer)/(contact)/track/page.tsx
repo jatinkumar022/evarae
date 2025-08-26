@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import Container from '@/app/components/layouts/Container';
 import { motion, AnimatePresence } from 'framer-motion';
-import Image from 'next/image';
 import Link from 'next/link';
 import {
   Package,
@@ -16,7 +15,6 @@ import {
   Mail,
   Calendar,
   User,
-  IndianRupee,
 } from 'lucide-react';
 
 // You'll need to import your actual product images
@@ -327,7 +325,8 @@ export default function TrackOrderPage() {
 
               <div className="mt-6 pt-6 border-t border-primary/10">
                 <p className="text-sm text-text-primary/70 text-center">
-                  Don't have your Order ID? Check your email confirmation or{' '}
+                  Don&apos;t have your Order ID? Check your email confirmation
+                  or{' '}
                   <Link
                     href="/contact"
                     className="text-primary hover:underline font-medium"
