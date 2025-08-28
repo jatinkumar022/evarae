@@ -43,7 +43,7 @@ const TrendingItem = ({
         <Image
           src={image}
           alt={alt}
-          className="w-full  object-cover group-hover:scale-105 transition-transform duration-500 ease-in-out h-[395px]"
+          className="w-full  object-cover group-hover:scale-105 transition-transform duration-500 ease-in-out h-full sm:h-[485px] h-[395px]"
         />
       </div>
       <div className="py-4">

@@ -396,10 +396,14 @@ export default function EnhancedNewArrivalsPage() {
               </h2>
             </div>
 
-            <div className="flex items-center justify-center gap-2   text-primary">
+            <Link
+              href={'https://www.instagram.com/caelvi.store'}
+              target="_blank"
+              className="flex items-center justify-center gap-2   text-primary"
+            >
               <Instagram className="w-4 h-4" />
-              luxuryjewelrycollection
-            </div>
+              CAELVISTORE
+            </Link>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
@@ -418,7 +422,7 @@ export default function EnhancedNewArrivalsPage() {
           </div>
 
           <div className="text-center mt-12">
-            <button className="btn btn-outline !px-8 !py-4 flex items-center gap-3 mx-auto">
+            <button className="btn btn-outline !px-8 !py-4 flex items-center gap-3 mx-auto ">
               <Instagram className="w-5 h-5" />
               Follow Us on Instagram
             </button>

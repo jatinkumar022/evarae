@@ -14,7 +14,12 @@ import {
 } from 'react-icons/fa6';
 import { motion } from 'framer-motion';
 import { LogoCaelvi } from '@/app/assets';
+import { Philosopher } from 'next/font/google';
 
+const philosopher = Philosopher({
+  subsets: ['latin'],
+  weight: ['400', '700'],
+});
 const FooterLinkGroup = ({
   title,
   links,
@@ -125,9 +130,17 @@ export default function Footer() {
               transition={{ duration: 0.5 }}
               viewport={{ once: true }}
             >
-              <h3 className="text-2xl  mb-3 md:mb-4  text-accent flex ">
+              {/* <h3 className="text-2xl  mb-3 md:mb-4  text-accent flex ">
                 <LogoCaelvi className="h-5" />
               </h3>
+               */}
+
+              <h1
+                className={`${philosopher.className} text-2xl md:text-3xl  mb-5 text-primary `}
+              >
+                {/* <LogoCaelvi className="h-4" /> */}
+                CAELVI
+              </h1>
               <p className="text-muted-foreground text-xs md:text-sm mb-4 md:mb-6 leading-relaxed">
                 Exquisite Jewellery for Every Occasion. Crafted with passion,
                 designed for elegance.

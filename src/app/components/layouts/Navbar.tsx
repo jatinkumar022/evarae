@@ -24,7 +24,12 @@ import { BsInboxes } from 'react-icons/bs';
 import MobileNavMenu from './MobileNavMenu';
 import { useRouter } from 'next/navigation';
 import { LogoCaelvi } from '@/app/assets';
+import { Philosopher } from 'next/font/google';
 
+const philosopher = Philosopher({
+  subsets: ['latin'],
+  weight: ['400', '700'],
+});
 const NavLink = ({
   href,
   children,
@@ -224,8 +229,11 @@ export default function Navbar() {
               </div>
               <div className="lg:hidden">
                 <Link href="/" className="cursor-pointer">
-                  <h1 className="text-xs  font-heading text-primary ">
-                    <LogoCaelvi className="h-4" />
+                  <h1
+                    className={`${philosopher.className} text-lg   text-primary `}
+                  >
+                    {/* <LogoCaelvi className="h-4" /> */}
+                    CAELVI
                   </h1>
                 </Link>
               </div>
@@ -250,9 +258,12 @@ export default function Navbar() {
 
             {/* Centered Logo (Desktop-only) */}
             <Link href="/" className="hidden lg:block cursor-pointer">
-              <h2 className=" font-heading text-[#e95a7f] mt-1">
-                <LogoCaelvi className="text-xs h-4" />
-              </h2>
+              <h1
+                className={`${philosopher.className} text-3xl   text-primary `}
+              >
+                {/* <LogoCaelvi className="h-4" /> */}
+                CAELVI
+              </h1>
             </Link>
 
             {/* Right Group */}
@@ -613,14 +624,24 @@ export default function Navbar() {
               animate={{ y: '0%' }}
               exit={{ y: '-100%' }}
               transition={{ duration: 0.4, ease: [0.25, 1, 0.5, 1] }}
-              className="bg-white"
+              className="bg-white "
               onClick={e => e.stopPropagation()}
             >
               <Container>
                 <div className="py-8">
                   {/* Search Input */}
                   <div className="relative border border-border px-4 flex items-center rounded-md py-1">
-                    <Search className="h-5 w-5 flex-shrink-0 text-primary mr-4" />
+                    <Search
+                      onClick={() => {
+                        if (inputValue.trim()) {
+                          router.push(
+                            `/search?q=${encodeURIComponent(inputValue.trim())}`
+                          );
+                          setIsSearchOpen(false);
+                        }
+                      }}
+                      className="h-5 w-5 flex-shrink-0 text-primary mr-4"
+                    />
                     <input
                       type="text"
                       value={inputValue}
@@ -637,7 +658,7 @@ export default function Navbar() {
                       autoFocus
                     />
                     {inputValue === '' && (
-                      <div className="absolute left-14 inset-y-0 flex items-center pointer-events-none">
+                      <div className="absolute left-14 inset-y-0 flex items-center pointer-events-none ">
                         <AnimatePresence mode="wait">
                           <motion.p
                             key={currentPlaceholder}
@@ -645,7 +666,7 @@ export default function Navbar() {
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -5 }}
                             transition={{ duration: 0.3 }}
-                            className="text-lg text-gray-600"
+                            className="text-lg text-gray-600  "
                           >
                             {placeholders[currentPlaceholder]}
                           </motion.p>
@@ -661,7 +682,7 @@ export default function Navbar() {
                           setIsSearchOpen(false);
                         }
                       }}
-                      className="px-4 py-1.5 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors ml-4"
+                      className="px-4 py-1.5 hidden lg:block bg-primary text-white rounded-md hover:bg-primary/90 transition-colors ml-4"
                       aria-label="Search"
                     >
                       Search
