@@ -7,15 +7,15 @@ import {
   chainsCat,
   mangalsutraCat,
   pendantsCat,
-} from '@/app/assets/CategoryGrid';
+} from '@/app/(main)/assets/CategoryGrid';
 import {
   star,
   starWhite,
   dazzling,
   dazzlingWhite,
-} from '@/app/assets/Animatedgrid';
-import { signOne } from '@/app/assets/Home/Signature';
-import { one, two, three } from '@/app/assets/Home/CAROUSEL';
+} from '@/app/(main)/assets/Animatedgrid';
+import { signOne } from '@/app/(main)/assets/Home/Signature';
+import { one, two, three } from '@/app/(main)/assets/Home/CAROUSEL';
 
 // Static product data for rings
 export const ringsProducts: Product[] = [

@@ -1,0 +1,48 @@
+/* Admin-specific styles */
+.admin-layout {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+}
+
+/* Override any global styles that might interfere */
+.admin-layout * {
+  box-sizing: border-box;
+}
+
+/* Ensure proper spacing and layout */
+.admin-layout body {
+  margin: 0;
+  padding: 0;
+  background-color: #f9fafb;
+}
+
+/* Custom scrollbar for admin */
+.admin-layout ::-webkit-scrollbar {
+  width: 6px;
+}
+
+.admin-layout ::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.admin-layout ::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.admin-layout ::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Ensure modals work properly */
+.admin-layout .modal-overlay {
+  z-index: 9999;
+}
+
+/* Fix any potential font conflicts */
+.admin-layout .font-body {
+  font-family: 'Inter', sans-serif;
+}
+
+.admin-layout .font-heading {
+  font-family: 'Philosopher', serif;
+}

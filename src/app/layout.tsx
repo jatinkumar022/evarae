@@ -2,9 +2,6 @@ import type { Metadata, Viewport } from 'next';
 import { IBM_Plex_Sans, Fraunces } from 'next/font/google';
 import './styles/theme.css';
 import './styles/globals.css';
-import Navbar from './components/layouts/Navbar';
-import NavigationMenu from './components/layouts/NavigationMenu';
-import Footer from './components/layouts/Footer';
 
 const ibmPlexSans = IBM_Plex_Sans({
   variable: '--font-body',
@@ -95,18 +92,7 @@ export default function RootLayout({
       <body
         className={`${ibmPlexSans.variable} ${fraunces.variable} font-body antialiased`}
       >
-        <div className=" h-[80px] lg:h-[137px]">
-          <Navbar />
-          <div className="max-lg:hidden">
-            <NavigationMenu />
-          </div>
-        </div>
-        <main className="">
-          {children}
-          <div className="">
-            <Footer />
-          </div>
-        </main>
+        {children}
       </body>
     </html>
   );
