@@ -57,8 +57,9 @@ export async function POST(request: Request) {
     }
 
     // Clear OTP fields after success
-    user.adminOtpHash = null as any;
-    user.adminOtpExpiry = null as any;
+    // Using undefined so it fits stricter typing on the model
+    user.adminOtpHash = undefined as unknown as string;
+    user.adminOtpExpiry = undefined as unknown as Date;
     user.adminOtpAttempts = 0;
     await user.save();
 

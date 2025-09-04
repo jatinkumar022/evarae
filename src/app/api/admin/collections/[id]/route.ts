@@ -2,15 +2,14 @@ import { NextResponse } from 'next/server';
 import { connect } from '@/dbConfig/dbConfig';
 import Collection from '@/models/collectionModel';
 
+type RouteContext = { params: Promise<{ id: string }> };
+
 // GET single collection
-export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: Request, { params }: RouteContext) {
   try {
     await connect();
-
-    const collection = await Collection.findById(params.id)
+    const { id } = await params;
+    const collection = await Collection.findById(id)
       .populate('products')
       .lean();
 
@@ -32,15 +31,20 @@ export async function GET(
 }
 
 // UPDATE collection (details or products)
-export async function PUT(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(request: Request, { params }: RouteContext) {
   try {
     await connect();
     const body = await request.json();
 
-    const updateData: any = {};
+    const updateData: Partial<{
+      name: string;
+      slug: string;
+      image: string;
+      description: string;
+      isActive: boolean;
+      sortOrder: number;
+      products: string[];
+    }> = {};
     if (body.name) {
       updateData.name = body.name;
       updateData.slug = body.name
@@ -55,8 +59,9 @@ export async function PUT(
     if (body.sortOrder !== undefined) updateData.sortOrder = body.sortOrder;
     if (body.products !== undefined) updateData.products = body.products;
 
+    const { id } = await params;
     const updatedCollection = await Collection.findByIdAndUpdate(
-      params.id,
+      id,
       updateData,
       { new: true }
     ).populate('products');
@@ -82,14 +87,12 @@ export async function PUT(
 }
 
 // DELETE collection
-export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(request: Request, { params }: RouteContext) {
   try {
     await connect();
 
-    const deleted = await Collection.findByIdAndDelete(params.id);
+    const { id } = await params;
+    const deleted = await Collection.findByIdAndDelete(id);
 
     if (!deleted) {
       return NextResponse.json(

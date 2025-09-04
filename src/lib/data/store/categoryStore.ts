@@ -31,7 +31,7 @@ interface CategoryState {
   clearError: () => void;
 }
 
-export const useCategoryStore = create<CategoryState>((set, get) => ({
+export const useCategoryStore = create<CategoryState>(set => ({
   categories: [],
   currentCategory: null,
   status: 'idle',
@@ -48,9 +48,11 @@ export const useCategoryStore = create<CategoryState>((set, get) => ({
         categories: response.categories,
         status: 'success',
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : 'Failed to fetch categories';
       set({
-        error: err?.message ?? String(err) ?? 'Failed to fetch categories',
+        error: message,
         status: 'error',
       });
     }
@@ -67,9 +69,11 @@ export const useCategoryStore = create<CategoryState>((set, get) => ({
         currentCategory: response.category,
         status: 'success',
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : 'Failed to fetch category';
       set({
-        error: err?.message ?? 'Failed to fetch category',
+        error: message,
         status: 'error',
       });
     }
@@ -91,9 +95,11 @@ export const useCategoryStore = create<CategoryState>((set, get) => ({
         status: 'success',
       }));
       return response.category;
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : 'Failed to create category';
       set({
-        error: err?.message ?? 'Failed to create category',
+        error: message,
         status: 'error',
       });
       throw err;
@@ -122,9 +128,11 @@ export const useCategoryStore = create<CategoryState>((set, get) => ({
         status: 'success',
       }));
       return response.category;
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : 'Failed to update category';
       set({
-        error: err?.message ?? 'Failed to update category',
+        error: message,
         status: 'error',
       });
       throw err;
@@ -142,9 +150,11 @@ export const useCategoryStore = create<CategoryState>((set, get) => ({
           state.currentCategory?._id === id ? null : state.currentCategory,
         status: 'success',
       }));
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : 'Failed to delete category';
       set({
-        error: err?.message ?? 'Failed to delete category',
+        error: message,
         status: 'error',
       });
       throw err;

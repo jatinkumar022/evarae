@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -32,7 +32,7 @@ export default function CategoryViewPage() {
   const {
     productsByCategory,
     fetchProductsByCategory,
-    status: productStatus,
+    // status: productStatus,
   } = useProductStore();
 
   useEffect(() => {

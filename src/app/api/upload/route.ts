@@ -15,14 +15,16 @@ export async function POST(request: Request) {
     const buffer = Buffer.from(bytes);
 
     // Upload to Cloudinary
-    const result = await new Promise<any>((resolve, reject) => {
-      cloudinary.uploader
-        .upload_stream({ folder: 'categories' }, (error, result) => {
-          if (error) reject(error);
-          else resolve(result);
-        })
-        .end(buffer);
-    });
+    const result = await new Promise<{ secure_url: string; public_id: string }>(
+      (resolve, reject) => {
+        cloudinary.uploader
+          .upload_stream({ folder: 'categories' }, (error, result) => {
+            if (error) reject(error);
+            else resolve(result as { secure_url: string; public_id: string });
+          })
+          .end(buffer);
+      }
+    );
 
     return NextResponse.json({
       url: result.secure_url,

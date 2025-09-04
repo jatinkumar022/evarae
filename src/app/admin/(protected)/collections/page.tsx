@@ -43,7 +43,7 @@ export default function CollectionsPage() {
 
   useEffect(() => {
     fetchCollections();
-  }, []); // run once
+  }, [fetchCollections]); // run once
 
   const handleToggleStatus = async (id: string) => {
     try {
@@ -387,17 +387,27 @@ export default function CollectionsPage() {
                         {collection.products &&
                         collection.products.length > 0 ? (
                           <div className="space-y-2 max-h-40 overflow-y-auto">
-                            {collection.products.map((prod: any) => (
-                              <div
-                                key={prod._id || prod}
-                                className="flex items-center space-x-2 p-2 bg-white rounded-lg"
-                              >
-                                <Package className="h-4 w-4 text-indigo-500" />
-                                <span className="text-sm text-gray-700">
-                                  {prod.name || prod}
-                                </span>
-                              </div>
-                            ))}
+                            {collection.products.map(
+                              (
+                                prod: { _id?: string; name?: string } | string
+                              ) => (
+                                <div
+                                  key={
+                                    (typeof prod === 'string'
+                                      ? prod
+                                      : prod._id) || ''
+                                  }
+                                  className="flex items-center space-x-2 p-2 bg-white rounded-lg"
+                                >
+                                  <Package className="h-4 w-4 text-indigo-500" />
+                                  <span className="text-sm text-gray-700">
+                                    {typeof prod === 'string'
+                                      ? prod
+                                      : prod.name || ''}
+                                  </span>
+                                </div>
+                              )
+                            )}
                           </div>
                         ) : (
                           <div className="text-center py-4">

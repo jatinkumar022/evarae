@@ -4,7 +4,6 @@ import { useRouter, useParams } from 'next/navigation';
 import {
   ArrowLeft,
   Save,
-  Trash2,
   Loader2,
   Upload,
   X,
@@ -345,7 +344,7 @@ export default function EditProductPage() {
           Product not found
         </h3>
         <p className="mt-1 text-sm text-gray-500">
-          The product you're looking for doesn't exist.
+          The product you&apos;re looking for doesn&apos;t exist.
         </p>
         <Link
           href="/admin/products"

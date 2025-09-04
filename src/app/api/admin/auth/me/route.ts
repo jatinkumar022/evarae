@@ -12,9 +12,7 @@ if (!ADMIN_JWT_SECRET) {
 export async function GET(request: Request) {
   try {
     await connect();
-    const cookieHeader = (request.headers as any).get('cookie') as
-      | string
-      | null;
+    const cookieHeader = request.headers.get('cookie') as string | null;
     const token = cookieHeader
       ?.split(';')
       .map(p => p.trim())
@@ -22,7 +20,10 @@ export async function GET(request: Request) {
       ?.split('=')[1];
     if (!token) return NextResponse.json({ admin: null });
 
-    const payload = jwt.verify(token, ADMIN_JWT_SECRET) as any;
+    const payload = jwt.verify(token, ADMIN_JWT_SECRET) as {
+      uid?: string;
+      role?: string;
+    };
     if (!payload || payload.role !== 'admin')
       return NextResponse.json({ admin: null });
 
@@ -33,7 +34,7 @@ export async function GET(request: Request) {
     return NextResponse.json({
       admin: { id: user._id, name: user.name, email: user.email },
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ admin: null });
   }
 }

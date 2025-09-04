@@ -2,14 +2,14 @@ import { NextResponse } from 'next/server';
 import { connect } from '@/dbConfig/dbConfig';
 import Review from '@/models/reviewModel';
 
-export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+type RouteContext = { params: Promise<{ id: string }> };
+
+export async function GET(request: Request, { params }: RouteContext) {
   try {
     await connect();
 
-    const review = await Review.findById(params.id)
+    const { id } = await params;
+    const review = await Review.findById(id)
       .populate('product', 'name slug')
       .populate('user', 'name email')
       .lean();
@@ -28,10 +28,7 @@ export async function GET(
   }
 }
 
-export async function PUT(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(request: Request, { params }: RouteContext) {
   try {
     await connect();
 
@@ -47,7 +44,14 @@ export async function PUT(
       );
     }
 
-    const updateData: any = {};
+    const updateData: Partial<{
+      rating: number;
+      comment: string;
+      images: string[];
+      videos: string[];
+      verifiedPurchase: boolean;
+      helpfulVotes: number;
+    }> = {};
     if (rating !== undefined) updateData.rating = rating;
     if (comment !== undefined) updateData.comment = comment;
     if (images !== undefined) updateData.images = images;
@@ -56,11 +60,11 @@ export async function PUT(
       updateData.verifiedPurchase = verifiedPurchase;
     if (helpfulVotes !== undefined) updateData.helpfulVotes = helpfulVotes;
 
-    const updatedReview = await Review.findByIdAndUpdate(
-      params.id,
-      updateData,
-      { new: true, runValidators: true }
-    )
+    const { id } = await params;
+    const updatedReview = await Review.findByIdAndUpdate(id, updateData, {
+      new: true,
+      runValidators: true,
+    })
       .populate('product', 'name slug')
       .populate('user', 'name email');
 
@@ -81,14 +85,12 @@ export async function PUT(
   }
 }
 
-export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(request: Request, { params }: RouteContext) {
   try {
     await connect();
 
-    const deletedReview = await Review.findByIdAndDelete(params.id);
+    const { id } = await params;
+    const deletedReview = await Review.findByIdAndDelete(id);
 
     if (!deletedReview) {
       return NextResponse.json({ error: 'Review not found' }, { status: 404 });

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { apiFetch } from '@/lib/utils';
-import { Product } from '@/lib/types/product';
+import { type Product } from '@/lib/data/store/productStore';
 
 export interface Collection {
   _id: string;
@@ -41,7 +41,7 @@ interface CollectionState {
   reset: () => void;
 }
 
-export const useCollectionStore = create<CollectionState>((set, get) => ({
+export const useCollectionStore = create<CollectionState>(set => ({
   collections: [],
   currentCollection: null,
   allProducts: [], // ✅
@@ -55,9 +55,11 @@ export const useCollectionStore = create<CollectionState>((set, get) => ({
         '/api/admin/collections'
       );
       set({ collections: response.collections, status: 'success' });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : 'Failed to fetch collections';
       set({
-        error: error.message || 'Failed to fetch collections',
+        error: message,
         status: 'error',
       });
     }
@@ -70,9 +72,11 @@ export const useCollectionStore = create<CollectionState>((set, get) => ({
         `/api/admin/collections/${id}`
       );
       set({ currentCollection: response.collection, status: 'success' });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : 'Failed to fetch collection';
       set({
-        error: error.message || 'Failed to fetch collection',
+        error: message,
         status: 'error',
       });
     }
@@ -84,7 +88,7 @@ export const useCollectionStore = create<CollectionState>((set, get) => ({
         '/api/admin/products'
       );
       set({ allProducts: response.products });
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Failed to fetch products', error);
     }
   },
@@ -104,9 +108,11 @@ export const useCollectionStore = create<CollectionState>((set, get) => ({
         status: 'success',
       }));
       return response.collection;
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : 'Failed to create collection';
       set({
-        error: error.message || 'Failed to create collection',
+        error: message,
         status: 'error',
       });
       throw error;
@@ -134,9 +140,11 @@ export const useCollectionStore = create<CollectionState>((set, get) => ({
         status: 'success',
       }));
       return response.collection;
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : 'Failed to update collection';
       set({
-        error: error.message || 'Failed to update collection',
+        error: message,
         status: 'error',
       });
       throw error;
@@ -160,11 +168,14 @@ export const useCollectionStore = create<CollectionState>((set, get) => ({
         ),
         status: 'success',
       }));
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to update collection products', error);
       set({
         status: 'error',
-        error: error.message || 'Failed to update collection products',
+        error:
+          error instanceof Error
+            ? error.message
+            : 'Failed to update collection products',
       });
     }
   },
@@ -181,9 +192,11 @@ export const useCollectionStore = create<CollectionState>((set, get) => ({
           state.currentCollection?._id === id ? null : state.currentCollection,
         status: 'success',
       }));
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : 'Failed to delete collection';
       set({
-        error: error.message || 'Failed to delete collection',
+        error: message,
         status: 'error',
       });
       throw error;

@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import Image from 'next/image';
-import { Product } from '@/lib/types/product';
+import { type Product } from '@/lib/data/store/productStore';
 import { Package } from 'lucide-react';
 
 interface Props {

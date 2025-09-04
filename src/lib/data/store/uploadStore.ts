@@ -47,9 +47,10 @@ export const useUploadStore = create<UploadState>(set => ({
         publicId: data.public_id,
         status: 'success',
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Upload failed';
       set({
-        error: error.message || 'Upload failed',
+        error: message,
         status: 'error',
       });
     }

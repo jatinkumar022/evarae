@@ -21,7 +21,7 @@ export async function GET(request: Request) {
     const skip = (page - 1) * limit;
 
     // Build filter
-    const filter: any = {};
+    const filter: Record<string, unknown> = {};
     if (search) {
       filter.$or = [
         { name: { $regex: search, $options: 'i' } },
@@ -34,7 +34,7 @@ export async function GET(request: Request) {
     if (status) filter.status = status;
 
     // Build sort
-    const sort: any = {};
+    const sort: Record<string, 1 | -1> = {};
     sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
 
     const products = await Product.find(filter)

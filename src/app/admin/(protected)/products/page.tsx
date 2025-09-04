@@ -8,7 +8,6 @@ import {
   Edit,
   Trash2,
   Eye,
-  MoreHorizontal,
   Package,
   Layers,
   Grid2X2,
@@ -24,11 +23,10 @@ export default function ProductsPage() {
     filters,
     pagination,
     status,
-    error,
+
     setFilters,
     fetchProducts,
     deleteProduct,
-    clearError,
   } = useProductStore();
 
   const { categories, fetchCategories } = useCategoryStore();

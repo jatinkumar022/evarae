@@ -54,10 +54,11 @@ export const useAdminAuth = create<AdminAuthState>((set, get) => ({
         setTimeout(tick, 1000);
       };
       setTimeout(tick, 1000);
-    } catch (e: any) {
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : 'Failed to request OTP';
       set({
         requestStatus: 'error',
-        error: e?.message || 'Failed to request OTP',
+        error: message,
       });
     }
   },
@@ -75,8 +76,9 @@ export const useAdminAuth = create<AdminAuthState>((set, get) => ({
       await adminAuthApi.verifyOtp(email, otp);
       set({ verifyStatus: 'success' });
       await get().loadProfile();
-    } catch (e: any) {
-      set({ verifyStatus: 'error', error: e?.message || 'Invalid OTP' });
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : 'Invalid OTP';
+      set({ verifyStatus: 'error', error: message });
     }
   },
 

@@ -3,14 +3,12 @@ import { connect } from '@/dbConfig/dbConfig';
 import Category from '@/models/categoryModel';
 
 // -------------------- GET (View Category) --------------------
-export async function GET(
-  request: Request,
-  context: { params: Promise<{ id: string }> }
-) {
+type RouteContext = { params: Promise<{ id: string }> };
+
+export async function GET(request: Request, { params }: RouteContext) {
   try {
     await connect();
-
-    const { id } = await context.params; // ✅ Always await params
+    const { id } = await params;
     const category = await Category.findById(id);
 
     if (!category) {
@@ -31,14 +29,10 @@ export async function GET(
 }
 
 // -------------------- PUT (Update Category) --------------------
-export async function PUT(
-  request: Request,
-  context: { params: Promise<{ id: string }> }
-) {
+export async function PUT(request: Request, { params }: RouteContext) {
   try {
     await connect();
-
-    const { id } = await context.params;
+    const { id } = await params;
     const body = await request.json();
     const category = await Category.findById(id);
 
@@ -49,7 +43,14 @@ export async function PUT(
       );
     }
 
-    const updateData: any = {};
+    const updateData: Partial<{
+      name: string;
+      slug: string;
+      description: string;
+      image: string;
+      isActive: boolean;
+      sortOrder: number;
+    }> = {};
 
     // Validate duplicate name (case insensitive)
     if (body.name && body.name !== category.name) {
@@ -113,14 +114,10 @@ export async function PUT(
 }
 
 // -------------------- DELETE (Delete Category) --------------------
-export async function DELETE(
-  request: Request,
-  context: { params: Promise<{ id: string }> }
-) {
+export async function DELETE(request: Request, { params }: RouteContext) {
   try {
     await connect();
-
-    const { id } = await context.params;
+    const { id } = await params;
     const category = await Category.findById(id);
 
     if (!category) {

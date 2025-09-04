@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   ArrowLeft,
@@ -122,30 +122,30 @@ export default function NewProductPage() {
           .substring(0, 8) +
         '-' +
         Date.now().toString().slice(-4);
-      handleInputChange('sku', generatedSku);
+      setFormData(prev => ({ ...prev, sku: generatedSku }));
     }
-  }, [formData.name]);
+  }, [formData.name, formData.sku]);
 
   // Auto-generate meta title from name
   useEffect(() => {
     if (formData.name && !formData.metaTitle) {
-      handleInputChange('metaTitle', formData.name);
+      setFormData(prev => ({ ...prev, metaTitle: formData.name }));
     }
-  }, [formData.name]);
+  }, [formData.name, formData.metaTitle]);
 
-  const handleInputChange = <K extends keyof ProductFormData>(
-    field: K,
-    value: ProductFormData[K]
-  ) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    if (validationErrors[field]) {
-      setValidationErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors[field as string];
-        return newErrors;
-      });
-    }
-  };
+  const handleInputChange = useCallback(
+    <K extends keyof ProductFormData>(field: K, value: ProductFormData[K]) => {
+      setFormData(prev => ({ ...prev, [field]: value }));
+      if (validationErrors[field]) {
+        setValidationErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors[field as string];
+          return newErrors;
+        });
+      }
+    },
+    [validationErrors]
+  );
 
   const toggleArray = (field: 'colors' | 'categories', value: string) => {
     setFormData(prev => ({

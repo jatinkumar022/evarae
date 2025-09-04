@@ -5,14 +5,9 @@ import {
   ArrowLeft,
   Edit,
   Trash2,
-  Eye,
   Loader2,
   Package,
-  Star,
   Tag,
-  DollarSign,
-  Hash,
-  Calendar,
   AlertCircle,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -87,7 +82,7 @@ export default function ProductDetailPage() {
             Product not found
           </h3>
           <p className="mt-1 text-sm text-gray-500">
-            The product you're looking for doesn't exist.
+            The product you&apos;re looking for doesn&apos;t exist.
           </p>
           <Link
             href="/admin/products"

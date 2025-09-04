@@ -25,6 +25,7 @@ export interface Product {
   metaDescription: string;
   createdAt: string;
   updatedAt: string;
+  sizes?: string[]; // Added to support admin UI display
 }
 
 export interface ProductFilters {
@@ -116,9 +117,11 @@ export const useProductStore = create<ProductState>((set, get) => ({
         pagination: response.pagination,
         status: 'success',
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : 'Failed to fetch products';
       set({
-        error: err?.message || 'Failed to fetch products',
+        error: message,
         status: 'error',
       });
     }
@@ -131,9 +134,11 @@ export const useProductStore = create<ProductState>((set, get) => ({
         `/api/admin/products/${id}`
       );
       set({ currentProduct: response.product, status: 'success' });
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : 'Failed to fetch product';
       set({
-        error: err?.message || 'Failed to fetch product',
+        error: message,
         status: 'error',
       });
     }
@@ -155,9 +160,11 @@ export const useProductStore = create<ProductState>((set, get) => ({
         status: 'success',
       }));
       return response.product;
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : 'Failed to create product';
       set({
-        error: err?.message || 'Failed to create product',
+        error: message,
         status: 'error',
       });
       throw err;
@@ -186,9 +193,11 @@ export const useProductStore = create<ProductState>((set, get) => ({
         status: 'success',
       }));
       return response.product;
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : 'Failed to update product';
       set({
-        error: err?.message || 'Failed to update product',
+        error: message,
         status: 'error',
       });
       throw err;
@@ -205,9 +214,11 @@ export const useProductStore = create<ProductState>((set, get) => ({
           state.currentProduct?._id === id ? null : state.currentProduct,
         status: 'success',
       }));
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : 'Failed to delete product';
       set({
-        error: err?.message || 'Failed to delete product',
+        error: message,
         status: 'error',
       });
       throw err;
@@ -227,9 +238,13 @@ export const useProductStore = create<ProductState>((set, get) => ({
         },
         status: 'success',
       }));
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : 'Failed to fetch products by category';
       set({
-        error: err?.message || 'Failed to fetch products by category',
+        error: message,
         status: 'error',
       });
     }

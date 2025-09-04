@@ -8,11 +8,8 @@ import {
   Trash2,
   Eye,
   MoreHorizontal,
-  Package,
   ToggleLeft,
   ToggleRight,
-  ChevronDown,
-  ChevronUp,
   Tag,
   Search,
   Filter,
@@ -48,7 +45,7 @@ export default function CategoriesPage() {
 
   useEffect(() => {
     fetchCategories();
-  }, []);
+  }, [fetchCategories]);
 
   const handleDeleteCategory = (category: Category) => {
     setCategoryToDelete(category);
@@ -244,7 +241,7 @@ export default function CategoriesPage() {
                   {searchTerm && (
                     <span className="text-gray-500 font-normal">
                       {' '}
-                      matching "{searchTerm}"
+                      matching &quot;{searchTerm}&quot;
                     </span>
                   )}
                 </h3>
@@ -568,7 +565,7 @@ export default function CategoriesPage() {
                     <p className="text-sm text-gray-700">
                       Are you sure you want to delete{' '}
                       <span className="font-semibold text-gray-900">
-                        "{categoryToDelete?.name}"
+                        &quot;{categoryToDelete?.name}&quot;
                       </span>
                       ? This will permanently remove the category and may affect
                       associated products.

@@ -9,17 +9,7 @@ import {
   Trash2,
   Layers,
   Package,
-  Calendar,
-  ToggleLeft,
-  ToggleRight,
   Plus,
-  Eye,
-  Settings,
-  TrendingUp,
-  Star,
-  Clock,
-  Users,
-  Grid,
   Loader2,
   AlertCircle,
 } from 'lucide-react';
@@ -57,7 +47,9 @@ export default function CollectionViewPage() {
   useEffect(() => {
     if (currentCollection?.products) {
       setSelectedProducts(
-        currentCollection.products.map((p: any) => p._id || p)
+        currentCollection.products.map((p: { _id?: string } | string) =>
+          typeof p === 'string' ? p : p._id || ''
+        )
       );
     }
   }, [currentCollection]);
@@ -141,7 +133,7 @@ export default function CollectionViewPage() {
             Collection not found
           </h3>
           <p className="mt-1 text-sm text-gray-500">
-            The collection you're looking for doesn't exist.
+            The collection you&apos;re looking for doesn&apos;t exist.
           </p>
           <Link
             href="/admin/collections"
@@ -289,15 +281,26 @@ export default function CollectionViewPage() {
                 currentCollection.products.length > 0 ? (
                   <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
                     {currentCollection.products.map(
-                      (product: any, index: number) => (
+                      (
+                        product:
+                          | { _id?: string; images?: string[]; name?: string }
+                          | string,
+                        index: number
+                      ) => (
                         <div
-                          key={product._id || index}
+                          key={
+                            (typeof product === 'string'
+                              ? product
+                              : product._id) || index
+                          }
                           className="aspect-square overflow-hidden rounded-lg bg-gray-200 group cursor-pointer"
                         >
-                          {product.images && product.images[0] ? (
+                          {typeof product !== 'string' &&
+                          product.images &&
+                          product.images[0] ? (
                             <Image
                               src={product.images[0]}
-                              alt={product.name || 'Product'}
+                              alt={(product.name || 'Product') as string}
                               width={200}
                               height={200}
                               className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
@@ -310,7 +313,7 @@ export default function CollectionViewPage() {
                           {/* <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-end">
                           <div className="p-2 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                             <p className="text-xs font-medium truncate">
-                              {product.name || 'Product'}
+                              {typeof product === 'string' ? product : product.name || 'Product'}
                             </p>
                           </div>
                         </div> */}
