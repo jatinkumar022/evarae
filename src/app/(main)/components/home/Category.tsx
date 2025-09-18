@@ -9,35 +9,35 @@ const categories = [
   {
     title: 'Daily Wear Earrings',
     image:
-      'https://www.tanishq.co.in/dw/image/v2/BKCK_PRD/on/demandware.static/-/Sites-Tanishq-product-catalog/default/dweabf3ab3/images/hi-res/51M4D1DBMABA00_1.jpg?sw=120&sh=120',
+      'https://res.cloudinary.com/dil93ruwo/image/upload/v1756960400/categories/yr7xd9r2mt07qoxync4d.png',
     href: '#',
     alt: 'Daily Wear ',
   },
   {
     title: 'Latest Mangalsutras',
     image:
-      'https://www.tanishq.co.in/dw/image/v2/BKCK_PRD/on/demandware.static/-/Sites-Tanishq-product-catalog/default/dw1cb4f7b9/images/hi-res/511870YAYAA00_1.jpg?sw=120&sh=120',
+      'https://res.cloudinary.com/dil93ruwo/image/upload/v1756960400/categories/yr7xd9r2mt07qoxync4d.png',
     href: '#',
     alt: 'Latest ',
   },
   {
     title: 'New Arrivals',
     image:
-      'https://www.tanishq.co.in/dw/image/v2/BKCK_PRD/on/demandware.static/-/Sites-Tanishq-product-catalog/default/dw52f65a28/images/hi-res/51D3B12OSABA00_1.jpg?sw=120&sh=120',
+      'https://res.cloudinary.com/dil93ruwo/image/upload/v1756960400/categories/yr7xd9r2mt07qoxync4d.png',
     href: '#',
     alt: 'New ',
   },
   {
     title: 'Gifting Jewellery',
     image:
-      'https://www.tanishq.co.in/dw/image/v2/BKCK_PRD/on/demandware.static/-/Sites-Tanishq-product-catalog/default/dwa8e54872/images/hi-res/512814SQNABA18_1.jpg?sw=120&sh=120',
+      'https://res.cloudinary.com/dil93ruwo/image/upload/v1756960400/categories/yr7xd9r2mt07qoxync4d.png',
     href: '#',
     alt: 'Gifting ',
   },
   {
     title: 'Engagement Rings',
     image:
-      'https://www.tanishq.co.in/dw/image/v2/BKCK_PRD/on/demandware.static/-/Sites-Tanishq-product-catalog/default/dwd6d91376/images/hi-res/50D4C1FOXAA02_1.jpg?sw=120&sh=120',
+      'https://res.cloudinary.com/dil93ruwo/image/upload/v1756960400/categories/yr7xd9r2mt07qoxync4d.png',
     href: '#',
     alt: 'Engagement ',
   },

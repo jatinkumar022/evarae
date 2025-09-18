@@ -78,16 +78,6 @@ export default function RootLayout({
           sizes="512x512"
           href="/android-chrome-512x512.png"
         />
-
-        {/* DNS prefetch for external domains */}
-        <link rel="dns-prefetch" href="https://static.tanishq.com" />
-        <link rel="dns-prefetch" href="https://www.tanishq.co.in" />
-        <link rel="dns-prefetch" href="https://tanishq.co.in" />
-
-        {/* Preconnect to external domains */}
-        <link rel="preconnect" href="https://static.tanishq.com" />
-        <link rel="preconnect" href="https://www.tanishq.co.in" />
-        <link rel="preconnect" href="https://tanishq.co.in" />
       </head>
       <body
         className={`${ibmPlexSans.variable} ${fraunces.variable} font-body antialiased`}

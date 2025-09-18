@@ -2,70 +2,18 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import React from 'react';
-import {
-  banglesCat,
-  chainsCat,
-  earringsCat,
-  mangalsutraCat,
-  pendantsCat,
-  ringsCat,
-  braceletsCat,
-} from '@/app/(main)/assets/CategoryGrid';
-
-const categories = [
-  {
-    title: 'Earrings',
-    image: earringsCat,
-    href: '/shop/earrings',
-    subtitle: 'Artisanal Beauty',
-    count: '120+ Designs',
-  },
-  {
-    title: 'Rings',
-    image: ringsCat,
-    href: '/shop/rings',
-    subtitle: 'Eternal Symbols',
-    count: '95+ Designs',
-  },
-  {
-    title: 'Pendants',
-    image: pendantsCat,
-    href: '/shop/pendants',
-    subtitle: 'Graceful Expressions',
-    count: '80+ Designs',
-  },
-  {
-    title: 'Mangalsutra',
-    image: mangalsutraCat,
-    href: '/shop/mangalsutra',
-    subtitle: 'Sacred Traditions',
-    count: '45+ Designs',
-  },
-  {
-    title: 'Bracelets',
-    image: braceletsCat,
-    href: '/shop/bracelets',
-    subtitle: 'Delicate Charm',
-    count: '60+ Designs',
-  },
-  {
-    title: 'Bangles',
-    image: banglesCat,
-    href: '/shop/bangles',
-    subtitle: 'Traditional Elegance',
-    count: '75+ Designs',
-  },
-  {
-    title: 'Chains',
-    image: chainsCat,
-    href: '/shop/chains',
-    subtitle: 'Foundation Style',
-    count: '55+ Designs',
-  },
-];
+import React, { useEffect } from 'react';
+import { usePublicCategoryStore } from '@/lib/data/mainStore/categoryStore';
+import Loader from '@/app/(main)/components/layouts/Loader';
 
 export default function CategoriesPage() {
+  const { categories, status, error, fetchCategories } =
+    usePublicCategoryStore();
+
+  useEffect(() => {
+    if (status === 'idle') fetchCategories();
+  }, []);
+
   return (
     <div className=" relative overflow-hidden">
       <div className="relative z-10">
@@ -92,88 +40,114 @@ export default function CategoriesPage() {
           </div>
         </section>
 
+        {/* Loading State */}
+        {status === 'loading' && (
+          <div className="px-6 lg:px-12 pb-20">
+            <div className="max-w-7xl mx-auto">
+              <Loader text="Loading categories..." fullscreen />
+            </div>
+          </div>
+        )}
+
+        {/* Error State */}
+        {status === 'error' && (
+          <div className="px-6 lg:px-12 pb-20">
+            <div className="max-w-7xl mx-auto text-center text-red-600">
+              {error || 'Failed to load categories'}
+            </div>
+          </div>
+        )}
+
+        {/* Empty State */}
+        {status === 'success' && categories.length === 0 && (
+          <div className="px-6 lg:px-12 pb-20">
+            <div className="max-w-7xl mx-auto text-center text-gray-600">
+              No categories found.
+            </div>
+          </div>
+        )}
+
         {/* Categories Grid */}
-        <section className="px-6 lg:px-12 pb-20">
-          <div className="max-w-7xl mx-auto">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-12">
-              {categories.map((category, index) => (
-                <Link
-                  key={category.title}
-                  href={category.href}
-                  className="group block"
-                  style={{ animationDelay: `${index * 150}ms` }}
-                >
-                  <div className="relative bg-white/80 rounded-3xl p-8 border border-slate-200/50 hover:border-amber-300/70 transition-all duration-700 hover:shadow-2xl  shadow-sm ">
-                    {/* Image Container */}
-                    <div className="relative mb-8 overflow-hidden rounded-2xl">
-                      <div className="aspect-[4/3] relative">
-                        {/* Gradient overlay */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-white/40 via-transparent to-transparent z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+        {status === 'success' && categories.length > 0 && (
+          <section className="px-6 lg:px-12 pb-20">
+            <div className="max-w-7xl mx-auto">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-12">
+                {categories.map((category, index) => (
+                  <Link
+                    key={category.slug}
+                    href={`/shop/${category.slug}`}
+                    className="group block"
+                    style={{ animationDelay: `${index * 150}ms` }}
+                  >
+                    <div className="relative bg-white/80 rounded-3xl p-8 border border-slate-200/50 hover:border-amber-300/70 transition-all duration-700 hover:shadow-2xl  shadow-sm ">
+                      {/* Image Container */}
+                      <div className="relative mb-8 overflow-hidden rounded-2xl">
+                        <div className="aspect-[4/3] relative">
+                          {/* Gradient overlay */}
+                          <div className="absolute inset-0 bg-gradient-to-t from-white/40 via-transparent to-transparent z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
 
-                        <Image
-                          src={category.image}
-                          alt={category.title}
-                          fill
-                          className="object-cover transition-all duration-700 group-hover:scale-110 group-hover:brightness-105"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Content */}
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between flex-wrap gap-2">
-                        <span className="text-primary group-hover:!text-amber-600 text-sm tracking-wider uppercase font-medium text-nowrap">
-                          {category.subtitle}
-                        </span>
-                        <span className="text-slate-500 text-xs font-medium text-nowrap">
-                          {category.count}
-                        </span>
+                          <Image
+                            src={category.image || '/favicon.ico'}
+                            alt={category.name}
+                            fill
+                            className="object-cover transition-all duration-700 group-hover:scale-110 group-hover:brightness-105"
+                          />
+                        </div>
                       </div>
 
-                      <h3 className="text-3xl md:text-4xl font-light text-slate-800 group-hover:text-amber-700 transition-colors duration-500">
-                        {category.title}
-                      </h3>
-
-                      {/* Animated underline */}
-                      <div className="relative">
-                        <div className="w-full h-px bg-slate-200"></div>
-                        <div className="absolute top-0 left-0 h-px bg-gradient-to-r from-amber-400 to-rose-400 w-0 group-hover:w-full transition-all duration-700 ease-out"></div>
-                      </div>
-
-                      {/* Explore button */}
-                      <div className="pt-4">
-                        <div className="inline-flex items-center space-x-2 text-slate-600 group-hover:text-amber-600 transition-colors duration-500">
-                          <span className="text-sm font-medium tracking-wide">
-                            Explore Category
+                      {/* Content */}
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between flex-wrap gap-2">
+                          <span className="text-primary group-hover:!text-amber-600 text-sm tracking-wider uppercase font-medium text-nowrap">
+                            {category.description || 'Explore Now'}
                           </span>
-                          <div className="w-0 group-hover:w-6 transition-all duration-500 overflow-hidden">
-                            <svg
-                              className="w-4 h-4"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={1.5}
-                                d="M17 8l4 4m0 0l-4 4m4-4H3"
-                              />
-                            </svg>
+                        </div>
+
+                        <h3 className="text-3xl md:text-4xl font-light text-slate-800 group-hover:text-amber-700 transition-colors duration-500">
+                          {category.name}
+                        </h3>
+
+                        {/* Animated underline */}
+                        <div className="relative">
+                          <div className="w-full h-px bg-slate-200"></div>
+                          <div className="absolute top-0 left-0 h-px bg-gradient-to-r from-amber-400 to-rose-400 w-0 group-hover:w-full transition-all duration-700 ease-out"></div>
+                        </div>
+
+                        {/* Explore button */}
+                        <div className="pt-4">
+                          <div className="inline-flex items-center space-x-2 text-slate-600 group-hover:text-amber-600 transition-colors duration-500">
+                            <span className="text-sm font-medium tracking-wide">
+                              Explore Category
+                            </span>
+                            <div className="w-0 group-hover:w-6 transition-all duration-500 overflow-hidden">
+                              <svg
+                                className="w-4 h-4"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={1.5}
+                                  d="M17 8l4 4m0 0l-4 4m4-4H3"
+                                />
+                              </svg>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
 
-                    {/* Decorative corner elements */}
-                    <div className="absolute top-0 left-0 w-20 h-20 border-l-2 border-t-2 border-amber-300/30 rounded-tl-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                    <div className="absolute bottom-0 right-0 w-20 h-20 border-r-2 border-b-2 border-rose-300/30 rounded-br-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-200"></div>
-                  </div>
-                </Link>
-              ))}
+                      {/* Decorative corner elements */}
+                      <div className="absolute top-0 left-0 w-20 h-20 border-l-2 border-t-2 border-amber-300/30 rounded-tl-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                      <div className="absolute bottom-0 right-0 w-20 h-20 border-r-2 border-b-2 border-rose-300/30 rounded-br-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-200"></div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
       </div>
     </div>
   );

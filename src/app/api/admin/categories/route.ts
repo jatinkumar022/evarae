@@ -30,7 +30,16 @@ export async function POST(request: Request) {
     await connect();
 
     const body = await request.json();
-    const { name, image, description, isActive } = body;
+    const { name, image, description, isActive, banner, mobileBanner } = body;
+
+    console.log('[ADMIN CATEGORIES POST] body:', {
+      name,
+      image,
+      description,
+      isActive,
+      banner,
+      mobileBanner,
+    });
 
     if (!name) {
       return NextResponse.json(
@@ -67,9 +76,19 @@ export async function POST(request: Request) {
       image,
       description: description || '',
       isActive: isActive !== false,
+      banner: banner || '',
+      mobileBanner: mobileBanner || '',
     });
 
     await category.save();
+
+    console.log('[ADMIN CATEGORIES POST] saved category:', {
+      _id: (category as any)?._id?.toString?.(),
+      name: category.name,
+      slug: category.slug,
+      banner: category.banner,
+      mobileBanner: category.mobileBanner,
+    });
 
     return NextResponse.json(
       {

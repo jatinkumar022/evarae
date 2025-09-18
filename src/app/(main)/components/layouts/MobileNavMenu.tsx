@@ -21,6 +21,7 @@ import {
 // import GiftingMenu from './Submenus/GiftingMenu';
 // import MoreMenu from './Submenus/MoreMenu';
 import { LogoCaelvi } from '@/app/(main)/assets';
+import { usePublicCategoryStore } from '@/lib/data/mainStore/categoryStore';
 
 // const menuItems = [
 //   { name: 'All Jewellery', href: '#', submenu: MegaMenuContent },
@@ -58,6 +59,13 @@ interface MobileNavMenuProps {
 const MobileNavMenu = ({ isOpen, onClose }: MobileNavMenuProps) => {
   // const [activeSubmenu, setActiveSubmenu] = useState<string | null>(null);
   const [searchValue, setSearchValue] = useState('');
+
+  const { categories, status, fetchCategories } = usePublicCategoryStore();
+
+  useEffect(() => {
+    if (status === 'idle') fetchCategories();
+  }, [status, fetchCategories]);
+
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
@@ -423,21 +431,17 @@ const MobileNavMenu = ({ isOpen, onClose }: MobileNavMenuProps) => {
                 </h3>
                 <div className="space-y-1">
                   <div className="space-y-1">
-                    {[
-                      { name: 'Earrings', href: '/shop/earrings' },
-                      { name: 'Rings', href: '/shop/rings' },
-                      { name: 'Pendants', href: '/shop/pendants' },
-                      { name: 'Mangalsutra', href: '/shop/mangalsutra' },
-                    ].map(item => (
-                      <Link
-                        key={item.name}
-                        href={item.href}
-                        className="block rounded-md px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 hover:text-primary"
-                        onClick={onClose}
-                      >
-                        {item.name}
-                      </Link>
-                    ))}
+                    {status === 'success' &&
+                      categories.slice(0, 8).map(item => (
+                        <Link
+                          key={item.slug}
+                          href={`/shop/${item.slug}`}
+                          className="block rounded-md px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 hover:text-primary"
+                          onClick={onClose}
+                        >
+                          {item.name}
+                        </Link>
+                      ))}
                     <Link
                       href={'/categories'}
                       className="block rounded-md px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 hover:text-primary"
@@ -446,55 +450,6 @@ const MobileNavMenu = ({ isOpen, onClose }: MobileNavMenuProps) => {
                       All Categories
                     </Link>
                   </div>
-
-                  {/* {menuItems.map(item => (
-                    <div key={item.name} className="relative">
-                      <button
-                        onClick={() => handleSubmenuToggle(item.name)}
-                        className="flex w-full items-center justify-between rounded-md px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 hover:text-primary"
-                        aria-label={`Toggle ${item.name} submenu`}
-                        aria-expanded={activeSubmenu === item.name}
-                      >
-                        <span>{item.name}</span>
-                        <motion.div
-                          animate={{
-                            rotate: activeSubmenu === item.name ? 90 : 0,
-                          }}
-                          transition={{ duration: 0.2 }}
-                        >
-                          <svg
-                            className="h-4 w-4"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M9 5l7 7-7 7"
-                            />
-                          </svg>
-                        </motion.div>
-                      </button>
-
-                      <AnimatePresence>
-                        {activeSubmenu === item.name && (
-                          <motion.div
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: 'auto' }}
-                            exit={{ opacity: 0, height: 0 }}
-                            transition={{ duration: 0.3 }}
-                            className="overflow-hidden"
-                          >
-                            <div className="border-l-2 border-gray-200 pl-4 py-2">
-                              {getMobileSubmenuContent(item.name)}
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                  ))} */}
                 </div>
               </div>
 

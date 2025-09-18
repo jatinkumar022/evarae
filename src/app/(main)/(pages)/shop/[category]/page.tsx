@@ -1,25 +1,99 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 import Container from '@/app/(main)/components/layouts/Container';
 import ProductFilters from '@/app/(main)/components/filters/ProductFilters';
 import DailywearCardsAd from '@/app/(main)/components/ads/DailywearCardsAd';
-import { FilterOptions, SortOption } from '@/lib/types/product';
-import { banglesProducts, ringsProducts } from '@/lib/data/products';
+import {
+  FilterOptions,
+  SortOption,
+  Product as UiProduct,
+} from '@/lib/types/product';
 import BannerImage from '../components/Banner';
-import { ad, Banner, BannerMobile } from '@/app/(main)/assets/Shop-list';
+import { ad } from '@/app/(main)/assets/Shop-list';
 import { ProductCard } from '../components/ProductCard';
 import Image from 'next/image';
 import { useParams } from 'next/navigation';
+import { usePublicCategoryStore } from '@/lib/data/mainStore/categoryStore';
+import Loader from '@/app/(main)/components/layouts/Loader';
+import { List, NoItems } from '@/app/(main)/assets/Common';
 
 export default function ShopCategoryPage() {
-  const [filteredProducts, setFilteredProducts] = useState(ringsProducts);
-  const [columns, setColumns] = useState(3);
-  const [visibleProducts, setVisibleProducts] = useState(10);
   const params = useParams();
   const rawCategory = params?.category;
+  const slug = Array.isArray(rawCategory) ? rawCategory[0] : rawCategory || '';
+
+  const { currentCategory, status, error, fetchCategory } =
+    usePublicCategoryStore();
+
+  const [filteredProducts, setFilteredProducts] = useState<UiProduct[]>([]);
+  const [columns, setColumns] = useState(3);
+  const [visibleProducts, setVisibleProducts] = useState(10);
   const [prevPage, setPrevPage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (slug) fetchCategory(slug, true);
+  }, [slug, fetchCategory]);
+
+  // Map API products to UI Product type
+  const mappedProducts: UiProduct[] = useMemo(() => {
+    const apiProducts = (currentCategory?.products ?? []) as Array<{
+      _id?: string;
+      name: string;
+      slug: string;
+      images?: string[];
+      thumbnail?: string;
+      price?: number;
+      discountPrice?: number;
+    }>;
+
+    return apiProducts.map(p => {
+      const mainImage =
+        p.thumbnail || (p.images && p.images[0]) || '/favicon.ico';
+      const hoverImage = p.images && p.images[1] ? p.images[1] : undefined;
+      const hasDiscount =
+        p.discountPrice != null && p.price != null && p.discountPrice < p.price;
+      return {
+        id: p.slug,
+        name: p.name,
+        description: '',
+        price: hasDiscount ? p.discountPrice! : p.price ?? null,
+        originalPrice: hasDiscount ? p.price! : null,
+        currency: 'INR',
+        images: [mainImage],
+        hoverImage,
+        category: {
+          id: currentCategory?._id || currentCategory?.slug || '',
+          name: currentCategory?.name || '',
+          slug: currentCategory?.slug || '',
+          description: currentCategory?.description,
+          image: currentCategory?.image,
+          productCount: apiProducts.length,
+          isActive: true,
+        },
+        subcategory: '',
+        brand: '',
+        material: '',
+        inStock: true,
+        stockCount: 10,
+        rating: 0,
+        reviews: 0,
+        isNew: false,
+        isSale: hasDiscount,
+        isWishlisted: false,
+        isFeatured: false,
+        tags: [],
+        sku: '',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      } as UiProduct;
+    });
+  }, [currentCategory]);
+
+  useEffect(() => {
+    setFilteredProducts(mappedProducts);
+  }, [mappedProducts]);
 
   useEffect(() => {
     if (document.referrer) {
@@ -27,26 +101,16 @@ export default function ShopCategoryPage() {
         const url = new URL(document.referrer);
         const segments = url.pathname.split('/').filter(Boolean);
         let lastSegment = segments[segments.length - 1] || null;
-
         if (lastSegment) {
           lastSegment =
             lastSegment.charAt(0).toUpperCase() + lastSegment.slice(1);
         }
-
         setPrevPage(lastSegment);
       } catch {
         setPrevPage(null);
       }
     }
   }, []);
-  // Ensure it's a string
-  const category = Array.isArray(rawCategory)
-    ? rawCategory[0]
-    : rawCategory || '';
-
-  // Capitalize first letter and replace hyphens with spaces
-  const headerTitle =
-    category.charAt(0).toUpperCase() + category.slice(1).replace(/-/g, ' ');
 
   useEffect(() => {
     function updateColumns() {
@@ -65,24 +129,33 @@ export default function ShopCategoryPage() {
 
   const filterOptions: FilterOptions = {
     priceRanges: [
-      { value: 'under-50k', label: 'Under ₹50,000' },
-      { value: '50k-100k', label: '₹50,000 - ₹100,000' },
-      { value: '100k-200k', label: '₹100,000 - ₹200,000' },
-      { value: 'above-200k', label: 'Above ₹200,000' },
+      { value: 'under-1k', label: 'Under ₹1,000' },
+      { value: '1k-2k', label: '₹1,000 - ₹2,000' },
+      { value: '2k-5k', label: '₹2,000 - ₹5,000' },
+      { value: 'above-5k', label: 'Above ₹5,000' },
     ],
     materials: [
-      '18K Gold with Diamond',
-      '18K Gold with Crystals',
-      '22K Gold',
-      '18K Gold with Pearls',
-      '18K Gold',
+      'Brass Alloy (Gold Color)',
+      'Copper Alloy (Gold Color)',
+      'Zinc Alloy (Gold Color)',
+      'Stainless Steel Alloy (Gold Tone)',
+      'American Diamond (CZ)',
+      'Crystal Stones',
+      'Pearl Beads',
+      'Oxidised Alloy',
     ],
     subcategories: [
-      'Gold Bangles',
-      'Diamond Bangles',
-      'Crystal Bangles',
-      'Designer Bangles',
-      'Traditional Bangles',
+      'Rings',
+      'Earrings',
+      'Bangles',
+      'Bracelets',
+      'Chains',
+      'Mangalsutras',
+      'Pendants',
+      'Necklaces',
+      'Nose Pins',
+      'Kadas',
+      'Jhumkas',
     ],
   };
 
@@ -105,17 +178,27 @@ export default function ShopCategoryPage() {
     const products = displayedProducts;
     const totalItems = products.length;
     const isLargeScreen = columns >= 3;
+    if (totalItems < 6) {
+      return products.map(product => (
+        <div key={product.id} className="h-full">
+          <ProductCard product={product} />
+        </div>
+      ));
+    }
+    // If no products, return only products (no ads)
+    if (totalItems === 0) {
+      return [];
+    }
 
     const ad1Index = isLargeScreen ? 3 : 2;
     let ad2Index;
-
     if (totalItems > 10) {
       ad2Index = isLargeScreen ? 8 : 5;
     } else {
       ad2Index = Math.max(totalItems - 1, ad1Index + 1);
     }
 
-    const items = [];
+    const items: React.ReactNode[] = [];
     let productIndex = 0;
     let insertedAd1 = false;
     let insertedAd2 = false;
@@ -155,12 +238,49 @@ export default function ShopCategoryPage() {
         productIndex++;
       }
     }
+
     return items;
   };
 
+  const headerTitle =
+    currentCategory?.name ||
+    slug.charAt(0).toUpperCase() + slug.slice(1).replace(/-/g, ' ');
+
+  if (status === 'loading') {
+    return <Loader text="Loading category..." fullscreen />;
+  }
+
+  if (status === 'error') {
+    return (
+      <Container>
+        <div className="py-10 text-center text-red-600">
+          {error || 'Failed to load category'}
+        </div>
+      </Container>
+    );
+  }
+
+  if (!currentCategory) {
+    // if (true) {
+    return (
+      <Container>
+        <div className="text-center py-12 text-primary-dark text-lg">
+          <List className="w-28 mx-auto " />
+          <p className="">Category not found.</p>
+        </div>
+      </Container>
+    );
+  }
+
   return (
     <>
-      <BannerImage desktopSrc={Banner} mobileSrc={BannerMobile} alt="Banner" />
+      {currentCategory.banner && (
+        <BannerImage
+          desktopSrc={currentCategory.banner}
+          mobileSrc={currentCategory.mobileBanner || currentCategory.banner}
+          alt={currentCategory.name}
+        />
+      )}
       <Container>
         <nav className="py-4 sm:py-6 text-xs sm:text-sm">
           <div className="flex items-center gap-1 sm:gap-2">
@@ -185,7 +305,7 @@ export default function ShopCategoryPage() {
         </div>
 
         <ProductFilters
-          products={banglesProducts}
+          products={mappedProducts}
           filterOptions={filterOptions}
           sortOptions={sortOptions}
           onFiltersChange={setFilteredProducts}
@@ -207,10 +327,9 @@ export default function ShopCategoryPage() {
           )}
 
           {filteredProducts.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-primary-dark text-lg">
-                No products match your filters.
-              </p>
+            <div className="text-center py-12 text-primary-dark text-lg">
+              <NoItems className="w-38 mx-auto " />
+              <p className="">No products found in this category.</p>
             </div>
           )}
         </ProductFilters>

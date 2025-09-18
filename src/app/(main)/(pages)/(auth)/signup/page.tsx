@@ -4,27 +4,42 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import Link from 'next/link';
 import Container from '@/app/(main)/components/layouts/Container';
+import { Eye, EyeOff } from 'lucide-react';
 
 export default function SignupPage() {
-  type Step = 'phone' | 'otp' | 'details' | 'done';
+  type Step = 'email' | 'auth' | 'details' | 'done';
+  type AuthMode = 'password' | 'otp';
 
-  const [step, setStep] = useState<Step>('phone');
-  const [phone, setPhone] = useState('');
-  const [otp, setOtp] = useState<string[]>(Array(6).fill(''));
-  const [fullName, setFullName] = useState('');
+  const [step, setStep] = useState<Step>('email');
   const [email, setEmail] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [authMode, setAuthMode] = useState<AuthMode>('password');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [otp, setOtp] = useState<string[]>(Array(6).fill(''));
   const inputsRef = useRef<Array<HTMLInputElement | null>>([]);
   const [resendIn, setResendIn] = useState(30);
 
-  const isValidPhone = useMemo(() => /^\d{10}$/.test(phone), [phone]);
+  const [fullName, setFullName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+
+  const isValidEmail = useMemo(
+    () => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email),
+    [email]
+  );
   const combinedOtp = useMemo(() => otp.join(''), [otp]);
   const isValidOtp = useMemo(() => /^\d{6}$/.test(combinedOtp), [combinedOtp]);
+  const isValidPassword = useMemo(
+    () => password.length >= 6 && password === confirmPassword,
+    [password, confirmPassword]
+  );
 
-  // Minimal stepper helpers for connector-line progress
+  // Stepper items
   const stepItems = [
-    { key: 'phone', label: 'Mobile', number: 1 },
-    { key: 'otp', label: 'OTP', number: 2 },
+    { key: 'email', label: 'Email', number: 1 },
+    { key: 'auth', label: 'Verify', number: 2 },
     { key: 'details', label: 'Details', number: 3 },
   ] as const;
   const rawIndex =
@@ -35,28 +50,27 @@ export default function SignupPage() {
   const progressPercent = (currentStepIndex / (stepItems.length - 1)) * 100;
 
   useEffect(() => {
-    if (step === 'otp') {
+    if (step === 'auth' && authMode === 'otp') {
       inputsRef.current[0]?.focus();
     }
-  }, [step]);
+  }, [step, authMode]);
 
   useEffect(() => {
-    if (step !== 'otp') return;
+    if (!(step === 'auth' && authMode === 'otp')) return;
     setResendIn(30);
-    const id = setInterval(() => {
-      setResendIn(prev => (prev > 0 ? prev - 1 : 0));
-    }, 1000);
+    const id = setInterval(
+      () => setResendIn(prev => (prev > 0 ? prev - 1 : 0)),
+      1000
+    );
     return () => clearInterval(id);
-  }, [step]);
+  }, [step, authMode]);
 
   const handleOtpChange = (index: number, value: string) => {
     const digit = value.replace(/\D/g, '').slice(0, 1);
     const next = [...otp];
     next[index] = digit;
     setOtp(next);
-    if (digit && index < otp.length - 1) {
-      inputsRef.current[index + 1]?.focus();
-    }
+    if (digit && index < otp.length - 1) inputsRef.current[index + 1]?.focus();
   };
 
   const handleOtpKeyDown = (
@@ -78,19 +92,20 @@ export default function SignupPage() {
       inputsRef.current[index + 1]?.focus();
   };
 
-  const goToOtp = () => {
-    if (!isValidPhone) return;
-    setStep('otp');
+  const goToAuth = () => {
+    if (!isValidEmail) return;
+    setStep('auth');
   };
 
-  const goToDetails = () => {
-    if (!isValidOtp) return;
+  const completeAuth = () => {
+    if (authMode === 'password' && !isValidPassword) return;
+    if (authMode === 'otp' && !isValidOtp) return;
     setStep('details');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!fullName.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
+    if (!fullName.trim() || !/^\d{10}$/.test(phone)) return;
     setIsSubmitting(true);
     try {
       await new Promise(r => setTimeout(r, 800));
@@ -110,11 +125,11 @@ export default function SignupPage() {
                 Create your account
               </h1>
               <p className="text-sm text-[oklch(0.55_0.06_15)] font-light">
-                Verify your mobile, confirm your details, and you&apos;re in.
+                Sign up quickly with email and password, or use OTP.
               </p>
             </div>
 
-            {/* Minimal yet designed stepper */}
+            {/* Stepper */}
             <div className="mb-6 rounded-xl border border-[oklch(0.84_0.04_10.35)]/50 bg-white/80 backdrop-blur-sm px-4 py-3 shadow">
               <ol className="relative flex items-center justify-between">
                 {/* connector lines */}
@@ -182,9 +197,9 @@ export default function SignupPage() {
             </div>
 
             <AnimatePresence mode="wait">
-              {step === 'phone' && (
+              {step === 'email' && (
                 <motion.section
-                  key="phone"
+                  key="email"
                   initial={{ opacity: 0, y: 20, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -20, scale: 0.95 }}
@@ -192,128 +207,196 @@ export default function SignupPage() {
                   className="rounded-xl border border-[oklch(0.84_0.04_10.35)]/30 bg-white/90 backdrop-blur-sm p-4 sm:p-6 shadow"
                 >
                   <h3 className="text-base font-medium text-[oklch(0.39_0.09_17.83)] mb-4">
-                    Enter your mobile number
+                    Enter your email
                   </h3>
                   <div className="space-y-2">
-                    <div className="flex gap-2">
-                      <div className="inline-flex items-center rounded-lg border border-[oklch(0.84_0.04_10.35)] bg-[oklch(0.93_0.03_12.01)] px-3 py-2 text-xs font-medium text-[oklch(0.55_0.06_15)]">
-                        <span className="hidden sm:block">🇮🇳</span> +91
-                      </div>
-                      <input
-                        id="phone"
-                        inputMode="numeric"
-                        pattern="[0-9]*"
-                        maxLength={10}
-                        value={phone}
-                        onChange={e =>
-                          setPhone(e.target.value.replace(/\D/g, ''))
-                        }
-                        className="flex-1 rounded-lg border border-[oklch(0.84_0.04_10.35)] bg-white px-3 py-2 text-sm text-[oklch(0.39_0.09_17.83)] placeholder-[oklch(0.7_0.04_12)] focus:outline-none focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/30 focus:border-[oklch(0.66_0.14_358.91)] transition-all"
-                        placeholder="Enter 10-digit mobile number"
-                      />
-                    </div>
+                    <input
+                      id="email"
+                      type="email"
+                      value={email}
+                      onChange={e => setEmail(e.target.value)}
+                      className="w-full rounded-lg border border-[oklch(0.84_0.04_10.35)] bg-white px-3 py-2 text-sm text-[oklch(0.39_0.09_17.83)] placeholder-[oklch(0.7_0.04_12)] focus:outline-none focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/30 focus:border-[oklch(0.66_0.14_358.91)] transition-all"
+                      placeholder="you@example.com"
+                    />
                   </div>
-                  <div className="gap-3 mt-3 flex sm:items-center justify-between flex-col">
-                    <p className="text-xs text-center text-[oklch(0.55_0.06_15)]">
-                      We&apos;ll send you a secure one-time password (OTP).
-                    </p>
+                  <div className="gap-3 mt-3 flex sm:items-center justify-end">
                     <button
-                      onClick={goToOtp}
-                      disabled={!isValidPhone}
+                      onClick={goToAuth}
+                      disabled={!isValidEmail}
                       className={`rounded-lg px-4 py-2.5 min-w-40 text-white text-sm font-medium transition-all duration-200 ${
-                        isValidPhone
+                        isValidEmail
                           ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] hover:shadow-lg hover:scale-105 shadow-md'
                           : 'bg-[oklch(0.84_0.04_10.35)] cursor-not-allowed'
                       }`}
                     >
-                      Send OTP
+                      Continue
                     </button>
                   </div>
                 </motion.section>
               )}
 
-              {step === 'otp' && (
+              {step === 'auth' && (
                 <motion.section
-                  key="otp"
+                  key="auth"
                   initial={{ opacity: 0, y: 20, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -20, scale: 0.95 }}
                   transition={{ duration: 0.3, ease: 'easeOut' }}
                   className="rounded-xl border border-[oklch(0.84_0.04_10.35)]/30 bg-white/90 backdrop-blur-sm p-6 shadow"
                 >
-                  <h3 className="text-base font-medium text-[oklch(0.39_0.09_17.83)] mb-3">
-                    Verify your number
-                  </h3>
-                  <p className="text-sm text-[oklch(0.55_0.06_15)] mb-8">
-                    Enter the 6-digit code sent to{' '}
-                    <span className="font-semibold text-[oklch(0.66_0.14_358.91)]">
-                      +91 {phone}
-                    </span>
-                  </p>
-                  <div className="flex  gap-2.5 mb-6">
-                    {otp.map((d, i) => (
-                      <input
-                        key={i}
-                        ref={el => {
-                          inputsRef.current[i] = el;
-                        }}
-                        inputMode="numeric"
-                        pattern="[0-9]*"
-                        maxLength={1}
-                        value={d}
-                        onChange={e => handleOtpChange(i, e.target.value)}
-                        onKeyDown={e => handleOtpKeyDown(i, e)}
-                        className="
-        aspect-square
-        w-8 md:w-12 lg:w-14
-        text-center rounded-lg border
-        border-[oklch(0.84_0.04_10.35)]
-        bg-white text-base font-semibold
-        text-[oklch(0.39_0.09_17.83)]
-        focus:outline-none focus:ring-2
-        focus:ring-[oklch(0.66_0.14_358.91)]/30
-        focus:border-[oklch(0.66_0.14_358.91)]
-        transition-all
-        hover:border-[oklch(0.66_0.14_358.91)]/50
-      "
-                      />
-                    ))}
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <button
-                      onClick={() => setStep('phone')}
-                      className="text-sm text-[oklch(0.55_0.06_15)] hover:text-[oklch(0.66_0.14_358.91)] transition-colors"
-                    >
-                      ← Back
-                    </button>
-                    <div className="flex items-center gap-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-base font-medium text-[oklch(0.39_0.09_17.83)]">
+                      Create password or use OTP
+                    </h3>
+                    <div className="text-xs text-[oklch(0.55_0.06_15)]">
                       <button
-                        type="button"
-                        disabled={resendIn > 0}
-                        onClick={() => setResendIn(30)}
-                        className={`text-sm transition-colors ${
-                          resendIn > 0
-                            ? 'text-[oklch(0.7_0.04_12)] cursor-not-allowed'
-                            : 'text-[oklch(0.66_0.14_358.91)] hover:text-[oklch(0.58_0.16_8)]'
-                        }`}
+                        onClick={() =>
+                          setAuthMode(m =>
+                            m === 'password' ? 'otp' : 'password'
+                          )
+                        }
+                        className="underline hover:text-[oklch(0.66_0.14_358.91)]"
                       >
-                        {resendIn > 0
-                          ? `Resend in 00:${String(resendIn).padStart(2, '0')}`
-                          : 'Resend OTP'}
-                      </button>
-                      <button
-                        onClick={goToDetails}
-                        disabled={!isValidOtp}
-                        className={`rounded-lg px-4 py-2.5 text-white text-sm font-medium transition-all duration-200 ${
-                          isValidOtp
-                            ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] hover:shadow-lg hover:scale-105 shadow-md'
-                            : 'bg-[oklch(0.84_0.04_10.35)] cursor-not-allowed'
-                        }`}
-                      >
-                        Verify
+                        {authMode === 'password'
+                          ? 'Use OTP instead'
+                          : 'Use Password instead'}
                       </button>
                     </div>
                   </div>
+
+                  {authMode === 'password' ? (
+                    <div className="space-y-3">
+                      {/* Password field */}
+                      <div className="relative">
+                        <input
+                          type={showPassword ? 'text' : 'password'}
+                          placeholder="Create password (min 6 characters)"
+                          value={password}
+                          onChange={e => setPassword(e.target.value)}
+                          className="w-full rounded-lg border border-[oklch(0.84_0.04_10.35)] bg-white px-3 py-2 pr-10 text-sm"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute inset-y-0 right-2 flex items-center text-[oklch(0.55_0.06_15)] hover:text-[oklch(0.66_0.14_358.91)]"
+                        >
+                          {showPassword ? (
+                            <EyeOff size={18} />
+                          ) : (
+                            <Eye size={18} />
+                          )}
+                        </button>
+                      </div>
+
+                      {/* Confirm password field */}
+                      <div className="relative">
+                        <input
+                          type={showConfirm ? 'text' : 'password'}
+                          placeholder="Confirm password"
+                          value={confirmPassword}
+                          onChange={e => setConfirmPassword(e.target.value)}
+                          className="w-full rounded-lg border border-[oklch(0.84_0.04_10.35)] bg-white px-3 py-2 pr-10 text-sm"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirm(!showConfirm)}
+                          className="absolute inset-y-0 right-2 flex items-center text-[oklch(0.55_0.06_15)] hover:text-[oklch(0.66_0.14_358.91)]"
+                        >
+                          {showConfirm ? (
+                            <EyeOff size={18} />
+                          ) : (
+                            <Eye size={18} />
+                          )}
+                        </button>
+                      </div>
+
+                      <div className="flex justify-between items-center mt-2">
+                        <button
+                          type="button"
+                          onClick={() => setStep('email')}
+                          className="text-sm text-[oklch(0.55_0.06_15)] hover:text-[oklch(0.66_0.14_358.91)]"
+                        >
+                          ← Back
+                        </button>
+                        <button
+                          onClick={completeAuth}
+                          disabled={!isValidPassword}
+                          className={`rounded-lg px-4 py-2.5 text-white text-sm font-medium transition-all duration-200 ${
+                            isValidPassword
+                              ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] hover:shadow-lg hover:scale-105 shadow-md'
+                              : 'bg-[oklch(0.84_0.04_10.35)] cursor-not-allowed'
+                          }`}
+                        >
+                          Continue
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      <p className="text-sm text-[oklch(0.55_0.06_15)] mb-4">
+                        Enter the 6-digit code sent to
+                        <span className="font-semibold text-[oklch(0.66_0.14_358.91)]">
+                          {' '}
+                          {email}
+                        </span>
+                      </p>
+                      <div className="flex gap-2.5 mb-4 justify-center">
+                        {otp.map((d, i) => (
+                          <input
+                            key={i}
+                            ref={el => {
+                              inputsRef.current[i] = el;
+                            }}
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            maxLength={1}
+                            value={d}
+                            onChange={e => handleOtpChange(i, e.target.value)}
+                            onKeyDown={e => handleOtpKeyDown(i, e)}
+                            className="aspect-square w-8 md:w-12 lg:w-14 text-center rounded-lg border border-[oklch(0.84_0.04_10.35)] bg-white text-base font-semibold"
+                          />
+                        ))}
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <button
+                          onClick={() => setStep('email')}
+                          className="text-sm text-[oklch(0.55_0.06_15)] hover:text-[oklch(0.66_0.14_358.91)]"
+                        >
+                          ← Back
+                        </button>
+                        <div className="flex items-center gap-4">
+                          <button
+                            type="button"
+                            disabled={resendIn > 0}
+                            onClick={() => setResendIn(30)}
+                            className={`text-sm transition-colors ${
+                              resendIn > 0
+                                ? 'text-[oklch(0.7_0.04_12)] cursor-not-allowed'
+                                : 'text-[oklch(0.66_0.14_358.91)] hover:text-[oklch(0.58_0.16_8)]'
+                            }`}
+                          >
+                            {resendIn > 0
+                              ? `Resend in 00:${String(resendIn).padStart(
+                                  2,
+                                  '0'
+                                )}`
+                              : 'Resend OTP'}
+                          </button>
+                          <button
+                            onClick={completeAuth}
+                            disabled={!isValidOtp}
+                            className={`rounded-lg px-4 py-2.5 text-white text-sm font-medium transition-all duration-200 ${
+                              isValidOtp
+                                ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] hover:shadow-lg hover:scale-105 shadow-md'
+                                : 'bg-[oklch(0.84_0.04_10.35)] cursor-not-allowed'
+                            }`}
+                          >
+                            Continue
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </motion.section>
               )}
 
@@ -332,12 +415,29 @@ export default function SignupPage() {
                   <div className="space-y-6">
                     <div>
                       <label className="block text-sm font-medium text-[oklch(0.55_0.06_15)] mb-2">
+                        Email
+                      </label>
+                      <input
+                        value={email}
+                        readOnly
+                        className="w-full rounded-xl border border-[oklch(0.84_0.04_10.35)] bg-[oklch(0.93_0.03_12.01)] px-4 py-3 text-sm text-[oklch(0.55_0.06_15)]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-[oklch(0.55_0.06_15)] mb-2">
                         Mobile number
                       </label>
                       <input
-                        value={`+91 ${phone}`}
-                        readOnly
-                        className="w-full rounded-xl border border-[oklch(0.84_0.04_10.35)] bg-[oklch(0.93_0.03_12.01)] px-4 py-3 text-sm text-[oklch(0.55_0.06_15)]"
+                        value={phone}
+                        onChange={e =>
+                          setPhone(
+                            e.target.value.replace(/\D/g, '').slice(0, 10)
+                          )
+                        }
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        placeholder="Enter 10-digit mobile number"
+                        className="w-full rounded-xl border border-[oklch(0.84_0.04_10.35)] bg-white px-4 py-3 text-sm"
                       />
                     </div>
                     <div>
@@ -351,30 +451,14 @@ export default function SignupPage() {
                         id="fullName"
                         value={fullName}
                         onChange={e => setFullName(e.target.value)}
-                        className="w-full rounded-xl border border-[oklch(0.84_0.04_10.35)] bg-white px-4 py-3 text-sm text-[oklch(0.39_0.09_17.83)] placeholder-[oklch(0.7_0.04_12)] focus:outline-none focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/30 focus:border-[oklch(0.66_0.14_358.91)] transition-all"
+                        className="w-full rounded-xl border border-[oklch(0.84_0.04_10.35)] bg-white px-4 py-3 text-sm"
                         placeholder="Enter your full name"
-                      />
-                    </div>
-                    <div>
-                      <label
-                        htmlFor="email"
-                        className="block text-sm font-medium text-[oklch(0.55_0.06_15)] mb-2"
-                      >
-                        Email address
-                      </label>
-                      <input
-                        id="email"
-                        type="email"
-                        value={email}
-                        onChange={e => setEmail(e.target.value)}
-                        className="w-full rounded-xl border border-[oklch(0.84_0.04_10.35)] bg-white px-4 py-3 text-sm text-[oklch(0.39_0.09_17.83)] placeholder-[oklch(0.7_0.04_12)] focus:outline-none focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/30 focus:border-[oklch(0.66_0.14_358.91)] transition-all"
-                        placeholder="you@example.com"
                       />
                     </div>
                     <div className="flex items-center justify-between pt-4">
                       <button
                         type="button"
-                        onClick={() => setStep('otp')}
+                        onClick={() => setStep('auth')}
                         className="text-sm text-[oklch(0.55_0.06_15)] hover:text-[oklch(0.66_0.14_358.91)] transition-colors"
                       >
                         ← Back
@@ -384,12 +468,12 @@ export default function SignupPage() {
                         disabled={
                           isSubmitting ||
                           !fullName.trim() ||
-                          !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+                          !/^\d{10}$/.test(phone)
                         }
                         className={`rounded-lg px-4 py-2.5 text-white text-sm font-medium transition-all duration-200 ${
                           isSubmitting ||
                           !fullName.trim() ||
-                          !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+                          !/^\d{10}$/.test(phone)
                             ? 'bg-[oklch(0.84_0.04_10.35)] cursor-not-allowed'
                             : 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] hover:shadow-lg hover:scale-105 shadow-md'
                         }`}

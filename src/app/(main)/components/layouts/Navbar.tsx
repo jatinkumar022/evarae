@@ -25,6 +25,7 @@ import MobileNavMenu from './MobileNavMenu';
 import { useRouter } from 'next/navigation';
 // import { LogoCaelvi } from '@/app/(main)/assets';
 import { Philosopher } from 'next/font/google';
+import { Eye, EyeOff } from 'lucide-react';
 
 const philosopher = Philosopher({
   subsets: ['latin'],
@@ -100,10 +101,13 @@ export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const router = useRouter();
   // Inline login dropdown (desktop) state
-  const [loginMode, setLoginMode] = useState<'mobile' | 'email'>('mobile');
-  const [loginStep, setLoginStep] = useState<'phone' | 'otp' | 'done'>('phone');
-  const [loginPhone, setLoginPhone] = useState('');
+  const [loginStep, setLoginStep] = useState<'email' | 'verify' | 'done'>(
+    'email'
+  );
+  const [authMode, setAuthMode] = useState<'password' | 'otp'>('password');
   const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [loginOtp, setLoginOtp] = useState<string[]>(Array(6).fill(''));
   const [loginResendIn, setLoginResendIn] = useState(0);
   const loginInputsRef = useRef<Array<HTMLInputElement | null>>([]);
@@ -134,7 +138,7 @@ export default function Navbar() {
 
   // Login dropdown helpers
   useEffect(() => {
-    if (loginStep === 'otp') {
+    if (loginStep === 'verify' && authMode === 'otp') {
       setLoginResendIn(30);
       // focus first OTP input
       loginInputsRef.current[0]?.focus();
@@ -143,11 +147,11 @@ export default function Navbar() {
       }, 1000);
       return () => clearInterval(id);
     }
-  }, [loginStep]);
+  }, [loginStep, authMode]);
 
-  const isValidLoginPhone = /^\d{10}$/.test(loginPhone);
   const isValidLoginEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(loginEmail);
   const isValidLoginOtp = /^\d{6}$/.test(loginOtp.join(''));
+  const isValidLoginPassword = loginPassword.length >= 6;
 
   const handleLoginOtpChange = (index: number, value: string) => {
     const digit = value.replace(/\D/g, '').slice(0, 1);
@@ -176,6 +180,11 @@ export default function Navbar() {
       loginInputsRef.current[index - 1]?.focus();
     if (e.key === 'ArrowRight' && index < loginOtp.length - 1)
       loginInputsRef.current[index + 1]?.focus();
+  };
+
+  const continueFromEmail = () => {
+    if (!isValidLoginEmail) return;
+    setLoginStep('verify');
   };
 
   // Sample mini-cart items and helpers (replace with real cart state later)
@@ -292,39 +301,31 @@ export default function Navbar() {
                         Quick sign in
                       </h3>
                       <p className="mt-0.5 text-xs text-[oklch(0.55_0.06_15)]">
-                        {loginMode === 'mobile'
-                          ? 'Use your mobile number'
-                          : 'Use your email'}
+                        Use your email
                       </p>
 
-                      {/* Mode toggle */}
+                      {/* Auth mode toggle (Password / OTP) */}
                       <div className="mt-3 flex justify-center">
                         <div className="inline-flex rounded-full border border-[oklch(0.84_0.04_10.35)] bg-white p-1">
                           <button
-                            onClick={() => {
-                              setLoginMode('mobile');
-                              setLoginStep('phone');
-                            }}
+                            onClick={() => setAuthMode('password')}
                             className={`${
-                              loginMode === 'mobile'
+                              authMode === 'password'
                                 ? 'bg-[oklch(0.93_0.03_12.01)] text-[oklch(0.39_0.09_17.83)]'
                                 : 'text-[oklch(0.55_0.06_15)]'
                             } px-3 py-1.5 rounded-full text-xs font-medium transition-colors`}
                           >
-                            Mobile
+                            Password
                           </button>
                           <button
-                            onClick={() => {
-                              setLoginMode('email');
-                              setLoginStep('phone');
-                            }}
+                            onClick={() => setAuthMode('otp')}
                             className={`${
-                              loginMode === 'email'
+                              authMode === 'otp'
                                 ? 'bg-[oklch(0.93_0.03_12.01)] text-[oklch(0.39_0.09_17.83)]'
                                 : 'text-[oklch(0.55_0.06_15)]'
                             } px-3 py-1.5 rounded-full text-xs font-medium transition-colors`}
                           >
-                            Email
+                            OTP
                           </button>
                         </div>
                       </div>
@@ -337,14 +338,14 @@ export default function Navbar() {
                             <div
                               className="h-px bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] via-[oklch(0.62_0.15_3)] to-[oklch(0.58_0.16_8)] rounded-full transition-all duration-300 ease-out"
                               style={{
-                                width: `${loginStep === 'otp' ? 100 : 0}%`,
+                                width: `${loginStep === 'verify' ? 100 : 0}%`,
                               }}
                             />
                           </div>
 
                           {[
-                            loginMode === 'mobile' ? 'Mobile' : 'Email',
-                            'OTP',
+                            'Email',
+                            authMode === 'password' ? 'Password' : 'OTP',
                           ].map((label, idx) => (
                             <li
                               key={label}
@@ -352,9 +353,9 @@ export default function Navbar() {
                             >
                               <span
                                 className={`flex h-4 w-4 items-center justify-center rounded-full text-[10px] ${
-                                  idx === 0 && loginStep === 'phone'
+                                  idx === 0 && loginStep === 'email'
                                     ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] text-white'
-                                    : idx === 1 && loginStep === 'otp'
+                                    : idx === 1 && loginStep === 'verify'
                                     ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] text-white'
                                     : 'bg-white border-2 border-[oklch(0.84_0.04_10.35)] text-[oklch(0.55_0.06_15)]'
                                 }`}
@@ -363,8 +364,8 @@ export default function Navbar() {
                               </span>
                               <span
                                 className={`text-[10px] ${
-                                  (idx === 0 && loginStep === 'phone') ||
-                                  (idx === 1 && loginStep === 'otp')
+                                  (idx === 0 && loginStep === 'email') ||
+                                  (idx === 1 && loginStep === 'verify')
                                     ? 'text-[oklch(0.66_0.14_358.91)]'
                                     : 'text-[oklch(0.55_0.06_15)]'
                                 }`}
@@ -377,125 +378,143 @@ export default function Navbar() {
                       </div>
 
                       {/* Content */}
-                      {loginStep === 'phone' && (
+                      {loginStep === 'email' && (
                         <div className="mt-3">
-                          {loginMode === 'mobile' ? (
-                            <div className="flex gap-2">
-                              <div className="inline-flex items-center rounded-lg border border-[oklch(0.84_0.04_10.35)] bg-[oklch(0.93_0.03_12.01)] px-3 py-2 text-xs font-medium text-[oklch(0.55_0.06_15)]">
-                                <span className="hidden sm:block">🇮🇳</span> +91
-                              </div>
-                              <input
-                                inputMode="numeric"
-                                pattern="[0-9]*"
-                                maxLength={10}
-                                value={loginPhone}
-                                onChange={e =>
-                                  setLoginPhone(
-                                    e.target.value.replace(/\D/g, '')
-                                  )
-                                }
-                                className="flex-1 rounded-lg border border-[oklch(0.84_0.04_10.35)] bg-white px-3 py-2 text-sm text-[oklch(0.39_0.09_17.83)] placeholder-[oklch(0.7_0.04_12)] focus:outline-none focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/30 focus:border-[oklch(0.66_0.14_358.91)] transition-all"
-                                placeholder="10-digit number"
-                              />
-                            </div>
-                          ) : (
-                            <input
-                              type="email"
-                              value={loginEmail}
-                              onChange={e => setLoginEmail(e.target.value)}
-                              className="w-full rounded-lg border border-[oklch(0.84_0.04_10.35)] bg-white px-3 py-2 text-sm text-[oklch(0.39_0.09_17.83)] placeholder-[oklch(0.7_0.04_12)] focus:outline-none focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/30 focus:border-[oklch(0.66_0.14_358.91)] transition-all"
-                              placeholder="you@example.com"
-                            />
-                          )}
+                          <input
+                            type="email"
+                            value={loginEmail}
+                            onChange={e => setLoginEmail(e.target.value)}
+                            className="w-full rounded-lg border border-[oklch(0.84_0.04_10.35)] bg-white px-3 py-2 text-sm text-[oklch(0.39_0.09_17.83)] placeholder-[oklch(0.7_0.04_12)] focus:outline-none focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/30 focus:border-[oklch(0.66_0.14_358.91)] transition-all"
+                            placeholder="you@example.com"
+                          />
                           <div className="mt-3 flex justify-end">
                             <button
-                              onClick={() => setLoginStep('otp')}
-                              disabled={
-                                loginMode === 'mobile'
-                                  ? !isValidLoginPhone
-                                  : !isValidLoginEmail
-                              }
+                              onClick={continueFromEmail}
+                              disabled={!isValidLoginEmail}
                               className={`rounded-lg px-4 py-2.5 text-white text-sm font-medium transition-all duration-200 ${
-                                loginMode === 'mobile'
-                                  ? isValidLoginPhone
-                                    ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] hover:shadow-md'
-                                    : 'bg-[oklch(0.84_0.04_10.35)] cursor-not-allowed'
-                                  : isValidLoginEmail
+                                isValidLoginEmail
                                   ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] hover:shadow-md'
                                   : 'bg-[oklch(0.84_0.04_10.35)] cursor-not-allowed'
                               }`}
                             >
-                              Send OTP
+                              Continue
                             </button>
                           </div>
                         </div>
                       )}
 
-                      {loginStep === 'otp' && (
+                      {loginStep === 'verify' && (
                         <div className="mt-3">
-                          <p className="text-xs text-[oklch(0.55_0.06_15)] mb-3">
-                            Code sent to{' '}
-                            <span className="font-medium text-[oklch(0.66_0.14_358.91)]">
-                              {loginMode === 'mobile'
-                                ? `+91 ${loginPhone}`
-                                : loginEmail}
-                            </span>
-                          </p>
-                          <div className="flex gap-2.5 mb-3">
-                            {loginOtp.map((d, i) => (
-                              <input
-                                key={i}
-                                ref={el => {
-                                  loginInputsRef.current[i] = el;
-                                }}
-                                inputMode="numeric"
-                                pattern="[0-9]*"
-                                maxLength={1}
-                                value={d}
-                                onChange={e =>
-                                  handleLoginOtpChange(i, e.target.value)
-                                }
-                                onKeyDown={e => handleLoginOtpKeyDown(i, e)}
-                                className="aspect-square w-8 md:w-10 text-center rounded-lg border border-[oklch(0.84_0.04_10.35)] bg-white text-base font-semibold text-[oklch(0.39_0.09_17.83)] focus:outline-none focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/30 focus:border-[oklch(0.66_0.14_358.91)] transition-all"
-                              />
-                            ))}
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <button
-                              onClick={() => setLoginStep('phone')}
-                              className="text-xs text-[oklch(0.55_0.06_15)] hover:text-[oklch(0.66_0.14_358.91)]"
-                            >
-                              Back
-                            </button>
-                            <div className="flex items-center gap-3">
-                              <button
-                                type="button"
-                                disabled={loginResendIn > 0}
-                                onClick={() => setLoginResendIn(30)}
-                                className={`text-xs ${
-                                  loginResendIn > 0
-                                    ? 'text-[oklch(0.7_0.04_12)] cursor-not-allowed'
-                                    : 'text-[oklch(0.66_0.14_358.91)] hover:text-[oklch(0.58_0.16_8)]'
-                                }`}
-                              >
-                                {loginResendIn > 0
-                                  ? `Resend in 00:${String(
-                                      loginResendIn
-                                    ).padStart(2, '0')}`
-                                  : 'Resend OTP'}
-                              </button>
-                              <button
-                                disabled={!isValidLoginOtp}
-                                className={`rounded-lg px-4 py-2.5 text-white text-sm font-medium transition-all duration-200 ${
-                                  isValidLoginOtp
-                                    ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] hover:shadow-md'
-                                    : 'bg-[oklch(0.84_0.04_10.35)] cursor-not-allowed'
-                                }`}
-                              >
-                                Verify
-                              </button>
-                            </div>
-                          </div>
+                          {authMode === 'password' ? (
+                            <>
+                              <div className="relative mb-3">
+                                <input
+                                  type={showLoginPassword ? 'text' : 'password'}
+                                  value={loginPassword}
+                                  onChange={e =>
+                                    setLoginPassword(e.target.value)
+                                  }
+                                  placeholder="Your password"
+                                  className="w-full rounded-lg border border-[oklch(0.84_0.04_10.35)] bg-white px-3 py-2 pr-10 text-sm"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setShowLoginPassword(!showLoginPassword)
+                                  }
+                                  className="absolute inset-y-0 right-2 flex items-center text-[oklch(0.55_0.06_15)] hover:text-[oklch(0.66_0.14_358.91)]"
+                                >
+                                  {showLoginPassword ? (
+                                    <EyeOff size={18} />
+                                  ) : (
+                                    <Eye size={18} />
+                                  )}
+                                </button>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <button
+                                  onClick={() => setLoginStep('email')}
+                                  className="text-xs text-[oklch(0.55_0.06_15)] hover:text-[oklch(0.66_0.14_358.91)]"
+                                >
+                                  Back
+                                </button>
+                                <button
+                                  disabled={!isValidLoginPassword}
+                                  className={`rounded-lg px-4 py-2.5 text-white text-sm font-medium transition-all duration-200 ${
+                                    isValidLoginPassword
+                                      ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] hover:shadow-md'
+                                      : 'bg-[oklch(0.84_0.04_10.35)] cursor-not-allowed'
+                                  }`}
+                                >
+                                  Login
+                                </button>
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <p className="text-xs text-[oklch(0.55_0.06_15)] mb-3">
+                                Code sent to{' '}
+                                <span className="font-medium text-[oklch(0.66_0.14_358.91)]">
+                                  {loginEmail}
+                                </span>
+                              </p>
+                              <div className="flex gap-2.5 mb-3">
+                                {loginOtp.map((d, i) => (
+                                  <input
+                                    key={i}
+                                    ref={el => {
+                                      loginInputsRef.current[i] = el;
+                                    }}
+                                    inputMode="numeric"
+                                    pattern="[0-9]*"
+                                    maxLength={1}
+                                    value={d}
+                                    onChange={e =>
+                                      handleLoginOtpChange(i, e.target.value)
+                                    }
+                                    onKeyDown={e => handleLoginOtpKeyDown(i, e)}
+                                    className="aspect-square w-8 md:w-10 text-center rounded-lg border border-[oklch(0.84_0.04_10.35)] bg-white text-base font-semibold text-[oklch(0.39_0.09_17.83)] focus:outline-none focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/30 focus:border-[oklch(0.66_0.14_358.91)] transition-all"
+                                  />
+                                ))}
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <button
+                                  onClick={() => setLoginStep('email')}
+                                  className="text-xs text-[oklch(0.55_0.06_15)] hover:text-[oklch(0.66_0.14_358.91)]"
+                                >
+                                  Back
+                                </button>
+                                <div className="flex items-center gap-3">
+                                  <button
+                                    type="button"
+                                    disabled={loginResendIn > 0}
+                                    onClick={() => setLoginResendIn(30)}
+                                    className={`text-xs ${
+                                      loginResendIn > 0
+                                        ? 'text-[oklch(0.7_0.04_12)] cursor-not-allowed'
+                                        : 'text-[oklch(0.66_0.14_358.91)] hover:text-[oklch(0.58_0.16_8)]'
+                                    }`}
+                                  >
+                                    {loginResendIn > 0
+                                      ? `Resend in 00:${String(
+                                          loginResendIn
+                                        ).padStart(2, '0')}`
+                                      : 'Resend OTP'}
+                                  </button>
+                                  <button
+                                    disabled={!isValidLoginOtp}
+                                    className={`rounded-lg px-4 py-2.5 text-white text-sm font-medium transition-all duration-200 ${
+                                      isValidLoginOtp
+                                        ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] hover:shadow-md'
+                                        : 'bg-[oklch(0.84_0.04_10.35)] cursor-not-allowed'
+                                    }`}
+                                  >
+                                    Verify
+                                  </button>
+                                </div>
+                              </div>
+                            </>
+                          )}
                         </div>
                       )}
 

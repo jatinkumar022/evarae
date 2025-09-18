@@ -19,6 +19,8 @@ interface CategoryFormData {
   name: string;
   description: string;
   image: string;
+  banner: string;
+  mobileBanner: string;
   isActive: boolean;
   sortOrder: number;
 }
@@ -32,6 +34,8 @@ export default function NewCategoryPage() {
     name: '',
     description: '',
     image: '',
+    banner: '',
+    mobileBanner: '',
     isActive: true,
     sortOrder: 0,
   });
@@ -79,6 +83,62 @@ export default function NewCategoryPage() {
     const url = useUploadStore.getState().fileUrl;
     if (url) {
       handleInputChange('image', url);
+    }
+  };
+
+  // Upload banner and set URL
+  const handleBannerSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      setValidationErrors(prev => ({
+        ...prev,
+        banner: 'Invalid file type',
+      }));
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setValidationErrors(prev => ({
+        ...prev,
+        banner: 'File too large (max 5MB)',
+      }));
+      return;
+    }
+
+    await uploadFile(file);
+    const url = useUploadStore.getState().fileUrl;
+    if (url) {
+      handleInputChange('banner', url);
+    }
+  };
+
+  // Upload mobile banner and set URL
+  const handleMobileBannerSelect = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      setValidationErrors(prev => ({
+        ...prev,
+        mobileBanner: 'Invalid file type',
+      }));
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setValidationErrors(prev => ({
+        ...prev,
+        mobileBanner: 'File too large (max 5MB)',
+      }));
+      return;
+    }
+
+    await uploadFile(file);
+    const url = useUploadStore.getState().fileUrl;
+    if (url) {
+      handleInputChange('mobileBanner', url);
     }
   };
 
@@ -330,6 +390,118 @@ export default function NewCategoryPage() {
                 </div>
               </div>
 
+              {/* Category Banner (optional) */}
+              <div className="bg-white shadow-sm rounded-xl border border-gray-200 overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                  <div className="flex items-center">
+                    <Upload className="h-5 w-5 text-gray-600 mr-2" />
+                    <h2 className="text-sm md:text-lg font-semibold text-gray-900">
+                      Category Banner (optional)
+                    </h2>
+                  </div>
+                </div>
+                <div className="p-6 space-y-4">
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
+                    <Upload className="mx-auto h-8 w-8 text-gray-400 mb-2" />
+                    <label className="cursor-pointer">
+                      <span className="text-sm font-medium text-gray-900">
+                        Upload banner
+                      </span>
+                      <span className="text-sm text-gray-500 block">PNG, JPG up to 5MB</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={e => handleBannerSelect(e)}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+
+                  {validationErrors.banner && (
+                    <p className="text-sm text-red-600">{validationErrors.banner}</p>
+                  )}
+
+                  {formData.banner && (
+                    <>
+                      <div className="relative group w-full h-32">
+                        <Image
+                          src={formData.banner}
+                          alt="Banner preview"
+                          fill
+                          className="object-cover rounded-lg border border-gray-200"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleInputChange('banner', '')}
+                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                      <p className="text-xs text-gray-600 break-all text-center">
+                        {formData.banner}
+                      </p>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Category Mobile Banner (optional) */}
+              <div className="bg-white shadow-sm rounded-xl border border-gray-200 overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                  <div className="flex items-center">
+                    <Upload className="h-5 w-5 text-gray-600 mr-2" />
+                    <h2 className="text-sm md:text-lg font-semibold text-gray-900">
+                      Mobile Banner (optional)
+                    </h2>
+                  </div>
+                </div>
+                <div className="p-6 space-y-4">
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
+                    <Upload className="mx-auto h-8 w-8 text-gray-400 mb-2" />
+                    <label className="cursor-pointer">
+                      <span className="text-sm font-medium text-gray-900">
+                        Upload mobile banner
+                      </span>
+                      <span className="text-sm text-gray-500 block">PNG, JPG up to 5MB</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={e => handleMobileBannerSelect(e)}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+
+                  {validationErrors.mobileBanner && (
+                    <p className="text-sm text-red-600">{validationErrors.mobileBanner}</p>
+                  )}
+
+                  {formData.mobileBanner && (
+                    <>
+                      <div className="relative group w-full h-32">
+                        <Image
+                          src={formData.mobileBanner}
+                          alt="Mobile banner preview"
+                          fill
+                          className="object-cover rounded-lg border border-gray-200"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleInputChange('mobileBanner', '')}
+                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                      <p className="text-xs text-gray-600 break-all text-center">
+                        {formData.mobileBanner}
+                      </p>
+                    </>
+                  )}
+                </div>
+              </div>
+
               {/* Form Summary */}
               <div className="bg-gradient-to-br from-blue-50 to-indigo-50 shadow-sm rounded-xl border border-blue-200 overflow-hidden">
                 <div className="px-6 py-4 border-b border-blue-200">
@@ -366,6 +538,18 @@ export default function NewCategoryPage() {
                     <span className="text-gray-600">Image:</span>
                     <span className="font-medium text-gray-900">
                       {formData.image ? 'Uploaded' : 'Not set'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Banner:</span>
+                    <span className="font-medium text-gray-900">
+                      {formData.banner ? 'Uploaded' : 'Not set'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Mobile Banner:</span>
+                    <span className="font-medium text-gray-900">
+                      {formData.mobileBanner ? 'Uploaded' : 'Not set'}
                     </span>
                   </div>
                 </div>

@@ -34,6 +34,15 @@ export async function PUT(request: Request, { params }: RouteContext) {
     await connect();
     const { id } = await params;
     const body = await request.json();
+    console.log('[ADMIN CATEGORIES PUT] id:', id, 'body:', {
+      name: body.name,
+      image: body.image,
+      description: body.description,
+      banner: body.banner,
+      mobileBanner: body.mobileBanner,
+      isActive: body.isActive,
+      sortOrder: body.sortOrder,
+    });
     const category = await Category.findById(id);
 
     if (!category) {
@@ -48,6 +57,8 @@ export async function PUT(request: Request, { params }: RouteContext) {
       slug: string;
       description: string;
       image: string;
+      banner: string;
+      mobileBanner: string;
       isActive: boolean;
       sortOrder: number;
     }> = {};
@@ -92,12 +103,22 @@ export async function PUT(request: Request, { params }: RouteContext) {
     if (body.description !== undefined)
       updateData.description = body.description;
     if (body.image !== undefined) updateData.image = body.image;
+    if (body.banner !== undefined) updateData.banner = body.banner;
+    if (body.mobileBanner !== undefined)
+      updateData.mobileBanner = body.mobileBanner;
     if (body.isActive !== undefined) updateData.isActive = body.isActive;
     if (body.sortOrder !== undefined) updateData.sortOrder = body.sortOrder;
 
-    const updatedCategory = await Category.findByIdAndUpdate(id, updateData, {
-      new: true,
-      runValidators: true,
+    // Use document.set + save to ensure full persistence
+    category.set(updateData);
+    const updatedCategory = await category.save();
+
+    console.log('[ADMIN CATEGORIES PUT] updated category:', {
+      _id: updatedCategory?._id?.toString?.(),
+      name: updatedCategory?.name,
+      slug: updatedCategory?.slug,
+      banner: updatedCategory?.banner,
+      mobileBanner: updatedCategory?.mobileBanner,
     });
 
     return NextResponse.json({

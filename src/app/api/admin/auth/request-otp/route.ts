@@ -61,7 +61,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       ok: true,
       message: 'If this email exists, OTP has been sent',
-      // devOtp: process.env.NODE_ENV !== 'production' ? otp : undefined,
+      devOtp: process.env.NODE_ENV !== 'production' ? otp : undefined,
     });
   } catch (error) {
     console.error('request-otp error', error);

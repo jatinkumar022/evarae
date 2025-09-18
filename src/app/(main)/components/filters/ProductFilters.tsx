@@ -264,7 +264,7 @@ const FilterModal = ({
           <div className="flex max-sm:justify-between items-start sm:items-center gap-2 sm:gap-4 w-full sm:w-auto">
             <button
               onClick={handleClearAll}
-              className="text-sm text-primary hover:text-primary-dark underline"
+              className="text-sm text-primary hover:text-primary-dark underline cursor-pointer"
             >
               Clear All Filters
             </button>
@@ -277,17 +277,21 @@ const FilterModal = ({
 
           {/* Right side: Cancel and Apply buttons */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 w-full sm:w-auto">
-            <button
-              onClick={handleCancel}
-              className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-primary border border-primary rounded-full hover:bg-primary hover:text-white transition-colors"
-            >
-              Cancel
+            <button>
+              <div
+                onClick={handleCancel}
+                className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-primary border border-primary rounded-full hover:bg-primary hover:!text-white transition-colors cursor-pointer"
+              >
+                Cancel
+              </div>
             </button>
-            <button
-              onClick={handleApplyFilters}
-              className="w-full sm:w-auto bg-primary text-white px-6 py-2 rounded-full text-sm font-medium hover:bg-primary-dark transition-colors"
-            >
-              Apply Filters
+            <button>
+              <div
+                onClick={handleApplyFilters}
+                className="w-full sm:w-auto bg-primary text-white px-6 py-2 rounded-full text-sm font-medium hover:bg-primary-dark transition-colors cursor-pointer"
+              >
+                Apply Filters
+              </div>
             </button>
           </div>
         </div>

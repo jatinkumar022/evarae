@@ -1,38 +1,44 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, ReactNode } from 'react';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 import Container from '@/app/(main)/components/layouts/Container';
 import ProductFilters from '@/app/(main)/components/filters/ProductFilters';
 import DailywearCardsAd from '@/app/(main)/components/ads/DailywearCardsAd';
-import { FilterOptions, SortOption } from '@/lib/types/product';
-import { allProducts } from '@/lib/data/products';
+import {
+  FilterOptions,
+  SortOption,
+  Product as UiProduct,
+} from '@/lib/types/product';
 import BannerImage from '../shop/components/Banner';
 import { ad, Banner, BannerMobile } from '@/app/(main)/assets/Shop-list';
 import { ProductCard } from '../shop/components/ProductCard';
 import Image from 'next/image';
-
-// Combine all products from different categories
-const allJewelleryProducts = [
-  ...allProducts.rings,
-  ...allProducts.earrings,
-  ...allProducts.bangles,
-  ...allProducts.bracelets,
-  ...allProducts.chains,
-  ...allProducts.mangalsutras,
-  ...allProducts.pendants,
-  ...allProducts.necklaces,
-  ...allProducts.nosePins,
-  ...allProducts.kadas,
-  ...allProducts.engagementRings,
-  ...allProducts.jhumkas,
-];
+import { usePublicProductStore } from '@/lib/data/mainStore/productStore';
+import Loader from '@/app/(main)/components/layouts/Loader';
 
 export default function AllJewelleryPage() {
-  const [filteredProducts, setFilteredProducts] =
-    useState(allJewelleryProducts);
+  const {
+    products,
+    status,
+    error,
+    fetchProducts,
+    setFilters,
+    filters,
+    pagination,
+  } = usePublicProductStore();
+
+  const [filteredProducts, setFilteredProducts] = useState<UiProduct[]>([]);
   const [columns, setColumns] = useState(3);
-  const [visibleProducts, setVisibleProducts] = useState(10);
+  const [visibleProducts, setVisibleProducts] = useState(12);
+
+  useEffect(() => {
+    if (status === 'idle') {
+      // Ensure a reasonable initial page size
+      if (filters.limit < 12) setFilters({ limit: 12 });
+      fetchProducts();
+    }
+  }, [status, fetchProducts, setFilters, filters.limit]);
 
   useEffect(() => {
     function updateColumns() {
@@ -49,19 +55,70 @@ export default function AllJewelleryPage() {
     return () => window.removeEventListener('resize', updateColumns);
   }, []);
 
+  const mappedProducts: UiProduct[] = useMemo(() => {
+    return products.map(p => {
+      const mainImage =
+        p.thumbnail || (p.images && p.images[0]) || '/favicon.ico';
+      const hoverImage = p.images && p.images[1] ? p.images[1] : undefined;
+      const hasDiscount =
+        p.discountPrice != null && p.price != null && p.discountPrice < p.price;
+      return {
+        id: p.slug,
+        name: p.name,
+        description: p.description || '',
+        price: hasDiscount ? p.discountPrice! : p.price ?? null,
+        originalPrice: hasDiscount ? p.price! : null,
+        currency: 'INR',
+        images: [mainImage],
+        hoverImage,
+        category: {
+          id: p.categories?.[0]?._id || p.categories?.[0]?.slug || '',
+          name: p.categories?.[0]?.name || '',
+          slug: p.categories?.[0]?.slug || '',
+          description: undefined,
+          image: undefined,
+          productCount: 0,
+          isActive: true,
+        },
+        subcategory: '',
+        brand: '',
+        material: p.material || '',
+        inStock: (p.status || 'active') === 'active',
+        stockCount: p.stockQuantity ?? 0,
+        rating: 0,
+        reviews: 0,
+        isNew: false,
+        isSale: hasDiscount,
+        isWishlisted: false,
+        isFeatured: false,
+        tags: p.tags || [],
+        sku: '',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      } as UiProduct;
+    });
+  }, [products]);
+
+  useEffect(() => {
+    setFilteredProducts(mappedProducts);
+  }, [mappedProducts]);
+
   const filterOptions: FilterOptions = {
     priceRanges: [
-      { value: 'under-50k', label: 'Under ₹50,000' },
-      { value: '50k-100k', label: '₹50,000 - ₹100,000' },
-      { value: '100k-200k', label: '₹100,000 - ₹200,000' },
-      { value: 'above-200k', label: 'Above ₹200,000' },
+      { value: 'under-1k', label: 'Under ₹1,000' },
+      { value: '1k-2k', label: '₹1,000 - ₹2,000' },
+      { value: '2k-5k', label: '₹2,000 - ₹5,000' },
+      { value: 'above-5k', label: 'Above ₹5,000' },
     ],
     materials: [
-      '18K Gold with Diamond',
-      '18K Gold with Crystals',
-      '22K Gold',
-      '18K Gold with Pearls',
-      '18K Gold',
+      'Brass Alloy (Gold Color)',
+      'Copper Alloy (Gold Color)',
+      'Zinc Alloy (Gold Color)',
+      'Stainless Steel Alloy (Gold Tone)',
+      'American Diamond (CZ)',
+      'Crystal Stones',
+      'Pearl Beads',
+      'Oxidised Alloy',
     ],
     subcategories: [
       'Rings',
@@ -74,68 +131,7 @@ export default function AllJewelleryPage() {
       'Necklaces',
       'Nose Pins',
       'Kadas',
-      'Engagement Rings',
       'Jhumkas',
-      'Diamond Rings',
-      'Gold Rings',
-      'Crystal Rings',
-      'Designer Rings',
-      'Pearl Rings',
-      'Diamond Earrings',
-      'Gold Earrings',
-      'Pearl Earrings',
-      'Crystal Earrings',
-      'Traditional Earrings',
-      'Gold Bangles',
-      'Diamond Bangles',
-      'Crystal Bangles',
-      'Designer Bangles',
-      'Traditional Bangles',
-      'Gold Bracelets',
-      'Diamond Bracelets',
-      'Crystal Bracelets',
-      'Designer Bracelets',
-      'Tennis Bracelets',
-      'Gold Chains',
-      'Diamond Chains',
-      'Crystal Chains',
-      'Designer Chains',
-      'Traditional Chains',
-      'Traditional Mangalsutras',
-      'Diamond Mangalsutras',
-      'Designer Mangalsutras',
-      'Modern Mangalsutras',
-      'Sacred Mangalsutras',
-      'Diamond Pendants',
-      'Gold Pendants',
-      'Crystal Pendants',
-      'Designer Pendants',
-      'Traditional Pendants',
-      'Diamond Necklaces',
-      'Gold Necklaces',
-      'Crystal Necklaces',
-      'Designer Necklaces',
-      'Traditional Necklaces',
-      'Diamond Nose Pins',
-      'Gold Nose Pins',
-      'Crystal Nose Pins',
-      'Designer Nose Pins',
-      'Traditional Nose Pins',
-      'Gold Kadas',
-      'Diamond Kadas',
-      'Designer Kadas',
-      'Traditional Kadas',
-      'Modern Kadas',
-      'Diamond Engagement Rings',
-      'Solitaire Engagement Rings',
-      'Halo Engagement Rings',
-      'Designer Engagement Rings',
-      'Traditional Engagement Rings',
-      'Gold Jhumkas',
-      'Diamond Jhumkas',
-      'Crystal Jhumkas',
-      'Designer Jhumkas',
-      'Traditional Jhumkas',
     ],
   };
 
@@ -147,17 +143,31 @@ export default function AllJewelleryPage() {
     { value: 'rating', label: 'Highest Rated' },
   ];
 
-  const handleLoadMore = () => {
-    setVisibleProducts(prev => prev + 10);
+  const handleLoadMore = async () => {
+    // If server has more, increase requested limit and re-fetch
+    if (pagination?.hasNext) {
+      const newLimit = filters.limit + 12;
+      setFilters({ limit: newLimit });
+      await fetchProducts();
+    }
+    setVisibleProducts(prev => prev + 12);
   };
 
   const displayedProducts = filteredProducts.slice(0, visibleProducts);
-  const hasMoreProducts = visibleProducts < filteredProducts.length;
+  const hasMoreProducts =
+    pagination?.hasNext || visibleProducts < filteredProducts.length;
 
   const renderProductsWithAds = () => {
-    const products = displayedProducts;
-    const totalItems = products.length;
+    const productsRender = displayedProducts;
+    const totalItems = productsRender.length;
     const isLargeScreen = columns >= 3;
+    if (totalItems < 6) {
+      return productsRender.map(product => (
+        <div key={product.id} className="h-full">
+          <ProductCard product={product} />
+        </div>
+      ));
+    }
 
     const ad1Index = isLargeScreen ? 3 : 2;
     let ad2Index;
@@ -168,12 +178,12 @@ export default function AllJewelleryPage() {
       ad2Index = Math.max(totalItems - 1, ad1Index + 1);
     }
 
-    const items = [];
+    const items: ReactNode[] = [];
     let productIndex = 0;
     let insertedAd1 = false;
     let insertedAd2 = false;
 
-    for (let i = 0; productIndex < products.length || !insertedAd2; i++) {
+    for (let i = 0; productIndex < productsRender.length || !insertedAd2; i++) {
       if (!insertedAd1 && i === ad1Index) {
         items.push(
           <div key="ad-1" className="col-span-2">
@@ -195,14 +205,14 @@ export default function AllJewelleryPage() {
         );
         insertedAd2 = true;
 
-        if (productIndex >= products.length) break;
+        if (productIndex >= productsRender.length) break;
         continue;
       }
 
-      if (productIndex < products.length) {
+      if (productIndex < productsRender.length) {
         items.push(
-          <div key={products[productIndex].id} className="h-full">
-            <ProductCard product={products[productIndex]} />
+          <div key={productsRender[productIndex].id} className="h-full">
+            <ProductCard product={productsRender[productIndex]} />
           </div>
         );
         productIndex++;
@@ -230,6 +240,20 @@ export default function AllJewelleryPage() {
             </span>
           </div>
         </nav>
+
+        {status === 'loading' && (
+          <div className="px-6 lg:px-12 pb-20">
+            <div className="max-w-7xl mx-auto">
+              <Loader text="Loading products..." fullscreen />
+            </div>
+          </div>
+        )}
+        {status === 'error' && (
+          <div className="text-center text-red-600">
+            {error || 'Failed to load products'}
+          </div>
+        )}
+
         <div className="font-heading my-6 sm:my-8 md:flex justify-center items-center gap-2 flex-col text-accent">
           <h1 className="text-2xl lg:text-3xl">All Jewellery Collection</h1>
           <h2 className="text-sm sm:text-base">
@@ -237,36 +261,38 @@ export default function AllJewelleryPage() {
           </h2>
         </div>
 
-        <ProductFilters
-          products={allJewelleryProducts}
-          filterOptions={filterOptions}
-          sortOptions={sortOptions}
-          onFiltersChange={setFilteredProducts}
-        >
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6 items-center">
-            {renderProductsWithAds()}
-          </div>
-
-          {hasMoreProducts && (
-            <div className="flex justify-center mt-8">
-              <button
-                onClick={handleLoadMore}
-                className="btn btn-filled btn-animated"
-              >
-                Load More ({displayedProducts.length} of{' '}
-                {filteredProducts.length})
-              </button>
+        {status === 'success' && (
+          <ProductFilters
+            products={mappedProducts}
+            filterOptions={filterOptions}
+            sortOptions={sortOptions}
+            onFiltersChange={setFilteredProducts}
+          >
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6 items-center">
+              {renderProductsWithAds()}
             </div>
-          )}
 
-          {filteredProducts.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-primary-dark text-lg">
-                No products match your filters.
-              </p>
-            </div>
-          )}
-        </ProductFilters>
+            {hasMoreProducts && (
+              <div className="flex justify-center mt-8">
+                <button
+                  onClick={handleLoadMore}
+                  className="btn btn-filled btn-animated"
+                >
+                  Load More ({displayedProducts.length} of{' '}
+                  {filteredProducts.length})
+                </button>
+              </div>
+            )}
+
+            {filteredProducts.length === 0 && (
+              <div className="text-center py-12">
+                <p className="text-primary-dark text-lg">
+                  No products match your filters.
+                </p>
+              </div>
+            )}
+          </ProductFilters>
+        )}
       </Container>
     </>
   );

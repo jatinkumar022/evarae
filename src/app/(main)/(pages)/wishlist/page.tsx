@@ -41,17 +41,20 @@ export default function AllJewelleryPage() {
   }, []);
   const filterOptions: FilterOptions = {
     priceRanges: [
-      { value: 'under-50k', label: 'Under ₹50,000' },
-      { value: '50k-100k', label: '₹50,000 - ₹100,000' },
-      { value: '100k-200k', label: '₹100,000 - ₹200,000' },
-      { value: 'above-200k', label: 'Above ₹200,000' },
+      { value: 'under-1k', label: 'Under ₹1,000' },
+      { value: '1k-2k', label: '₹1,000 - ₹2,000' },
+      { value: '2k-5k', label: '₹2,000 - ₹5,000' },
+      { value: 'above-5k', label: 'Above ₹5,000' },
     ],
     materials: [
-      '18K Gold with Diamond',
-      '18K Gold with Crystals',
-      '22K Gold',
-      '18K Gold with Pearls',
-      '18K Gold',
+      'Brass Alloy (Gold Color)',
+      'Copper Alloy (Gold Color)',
+      'Zinc Alloy (Gold Color)',
+      'Stainless Steel Alloy (Gold Tone)',
+      'American Diamond (CZ)',
+      'Crystal Stones',
+      'Pearl Beads',
+      'Oxidised Alloy',
     ],
     subcategories: [
       'Rings',

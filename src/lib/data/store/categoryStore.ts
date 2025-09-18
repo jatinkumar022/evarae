@@ -7,6 +7,8 @@ export interface Category {
   slug: string;
   description: string;
   image: string;
+  banner?: string;
+  mobileBanner?: string;
   parent?: string;
   isActive: boolean;
   sortOrder: number;

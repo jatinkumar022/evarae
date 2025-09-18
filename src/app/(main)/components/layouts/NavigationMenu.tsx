@@ -1,66 +1,23 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import useScrollDirection from '@/app/(main)/handlers/NavbarVisibilityHandler';
 import Link from 'next/link';
 import Container from './Container';
-// import MegaMenuContent from "./Submenus/MegaMenuContent";
-// import KundanPolkiMenu from "./Submenus/KundanPolkiMenu";
-// import CollectionsMenu from "./Submenus/CollectionsMenu";
-// import RingsMenu from "./Submenus/RingsMenu";
-// import EarringsMenu from "./Submenus/EarRingsMenu";
-// import GiftingMenu from "./Submenus/GiftingMenu";
-// import MoreMenu from "./Submenus/MoreMenu";
-
-// ✅ Just simple links for now
-const menuItems = [
-  { name: 'Earrings', href: '/shop/earrings' },
-  { name: 'Rings', href: '/shop/rings' },
-  { name: 'Pendants', href: '/shop/pendants' },
-  { name: 'Mangalsutra', href: '/shop/mangalsutra' },
-  { name: 'Bracelets', href: '/shop/bracelets' },
-  { name: 'Bangles', href: '/shop/bangles' },
-  { name: 'Chains', href: '/shop/chains' },
-  { name: 'All Categories', href: '/categories' },
-];
-
-const MenuItem = ({
-  item,
-  active,
-  setActive,
-}: {
-  item: { name: string; href: string };
-  active: string | null;
-  setActive: (item: string | null) => void;
-}) => {
-  const isActive = active === item.name;
-
-  return (
-    <div className="relative flex h-full items-center">
-      <Link
-        href={item.href}
-        onMouseEnter={() => setActive(item.name)}
-        className={`relative text-[15px] transition-colors ${
-          isActive ? 'text-primary' : 'text-gray-700 hover:text-primary'
-        }`}
-      >
-        {item.name}
-      </Link>
-      {isActive && (
-        <motion.div
-          className="absolute left-0 -bottom-px h-0.5 w-full bg-primary"
-          layoutId="underline"
-          transition={{ duration: 0.2 }}
-        />
-      )}
-    </div>
-  );
-};
+import { usePublicCategoryStore } from '@/lib/data/mainStore/categoryStore';
 
 const NavigationMenu = () => {
   const [active, setActive] = useState<string | null>(null);
   const scrollDir = useScrollDirection();
+
+  const { categories, status, fetchCategories } = usePublicCategoryStore();
+
+  useEffect(() => {
+    if (status === 'idle') fetchCategories();
+  }, [status, fetchCategories]);
+
+  const topCategories = categories.slice(0, 7);
 
   return (
     <motion.div
@@ -74,32 +31,53 @@ const NavigationMenu = () => {
           className="relative flex h-14 items-center justify-center gap-10"
           onMouseLeave={() => setActive(null)}
         >
-          {menuItems.map(item => (
-            <MenuItem
-              key={item.name}
-              item={item}
-              active={active}
-              setActive={setActive}
-            />
-          ))}
-
-          {/* 
-          🔽 Future dropdown submenu (commented for now)
-          <AnimatePresence>
-            {ActiveSubMenu && (
-              <motion.div
-                onMouseLeave={() => setActive(null)}
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 15 }}
-                transition={{ duration: 0.3, ease: "easeOut" }}
-                className="absolute left-0 top-full w-full"
+          {status === 'success' &&
+            topCategories.map(item => (
+              <div
+                key={item.slug}
+                className="relative flex h-full items-center"
               >
-                <ActiveSubMenu />
-              </motion.div>
+                <Link
+                  href={`/shop/${item.slug}`}
+                  onMouseEnter={() => setActive(item.name)}
+                  className={`relative text-[15px] transition-colors ${
+                    active === item.name
+                      ? 'text-primary'
+                      : 'text-gray-700 hover:text-primary'
+                  }`}
+                >
+                  {item.name}
+                </Link>
+                {active === item.name && (
+                  <motion.div
+                    className="absolute left-0 -bottom-px h-0.5 w-full bg-primary"
+                    layoutId="underline"
+                    transition={{ duration: 0.2 }}
+                  />
+                )}
+              </div>
+            ))}
+
+          <div className="relative flex h-full items-center">
+            <Link
+              href="/categories"
+              onMouseEnter={() => setActive('All Categories')}
+              className={`relative text-[15px] transition-colors ${
+                active === 'All Categories'
+                  ? 'text-primary'
+                  : 'text-gray-700 hover:text-primary'
+              }`}
+            >
+              All Categories
+            </Link>
+            {active === 'All Categories' && (
+              <motion.div
+                className="absolute left-0 -bottom-px h-0.5 w-full bg-primary"
+                layoutId="underline"
+                transition={{ duration: 0.2 }}
+              />
             )}
-          </AnimatePresence>
-          */}
+          </div>
         </nav>
       </Container>
     </motion.div>

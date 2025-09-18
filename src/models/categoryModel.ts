@@ -22,6 +22,14 @@ const categorySchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    banner: {
+      type: String,
+      default: '',
+    },
+    mobileBanner: {
+      type: String,
+      default: '',
+    },
     isActive: {
       type: Boolean,
       default: true,
@@ -34,6 +42,10 @@ const categorySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const Category =
-  mongoose.models.Category || mongoose.model('Category', categorySchema);
+// Ensure latest schema is used in dev/hot-reload environments
+if (mongoose.models.Category) {
+  delete mongoose.models.Category;
+}
+
+const Category = mongoose.model('Category', categorySchema);
 export default Category;

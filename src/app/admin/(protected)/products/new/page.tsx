@@ -43,18 +43,15 @@ interface ProductFormData {
   wallpaper: string[]; // store URLs only
   thumbnail?: string; // store URL
 }
-
 const materials = [
-  '18K Gold',
-  '22K Gold',
-  'Platinum',
-  'Silver',
-  '18K Gold with Diamond',
-  '22K Gold with Diamond',
-  'Platinum with Diamond',
-  'Gold with Pearl',
-  'Gold with Ruby',
-  'Gold with Emerald',
+  'Brass Alloy (Gold Color)',
+  'Copper Alloy (Gold Color)',
+  'Zinc Alloy (Gold Color)',
+  'Stainless Steel Alloy (Gold Tone)',
+  'American Diamond (CZ)',
+  'Crystal Stones',
+  'Pearl Beads',
+  'Oxidised Alloy',
 ];
 
 const colors = [
@@ -1053,7 +1050,7 @@ export default function NewProductPage() {
                         description:
                           'Beautiful handcrafted gold necklace perfect for special occasions',
                         price: '25000',
-                        material: '18K Gold',
+                        material: 'Copper Alloy (Gold Color)',
                         weight: '15.5',
                         colors: ['Gold'],
                         stockQuantity: '10',
