@@ -82,14 +82,6 @@ export async function POST(request: Request) {
 
     await category.save();
 
-    console.log('[ADMIN CATEGORIES POST] saved category:', {
-      _id: (category as any)?._id?.toString?.(),
-      name: category.name,
-      slug: category.slug,
-      banner: category.banner,
-      mobileBanner: category.mobileBanner,
-    });
-
     return NextResponse.json(
       {
         message: 'Category created successfully',

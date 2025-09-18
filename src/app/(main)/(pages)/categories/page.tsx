@@ -12,7 +12,7 @@ export default function CategoriesPage() {
 
   useEffect(() => {
     if (status === 'idle') fetchCategories();
-  }, []);
+  }, [status, fetchCategories]);
 
   return (
     <div className=" relative overflow-hidden">

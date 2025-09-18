@@ -113,14 +113,6 @@ export async function PUT(request: Request, { params }: RouteContext) {
     category.set(updateData);
     const updatedCategory = await category.save();
 
-    console.log('[ADMIN CATEGORIES PUT] updated category:', {
-      _id: updatedCategory?._id?.toString?.(),
-      name: updatedCategory?.name,
-      slug: updatedCategory?.slug,
-      banner: updatedCategory?.banner,
-      mobileBanner: updatedCategory?.mobileBanner,
-    });
-
     return NextResponse.json({
       message: 'Category updated successfully',
       category: updatedCategory,

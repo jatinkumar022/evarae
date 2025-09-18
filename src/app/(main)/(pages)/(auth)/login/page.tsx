@@ -11,7 +11,7 @@ export default function LoginPage() {
 
   const [step, setStep] = useState<Step>('phone');
   // Temporarily force email mode only
-  const mode: 'email' = 'email';
+  // const mode: 'email' = 'email';
   const [authMode, setAuthMode] = useState<'password' | 'otp'>('password');
   // const [phone, setPhone] = useState(''); // disabled mobile
   const [email, setEmail] = useState('');

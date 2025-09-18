@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { connect } from '@/dbConfig/dbConfig';
 import Category from '@/models/categoryModel';
 import Product from '@/models/productModel';
+import mongoose from 'mongoose';
 
 type RouteContext = { params: Promise<{ slug: string }> };
 
@@ -31,7 +32,9 @@ export async function GET(request: Request, { params }: RouteContext) {
       return NextResponse.json({ category });
     }
 
-    const categoryId = (category as { _id: string })._id;
+    // ✅ Safely convert ObjectId to string
+    const categoryId = (category._id as mongoose.Types.ObjectId).toString();
+
     const products = await Product.find({
       categories: categoryId,
       status: 'active',
