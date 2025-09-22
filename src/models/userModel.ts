@@ -32,6 +32,18 @@ const userSchema = new mongoose.Schema(
     isVerified: { type: Boolean, default: false },
     role: { type: String, enum: ['user', 'admin'], default: 'user' },
 
+    passwordHash: { type: String, default: null },
+
+    phone: { type: String, default: '' },
+
+    gender: {
+      type: String,
+      enum: ['male', 'female', 'other', 'prefer_not_to_say'],
+      default: 'prefer_not_to_say',
+    },
+    dob: { type: Date, default: null },
+    newsletterOptIn: { type: Boolean, default: false },
+
     addresses: [addressSchema],
 
     wishlist: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }],
@@ -53,6 +65,12 @@ const userSchema = new mongoose.Schema(
     adminOtpExpiry: { type: Date, default: null },
     adminOtpAttempts: { type: Number, default: 0 },
     adminOtpLastSentAt: { type: Date, default: null },
+
+    // User OTP login fields
+    loginOtpHash: { type: String, default: null },
+    loginOtpExpiry: { type: Date, default: null },
+    loginOtpAttempts: { type: Number, default: 0 },
+    loginOtpLastSentAt: { type: Date, default: null },
   },
   { timestamps: true }
 );

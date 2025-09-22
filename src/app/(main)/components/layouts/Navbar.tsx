@@ -26,6 +26,26 @@ import { useRouter } from 'next/navigation';
 // import { LogoCaelvi } from '@/app/(main)/assets';
 import { Philosopher } from 'next/font/google';
 import { Eye, EyeOff } from 'lucide-react';
+import { userAuthApi } from '@/lib/utils';
+import { accountApi } from '@/lib/utils';
+import type { UserAccount } from '@/lib/utils';
+import {
+  ChevronRight,
+  Package,
+  Settings,
+  CreditCard,
+  MapPin,
+  Bell,
+  Shield,
+  HelpCircle,
+  LogOut,
+  User as MenuUser,
+  Heart as MenuHeart,
+  Gift,
+  Star,
+  Clock,
+  Truck,
+} from 'lucide-react';
 
 const philosopher = Philosopher({
   subsets: ['latin'],
@@ -88,6 +108,7 @@ export default function Navbar() {
     'Search Diamond Jewellery',
     'Search Rings, Earrings & more...',
   ];
+  const [currentUser, setCurrentUser] = useState<UserAccount | null>(null);
   const trendingSearches = [
     'Rings',
     'Diamond Necklace',
@@ -111,6 +132,21 @@ export default function Navbar() {
   const [loginOtp, setLoginOtp] = useState<string[]>(Array(6).fill(''));
   const [loginResendIn, setLoginResendIn] = useState(0);
   const loginInputsRef = useRef<Array<HTMLInputElement | null>>([]);
+  const [loginEmailError, setLoginEmailError] = useState<string | null>(null);
+  const [loginPasswordError, setLoginPasswordError] = useState<string | null>(
+    null
+  );
+  const [loginOtpError, setLoginOtpError] = useState<string | null>(null);
+  useEffect(() => {
+    (async () => {
+      try {
+        const { user } = await accountApi.me();
+        setCurrentUser(user);
+      } catch {
+        setCurrentUser(null);
+      }
+    })();
+  }, []);
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentPlaceholder(prev => (prev + 1) % placeholders.length);
@@ -182,9 +218,69 @@ export default function Navbar() {
       loginInputsRef.current[index + 1]?.focus();
   };
 
-  const continueFromEmail = () => {
+  const continueFromEmail = async () => {
     if (!isValidLoginEmail) return;
-    setLoginStep('verify');
+    setLoginEmailError(null);
+    try {
+      const { exists } = await userAuthApi.checkEmail(loginEmail);
+      if (!exists) {
+        setLoginEmailError('No account found with this email. Please sign up.');
+        return;
+      }
+      if (authMode === 'otp') {
+        await userAuthApi.loginRequestOtp(loginEmail);
+        setLoginResendIn(30);
+      }
+      setLoginStep('verify');
+    } catch (e) {
+      const message = e instanceof Error ? e.message : 'Unable to continue';
+      setLoginEmailError(message);
+    }
+  };
+
+  const handleNavbarPasswordLogin = async () => {
+    setLoginPasswordError(null);
+    if (!isValidLoginEmail || !isValidLoginPassword) return;
+    try {
+      await userAuthApi.loginWithPassword(loginEmail, loginPassword);
+      setLoginStep('done');
+      try {
+        const { user } = await accountApi.me();
+        setCurrentUser(user);
+      } catch {}
+    } catch (e) {
+      const message = e instanceof Error ? e.message : 'Invalid credentials';
+      setLoginPasswordError(message);
+    }
+  };
+
+  const handleNavbarVerifyOtp = async () => {
+    setLoginOtpError(null);
+    if (!isValidLoginOtp) return;
+    try {
+      await userAuthApi.loginVerifyOtp(loginEmail, loginOtp.join(''));
+      setLoginStep('done');
+      try {
+        const { user } = await accountApi.me();
+        setCurrentUser(user);
+      } catch {}
+    } catch (e) {
+      const message = e instanceof Error ? e.message : 'Invalid OTP';
+      setLoginOtpError(message);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await userAuthApi.logout();
+    } finally {
+      setCurrentUser(null);
+      setLoginStep('email');
+      setLoginEmail('');
+      setLoginPassword('');
+      setLoginOtp(Array(6).fill(''));
+      router.push('/');
+    }
   };
 
   // Sample mini-cart items and helpers (replace with real cart state later)
@@ -221,6 +317,77 @@ export default function Navbar() {
       currency: 'INR',
       maximumFractionDigits: 0,
     }).format(value);
+
+  // profile
+
+  const [activeSubmenu, setActiveSubmenu] = useState<string | null>(null);
+  const [showProfileDrawer, setShowProfileDrawer] = useState(false);
+  const toggleSubmenu = (menuKey: string) => {
+    setActiveSubmenu(activeSubmenu === menuKey ? null : menuKey);
+  };
+
+  const menuItems = [
+    {
+      key: 'account',
+      icon: MenuUser,
+      label: 'Account Settings',
+      href: '/account',
+      submenu: [
+        {
+          icon: MenuUser,
+          label: 'Profile Information',
+          href: '/account/profile',
+        },
+        {
+          icon: Shield,
+          label: 'Privacy & Security',
+          href: '/account/security',
+        },
+        { icon: Bell, label: 'Notifications', href: '/account/notifications' },
+        {
+          icon: CreditCard,
+          label: 'Payment Methods',
+          href: '/account/payments',
+        },
+        { icon: MapPin, label: 'Addresses', href: '/account/addresses' },
+      ],
+    },
+    {
+      key: 'orders',
+      icon: Package,
+      label: 'My Orders',
+      href: '/orders',
+      submenu: [
+        { icon: Clock, label: 'Order History', href: '/orders/history' },
+        { icon: Truck, label: 'Track Orders', href: '/orders/tracking' },
+        { icon: Package, label: 'Returns & Refunds', href: '/orders/returns' },
+      ],
+    },
+    {
+      key: 'wishlist',
+      icon: MenuHeart,
+      label: 'Wishlist & Favorites',
+      href: '/wishlist',
+      submenu: [{ icon: MenuHeart, label: 'My Wishlist', href: '/wishlist' }],
+    },
+    {
+      key: 'rewards',
+      icon: Gift,
+      label: 'Rewards & Points',
+      href: '/rewards',
+      submenu: [
+        { icon: Gift, label: 'My Points', href: '/rewards/points' },
+        { icon: Star, label: 'Membership Benefits', href: '/rewards/benefits' },
+        { icon: Gift, label: 'Referral Program', href: '/rewards/referrals' },
+      ],
+    },
+  ];
+
+  const quickActions = [
+    { icon: HelpCircle, label: 'Help & Support', href: '/faqs' },
+    { icon: Settings, label: 'Contact Us', href: '/contact-us' },
+    { icon: Settings, label: 'Preferences', href: '/preferences' },
+  ];
 
   return (
     <>
@@ -284,19 +451,150 @@ export default function Navbar() {
                 <Search className="h-5 w-5" />
               </IconButton>
 
-              {/* Desktop hover dropdown for Login */}
-              <div className="relative group hidden lg:block">
+              {/* Desktop hover dropdown for Login or Profile */}
+              <div className="sm:relative group">
                 <IconButton
                   ariaLabel="My Account - Sign in or manage your account"
                   onClick={() => {
-                    router.push('/login');
+                    if (!currentUser) {
+                      // if not logged in → click = redirect
+                      router.push('/login');
+                    } else {
+                      // if logged in → toggle profile drawer
+                      setShowProfileDrawer(prev => !prev);
+                    }
                   }}
                 >
                   <User className="h-5 w-5" />
                 </IconButton>
-                <div className="hidden lg:block">
-                  <div className="invisible opacity-0 translate-y-1 group-hover:visible group-hover:opacity-100 group-hover:translate-y-0 transition ease-out duration-150 absolute right-0 mt-2 w-[340px] rounded-md border border-gray-200 bg-white shadow-lg z-50">
-                    <div className="p-4">
+                {currentUser && showProfileDrawer && (
+                  <div className="absolute right-0 mt-2 sm:w-[340px] w-screen sm:rounded-md border border-gray-200 bg-white shadow-lg z-50">
+                    {/* User Profile Header */}
+                    <div className="bg-gradient-to-r from-[#d56a90]/5 to-[#d56a90]/10 p-6 border-b border-gray-100">
+                      <div className="flex items-center gap-4">
+                        <div className="relative">
+                          <div className="h-12 w-12 rounded-full bg-gradient-to-r from-[#d56a90]/25 to-[#d56a90]/30 flex items-center justify-center text-gray-700 font-medium text-lg shadow-lg">
+                            {(currentUser.name || currentUser.email || '?')
+                              .toString()
+                              .trim()
+                              .charAt(0)
+                              .toUpperCase()}
+                          </div>
+                          <div className="absolute -bottom-1 -right-1 h-4 w-4 bg-green-400 rounded-full border-2 border-white"></div>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-lg font-semibold text-gray-700 truncate">
+                            {currentUser.name || 'My Account'}
+                          </p>
+                          <p className="text-sm text-gray-600 truncate">
+                            {currentUser.email}
+                          </p>
+                          {currentUser.membershipTier && (
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                                <Star className="w-3 h-3 mr-1" />
+                                {currentUser.membershipTier} Member
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Menu Items */}
+                    <div className="">
+                      <div className="py-2">
+                        {menuItems.map(item => (
+                          <div key={item.key} className="relative">
+                            <button
+                              className="w-full cursor-pointer"
+                              aria-label={`Toggle ${item.label}`}
+                            >
+                              <div
+                                className="w-full flex items-center justify-between px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-200"
+                                onClick={() => toggleSubmenu(item.key)}
+                              >
+                                <div className="flex items-center gap-3">
+                                  <item.icon className="w-5 h-5 text-gray-500" />
+                                  <div className="font-medium hover:text-[#d56a90] transition-colors">
+                                    {item.label}
+                                  </div>
+                                </div>
+                                <div className="p-1 rounded hover:bg-gray-100">
+                                  <ChevronRight
+                                    className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${
+                                      activeSubmenu === item.key
+                                        ? 'rotate-90'
+                                        : ''
+                                    }`}
+                                  />
+                                </div>
+                              </div>
+                            </button>
+
+                            {/* Submenu */}
+                            {activeSubmenu === item.key && (
+                              <div className="bg-gray-50 border-l-2 border-[#d56a90]/30">
+                                {item.submenu.map((subItem, index) => (
+                                  <a
+                                    key={index}
+                                    href={subItem.href}
+                                    className="flex items-center gap-3 px-8 py-2.5 text-sm text-gray-600 hover:text-[#d56a90] hover:bg-[#d56a90]/5 transition-colors duration-200"
+                                  >
+                                    <subItem.icon className="w-4 h-4" />
+                                    {subItem.label}
+                                  </a>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Separator */}
+                      <div className="border-t border-gray-200 my-2"></div>
+
+                      {/* Quick Actions */}
+                      <div className="py-2">
+                        {quickActions.map((action, index) => (
+                          <a
+                            key={index}
+                            href={action.href}
+                            className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#d56a90] transition-colors duration-200"
+                          >
+                            <action.icon className="w-5 h-5 text-gray-500" />
+                            <span className="font-medium">{action.label}</span>
+                          </a>
+                        ))}
+                      </div>
+
+                      {/* Separator */}
+                      <div className="border-t border-gray-200 my-2"></div>
+
+                      {/* Logout Button */}
+                      <div className="p-2">
+                        <button
+                          onClick={handleLogout}
+                          className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200 font-medium"
+                        >
+                          <LogOut className="w-5 h-5" />
+                          Sign Out
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Footer */}
+                    <div className="bg-gray-50 px-4 py-3 rounded-b-md border-t border-gray-200">
+                      <div className="flex items-center justify-between text-xs text-gray-500">
+                        <span>Version 2.1.0</span>
+                        <span>© 2025 Your App</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {!currentUser && (
+                  <div className="hidden lg:block">
+                    <div className="invisible opacity-0 translate-y-1 group-hover:visible group-hover:opacity-100 group-hover:translate-y-0 transition ease-out duration-150 p-4 absolute right-0 mt-2 w-[340px] rounded-md border border-gray-200 bg-white shadow-lg z-50">
                       <h3 className="text-sm font-heading text-[oklch(0.39_0.09_17.83)]">
                         Quick sign in
                       </h3>
@@ -383,10 +681,24 @@ export default function Navbar() {
                           <input
                             type="email"
                             value={loginEmail}
-                            onChange={e => setLoginEmail(e.target.value)}
+                            onChange={e => {
+                              setLoginEmail(e.target.value);
+                              if (loginEmailError) setLoginEmailError(null);
+                            }}
                             className="w-full rounded-lg border border-[oklch(0.84_0.04_10.35)] bg-white px-3 py-2 text-sm text-[oklch(0.39_0.09_17.83)] placeholder-[oklch(0.7_0.04_12)] focus:outline-none focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/30 focus:border-[oklch(0.66_0.14_358.91)] transition-all"
                             placeholder="you@example.com"
+                            onKeyDown={e => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                continueFromEmail();
+                              }
+                            }}
                           />
+                          {loginEmailError && (
+                            <p className="mt-1 text-[10px] text-red-600">
+                              {loginEmailError}
+                            </p>
+                          )}
                           <div className="mt-3 flex justify-end">
                             <button
                               onClick={continueFromEmail}
@@ -414,6 +726,12 @@ export default function Navbar() {
                                   onChange={e =>
                                     setLoginPassword(e.target.value)
                                   }
+                                  onKeyDown={e => {
+                                    if (e.key === 'Enter') {
+                                      e.preventDefault();
+                                      handleNavbarPasswordLogin();
+                                    }
+                                  }}
                                   placeholder="Your password"
                                   className="w-full rounded-lg border border-[oklch(0.84_0.04_10.35)] bg-white px-3 py-2 pr-10 text-sm"
                                 />
@@ -431,6 +749,11 @@ export default function Navbar() {
                                   )}
                                 </button>
                               </div>
+                              {loginPasswordError && (
+                                <p className="mb-2 text-[10px] text-red-600">
+                                  {loginPasswordError}
+                                </p>
+                              )}
                               <div className="flex items-center justify-between">
                                 <button
                                   onClick={() => setLoginStep('email')}
@@ -439,6 +762,7 @@ export default function Navbar() {
                                   Back
                                 </button>
                                 <button
+                                  onClick={handleNavbarPasswordLogin}
                                   disabled={!isValidLoginPassword}
                                   className={`rounded-lg px-4 py-2.5 text-white text-sm font-medium transition-all duration-200 ${
                                     isValidLoginPassword
@@ -477,6 +801,11 @@ export default function Navbar() {
                                   />
                                 ))}
                               </div>
+                              {loginOtpError && (
+                                <p className="mb-2 text-[10px] text-red-600">
+                                  {loginOtpError}
+                                </p>
+                              )}
                               <div className="flex items-center justify-between">
                                 <button
                                   onClick={() => setLoginStep('email')}
@@ -488,7 +817,20 @@ export default function Navbar() {
                                   <button
                                     type="button"
                                     disabled={loginResendIn > 0}
-                                    onClick={() => setLoginResendIn(30)}
+                                    onClick={async () => {
+                                      try {
+                                        await userAuthApi.loginRequestOtp(
+                                          loginEmail
+                                        );
+                                        setLoginResendIn(30);
+                                      } catch (e) {
+                                        setLoginOtpError(
+                                          e instanceof Error
+                                            ? e.message
+                                            : 'Failed to resend OTP'
+                                        );
+                                      }
+                                    }}
                                     className={`text-xs ${
                                       loginResendIn > 0
                                         ? 'text-[oklch(0.7_0.04_12)] cursor-not-allowed'
@@ -502,6 +844,7 @@ export default function Navbar() {
                                       : 'Resend OTP'}
                                   </button>
                                   <button
+                                    onClick={handleNavbarVerifyOtp}
                                     disabled={!isValidLoginOtp}
                                     className={`rounded-lg px-4 py-2.5 text-white text-sm font-medium transition-all duration-200 ${
                                       isValidLoginOtp
@@ -525,19 +868,43 @@ export default function Navbar() {
                           </p>
                         </div>
                       )}
+                      {/* Google Sign-In */}
+                      {loginStep !== 'done' && (
+                        <div className="mt-3">
+                          <a
+                            href="/api/auth/google"
+                            className="w-full flex items-center justify-center gap-2 rounded-lg border border-[oklch(0.84_0.04_10.35)] bg-white px-3 py-2 text-xs text-[oklch(0.39_0.09_17.83)] hover:bg-[oklch(0.93_0.03_12.01)] transition-all"
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              viewBox="0 0 48 48"
+                              className="w-3.5 h-3.5"
+                            >
+                              <path
+                                fill="#FFC107"
+                                d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.156,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.046,8.955,20,20,20c11.046,0,20-8.954,20-20C44,22.659,43.862,21.35,43.611,20.083z"
+                              />
+                              <path
+                                fill="#FF3D00"
+                                d="M6.306,14.691l6.571,4.819C14.655,16.108,18.961,14,24,14c3.059,0,5.842,1.156,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"
+                              />
+                              <path
+                                fill="#4CAF50"
+                                d="M24,44c5.166,0,9.86-1.977,13.409-5.197l-6.19-5.238C29.173,35.091,26.715,36,24,36c-5.202,0-9.62-3.317-11.283-7.955l-6.532,5.027C9.601,40.556,16.319,44,24,44z"
+                              />
+                              <path
+                                fill="#1976D2"
+                                d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-3.994,5.565c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.996,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"
+                              />
+                            </svg>
+                            Continue with Google
+                          </a>
+                        </div>
+                      )}
                     </div>
                   </div>
-                </div>
+                )}
               </div>
-
-              {/* Mobile: navigate to login page */}
-              <IconButton
-                onClick={() => router.push('/login')}
-                ariaLabel="My Account - Sign in or manage your account"
-                className="lg:hidden"
-              >
-                <User className="h-5 w-5" />
-              </IconButton>
 
               <IconButton
                 onClick={() => {

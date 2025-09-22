@@ -5,23 +5,28 @@ import { AnimatePresence, motion } from 'framer-motion';
 import Link from 'next/link';
 import Container from '@/app/(main)/components/layouts/Container';
 import { Eye, EyeOff } from 'lucide-react';
+import { useUserAuth } from '@/lib/data/mainStore/userAuth';
 
 export default function LoginPage() {
   type Step = 'phone' | 'otp' | 'done';
 
   const [step, setStep] = useState<Step>('phone');
-  // Temporarily force email mode only
-  // const mode: 'email' = 'email';
   const [authMode, setAuthMode] = useState<'password' | 'otp'>('password');
-  // const [phone, setPhone] = useState(''); // disabled mobile
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [otpError, setOtpError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [otp, setOtp] = useState<string[]>(Array(6).fill(''));
-  const [resendIn, setResendIn] = useState(30);
+  const {
+    setEmail: setStoreEmail,
+    requestLoginOtp,
+    verifyLoginOtp,
+    resendInSec,
+  } = useUserAuth();
   const inputsRef = useRef<Array<HTMLInputElement | null>>([]);
 
-  // const isValidPhone = useMemo(() => /^\d{10}$/.test(phone), [phone]); // disabled mobile
   const isValidEmail = useMemo(
     () => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email),
     [email]
@@ -53,15 +58,7 @@ export default function LoginPage() {
     if (step === 'otp' && authMode === 'otp') inputsRef.current[0]?.focus();
   }, [step, authMode]);
 
-  useEffect(() => {
-    if (!(step === 'otp' && authMode === 'otp')) return;
-    setResendIn(30);
-    const id = setInterval(
-      () => setResendIn(prev => (prev > 0 ? prev - 1 : 0)),
-      1000
-    );
-    return () => clearInterval(id);
-  }, [step, authMode]);
+  // resend cooldown handled by store
 
   const handleOtpChange = (index: number, value: string) => {
     const digit = value.replace(/\D/g, '').slice(0, 1);
@@ -90,23 +87,70 @@ export default function LoginPage() {
       inputsRef.current[index + 1]?.focus();
   };
 
-  const goToNext = () => {
+  const goToNext = async () => {
     if (!isValidEmail) return;
-    setStep('otp');
+    setStoreEmail(email);
+    setEmailError(null);
+    try {
+      const { userAuthApi } = await import('@/lib/utils');
+      const { exists } = await userAuthApi.checkEmail(email);
+      if (!exists) {
+        setEmailError('No account found with this email. Please sign up.');
+        return;
+      }
+      if (authMode === 'otp') {
+        await requestLoginOtp();
+      }
+      setStep('otp');
+    } catch (e) {
+      const message = e instanceof Error ? e.message : 'Unable to continue';
+      setEmailError(message);
+    }
   };
 
   const handlePasswordLogin = async () => {
-    if (!isValidPassword) return;
-    await new Promise(r => setTimeout(r, 600));
-    setStep('done');
+    setError(null);
+    if (!isValidEmail || !isValidPassword) return;
+    try {
+      const res = await (
+        await import('@/lib/utils')
+      ).userAuthApi.loginWithPassword(email, password);
+      if (res?.ok) setStep('done');
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : 'Invalid credentials';
+      setError(message);
+    }
   };
 
   const handleVerify = async () => {
     if (!isValidOtp) return;
-    await new Promise(r => setTimeout(r, 600));
-    setStep('done');
+    try {
+      setOtpError(null);
+      await verifyLoginOtp(otp.join(''));
+      setStep('done');
+    } catch (e) {
+      const message = e instanceof Error ? e.message : 'Invalid OTP';
+      setOtpError(message);
+    }
   };
+  const handleOtpPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pasted = e.clipboardData
+      .getData('text')
+      .replace(/\D/g, '')
+      .slice(0, otp.length);
+    if (!pasted) return;
 
+    const next = [...otp];
+    for (let i = 0; i < pasted.length; i++) {
+      next[i] = pasted[i];
+    }
+    setOtp(next);
+
+    // Focus the last filled input
+    const lastIndex = Math.min(pasted.length - 1, otp.length - 1);
+    inputsRef.current[lastIndex]?.focus();
+  };
   return (
     <main className="">
       <Container>
@@ -126,30 +170,66 @@ export default function LoginPage() {
             </div>
 
             {/* Email-only: choose Password or OTP */}
-            <div className="mb-3 flex justify-center">
-              <div className="inline-flex rounded-full border border-[oklch(0.84_0.04_10.35)] bg-white p-1">
-                <button
-                  onClick={() => setAuthMode('password')}
-                  className={`${
-                    authMode === 'password'
-                      ? 'bg-[oklch(0.93_0.03_12.01)] text-[oklch(0.39_0.09_17.83)]'
-                      : 'text-[oklch(0.55_0.06_15)]'
-                  } px-3 py-1.5 rounded-full text-xs font-medium transition-colors`}
-                >
-                  Password
-                </button>
-                <button
-                  onClick={() => setAuthMode('otp')}
-                  className={`${
-                    authMode === 'otp'
-                      ? 'bg-[oklch(0.93_0.03_12.01)] text-[oklch(0.39_0.09_17.83)]'
-                      : 'text-[oklch(0.55_0.06_15)]'
-                  } px-3 py-1.5 rounded-full text-xs font-medium transition-colors`}
-                >
-                  OTP
-                </button>
+            {step === 'phone' && (
+              <div className="mb-3 flex justify-center">
+                <div className="inline-flex rounded-full border border-[oklch(0.84_0.04_10.35)] bg-white p-1">
+                  <button
+                    onClick={() => setAuthMode('password')}
+                    className={`${
+                      authMode === 'password'
+                        ? 'bg-[oklch(0.93_0.03_12.01)] text-[oklch(0.39_0.09_17.83)]'
+                        : 'text-[oklch(0.55_0.06_15)]'
+                    } px-3 py-1.5 rounded-full text-xs font-medium transition-colors`}
+                  >
+                    Password
+                  </button>
+                  <button
+                    onClick={() => setAuthMode('otp')}
+                    className={`${
+                      authMode === 'otp'
+                        ? 'bg-[oklch(0.93_0.03_12.01)] text-[oklch(0.39_0.09_17.83)]'
+                        : 'text-[oklch(0.55_0.06_15)]'
+                    } px-3 py-1.5 rounded-full text-xs font-medium transition-colors`}
+                  >
+                    OTP
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
+            {step !== 'done' ? (
+              <div className="mb-4">
+                <a
+                  href="/api/auth/google"
+                  className="w-full flex items-center justify-center gap-2 rounded-lg border border-[oklch(0.84_0.04_10.35)] bg-white px-4 py-2.5 text-sm text-[oklch(0.39_0.09_17.83)] hover:bg-[oklch(0.93_0.03_12.01)] transition-all"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 48 48"
+                    className="w-4 h-4"
+                  >
+                    <path
+                      fill="#FFC107"
+                      d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.156,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.046,8.955,20,20,20c11.046,0,20-8.954,20-20C44,22.659,43.862,21.35,43.611,20.083z"
+                    />
+                    <path
+                      fill="#FF3D00"
+                      d="M6.306,14.691l6.571,4.819C14.655,16.108,18.961,14,24,14c3.059,0,5.842,1.156,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"
+                    />
+                    <path
+                      fill="#4CAF50"
+                      d="M24,44c5.166,0,9.86-1.977,13.409-5.197l-6.19-5.238C29.173,35.091,26.715,36,24,36c-5.202,0-9.62-3.317-11.283-7.955l-6.532,5.027C9.601,40.556,16.319,44,24,44z"
+                    />
+                    <path
+                      fill="#1976D2"
+                      d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-3.994,5.565c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.996,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"
+                    />
+                  </svg>
+                  Continue with Google
+                </a>
+              </div>
+            ) : (
+              ''
+            )}
 
             {/* Stepper */}
             <div className="mb-6 rounded-xl border border-[oklch(0.84_0.04_10.35)]/50 bg-white/80 backdrop-blur-sm px-4 py-3 shadow">
@@ -222,10 +302,22 @@ export default function LoginPage() {
                       id="email"
                       type="email"
                       value={email}
-                      onChange={e => setEmail(e.target.value)}
+                      onChange={e => {
+                        setEmail(e.target.value);
+                        if (emailError) setEmailError(null);
+                      }}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          goToNext();
+                        }
+                      }}
                       className="w-full rounded-lg border border-[oklch(0.84_0.04_10.35)] bg-white px-3 py-2 text-sm text-[oklch(0.39_0.09_17.83)] placeholder-[oklch(0.7_0.04_12)] focus:outline-none focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/30 focus:border-[oklch(0.66_0.14_358.91)] transition-all"
                       placeholder="you@example.com"
                     />
+                    {emailError && (
+                      <p className="text-xs text-red-600">{emailError}</p>
+                    )}
                   </div>
 
                   <div className="gap-3 mt-3 flex sm:items-center justify-between flex-col">
@@ -263,11 +355,20 @@ export default function LoginPage() {
                       <h3 className="text-base font-medium text-[oklch(0.39_0.09_17.83)] mb-3">
                         Enter your password
                       </h3>
-                      <div className="relative mb-4">
+                      {error && (
+                        <p className="mb-2 text-xs text-red-600">{error}</p>
+                      )}
+                      <div className="relative mb-2">
                         <input
                           type={showPassword ? 'text' : 'password'}
                           value={password}
                           onChange={e => setPassword(e.target.value)}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              handlePasswordLogin();
+                            }
+                          }}
                           placeholder="Your password"
                           className="w-full rounded-lg border border-[oklch(0.84_0.04_10.35)] bg-white px-3 py-2 pr-10 text-sm"
                         />
@@ -315,7 +416,7 @@ export default function LoginPage() {
                         </span>
                       </p>
 
-                      <div className="flex  gap-2.5 mb-6">
+                      <div className="flex  gap-2.5 mb-3">
                         {otp.map((d, i) => (
                           <input
                             key={i}
@@ -324,6 +425,7 @@ export default function LoginPage() {
                             }}
                             inputMode="numeric"
                             pattern="[0-9]*"
+                            onPaste={handleOtpPaste}
                             maxLength={1}
                             value={d}
                             onChange={e => handleOtpChange(i, e.target.value)}
@@ -344,6 +446,9 @@ export default function LoginPage() {
                           />
                         ))}
                       </div>
+                      {otpError && (
+                        <p className="text-xs text-red-600 mb-3">{otpError}</p>
+                      )}
 
                       <div className="flex items-center justify-between">
                         <button
@@ -355,16 +460,16 @@ export default function LoginPage() {
                         <div className="flex items-center gap-4">
                           <button
                             type="button"
-                            disabled={resendIn > 0}
-                            onClick={() => setResendIn(30)}
+                            disabled={resendInSec > 0}
+                            onClick={() => requestLoginOtp()}
                             className={`text-sm transition-colors ${
-                              resendIn > 0
+                              resendInSec > 0
                                 ? 'text-[oklch(0.7_0.04_12)] cursor-not-allowed'
                                 : 'text-[oklch(0.66_0.14_358.91)] hover:text-[oklch(0.58_0.16_8)]'
                             }`}
                           >
-                            {resendIn > 0
-                              ? `Resend in 00:${String(resendIn).padStart(
+                            {resendInSec > 0
+                              ? `Resend in 00:${String(resendInSec).padStart(
                                   2,
                                   '0'
                                 )}`
@@ -378,6 +483,12 @@ export default function LoginPage() {
                                 ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] hover:shadow-lg hover:scale-105 shadow-md'
                                 : 'bg-[oklch(0.84_0.04_10.35)] cursor-not-allowed'
                             }`}
+                            onKeyDown={e => {
+                              if (e.key === 'Enter' && isValidOtp) {
+                                e.preventDefault();
+                                handleVerify();
+                              }
+                            }}
                           >
                             Verify
                           </button>
@@ -421,16 +532,19 @@ export default function LoginPage() {
                 </div>
               </motion.section>
             )}
-
-            <p className="mt-8 text-center text-sm text-[oklch(0.55_0.06_15)]">
-              Don’t have an account?{' '}
-              <Link
-                className="text-[oklch(0.66_0.14_358.91)] hover:text-[oklch(0.58_0.16_8)] font-medium transition-colors"
-                href="/signup"
-              >
-                Create one
-              </Link>
-            </p>
+            {step !== 'done' ? (
+              <p className="mt-8 text-center text-sm text-[oklch(0.55_0.06_15)]">
+                Don’t have an account?{' '}
+                <Link
+                  className="text-[oklch(0.66_0.14_358.91)] hover:text-[oklch(0.58_0.16_8)] font-medium transition-colors"
+                  href="/signup"
+                >
+                  Create one
+                </Link>
+              </p>
+            ) : (
+              ''
+            )}
           </div>
         </div>
       </Container>

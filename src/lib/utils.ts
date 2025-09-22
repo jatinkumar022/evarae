@@ -45,3 +45,79 @@ export const adminAuthApi = {
   logout: () =>
     apiFetch<{ ok: true }>('/api/admin/auth/logout', { method: 'POST' }),
 };
+
+export const userAuthApi = {
+  // Signup OTP
+  signupRequestOtp: (email: string) =>
+    apiFetch<{ ok: true; message: string; devOtp?: string }>(
+      '/api/auth/signup/request-otp',
+      { method: 'POST', body: JSON.stringify({ email }) }
+    ),
+  signupVerifyOtp: (email: string, otp: string) =>
+    apiFetch<{ ok: true }>('/api/auth/signup/verify-otp', {
+      method: 'POST',
+      body: JSON.stringify({ email, otp }),
+    }),
+
+  // Login OTP
+  loginRequestOtp: (email: string) =>
+    apiFetch<{ ok: true; message: string; devOtp?: string }>(
+      '/api/auth/login/request-otp',
+      { method: 'POST', body: JSON.stringify({ email }) }
+    ),
+  loginVerifyOtp: (email: string, otp: string) =>
+    apiFetch<{ ok: true; user: { id: string; name: string; email: string } }>(
+      '/api/auth/login/verify-otp',
+      { method: 'POST', body: JSON.stringify({ email, otp }) }
+    ),
+
+  loginWithPassword: (email: string, password: string) =>
+    apiFetch<{ ok: true; user: { id: string; name: string; email: string } }>(
+      '/api/auth/login',
+      { method: 'POST', body: JSON.stringify({ email, password }) }
+    ),
+  completeProfile: (name: string, phone: string, password: string) =>
+    apiFetch<{ ok: true }>('/api/auth/complete-profile', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ name, phone, password }),
+    }),
+  checkEmail: (email: string) =>
+    apiFetch<{ exists: boolean }>('/api/auth/check-email', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    }),
+  logout: () => apiFetch<{ ok: true }>('/api/auth/logout', { method: 'POST' }),
+};
+
+export type UserAccount = {
+  id: string;
+  name: string | null;
+  email: string;
+  phone?: string | null;
+  gender?: string | null;
+  dob?: string | null;
+  newsletterOptIn?: boolean;
+  membershipTier?: string | null;
+};
+
+export type AccountUpdatePayload = {
+  name: string;
+  phone?: string;
+  gender?: string;
+  dob?: string;
+  newsletterOptIn?: boolean;
+};
+
+export const accountApi = {
+  me: () =>
+    apiFetch<{ user: UserAccount | null }>('/api/account/me', {
+      method: 'GET',
+    }),
+  update: (payload: AccountUpdatePayload) =>
+    apiFetch<{ ok: true }>('/api/account/update', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+};

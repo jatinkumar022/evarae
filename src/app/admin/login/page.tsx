@@ -102,6 +102,25 @@ export default function AdminLoginPage() {
     await verifyOtp(combinedOtp);
   };
 
+  const handleOtpPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pasted = e.clipboardData
+      .getData('text')
+      .replace(/\D/g, '')
+      .slice(0, otp.length);
+    if (!pasted) return;
+
+    const next = [...otp];
+    for (let i = 0; i < pasted.length; i++) {
+      next[i] = pasted[i];
+    }
+    setOtp(next);
+
+    // Focus the last filled input
+    const lastIndex = Math.min(pasted.length - 1, otp.length - 1);
+    inputsRef.current[lastIndex]?.focus();
+  };
+
   return (
     <main>
       <Container>
@@ -241,6 +260,7 @@ export default function AdminLoginPage() {
                         pattern="[0-9]*"
                         maxLength={1}
                         value={d}
+                        onPaste={handleOtpPaste}
                         onChange={e => handleOtpChange(i, e.target.value)}
                         onKeyDown={e => handleOtpKeyDown(i, e)}
                         className="aspect-square w-10 md:w-12 text-center rounded-lg border border-[oklch(0.84_0.04_10.35)] bg-white text-base font-semibold text-[oklch(0.39_0.09_17.83)] focus:outline-none focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/30 focus:border-[oklch(0.66_0.14_358.91)] transition-all hover:border-[oklch(0.66_0.14_358.91)]/50"
