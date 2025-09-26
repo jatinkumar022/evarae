@@ -26,6 +26,8 @@ function sanitizePartialAddress(
     typeof v === 'string' ? v.trim() : undefined;
   const digits = (v: unknown): string | undefined =>
     typeof v === 'string' ? v.replace(/\D/g, '') : undefined;
+  const boolOrUndef = (v: unknown): boolean | undefined =>
+    typeof v === 'boolean' ? v : undefined;
   return {
     ...(coerceStr(body.fullName) !== undefined && {
       fullName: coerceStr(body.fullName),
@@ -47,11 +49,11 @@ function sanitizePartialAddress(
     ...(coerceStr(body.country) !== undefined && {
       country: coerceStr(body.country),
     }),
-    ...(typeof (body as any).isDefaultShipping === 'boolean' && {
-      isDefaultShipping: Boolean((body as any).isDefaultShipping),
+    ...(boolOrUndef(body.isDefaultShipping) !== undefined && {
+      isDefaultShipping: boolOrUndef(body.isDefaultShipping) as boolean,
     }),
-    ...(typeof (body as any).isDefaultBilling === 'boolean' && {
-      isDefaultBilling: Boolean((body as any).isDefaultBilling),
+    ...(boolOrUndef(body.isDefaultBilling) !== undefined && {
+      isDefaultBilling: boolOrUndef(body.isDefaultBilling) as boolean,
     }),
   };
 }

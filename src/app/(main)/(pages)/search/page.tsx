@@ -107,43 +107,48 @@ function SearchPageInner() {
     tags?: string[];
     sku?: string;
   };
-  const mapApiToUi = (items: ApiProduct[]): UiProduct[] =>
-    (items || []).map(p => {
-      const hasDiscount =
-        p.discountPrice != null && p.price != null && p.discountPrice < p.price;
-      return {
-        id: p.slug,
-        name: p.name,
-        description: p.description || '',
-        price: hasDiscount ? p.discountPrice : p.price ?? null,
-        originalPrice: hasDiscount ? p.price : null,
-        currency: 'INR',
-        images: [p.thumbnail || p.images?.[0] || '/favicon.ico'],
-        hoverImage: p.images?.[1],
-        category: {
-          id: p.categories?.[0]?._id || p.categories?.[0]?.slug || '',
-          name: p.categories?.[0]?.name || '',
-          slug: p.categories?.[0]?.slug || '',
-          productCount: 0,
-          isActive: true,
-        },
-        subcategory: '',
-        brand: '',
-        material: p.material || '',
-        inStock: (p.status || 'active') === 'active',
-        stockCount: p.stockQuantity ?? 0,
-        rating: 0,
-        reviews: 0,
-        isNew: false,
-        isSale: hasDiscount,
-        isWishlisted: false,
-        isFeatured: false,
-        tags: p.tags || [],
-        sku: p.sku || '',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      } as UiProduct;
-    });
+  const mapApiToUi = useCallback(
+    (items: ApiProduct[]): UiProduct[] =>
+      (items || []).map(p => {
+        const hasDiscount =
+          p.discountPrice != null &&
+          p.price != null &&
+          p.discountPrice < p.price;
+        return {
+          id: p.slug,
+          name: p.name,
+          description: p.description || '',
+          price: hasDiscount ? p.discountPrice : p.price ?? null,
+          originalPrice: hasDiscount ? p.price : null,
+          currency: 'INR',
+          images: [p.thumbnail || p.images?.[0] || '/favicon.ico'],
+          hoverImage: p.images?.[1],
+          category: {
+            id: p.categories?.[0]?._id || p.categories?.[0]?.slug || '',
+            name: p.categories?.[0]?.name || '',
+            slug: p.categories?.[0]?.slug || '',
+            productCount: 0,
+            isActive: true,
+          },
+          subcategory: '',
+          brand: '',
+          material: p.material || '',
+          inStock: (p.status || 'active') === 'active',
+          stockCount: p.stockQuantity ?? 0,
+          rating: 0,
+          reviews: 0,
+          isNew: false,
+          isSale: hasDiscount,
+          isWishlisted: false,
+          isFeatured: false,
+          tags: p.tags || [],
+          sku: p.sku || '',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        } as UiProduct;
+      }),
+    []
+  );
   const fetchSearch = useCallback(
     async (q: string) => {
       if (!q) {

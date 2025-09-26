@@ -24,6 +24,8 @@ function sanitizeAddress(body: Partial<Address>): Address {
     typeof v === 'string' ? v.trim() : fallback;
   const digits = (v: unknown): string => coerceStr(v).replace(/\D/g, '');
   const country = coerceStr(body.country, 'IN') || 'IN';
+  const boolOrFalse = (v: unknown): boolean =>
+    typeof v === 'boolean' ? v : false;
   return {
     fullName: coerceStr(body.fullName),
     phone: digits(body.phone),
@@ -33,8 +35,8 @@ function sanitizeAddress(body: Partial<Address>): Address {
     state: coerceStr(body.state),
     postalCode: coerceStr(body.postalCode),
     country,
-    isDefaultShipping: Boolean((body as any).isDefaultShipping),
-    isDefaultBilling: Boolean((body as any).isDefaultBilling),
+    isDefaultShipping: boolOrFalse(body.isDefaultShipping),
+    isDefaultBilling: boolOrFalse(body.isDefaultBilling),
   };
 }
 
