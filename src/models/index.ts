@@ -1,0 +1,11 @@
+// models/index.ts
+import './bannerModel';
+import './cartModel';
+import './categoryModel';
+import './collectionModel';
+import './orderModel';
+import './productModel';
+import './pendingSignupModel';
+import './reviewModel';
+import './userModel';
+import './userProfileModel';

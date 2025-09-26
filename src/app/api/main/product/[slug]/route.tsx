@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { connect } from '@/dbConfig/dbConfig';
 import Product from '@/models/productModel';
-import '@/models/categoryModel';
 
 type RouteContext = { params: Promise<{ slug: string }> };
 
