@@ -3,6 +3,7 @@ import { IBM_Plex_Sans, Fraunces } from 'next/font/google';
 import './styles/theme.css';
 import './styles/globals.css';
 import GlobalLoaderProvider from '@/app/(main)/components/layouts/GlobalLoaderProvider';
+import ToastProvider from '@/app/(main)/components/layouts/ToastProvider';
 
 const ibmPlexSans = IBM_Plex_Sans({
   variable: '--font-body',
@@ -87,7 +88,10 @@ export default function RootLayout({
       <body
         className={`${ibmPlexSans.variable} ${fraunces.variable} font-body antialiased`}
       >
-        <GlobalLoaderProvider>{children}</GlobalLoaderProvider>
+        <GlobalLoaderProvider>
+          {children}
+          <ToastProvider />
+        </GlobalLoaderProvider>
       </body>
     </html>
   );

@@ -113,6 +113,19 @@ export async function POST(request: Request) {
     if (!cart || !cart.items || cart.items.length === 0)
       return NextResponse.json({ error: 'Cart is empty' }, { status: 400 });
 
+    // Filter out any items with missing product data to avoid crashes
+    const validItems = (cart.items || []).filter(
+      ci =>
+        ci &&
+        ci.product &&
+        (ci.product.price || ci.product.discountPrice || 0) >= 0
+    );
+    if (validItems.length === 0)
+      return NextResponse.json(
+        { error: 'Cart items invalid. Please refresh your cart.' },
+        { status: 400 }
+      );
+
     const address: Address | undefined =
       (profile?.addresses || []).find(
         (a: Address) => String(a._id) === String(addressId)
@@ -124,7 +137,7 @@ export async function POST(request: Request) {
         { status: 400 }
       );
 
-    const items: OrderItemLean[] = cart.items.map(ci => ({
+    const items: OrderItemLean[] = validItems.map(ci => ({
       product: ci.product?._id || '',
       name: ci.product?.name || '',
       slug: ci.product?.slug || '',
@@ -141,12 +154,7 @@ export async function POST(request: Request) {
 
     const subtotal = items.reduce((sum, it) => sum + it.price * it.quantity, 0);
     const originalSubtotal = items.reduce(
-      (sum, it) =>
-        sum +
-        ((it as unknown as { originalPrice?: number }).originalPrice ??
-          it.price ??
-          0) *
-          it.quantity,
+      (sum, it) => sum + (it.price ?? 0) * it.quantity, // safe original
       0
     );
     const discount = Math.max(0, originalSubtotal - subtotal);

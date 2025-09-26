@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import CustomDropdown from '@/app/(main)/components/ui/customDropdown';
+import toastApi from '@/lib/toast';
 
 function AccountPageInner() {
   const searchParams = useSearchParams();
@@ -183,6 +184,7 @@ function AccountPageInner() {
       } catch {
       } finally {
         setLoading(false);
+        // No toast on initial load success to avoid noise
       }
     })();
   }, []);
@@ -275,9 +277,11 @@ function AccountPageInner() {
       setSuccess('Profile updated successfully!');
       // reset snapshot to new state
       initialSnapshotRef.current = snapshot();
+      toastApi.success('Profile saved');
     } catch (e) {
       const message = e instanceof Error ? e.message : 'Failed to save changes';
       setError(message);
+      toastApi.error('Save failed', message);
     } finally {
       setSaving(false);
     }

@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { Visa, Mastercard, Paypal, Maestro } from '@/app/(main)/assets/Footer';
 import { useRouter } from 'next/navigation';
+import toastApi from '@/lib/toast';
 
 type Address = {
   id?: string;
@@ -108,6 +109,10 @@ export default function CheckoutPage() {
         if (def?.id) setSelectedAddressId(def.id);
       } catch {
         setError('Failed to load checkout data');
+        toastApi.error(
+          'Failed to load checkout',
+          'Please refresh and try again.'
+        );
       }
     })();
   }, []);
@@ -183,6 +188,7 @@ export default function CheckoutPage() {
           data?.message ||
             'Payment gateway is temporarily unavailable. Please try again later or contact support.'
         );
+        toastApi.warning('Gateway unavailable', 'Please try again later.');
         setLoading(false);
         return;
       }
@@ -218,10 +224,12 @@ export default function CheckoutPage() {
           );
           const verifyData = await verifyResponse.json();
           if (verifyData.success) {
+            toastApi.success('Payment successful');
             router.push(
               `/checkout/payment-success?orderId=${verifyData.orderId}`
             );
           } else {
+            toastApi.error('Payment verification failed');
             router.push(
               '/checkout/payment-failure?error=verification_failed&error_description=Payment verification failed'
             );
@@ -250,6 +258,7 @@ export default function CheckoutPage() {
           ? String((e as { message?: unknown }).message)
           : 'Failed to initiate payment';
       setError(message);
+      toastApi.error('Payment initiation failed', message);
       setLoading(false);
     }
   };
@@ -356,8 +365,10 @@ export default function CheckoutPage() {
           }));
           setAddresses(mappedPatched);
           setSelectedAddressId(newId);
+          toastApi.success('Address saved', 'Your address has been added.');
         } else if (newId) {
           setSelectedAddressId(newId);
+          toastApi.success('Address saved', 'Your address has been added.');
         }
       } else {
         // Local-only add (not persisted)
@@ -371,6 +382,7 @@ export default function CheckoutPage() {
         };
         setAddresses([addr, ...addresses]);
         setSelectedAddressId(id);
+        toastApi.success('Address added');
       }
 
       setAdding(false);
@@ -394,6 +406,7 @@ export default function CheckoutPage() {
           ? String((e as { message?: unknown }).message)
           : 'Failed to add address';
       setError(message);
+      toastApi.error('Address save failed', message);
     }
   };
 

@@ -328,7 +328,7 @@ export default function TrackOrderPage() {
                   Don&apos;t have your Order ID? Check your email confirmation
                   or{' '}
                   <Link
-                    href="/contact"
+                    href="/contact-us"
                     className="text-primary hover:underline font-medium"
                   >
                     contact support
@@ -929,7 +929,7 @@ export default function TrackOrderPage() {
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
               <Link
-                href="/contact"
+                href="/contact-us"
                 className="px-8 py-2 sm:py-3 text-sm sm:text-base bg-gradient-to-r from-primary to-accent text-white rounded-full  transform hover:scale-105 transition-all duration-300 font-medium"
               >
                 Contact Support

@@ -1,19 +1,59 @@
 import { NextResponse } from 'next/server';
-import jwt from 'jsonwebtoken';
 import { connect } from '@/dbConfig/dbConfig';
+import jwt from 'jsonwebtoken';
 import UserProfile from '@/models/userProfile';
 import type { Address, UserProfileLean } from '@/lib/types/product';
 
+function getCookie(req: Request, name: string): string | null {
+  try {
+    const token = (req.headers.get('cookie') || '')
+      .split(';')
+      .map(p => p.trim())
+      .find(p => p.startsWith(name + '='))
+      ?.split('=')[1];
+    return token || null;
+  } catch {
+    return null;
+  }
+}
+
 const USER_JWT_SECRET = process.env.USER_JWT_SECRET as string;
 
-function getCookie(req: Request, name: string): string | null {
-  const cookieHeader = req.headers.get('cookie') || '';
-  const token = cookieHeader
-    .split(';')
-    .map(p => p.trim())
-    .find(p => p.startsWith(name + '='))
-    ?.split('=')[1];
-  return token || null;
+function sanitizePartialAddress(
+  body: Partial<Address>
+): Record<string, unknown> {
+  const coerceStr = (v: unknown): string | undefined =>
+    typeof v === 'string' ? v.trim() : undefined;
+  const digits = (v: unknown): string | undefined =>
+    typeof v === 'string' ? v.replace(/\D/g, '') : undefined;
+  return {
+    ...(coerceStr(body.fullName) !== undefined && {
+      fullName: coerceStr(body.fullName),
+    }),
+    ...(digits(body.phone) !== undefined && { phone: digits(body.phone) }),
+    ...(coerceStr(body.line1) !== undefined && {
+      line1: coerceStr(body.line1),
+    }),
+    ...(coerceStr(body.line2) !== undefined && {
+      line2: coerceStr(body.line2),
+    }),
+    ...(coerceStr(body.city) !== undefined && { city: coerceStr(body.city) }),
+    ...(coerceStr(body.state) !== undefined && {
+      state: coerceStr(body.state),
+    }),
+    ...(coerceStr(body.postalCode) !== undefined && {
+      postalCode: coerceStr(body.postalCode),
+    }),
+    ...(coerceStr(body.country) !== undefined && {
+      country: coerceStr(body.country),
+    }),
+    ...(typeof (body as any).isDefaultShipping === 'boolean' && {
+      isDefaultShipping: Boolean((body as any).isDefaultShipping),
+    }),
+    ...(typeof (body as any).isDefaultBilling === 'boolean' && {
+      isDefaultBilling: Boolean((body as any).isDefaultBilling),
+    }),
+  };
 }
 
 export async function PUT(
@@ -34,12 +74,20 @@ export async function PUT(
     if (!payload?.uid)
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const body: Partial<Address> = await request.json();
+    const raw: Partial<Address> = await request.json();
+    const $setFields = sanitizePartialAddress(raw);
+    if (Object.keys($setFields).length === 0) {
+      return NextResponse.json(
+        { error: 'No changes provided' },
+        { status: 400 }
+      );
+    }
+
     await UserProfile.updateOne(
       { user: payload.uid, 'addresses._id': id },
       {
         $set: Object.fromEntries(
-          Object.entries(body).map(([k, v]) => [`addresses.$.${k}`, v])
+          Object.entries($setFields).map(([k, v]) => [`addresses.$.${k}`, v])
         ),
       }
     );
@@ -49,7 +97,7 @@ export async function PUT(
     return NextResponse.json({ ok: true, addresses: profile?.addresses || [] });
   } catch {
     return NextResponse.json(
-      { error: 'Internal Server Error' },
+      { error: 'Failed to update address' },
       { status: 500 }
     );
   }
@@ -90,7 +138,7 @@ export async function PATCH(
     return NextResponse.json({ ok: true, addresses: profile?.addresses || [] });
   } catch {
     return NextResponse.json(
-      { error: 'Internal Server Error' },
+      { error: 'Failed to set default address' },
       { status: 500 }
     );
   }
@@ -124,7 +172,7 @@ export async function DELETE(
     return NextResponse.json({ ok: true, addresses: profile?.addresses || [] });
   } catch {
     return NextResponse.json(
-      { error: 'Internal Server Error' },
+      { error: 'Failed to delete address' },
       { status: 500 }
     );
   }

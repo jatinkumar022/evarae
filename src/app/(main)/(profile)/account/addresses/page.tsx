@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { MapPin, Plus, Edit3, Trash2, Star } from 'lucide-react';
+import toastApi from '@/lib/toast';
 
 type Address = {
   _id?: string;
@@ -51,6 +52,7 @@ export default function AddressesPage() {
       setAddresses(data.addresses || []);
     } catch {
       setError('Failed to load addresses');
+      toastApi.error('Failed to load addresses');
     } finally {
       setLoading(false);
     }
@@ -86,30 +88,28 @@ export default function AddressesPage() {
   };
 
   const submit = async () => {
-    setSaving(true);
-    setError(null);
     try {
-      if (editingId) {
-        const res = await fetch(`/api/account/addresses/${editingId}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(form),
-        });
-        if (!res.ok) throw new Error('Update failed');
-      } else {
-        const res = await fetch('/api/account/addresses', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(form),
-        });
-        if (!res.ok) throw new Error('Create failed');
-      }
+      setSaving(true);
+      setError(null);
+      const url = editingId
+        ? `/api/account/addresses/${editingId}`
+        : '/api/account/addresses';
+      const method = editingId ? 'PUT' : 'POST';
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(form),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || 'Failed to save address');
+      setAddresses(data.addresses || []);
       setShowModal(false);
-      setForm(emptyAddress);
-      setEditingId(null);
-      await load();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to save');
+      toastApi.success('Address saved');
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : 'Failed to save address';
+      setError(message);
+      toastApi.error('Save failed', message);
     } finally {
       setSaving(false);
     }

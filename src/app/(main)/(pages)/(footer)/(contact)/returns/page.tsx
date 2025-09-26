@@ -149,7 +149,7 @@ export default function ShippingReturnsPage() {
         </p>
         <div className="flex justify-center gap-4">
           <a
-            href="/contact"
+            href="/contact-us"
             className="px-6 py-2 bg-primary text-white rounded-full shadow-md"
           >
             Contact Us

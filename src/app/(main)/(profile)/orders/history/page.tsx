@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import CustomDropdown from '@/app/(main)/components/ui/customDropdown';
 import Image from 'next/image';
+import toastApi from '@/lib/toast';
 
 // Strict types for order data
 type OrderItem = {
@@ -178,9 +179,13 @@ export default function OrdersHistoryPage() {
         }));
         setOrders(mapped);
         setLoading(false);
+        if (mapped.length === 0) {
+          toastApi.info('No orders yet');
+        }
       } catch (e: unknown) {
         setError(e instanceof Error ? e.message : 'Failed to load orders');
         setLoading(false);
+        toastApi.error('Failed to load orders');
       }
     })();
   }, []);

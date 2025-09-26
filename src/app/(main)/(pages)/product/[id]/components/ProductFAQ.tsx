@@ -95,7 +95,7 @@ export function ProductFAQ() {
         <p className="text-sm text-primary-dark/70">
           Still have questions?{' '}
           <a
-            href="/contact"
+            href="/contact-us"
             className="text-primary hover:text-primary-dark font-medium"
           >
             Contact our customer service

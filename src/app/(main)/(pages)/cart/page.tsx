@@ -10,6 +10,7 @@ import { ProductCard } from '@/app/(main)/(pages)/shop/components/ProductCard';
 import { Visa, Mastercard, Paypal, Maestro } from '@/app/(main)/assets/Footer';
 import { useCartStore } from '@/lib/data/mainStore/cartStore';
 import type { CartItem, SavedItem } from '@/lib/data/mainStore/cartStore';
+import toastApi from '@/lib/toast';
 
 export default function CartPage() {
   const { items, savedItems, load, update, remove, save, unsave } =
@@ -155,19 +156,27 @@ export default function CartPage() {
         String(ci?.product?._id || ci?.product?.id) === productId
     );
     const newQty = Math.max(1, (current?.quantity || 1) + delta);
-    await update(productId, newQty);
+    await update(productId, newQty)
+      .then(() => toastApi.success('Quantity updated'))
+      .catch(() => toastApi.error('Failed to update quantity'));
   };
 
   const removeItem = async (productId: string) => {
-    await remove(productId);
+    await remove(productId)
+      .then(() => toastApi.success('Removed from cart'))
+      .catch(() => toastApi.error('Failed to remove item'));
   };
 
   const moveToSaved = async (productId: string) => {
-    await save(productId);
+    await save(productId)
+      .then(() => toastApi.success('Moved to wishlist'))
+      .catch(() => toastApi.error('Failed to move to wishlist'));
   };
 
   const moveToCart = async (productId: string) => {
-    await unsave(productId);
+    await unsave(productId)
+      .then(() => toastApi.success('Moved to cart'))
+      .catch(() => toastApi.error('Failed to move to cart'));
     await fetch('/api/account/cart', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
