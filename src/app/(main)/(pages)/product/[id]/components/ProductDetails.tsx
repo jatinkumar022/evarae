@@ -11,8 +11,8 @@ import { ProductDelivery } from './ProductDelivery';
 import { ProductWarranty } from './ProductWarranty';
 import { ProductFAQ } from './ProductFAQ';
 import Container from '@/app/(main)/components/layouts/Container';
-import { ManufacturerImages } from './ManufacturerImages';
-import { one, two, four } from '@/app/(main)/assets/Home/CAROUSEL';
+
+
 import { PeopleAlsoBought } from './PeopleAlsoBought';
 
 interface ProductDetailsProps {
@@ -57,10 +57,10 @@ export function ProductDetails({ product }: ProductDetailsProps) {
       <div className=" mb-6 lg:mb-8">
         <RelatedProducts currentProduct={product} category={product.category} />
       </div>
-      <div className=" mb-6 lg:mb-8">
-        {/* Manufacturer Images Section */}
+      {/* <div className=" mb-6 lg:mb-8">
+       
         <ManufacturerImages images={[one.src, four.src, two.src]} />
-      </div>
+      </div> */}
       {/* Product Reviews Section */}
       <div className=" mb-6 lg:mb-8">
         <ProductReviews product={product} />

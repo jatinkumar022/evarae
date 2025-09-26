@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { IBM_Plex_Sans, Fraunces } from 'next/font/google';
 import './styles/theme.css';
 import './styles/globals.css';
+import GlobalLoaderProvider from '@/app/(main)/components/layouts/GlobalLoaderProvider';
 
 const ibmPlexSans = IBM_Plex_Sans({
   variable: '--font-body',
@@ -78,11 +79,15 @@ export default function RootLayout({
           sizes="512x512"
           href="/android-chrome-512x512.png"
         />
+        <script
+          src="https://checkout.razorpay.com/v1/checkout.js"
+          async
+        ></script>
       </head>
       <body
         className={`${ibmPlexSans.variable} ${fraunces.variable} font-body antialiased`}
       >
-        {children}
+        <GlobalLoaderProvider>{children}</GlobalLoaderProvider>
       </body>
     </html>
   );

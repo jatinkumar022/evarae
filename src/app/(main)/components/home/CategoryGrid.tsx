@@ -1,72 +1,34 @@
 'use client';
 
-import Image, { StaticImageData } from 'next/image';
-import React from 'react';
+import Image from 'next/image';
+import React, { useEffect } from 'react';
 import Link from 'next/link';
+
 import {
-  banglesCat,
-  chainsCat,
-  earringsCat,
-  mangalsutraCat,
-  pendantsCat,
-  ringsCat,
-  braceletsCat,
-} from '@/app/(main)/assets/CategoryGrid';
-
-interface Category {
-  title: string;
-  image: StaticImageData;
-}
-
-const categories: Category[] = [
-  {
-    title: 'Earrings',
-    image: earringsCat,
-  },
-  {
-    title: 'Rings',
-    image: ringsCat,
-  },
-  {
-    title: 'Pendants',
-    image: pendantsCat,
-  },
-  {
-    title: 'Mangalsutra',
-    image: mangalsutraCat,
-  },
-  {
-    title: 'Bracelets',
-    image: braceletsCat,
-  },
-  {
-    title: 'Bangles',
-    image: banglesCat,
-  },
-  {
-    title: 'Chains',
-    image: chainsCat,
-  },
-];
+  PublicCategory,
+  usePublicCategoryStore,
+} from '@/lib/data/mainStore/categoryStore';
 
 const CategoryItem = ({
   image,
+  slug,
   title,
 }: {
-  image: StaticImageData;
+  image: string;
+  slug: string;
   title: string;
 }) => (
   <div className="text-center group">
     <Link
-      href="#"
+      href={`/shop/${slug}`}
       className="inline-block"
-      aria-label={`Explore ${title} collection`}
+      aria-label={`Explore ${slug} collection`}
     >
       <div className="w-32 h-32 md:w-44 md:h-44 lg:w-52 lg:h-52 rounded-full overflow-hidden border-2 border-transparent group-hover:border-primary/30 transition-all duration-300 p-2 bg-background/70 shadow-sm">
         <div className="w-full h-full rounded-full overflow-hidden relative">
           <Image
             src={image}
-            alt={title}
+            alt={slug}
             fill
             className="object-cover transition-transform duration-500 ease-in-out group-hover:scale-110"
           />
@@ -79,15 +41,17 @@ const CategoryItem = ({
   </div>
 );
 
-const ViewAllItem = () => (
+const ViewAllItem = ({ categories }: { categories: PublicCategory[] }) => (
   <div className="text-center group">
     <Link
-      href="#"
+      href="/categories"
       className=" w-32 h-32 md:w-44 md:h-44 lg:w-52 lg:h-52 rounded-full border-2 border-border border-dashed group-hover:border-primary group-hover:border-solid transition-all duration-300 flex items-center justify-center text-center bg-background/70"
       aria-label="View all jewellery categories"
     >
       <div className="text-foreground/70 group-hover:text-primary transition-colors duration-300">
-        <p className="font-heading text-xl font-bold">10+</p>
+        <p className="font-heading text-xl font-bold">
+          {categories.length > 9 ? '10+' : 'All'}
+        </p>
         <p className="text-xs uppercase tracking-wider">Categories</p>
       </div>
     </Link>
@@ -98,6 +62,12 @@ const ViewAllItem = () => (
 );
 
 export default function CategoriesGrid() {
+  const { categories, status, fetchCategories } = usePublicCategoryStore();
+
+  useEffect(() => {
+    if (status === 'idle') fetchCategories();
+  }, [status, fetchCategories]);
+  const topCategories = categories.slice(0, 9);
   return (
     <section className="">
       <div className="heading-component-main-container">
@@ -108,10 +78,15 @@ export default function CategoriesGrid() {
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-y-12 gap-x-6 justify-items-center">
-        {categories.map((cat, idx) => (
-          <CategoryItem key={idx} image={cat.image} title={cat.title} />
+        {topCategories.map((cat, idx) => (
+          <CategoryItem
+            key={idx}
+            image={cat.image || ''}
+            slug={cat.slug}
+            title={cat.name}
+          />
         ))}
-        <ViewAllItem />
+        {topCategories.length > 0 && <ViewAllItem categories={categories} />}
       </div>
     </section>
   );

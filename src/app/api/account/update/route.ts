@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 import { connect } from '@/dbConfig/dbConfig';
 import User from '@/models/userModel';
+import UserProfile from '@/models/userProfile';
 
 const USER_JWT_SECRET = process.env.USER_JWT_SECRET as string;
 
@@ -31,30 +32,60 @@ export async function POST(request: Request) {
     if (!payload?.uid)
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const body = await request.json();
-    const { name, phone, gender, dob, newsletterOptIn } = body;
+    const body = (await request.json()) as Record<string, unknown>;
+
+    // Basic user fields allowed to update
+    const { name } = body as { name?: unknown };
 
     const user = await User.findById(payload.uid);
     if (!user)
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
     if (typeof name === 'string' && name.trim()) user.name = name.trim();
-    if (typeof phone === 'string')
-      user.phone = phone.replace(/\D/g, '').slice(0, 15);
-
-    if (typeof gender === 'string') user.gender = gender;
-    if (dob) {
-      const parsed = new Date(dob);
-      if (!isNaN(parsed.getTime())) {
-        user.dob = parsed;
-      }
-    }
-    if (typeof newsletterOptIn === 'boolean')
-      user.newsletterOptIn = newsletterOptIn;
 
     await user.save();
 
-    return NextResponse.json({ ok: true });
+    // Profile fields (supported only)
+    const profileUpdates: Record<string, unknown> = {};
+
+    const copyIfPresent = <T = unknown>(
+      key: string,
+      mapper?: (v: T) => unknown
+    ) => {
+      if (Object.prototype.hasOwnProperty.call(body, key)) {
+        const v = body[key] as T;
+        profileUpdates[key] = mapper ? mapper(v) : v;
+      }
+    };
+
+    copyIfPresent<string>('phone', v =>
+      String(v || '')
+        .replace(/\D/g, '')
+        .slice(0, 15)
+    );
+    copyIfPresent('gender');
+    copyIfPresent<string>('dob', v => {
+      const parsed = new Date(v);
+      return isNaN(parsed.getTime()) ? null : parsed;
+    });
+
+    copyIfPresent('newsletterOptIn', Boolean as (v: unknown) => boolean);
+    copyIfPresent('smsNotifications', Boolean as (v: unknown) => boolean);
+    copyIfPresent('emailNotifications', Boolean as (v: unknown) => boolean);
+    copyIfPresent('orderUpdates', Boolean as (v: unknown) => boolean);
+    copyIfPresent('promotionalEmails', Boolean as (v: unknown) => boolean);
+    copyIfPresent('language');
+
+    copyIfPresent('twoFactorEnabled', Boolean as (v: unknown) => boolean);
+
+    // Upsert profile
+    const profile = await UserProfile.findOneAndUpdate(
+      { user: user._id },
+      { $set: { user: user._id, ...profileUpdates } },
+      { new: true, upsert: true }
+    );
+
+    return NextResponse.json({ ok: true, profile });
   } catch {
     return NextResponse.json(
       { error: 'Internal Server Error' },

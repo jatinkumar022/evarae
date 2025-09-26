@@ -14,6 +14,7 @@ export interface Product {
   brand: string;
   material: string;
   weight?: number;
+  thumbnail?: string;
   dimensions?: {
     length?: number;
     width?: number;
@@ -135,3 +136,87 @@ export const PRODUCT_CATEGORIES = {
 export type ProductCategoryId = keyof typeof PRODUCT_CATEGORIES;
 export type ProductCategorySlug =
   (typeof PRODUCT_CATEGORIES)[ProductCategoryId]['slug'];
+
+// Shared domain types used across API routes and pages
+export interface Address {
+  _id?: string;
+  label?: string;
+  fullName: string;
+  phone: string;
+  line1: string;
+  line2?: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country?: string;
+  isDefaultShipping?: boolean;
+  isDefaultBilling?: boolean;
+}
+
+export interface UserProfileLean {
+  _id?: string;
+  user: string;
+  addresses: Address[];
+}
+
+export interface CartItemLean {
+  _id: string;
+  product: string;
+  quantity: number;
+  selectedColor?: string | null;
+  selectedSize?: string | null;
+  addedAt: string | Date;
+}
+
+export interface CartLean {
+  _id: string;
+  user: string;
+  items: CartItemLean[];
+  savedItems: { _id: string; product: string; addedAt: string | Date }[];
+}
+
+export interface OrderItemLean {
+  product: string;
+  name: string;
+  slug?: string;
+  sku?: string;
+  price: number;
+  quantity: number;
+  image?: string | null;
+  selectedColor?: string | null;
+  selectedSize?: string | null;
+}
+
+export interface OrderLean {
+  _id: string;
+  user: string;
+  orderNumber: string;
+  items: OrderItemLean[];
+  subtotalAmount: number;
+  taxAmount: number;
+  shippingAmount: number;
+  discountAmount: number;
+  paymentChargesAmount: number;
+  totalAmount: number;
+  paymentMethod: 'razorpay' | 'stripe' | 'phonepe' | 'cod';
+  paymentStatus: 'pending' | 'paid' | 'failed' | 'refunded' | 'completed';
+  orderStatus:
+    | 'pending'
+    | 'confirmed'
+    | 'processing'
+    | 'shipped'
+    | 'delivered'
+    | 'cancelled'
+    | 'returned';
+  shippingAddress: Address;
+  paymentProviderOrderId?: string | null;
+  paymentProviderPaymentId?: string | null;
+  paymentProviderSignature?: string | null;
+  paymentProvider?: string | null;
+  trackingNumber?: string | null;
+  courierName?: string | null;
+  isGift?: boolean;
+  couponCode?: string | null;
+  notes?: string | null;
+  paidAt?: string | Date | null;
+}

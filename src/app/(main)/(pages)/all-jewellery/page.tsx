@@ -62,8 +62,9 @@ export default function AllJewelleryPage() {
       const hoverImage = p.images && p.images[1] ? p.images[1] : undefined;
       const hasDiscount =
         p.discountPrice != null && p.price != null && p.discountPrice < p.price;
+      const sku = (p as { sku?: string }).sku;
       return {
-        id: p.slug,
+        id: p.slug, // use slug for URL
         name: p.name,
         description: p.description || '',
         price: hasDiscount ? p.discountPrice! : p.price ?? null,
@@ -92,7 +93,7 @@ export default function AllJewelleryPage() {
         isWishlisted: false,
         isFeatured: false,
         tags: p.tags || [],
-        sku: '',
+        sku: sku || '',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       } as UiProduct;

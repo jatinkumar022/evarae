@@ -22,7 +22,7 @@ import { RxCross2 } from 'react-icons/rx';
 import Link from 'next/link';
 import { BsInboxes } from 'react-icons/bs';
 import MobileNavMenu from './MobileNavMenu';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 // import { LogoCaelvi } from '@/app/(main)/assets';
 import { Philosopher } from 'next/font/google';
 import { Eye, EyeOff } from 'lucide-react';
@@ -46,6 +46,7 @@ import {
   Clock,
   Truck,
 } from 'lucide-react';
+import { useCartStore } from '@/lib/data/mainStore/cartStore';
 
 const philosopher = Philosopher({
   subsets: ['latin'],
@@ -103,6 +104,11 @@ const popularCategories = [
 ];
 
 export default function Navbar() {
+  const { items, load } = useCartStore();
+  useEffect(() => {
+    load();
+  }, [load]);
+
   const placeholders = [
     'Search Gold Jewellery',
     'Search Diamond Jewellery',
@@ -137,6 +143,10 @@ export default function Navbar() {
     null
   );
   const [loginOtpError, setLoginOtpError] = useState<string | null>(null);
+  const pathname = usePathname();
+
+  const isCartPage = pathname === '/cart';
+
   useEffect(() => {
     (async () => {
       try {
@@ -283,32 +293,15 @@ export default function Navbar() {
     }
   };
 
-  // Sample mini-cart items and helpers (replace with real cart state later)
-  const miniCartItems = [
-    {
-      id: '1',
-      name: 'Diamond Pendant',
-      price: 95000,
-      quantity: 1,
-      image: pendantsCat,
-    },
-    {
-      id: '2',
-      name: 'Gold Bracelet',
-      price: 85000,
-      quantity: 1,
-      image: braceletsCat,
-    },
-    {
-      id: '3',
-      name: 'Ring - Classic',
-      price: 65000,
-      quantity: 1,
-      image: ringsCat,
-    },
-  ];
+  const miniCartItems = items.map(i => ({
+    id: String(i?.product?._id || i?.product?.id),
+    name: i?.product?.name,
+    price: i?.product?.discountPrice ?? i?.product?.price ?? 0,
+    quantity: i?.quantity || 1,
+    image: (i?.product?.images && i.product.images[0]) || i?.product?.thumbnail,
+  }));
   const subtotal = miniCartItems.reduce(
-    (sum, item) => sum + item.price * item.quantity,
+    (sum: number, item) => sum + item.price * item.quantity,
     0
   );
   const formatINR = (value: number) =>
@@ -325,6 +318,26 @@ export default function Navbar() {
   const toggleSubmenu = (menuKey: string) => {
     setActiveSubmenu(activeSubmenu === menuKey ? null : menuKey);
   };
+  const drawerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        drawerRef.current &&
+        !drawerRef.current.contains(event.target as Node)
+      ) {
+        setShowProfileDrawer(false);
+      }
+    }
+
+    if (showProfileDrawer) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showProfileDrawer, setShowProfileDrawer]);
 
   const menuItems = [
     {
@@ -336,14 +349,18 @@ export default function Navbar() {
         {
           icon: MenuUser,
           label: 'Profile Information',
-          href: '/account/profile',
+          href: '/account/profile?tab=profile',
         },
         {
           icon: Shield,
           label: 'Privacy & Security',
-          href: '/account/security',
+          href: '/account/profile?tab=privacy',
         },
-        { icon: Bell, label: 'Notifications', href: '/account/notifications' },
+        {
+          icon: Bell,
+          label: 'Notifications',
+          href: '/account/profile?tab=preferences',
+        },
         {
           icon: CreditCard,
           label: 'Payment Methods',
@@ -468,7 +485,10 @@ export default function Navbar() {
                   <User className="h-5 w-5" />
                 </IconButton>
                 {currentUser && showProfileDrawer && (
-                  <div className="absolute right-0 mt-2 sm:w-[340px] w-screen sm:rounded-md border border-gray-200 bg-white shadow-lg z-50">
+                  <div
+                    ref={drawerRef}
+                    className="absolute right-0 mt-2 sm:w-[340px] w-screen sm:rounded-md border border-gray-200 bg-white shadow-lg z-50"
+                  >
                     {/* User Profile Header */}
                     <div className="bg-gradient-to-r from-[#d56a90]/5 to-[#d56a90]/10 p-6 border-b border-gray-100">
                       <div className="flex items-center gap-4">
@@ -587,7 +607,7 @@ export default function Navbar() {
                     <div className="bg-gray-50 px-4 py-3 rounded-b-md border-t border-gray-200">
                       <div className="flex items-center justify-between text-xs text-gray-500">
                         <span>Version 2.1.0</span>
-                        <span>© 2025 Your App</span>
+                        <span>© 2025 Caelvi Jewellery</span>
                       </div>
                     </div>
                   </div>
@@ -919,48 +939,62 @@ export default function Navbar() {
                   onClick={() => {
                     router.push('/cart');
                   }}
-                  ariaLabel="Shopping Bag - View cart with 5 items"
+                  ariaLabel={`Shopping Bag - View cart with ${items.length} items`}
                 >
                   <ShoppingBag className="h-5 w-5" />
                   <span
                     className="absolute top-0 right-0 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-white"
-                    aria-label="5 items in cart"
+                    aria-label={`${items.length} items in cart`}
                   >
-                    5
+                    {items.length}
                   </span>
                 </IconButton>
                 {/* Mini Cart Dropdown (desktop only) */}
-                <div className="hidden lg:block">
+                <div className={`hidden ${!isCartPage ? 'lg:block ' : ''}`}>
                   <div className="invisible opacity-0 translate-y-1 group-hover:visible group-hover:opacity-100 group-hover:translate-y-0 transition ease-out duration-150 absolute right-0 mt-2 w-[320px] rounded-md border border-gray-200 bg-white shadow-lg z-50">
                     <div className="p-4">
-                      {miniCartItems.length === 0 ? (
+                      {items.length === 0 ? (
                         <p className="text-sm text-gray-600">
                           Your cart is empty.
                         </p>
                       ) : (
                         <div className="space-y-3">
-                          {miniCartItems.map(item => (
+                          {items.map(i => (
                             <div
-                              key={item.id}
+                              key={String(i?.product?._id || i?.product?.id)}
                               className="flex items-center gap-3"
                             >
                               <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-md bg-gray-100">
                                 <Image
-                                  src={item.image}
-                                  alt={item.name}
+                                  src={String(
+                                    (i?.product?.images &&
+                                      (i.product.images[0] as string)) ??
+                                      i?.product?.thumbnail
+                                  )}
+                                  alt={i?.product?.name || 'Product'}
                                   className="h-full w-full object-cover"
+                                  width={56}
+                                  height={56}
                                 />
                               </div>
                               <div className="min-w-0 flex-1">
                                 <p className="truncate text-sm font-medium text-gray-800">
-                                  {item.name}
+                                  {i?.product?.name}
                                 </p>
                                 <p className="text-xs text-gray-500">
-                                  Qty: {item.quantity}
+                                  Qty: {i?.quantity || 1}
                                 </p>
                               </div>
                               <div className="text-sm font-medium text-gray-800">
-                                {formatINR(item.price)}
+                                {new Intl.NumberFormat('en-IN', {
+                                  style: 'currency',
+                                  currency: 'INR',
+                                  maximumFractionDigits: 0,
+                                }).format(
+                                  i?.product?.discountPrice ??
+                                    i?.product?.price ??
+                                    0
+                                )}
                               </div>
                             </div>
                           ))}

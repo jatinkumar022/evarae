@@ -205,7 +205,7 @@ export function ProductReviews({ product }: ProductReviewsProps) {
               setLightboxIndex(0);
               setIsLightboxOpen(true);
             }}
-            className="bg-primary text-white px-3 py-2 rounded-md hover:bg-primary-dark transition-colors text-sm"
+            className="bg-primary text-white px-4 lg:px-6 py-2  rounded-md hover:bg-primary-dark transition-colors flex items-center gap-2 text-sm lg:text-base self-start sm:self-auto"
           >
             See all photos ({allPhotos.length})
           </button>

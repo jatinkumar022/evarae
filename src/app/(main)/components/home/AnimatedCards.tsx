@@ -13,6 +13,7 @@ import {
   dazzlingWhite,
 } from '@/app/(main)/assets/Animatedgrid';
 import { GiCrystalShine } from 'react-icons/gi';
+import Link from 'next/link';
 const savedItems = [
   {
     id: 1,
@@ -39,12 +40,40 @@ const savedItems = [
     tag: null,
   },
 ];
+type Product = {
+  _id: string;
+  name: string;
+  price: number;
+  discountPrice?: number;
+  thumbnail: string;
+  images?: string[];
+  tags?: string[];
+  slug: string;
+};
 
 export default function AnimatedCards() {
   const sliderRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [cardsPerPage, setCardsPerPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await fetch('/api/main/dashboard/best-sellers', {
+          cache: 'no-store',
+        });
+        const data = await res.json();
+        setProducts(data.products || []);
+      } catch (err) {
+        console.error('Failed to fetch best sellers:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
 
   useEffect(() => {
     const container = sliderRef.current;
@@ -98,7 +127,7 @@ export default function AnimatedCards() {
     });
   };
 
-  const ImageCard = ({ item }: { item: (typeof savedItems)[0] }) => {
+  const ImageCard = ({ item }: { item: Product }) => {
     const [isHovered, setIsHovered] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
 
@@ -117,11 +146,11 @@ export default function AnimatedCards() {
 
     return (
       <div
-        className="relative w-full rounded-xl overflow-hidden cursor-pointer "
+        className="relative w-full aspect-square rounded-xl overflow-hidden cursor-pointer"
         onMouseEnter={() => !isMobile && setIsHovered(true)}
         onMouseLeave={() => !isMobile && setIsHovered(false)}
       >
-        <motion.div layout className="relative">
+        <motion.div layout className="relative w-full h-full">
           <AnimatePresence mode="wait">
             <motion.div
               key={isHovered ? 'hover' : 'default'}
@@ -130,34 +159,49 @@ export default function AnimatedCards() {
               animate="animate"
               exit="exit"
               transition={{ duration: 0.2, ease: 'easeInOut' }}
+              className="w-full h-full relative"
             >
               <Image
-                src={isHovered ? item.hoverImage : item.image}
-                alt={item.title}
-                className="w-full h-auto object-cover rounded-xl"
+                src={isHovered ? item.thumbnail || '' : item.images?.[0] || ''}
+                alt={item.name}
+                fill
+                className="object-cover rounded-xl"
               />
             </motion.div>
           </AnimatePresence>
         </motion.div>
-
-        {item.tag && (
+        {item.tags && (
           <span className="absolute top-0 left-0 best-seller-tag text-white text-[11px] px-3 py-1.5 rounded-tl-xl rounded-br-xl uppercase font-semibold tracking-wide">
             <div className="flex items-center gap-1">
-              <GiCrystalShine size={15} /> {item.tag}
+              <GiCrystalShine size={15} /> {item.tags[0]}
             </div>
           </span>
         )}
 
         <button
           className="absolute top-3 right-3 bg-white/50 backdrop-blur-sm text-foreground/70 hover:bg-white hover:text-foreground rounded-full p-2 transition-all duration-300"
-          aria-label={`Add ${item.title} to wishlist`}
+          aria-label={`Add ${item.name} to wishlist`}
         >
           <GoHeart size={18} />
         </button>
       </div>
     );
   };
+  if (loading) {
+    return (
+      <div className="text-center py-8 text-gray-500">
+        Loading best sellers...
+      </div>
+    );
+  }
 
+  if (!products.length) {
+    return (
+      <div className="text-center py-8 text-gray-500">
+        No best sellers found.
+      </div>
+    );
+  }
   return (
     <section>
       {/* Headings */}
@@ -175,21 +219,22 @@ export default function AnimatedCards() {
           className="flex gap-4 overflow-x-auto pb-4 scroll-smooth snap-x snap-mandatory no-scrollbar"
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
-          {savedItems.map((item, index) => (
-            <div
-              key={item.id + index}
-              className="flex-shrink-0 w-64 snap-start scroll-item"
+          {products.map((item, index) => (
+            <Link
+              href={`/product/${item.slug}`}
+              key={item._id + index}
+              className="flex-shrink-0 w-64 snap-start scroll-item cursor-pointer"
             >
               <ImageCard item={item} />
               <div className="mt-4 text-center">
                 <p className="text-sm font-medium text-foreground truncate">
-                  {item.title}
+                  {item.name}
                 </p>
                 <p className="text-base font-semibold text-accent mt-1">
-                  ₹{item.price}
+                  ₹{item.discountPrice || item.price}
                 </p>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
 
@@ -215,18 +260,22 @@ export default function AnimatedCards() {
 
       {/* Desktop Grid */}
       <div className="hidden lg:grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-6">
-        {savedItems.map(item => (
-          <div key={item.id + '-desktop'} className="flex flex-col">
+        {products.map(item => (
+          <Link
+            href={`/product/${item.slug}`}
+            key={item._id + '-desktop'}
+            className="flex flex-col cursor-pointer"
+          >
             <ImageCard item={item} />
             <div className="mt-4 text-center">
               <p className="text-sm font-medium text-foreground truncate">
-                {item.title}
+                {item.name}
               </p>
               <p className="text-base font-semibold text-accent mt-1">
-                ₹{item.price}
+                ₹{item.discountPrice || item.price}
               </p>
             </div>
-          </div>
+          </Link>
         ))}
       </div>
     </section>

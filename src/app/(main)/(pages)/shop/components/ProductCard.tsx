@@ -7,6 +7,7 @@ import { GiCrystalShine } from 'react-icons/gi';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Cart } from '@/app/(main)/assets/Common';
 import Link from 'next/link';
+import { useCartStore } from '@/lib/data/mainStore/cartStore';
 
 interface ProductCardProps {
   product: Product;
@@ -15,6 +16,7 @@ interface ProductCardProps {
 export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const addToCart = useCartStore(s => s.add);
 
   useEffect(() => {
     const checkScreen = () => setIsMobile(window.innerWidth < 1024); // lg breakpoint
@@ -27,6 +29,28 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     initial: { opacity: 0 },
     animate: { opacity: 1 },
     exit: { opacity: 0 },
+  };
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!product?.id) return;
+    const optimisticProduct = {
+      _id: product.id,
+      id: product.id,
+      name: product.name,
+      price: product.price ?? 0,
+      discountPrice: product.price ?? 0,
+      images: product.images as string[],
+      thumbnail: (product.images?.[0] as string) || undefined,
+      stockQuantity: product.stockCount ?? 1,
+    };
+    // fire-and-forget add with optimistic UI
+    addToCart({
+      productSlug: String(product.id),
+      quantity: 1,
+      optimisticProduct,
+    }).catch(() => {});
   };
 
   return (
@@ -68,6 +92,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           <button
             className="absolute bottom-3 right-3 bg-white/50 backdrop-blur-sm cursor-pointer hover:bg-primary hover:text-white rounded-full sm:p-2 p-1.5 transition-all duration-300"
             aria-label={`Add ${product.name} to wishlist`}
+            onClick={e => {
+              e.preventDefault();
+              e.stopPropagation();
+            }}
           >
             <Heart className="sm:w-4 sm:h-4 w-3 h-3" />
           </button>
@@ -127,12 +155,15 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                 )}
             </div>
           </div>
-          <div className="w-full bg-primary text-white py-2 px-3 rounded-md text-xs sm:text-sm  hover:bg-primary-dark transition-colors flex items-center justify-center gap-1">
+          <button
+            onClick={handleAddToCart}
+            className="w-full bg-primary text-white py-2 px-3 rounded-md text-xs sm:text-sm  hover:bg-primary-dark transition-colors flex items-center justify-center gap-1"
+          >
             <span className="text-accent">
               <Cart className="w-4 h-4 text-white" />
             </span>
             Add to Cart
-          </div>
+          </button>
           {product.inStock && product.stockCount <= 3 && (
             <p className="text-xs text-primary font-medium text-center flex items-center gap-1 animate-caret-blink ">
               <span className="inline-block w-2 h-2 bg-primary rounded-full "></span>

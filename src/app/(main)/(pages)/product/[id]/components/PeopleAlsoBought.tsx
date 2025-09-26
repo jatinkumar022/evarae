@@ -6,49 +6,98 @@ import { GiCrystalShine } from 'react-icons/gi';
 import { Heart } from '@/app/(main)/assets/Navbar';
 import { Cart } from '@/app/(main)/assets/Common';
 import { Product } from '@/lib/types/product';
-
-// ✅ Import all product arrays
-import {
-  ringsProducts,
-  earringsProducts,
-  banglesProducts,
-  braceletsProducts,
-  chainsProducts,
-  mangalsutrasProducts,
-  pendantsProducts,
-} from '@/lib/data/products';
+import { useEffect, useState } from 'react';
 
 interface PeopleAlsoBoughtProps {
   currentProduct: Product;
 }
 
 export function PeopleAlsoBought({ currentProduct }: PeopleAlsoBoughtProps) {
-  // ✅ Combine all products
-  const allProducts: Product[] = [
-    ...ringsProducts,
-    ...earringsProducts,
-    ...banglesProducts,
-    ...braceletsProducts,
-    ...chainsProducts,
-    ...mangalsutrasProducts,
-    ...pendantsProducts,
-  ];
+  const [items, setItems] = useState<Product[]>([]);
 
-  // ✅ Filter by category, remove current product, randomize & limit
-  const relatedProducts = allProducts
-    .filter(
-      p =>
-        p.id !== currentProduct.id &&
-        p.category?.id === currentProduct.category?.id
-    )
-    .sort(() => Math.random() - 0.5)
-    .slice(0, 7);
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch(
+          `/api/main/product/${currentProduct.id}/people-also-bought`,
+          { cache: 'no-store' }
+        );
+        if (!res.ok) return;
+        const data = await res.json();
+        type ApiProduct = {
+          slug: string;
+          name: string;
+          description?: string;
+          price?: number | null;
+          discountPrice?: number | null;
+          thumbnail?: string;
+          images?: string[];
+          categories?: Array<{
+            _id?: string;
+            name?: string;
+            slug?: string;
+          }>;
+          material?: string;
+          status?: string;
+          stockQuantity?: number;
+          tags?: string[];
+          sku?: string;
+        };
+        const productsArr = (data.products ?? []) as ApiProduct[];
+        const mapped: Product[] = productsArr.map(p => ({
+          id: p.slug,
+          name: p.name,
+          description: p.description || '',
+          price:
+            p.discountPrice != null &&
+            p.price != null &&
+            p.discountPrice < p.price
+              ? p.discountPrice
+              : p.price ?? null,
+          originalPrice:
+            p.discountPrice != null &&
+            p.price != null &&
+            p.discountPrice < p.price
+              ? p.price
+              : null,
+          currency: 'INR',
+          images: [p.thumbnail || p.images?.[0] || '/favicon.ico'],
+          hoverImage: p.images?.[1],
+          category: {
+            id: p.categories?.[0]?._id || p.categories?.[0]?.slug || '',
+            name: p.categories?.[0]?.name || '',
+            slug: p.categories?.[0]?.slug || '',
+            productCount: 0,
+            isActive: true,
+          },
+          subcategory: '',
+          brand: '',
+          material: p.material || '',
+          inStock: (p.status || 'active') === 'active',
+          stockCount: p.stockQuantity ?? 0,
+          rating: 0,
+          reviews: 0,
+          isNew: false,
+          isSale:
+            p.discountPrice != null &&
+            p.price != null &&
+            p.discountPrice < p.price,
+          isWishlisted: false,
+          isFeatured: false,
+          tags: p.tags || [],
+          sku: p.sku || '',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        }));
+        setItems(mapped.filter(p => p.id !== currentProduct.id).slice(0, 8));
+      } catch {}
+    })();
+  }, [currentProduct.id]);
 
-  if (!relatedProducts || relatedProducts.length === 0) return null;
+  if (items.length === 0) return null;
 
   return (
     <section className="space-y-8">
-      {/* Header */}
       <div>
         <h2 className="text-lg lg:text-2xl font-heading font-semibold text-primary-dark mb-1 lg:mb-2">
           People Also Bought
@@ -58,15 +107,13 @@ export function PeopleAlsoBought({ currentProduct }: PeopleAlsoBoughtProps) {
         </p>
       </div>
 
-      {/* Grid Layout */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-        {relatedProducts.map(product => (
+        {items.map(product => (
           <Link
             key={product.id}
             href={`/product/${product.id}`}
             className="group relative flex flex-col rounded-lg border border-primary/10 overflow-hidden hover:shadow-md transition-all"
           >
-            {/* Image */}
             <div className="relative aspect-square w-full overflow-hidden">
               <Image
                 src={product.images[0]}
@@ -89,7 +136,6 @@ export function PeopleAlsoBought({ currentProduct }: PeopleAlsoBoughtProps) {
               )}
             </div>
 
-            {/* Info */}
             <div className="flex flex-col flex-1 p-3 gap-2">
               <p className="font-medium text-primary-dark text-sm truncate">
                 {product.name}

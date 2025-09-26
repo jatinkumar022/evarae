@@ -28,15 +28,15 @@ const nextConfig: NextConfig = {
   },
 
   // Webpack optimizations
-  webpack(config: any) {
+  webpack(config) {
     // SVG handling
-    config.module.rules.push({
+    config.module?.rules?.push({
       test: /\.svg$/i,
       use: ['@svgr/webpack'],
     });
 
     // Video handling
-    config.module.rules.push({
+    config.module?.rules?.push({
       test: /\.mp4$/,
       use: [
         {

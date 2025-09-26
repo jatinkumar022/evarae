@@ -23,7 +23,7 @@ const productSchema = new mongoose.Schema(
       unique: true,
       sparse: true, // allows null but ensures uniqueness if present
     },
-
+    brand: { type: String, default: 'Caelvi' },
     // Relations
     categories: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Category' }],
 

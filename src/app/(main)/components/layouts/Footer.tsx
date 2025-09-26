@@ -88,6 +88,8 @@ export default function Footer() {
     { name: 'Our Story', to: '/our-story' },
     { name: 'Blog', to: '/blog' },
     { name: 'Sustainability', to: '/sustainability' },
+    { name: 'Terms & Conditions', to: '/terms-conditions' },
+    { name: 'Privacy Policy', to: '/privacy' },
   ];
   const serviceLinks = [
     { name: 'Contact Us', to: '/contact-us' },

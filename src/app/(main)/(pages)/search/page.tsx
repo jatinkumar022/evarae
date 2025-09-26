@@ -1,35 +1,39 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo, memo } from 'react';
+import {
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  memo,
+  Suspense,
+} from 'react';
 import { Search, Grid3X3, List, ArrowLeft, ChevronRight } from 'lucide-react';
 import Container from '@/app/(main)/components/layouts/Container';
 import ProductFilters from '@/app/(main)/components/filters/ProductFilters';
-import { FilterOptions, SortOption, Product } from '@/lib/types/product';
+import {
+  FilterOptions,
+  SortOption,
+  Product as UiProduct,
+} from '@/lib/types/product';
 import { ProductCard } from '../shop/components/ProductCard';
-import { allProducts } from '@/lib/data/products';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import Loader from '@/app/(main)/components/layouts/Loader';
-
-// Build a single array of products from asset-backed data
-const allProductsArray: Product[] = Object.values(
-  allProducts
-).flat() as Product[];
-
-// Rotating placeholder phrases defined once at module scope
+import { useSearchParams } from 'next/navigation';
 const PLACEHOLDER_PHRASES = [
   'Search Gold Jewellery',
   'Search Diamond Jewellery',
   'Search Rings, Earrings & more...',
 ];
 
-// Memoized child that updates its own state, preventing parent re-renders
 const RotatingPlaceholder = memo(function RotatingPlaceholder() {
   const [index, setIndex] = useState(0);
   useEffect(() => {
-    const id = setInterval(() => {
-      setIndex(prev => (prev + 1) % PLACEHOLDER_PHRASES.length);
-    }, 3000);
+    const id = setInterval(
+      () => setIndex(prev => (prev + 1) % PLACEHOLDER_PHRASES.length),
+      3000
+    );
     return () => clearInterval(id);
   }, []);
   return (
@@ -39,15 +43,15 @@ const RotatingPlaceholder = memo(function RotatingPlaceholder() {
   );
 });
 
-export default function SearchPage() {
-  const [searchValue, setSearchValue] = useState('');
-  const [searchResults, setSearchResults] =
-    useState<Product[]>(allProductsArray);
-  const [results, setResults] = useState<Product[]>(allProductsArray);
+function SearchPageInner() {
+  const searchParams = useSearchParams();
+  const initialQuery = searchParams.get('q') || '';
+  const [searchValue, setSearchValue] = useState(initialQuery);
+  const [searchResults, setSearchResults] = useState<UiProduct[]>([]);
+  const [results, setResults] = useState<UiProduct[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [viewMode, setViewMode] = useState('grid');
   const router = useRouter();
-
   const filterOptions: FilterOptions = useMemo(
     () => ({
       priceRanges: [
@@ -88,51 +92,121 @@ export default function SearchPage() {
     []
   );
 
-  const performSearch = async (searchTerm: string) => {
-    setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 400));
-
-    let filtered = allProductsArray;
-
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase();
-      filtered = filtered.filter(
-        item =>
-          item.name.toLowerCase().includes(term) ||
-          item.category.name.toLowerCase().includes(term) ||
-          (item.description || '').toLowerCase().includes(term)
-      );
-    }
-
-    setSearchResults(filtered);
-    setResults(filtered);
-    setIsLoading(false);
+  type ApiProduct = {
+    slug: string;
+    name: string;
+    description?: string;
+    price?: number | null;
+    discountPrice?: number | null;
+    thumbnail?: string;
+    images?: string[];
+    categories?: Array<{ _id?: string; name?: string; slug?: string }>;
+    material?: string;
+    status?: string;
+    stockQuantity?: number;
+    tags?: string[];
+    sku?: string;
   };
+  const mapApiToUi = (items: ApiProduct[]): UiProduct[] =>
+    (items || []).map(p => {
+      const hasDiscount =
+        p.discountPrice != null && p.price != null && p.discountPrice < p.price;
+      return {
+        id: p.slug,
+        name: p.name,
+        description: p.description || '',
+        price: hasDiscount ? p.discountPrice : p.price ?? null,
+        originalPrice: hasDiscount ? p.price : null,
+        currency: 'INR',
+        images: [p.thumbnail || p.images?.[0] || '/favicon.ico'],
+        hoverImage: p.images?.[1],
+        category: {
+          id: p.categories?.[0]?._id || p.categories?.[0]?.slug || '',
+          name: p.categories?.[0]?.name || '',
+          slug: p.categories?.[0]?.slug || '',
+          productCount: 0,
+          isActive: true,
+        },
+        subcategory: '',
+        brand: '',
+        material: p.material || '',
+        inStock: (p.status || 'active') === 'active',
+        stockCount: p.stockQuantity ?? 0,
+        rating: 0,
+        reviews: 0,
+        isNew: false,
+        isSale: hasDiscount,
+        isWishlisted: false,
+        isFeatured: false,
+        tags: p.tags || [],
+        sku: p.sku || '',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      } as UiProduct;
+    });
+  const fetchSearch = useCallback(
+    async (q: string) => {
+      if (!q) {
+        setSearchResults([]);
+        setResults([]);
+        return;
+      }
+      setIsLoading(true);
+      try {
+        const res = await fetch(
+          `/api/main/search?q=${encodeURIComponent(q)}&limit=48`,
+          { cache: 'no-store' }
+        );
+        const data = await res.json();
+        const mapped = mapApiToUi(data.products || []);
+        setSearchResults(mapped);
+        setResults(mapped);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [mapApiToUi]
+  );
+
+  // initial: show nothing until the user searches
+  useEffect(() => {
+    setSearchResults([]);
+    setResults([]);
+  }, []);
+  useEffect(() => {
+    if (initialQuery) {
+      fetchSearch(initialQuery.trim());
+    }
+  }, [initialQuery, fetchSearch]);
+
+  useEffect(() => {
+    const id = setTimeout(() => {
+      if (searchValue.trim()) {
+        fetchSearch(searchValue.trim());
+
+        // Push updated query to URL
+        router.push(`/search?q=${encodeURIComponent(searchValue.trim())}`);
+      }
+    }, 350);
+    return () => clearTimeout(id);
+  }, [searchValue, fetchSearch, router]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    performSearch(searchValue);
+    fetchSearch(searchValue.trim());
   };
 
-  useEffect(() => {
-    performSearch('');
-  }, []);
-
-  // Stable callback for ProductFilters to avoid re-runs
-  const handleFiltersChange = useCallback((filteredProducts: Product[]) => {
+  const handleFiltersChange = useCallback((filteredProducts: UiProduct[]) => {
     setResults(filteredProducts);
   }, []);
 
-  // Simple list-row component for list view
-  const ListProductRow = ({ product }: { product: Product }) => {
+  const ListProductRow = ({ product }: { product: UiProduct }) => {
     const primaryImage =
       product.images && product.images.length > 0
         ? product.images[0]
         : undefined;
-
     return (
       <div className="bg-white border-b border-gray-100 p-2 sm:p-3 flex items-start gap-3 w-full max-w-full">
-        {/* Image */}
         <div className="relative w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0 rounded-md overflow-hidden">
           {primaryImage ? (
             <Image
@@ -146,8 +220,6 @@ export default function SearchPage() {
             />
           ) : null}
         </div>
-
-        {/* Content */}
         <div className="flex-1 min-w-0">
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1 sm:gap-2">
             <div className="min-w-0">
@@ -163,12 +235,9 @@ export default function SearchPage() {
               </h3>
             </div>
           </div>
-
-          {/* Description (hidden on tiny screens for space) */}
           <p className="hidden sm:block text-xs text-gray-600 line-clamp-2 mb-1">
             {product.description}
           </p>
-
           <div className="flex items-center justify-between gap-2 mt-1">
             <div className="flex items-center gap-1">
               {product.price !== null ? (
@@ -197,8 +266,6 @@ export default function SearchPage() {
 
   return (
     <Container>
-      {/* Header */}
-      {/* Navigation */}
       <nav className="py-4 sm:py-6 text-xs sm:text-sm">
         <div className="flex items-center gap-1 sm:gap-2">
           <button
@@ -213,13 +280,10 @@ export default function SearchPage() {
           <span className="text-primary-dark cursor-default">Search</span>
         </div>
       </nav>
-      {/* Search Box with Dynamic Placeholder */}
+
       <div className="flex items-center justify-center py-3 px-4">
         <form onSubmit={handleSearch} className="relative w-full max-w-2xl">
-          {/* Search Icon */}
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-primary" />
-
-          {/* Input */}
           <input
             type="text"
             value={searchValue}
@@ -227,8 +291,6 @@ export default function SearchPage() {
             placeholder=""
             className="w-full pl-12 pr-28 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent text-base shadow-sm"
           />
-
-          {/* Dynamic Placeholder */}
           {searchValue === '' && (
             <div className="absolute left-12 right-28 inset-y-0 flex items-center pointer-events-none overflow-hidden">
               <span className="text-gray-400 text-sm truncate">
@@ -236,8 +298,6 @@ export default function SearchPage() {
               </span>
             </div>
           )}
-
-          {/* Search Button */}
           <button
             type="submit"
             className="absolute right-2 top-1/2 -translate-y-1/2 bg-primary text-white px-4 py-1.5 rounded-lg hover:bg-primary-dark transition-colors text-sm font-medium whitespace-nowrap"
@@ -248,17 +308,13 @@ export default function SearchPage() {
       </div>
 
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 my-6 sm:my-8 font-heading text-accent">
-        {/* Left side: Title + Count */}
         <div className="text-center md:text-left">
           <h1 className="text-2xl lg:text-3xl font-semibold">Search</h1>
           <h2 className="text-sm sm:text-base text-gray-600 mt-1">
             ({results.length} {results.length === 1 ? 'item' : 'items'} found)
           </h2>
         </div>
-
-        {/* Right side: Controls */}
         <div className="flex items-center justify-center md:justify-end gap-3">
-          {/* Redesigned View Toggle */}
           <div className="flex items-center bg-gray-100 rounded-xl overflow-hidden shadow-sm">
             <button
               onClick={() => setViewMode('grid')}
@@ -286,9 +342,6 @@ export default function SearchPage() {
         </div>
       </div>
 
-      {/* Results Summary */}
-
-      {/* Product Filters and Results */}
       <ProductFilters
         products={searchResults}
         filterOptions={filterOptions}
@@ -309,11 +362,12 @@ export default function SearchPage() {
             <button
               onClick={() => {
                 setSearchValue('');
-                performSearch('');
+                setSearchResults([]);
+                setResults([]);
               }}
               className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
             >
-              View All Items
+              Clear Search
             </button>
           </div>
         ) : (
@@ -337,5 +391,19 @@ export default function SearchPage() {
         )}
       </ProductFilters>
     </Container>
+  );
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense
+      fallback={
+        <Container>
+          <div className="py-8 text-center">Loading...</div>
+        </Container>
+      }
+    >
+      <SearchPageInner />
+    </Suspense>
   );
 }

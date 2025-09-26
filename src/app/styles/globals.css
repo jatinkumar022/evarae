@@ -327,3 +327,25 @@
   border-bottom-left-radius: 1.5rem;
   border-bottom-right-radius: 1.5rem;
 }
+
+
+
+@media print {
+
+  header,
+  footer,
+  nav,
+  .print\:hidden {
+    display: none !important;
+  }
+
+  body {
+    background: #fff !important;
+  }
+
+  /* Optional: remove shadows/borders for print */
+  .no-print-border {
+    border: none !important;
+    box-shadow: none !important;
+  }
+}

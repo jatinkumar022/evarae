@@ -238,7 +238,7 @@ body {
 .btn-outline:hover::before {
   opacity: 1;
   transform: scale(1);
-  color: var(--text-white);
+
 
 }
 

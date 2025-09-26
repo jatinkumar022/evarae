@@ -15,6 +15,7 @@ import { Cart } from '@/app/(main)/assets/Common';
 import CustomSelect from '@/app/(main)/components/filters/CustomSelect';
 import { ringsCat } from '@/app/(main)/assets/CategoryGrid';
 import Image from 'next/image';
+import { useCartStore } from '@/lib/data/mainStore/cartStore';
 interface ProductInfoProps {
   product: Product;
 }
@@ -23,6 +24,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
   const [quantity, setQuantity] = useState(1);
   const [selectedVariant, setSelectedVariant] = useState('default');
   const [isStickyVisible, setIsStickyVisible] = useState(false);
+  const addToCart = useCartStore(s => s.add);
 
   // Mock variants - in real app, this would come from product data
   const variants = [
@@ -75,6 +77,25 @@ export function ProductInfo({ product }: ProductInfoProps) {
     }
 
     return stars;
+  };
+
+  const onAddToCart = () => {
+    const optimisticProduct = {
+      _id: product.id,
+      id: product.id,
+      name: product.name,
+      price: product.price ?? 0,
+      discountPrice: product.price ?? 0,
+      images: product.images as string[],
+      thumbnail: (product.images?.[0] as string) || undefined,
+      stockQuantity: product.stockCount ?? 1,
+    };
+    addToCart({
+      productSlug: String(product.id),
+      quantity,
+      selectedColor: selectedVariant,
+      optimisticProduct,
+    }).catch(() => {});
   };
 
   return (
@@ -197,7 +218,10 @@ export function ProductInfo({ product }: ProductInfoProps) {
 
             {/* Row for secondary actions */}
             <div className="flex gap-2">
-              <button className="flex-1 bg-accent text-white py-2 px-5 rounded-sm text-sm lg:text-base font-medium hover:bg-accent/90 transition-colors flex items-center justify-center gap-2">
+              <button
+                onClick={onAddToCart}
+                className="flex-1 bg-accent text-white py-2 px-5 rounded-sm text-sm lg:text-base font-medium hover:bg-accent/90 transition-colors flex items-center justify-center gap-2"
+              >
                 <Cart className="w-4 h-4" />
                 Add to Cart
               </button>
@@ -260,7 +284,10 @@ export function ProductInfo({ product }: ProductInfoProps) {
                 ₹{product.price.toLocaleString()}
               </p>
             </div>
-            <button className="bg-primary text-white px-4 lg:px-6 py-2 lg:py-3 rounded-md font-medium hover:bg-primary-dark transition-colors whitespace-nowrap">
+            <button
+              onClick={onAddToCart}
+              className="bg-primary text-white px-4 lg:px-6 py-2 lg:py-3 rounded-md font-medium hover:bg-primary-dark transition-colors whitespace-nowrap"
+            >
               Add to Cart
             </button>
           </div>

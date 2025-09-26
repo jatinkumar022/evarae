@@ -2,8 +2,11 @@ import { NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 import { connect } from '@/dbConfig/dbConfig';
 import User from '@/models/userModel';
+import UserProfile from '@/models/userProfile';
 
 const USER_JWT_SECRET = process.env.USER_JWT_SECRET as string;
+
+type BasicUser = { _id: unknown; name: string; email: string };
 
 export async function GET(request: Request) {
   try {
@@ -23,12 +26,21 @@ export async function GET(request: Request) {
     } | null;
     if (!payload?.uid) return NextResponse.json({ user: null });
 
-    const user = await User.findById(payload.uid)
-      .select('name email phone  gender dob newsletterOptIn addresses')
-      .lean();
-    if (!user) return NextResponse.json({ user: null });
+    const userDoc = await User.findById(payload.uid)
+      .select({ name: 1, email: 1 })
+      .lean<BasicUser | null>();
+    if (!userDoc) return NextResponse.json({ user: null });
 
-    return NextResponse.json({ user });
+    const profile = await UserProfile.findOne({ user: payload.uid }).lean();
+
+    return NextResponse.json({
+      user: {
+        id: payload.uid,
+        name: userDoc.name,
+        email: userDoc.email,
+        profile: profile || null,
+      },
+    });
   } catch {
     return NextResponse.json({ user: null });
   }

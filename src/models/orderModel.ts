@@ -7,23 +7,28 @@ const orderItemSchema = new mongoose.Schema(
       ref: 'Product',
       required: true,
     },
-    name: { type: String, required: true }, // snapshot of product name
-    price: { type: Number, required: true }, // snapshot of price at purchase
+    name: { type: String, required: true },
+    slug: { type: String, default: '' },
+    sku: { type: String, default: '' },
+    price: { type: Number, required: true },
     quantity: { type: Number, required: true, min: 1 },
-    image: { type: String, default: null }, // snapshot of product image
+    image: { type: String, default: null },
+    selectedColor: { type: String, default: null },
+    selectedSize: { type: String, default: null },
   },
   { _id: false }
 );
 
 const shippingAddressSchema = new mongoose.Schema(
   {
-    name: { type: String, required: true },
+    fullName: { type: String, required: true },
     phone: { type: String, required: true },
-    street: { type: String, required: true },
+    line1: { type: String, required: true },
+    line2: { type: String, default: '' },
     city: { type: String, required: true },
     state: { type: String, required: true },
-    pincode: { type: String, required: true },
-    country: { type: String, default: 'India' },
+    postalCode: { type: String, required: true },
+    country: { type: String, default: 'IN' },
   },
   { _id: false }
 );
@@ -32,20 +37,27 @@ const orderSchema = new mongoose.Schema(
   {
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
 
+    // Human-friendly order number
+    orderNumber: { type: String, unique: true, index: true },
+
     items: { type: [orderItemSchema], required: true },
 
+    subtotalAmount: { type: Number, required: true },
+    taxAmount: { type: Number, default: 0 },
+    shippingAmount: { type: Number, default: 0 },
+    discountAmount: { type: Number, default: 0 },
+    // New: gateway fees (e.g., Razorpay charges + their GST)
+    paymentChargesAmount: { type: Number, default: 0 },
     totalAmount: { type: Number, required: true },
-    discount: { type: Number, default: 0 },
-    finalAmount: { type: Number, required: true }, // total - discount
 
     paymentMethod: {
       type: String,
-      enum: ['cod', 'razorpay', 'stripe'],
-      default: 'cod',
+      enum: ['razorpay', 'stripe', 'phonepe', 'cod'],
+      default: 'razorpay',
     },
     paymentStatus: {
       type: String,
-      enum: ['pending', 'paid', 'failed', 'refunded'],
+      enum: ['pending', 'paid', 'failed', 'refunded', 'completed'],
       default: 'pending',
     },
 
@@ -53,6 +65,7 @@ const orderSchema = new mongoose.Schema(
       type: String,
       enum: [
         'pending',
+        'confirmed',
         'processing',
         'shipped',
         'delivered',
@@ -64,13 +77,18 @@ const orderSchema = new mongoose.Schema(
 
     shippingAddress: { type: shippingAddressSchema, required: true },
 
+    paymentProviderOrderId: { type: String, default: null },
+    paymentProviderPaymentId: { type: String, default: null },
+    paymentProviderSignature: { type: String, default: null },
+    paymentProvider: { type: String, default: 'razorpay' },
+
     trackingNumber: { type: String, default: null },
     courierName: { type: String, default: null },
 
-    // Extra fields for Amazon-like functionality
     isGift: { type: Boolean, default: false },
     couponCode: { type: String, default: null },
     notes: { type: String, default: null },
+    paidAt: { type: Date, default: null },
   },
   { timestamps: true }
 );

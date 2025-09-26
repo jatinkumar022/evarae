@@ -1,50 +1,19 @@
 'use client';
 
-import React, { useState, MouseEvent } from 'react';
+import React, { useState, MouseEvent, useEffect } from 'react';
 import Container from '../layouts/Container';
 import Link from 'next/link';
 import Image from 'next/image';
-
-const categories = [
-  {
-    title: 'Daily Wear Earrings',
-    image:
-      'https://res.cloudinary.com/dil93ruwo/image/upload/v1756960400/categories/yr7xd9r2mt07qoxync4d.png',
-    href: '#',
-    alt: 'Daily Wear ',
-  },
-  {
-    title: 'Latest Mangalsutras',
-    image:
-      'https://res.cloudinary.com/dil93ruwo/image/upload/v1756960400/categories/yr7xd9r2mt07qoxync4d.png',
-    href: '#',
-    alt: 'Latest ',
-  },
-  {
-    title: 'New Arrivals',
-    image:
-      'https://res.cloudinary.com/dil93ruwo/image/upload/v1756960400/categories/yr7xd9r2mt07qoxync4d.png',
-    href: '#',
-    alt: 'New ',
-  },
-  {
-    title: 'Gifting Jewellery',
-    image:
-      'https://res.cloudinary.com/dil93ruwo/image/upload/v1756960400/categories/yr7xd9r2mt07qoxync4d.png',
-    href: '#',
-    alt: 'Gifting ',
-  },
-  {
-    title: 'Engagement Rings',
-    image:
-      'https://res.cloudinary.com/dil93ruwo/image/upload/v1756960400/categories/yr7xd9r2mt07qoxync4d.png',
-    href: '#',
-    alt: 'Engagement ',
-  },
-];
+import { usePublicCategoryStore } from '@/lib/data/mainStore/categoryStore';
 
 const CircleCategories = () => {
   const [clickedIndex, setClickedIndex] = useState<number | null>(null);
+
+  const { categories, status, fetchCategories } = usePublicCategoryStore();
+
+  useEffect(() => {
+    if (status === 'idle') fetchCategories();
+  }, [status, fetchCategories]);
 
   const handleClick = (e: MouseEvent<HTMLAnchorElement>, idx: number) => {
     e.preventDefault();
@@ -65,7 +34,7 @@ const CircleCategories = () => {
           {categories.map((item, idx) => {
             return (
               <Link
-                href={item.href}
+                href={`/shop/${item.slug}`}
                 key={idx}
                 className="flex-shrink-0 flex flex-col items-center text-center w-24 md:w-28"
                 onClick={e => handleClick(e, idx)}
@@ -73,8 +42,8 @@ const CircleCategories = () => {
                 <div className="relative group">
                   <div className="w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center relative z-10 overflow-hidden">
                     <Image
-                      src={item.image}
-                      alt={item.alt}
+                      src={item.image || ''}
+                      alt={item.name}
                       width={80}
                       height={80}
                       className="w-16 h-16 md:w-20 md:h-20 object-cover rounded-full"
@@ -89,7 +58,7 @@ const CircleCategories = () => {
                   />
                 </div>
                 <div className="pt-2 text-xs md:text-sm text-foreground leading-tight">
-                  <h4 dangerouslySetInnerHTML={{ __html: item.title }} />
+                  <h4 dangerouslySetInnerHTML={{ __html: item.name }} />
                 </div>
               </Link>
             );

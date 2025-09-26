@@ -567,12 +567,18 @@ export default function SignupPage() {
                   You are signed in{fullName ? `, ${fullName}` : ''}.
                 </p>
                 <div className="flex items-center justify-center gap-3 flex-wrap">
-                  <button className="rounded-lg bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] px-4 py-2.5 text-white text-sm font-medium hover:shadow-md transition-all">
+                  <Link
+                    href="/"
+                    className="rounded-lg bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] px-4 py-2.5 text-white text-sm font-medium hover:shadow-md transition-all"
+                  >
                     Go to Home
-                  </button>
-                  <button className="rounded-lg border border-[oklch(0.84_0.04_10.35)] bg-white px-4 py-2.5 text-sm text-[oklch(0.55_0.06_15)] hover:bg-[oklch(0.93_0.03_12.01)] transition-all">
+                  </Link>
+                  <Link
+                    href="/account/profile"
+                    className="rounded-lg border border-[oklch(0.84_0.04_10.35)] bg-white px-4 py-2.5 text-sm text-[oklch(0.55_0.06_15)] hover:bg-[oklch(0.93_0.03_12.01)] transition-all"
+                  >
                     Manage Account
-                  </button>
+                  </Link>
                 </div>
               </motion.section>
             )}

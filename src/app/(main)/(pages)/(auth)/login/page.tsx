@@ -524,7 +524,7 @@ export default function LoginPage() {
                     Go to Home
                   </Link>
                   <Link
-                    href="/account"
+                    href="/account/profile"
                     className="rounded-lg border border-[oklch(0.84_0.04_10.35)] bg-white px-4 py-2.5 text-sm text-[oklch(0.55_0.06_15)] hover:bg-[oklch(0.93_0.03_12.01)] transition-all"
                   >
                     Manage Account

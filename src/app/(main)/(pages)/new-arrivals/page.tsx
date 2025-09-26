@@ -18,9 +18,12 @@ import { worldOne } from '@/app/(main)/assets/Home/World';
 import Image from 'next/image';
 
 import Link from 'next/link';
-import { FilterOptions, SortOption } from '@/lib/types/product';
+import {
+  FilterOptions,
+  SortOption,
+  Product as UiProduct,
+} from '@/lib/types/product';
 import ProductFilters from '@/app/(main)/components/filters/ProductFilters';
-import { ringsProducts } from '@/lib/data/products';
 import { ProductCard } from '../shop/components/ProductCard';
 import Container from '@/app/(main)/components/layouts/Container';
 
@@ -36,22 +39,89 @@ export default function EnhancedNewArrivalsPage() {
   useEffect(() => {
     const timer = setInterval(() => {
       setTimeRemaining(prev => {
-        if (prev.seconds > 0) {
-          return { ...prev, seconds: prev.seconds - 1 };
-        } else if (prev.minutes > 0) {
+        if (prev.seconds > 0) return { ...prev, seconds: prev.seconds - 1 };
+        if (prev.minutes > 0)
           return { ...prev, minutes: prev.minutes - 1, seconds: 59 };
-        } else if (prev.hours > 0) {
+        if (prev.hours > 0)
           return { hours: prev.hours - 1, minutes: 59, seconds: 59 };
-        }
         return prev;
       });
     }, 1000);
-
     return () => clearInterval(timer);
   }, []);
 
-  const [filteredProducts, setFilteredProducts] = useState(ringsProducts);
-  const [visibleProducts, setVisibleProducts] = useState(10);
+  const [allProducts, setAllProducts] = useState<UiProduct[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<UiProduct[]>([]);
+  const [visibleProducts, setVisibleProducts] = useState(12);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch('/api/main/new-arrived', { cache: 'no-store' });
+        const data = await res.json();
+        type ApiProduct = {
+          slug: string;
+          name: string;
+          description?: string;
+          price?: number | null;
+          discountPrice?: number | null;
+          thumbnail?: string;
+          images?: string[];
+          categories?: Array<{
+            _id?: string;
+            name?: string;
+            slug?: string;
+          }>;
+          material?: string;
+          status?: string;
+          stockQuantity?: number;
+          tags?: string[];
+          sku?: string;
+        };
+        const productsArr = (data.products ?? []) as ApiProduct[];
+        const mapped: UiProduct[] = productsArr.map(p => {
+          const hasDiscount =
+            p.discountPrice != null &&
+            p.price != null &&
+            p.discountPrice < p.price;
+          return {
+            id: p.slug,
+            name: p.name,
+            description: p.description || '',
+            price: hasDiscount ? p.discountPrice : p.price ?? null,
+            originalPrice: hasDiscount ? p.price : null,
+            currency: 'INR',
+            images: [p.thumbnail || p.images?.[0]],
+            hoverImage: p.images?.[1],
+            category: {
+              id: p.categories?.[0]?._id || p.categories?.[0]?.slug || '',
+              name: p.categories?.[0]?.name || '',
+              slug: p.categories?.[0]?.slug || '',
+              productCount: 0,
+              isActive: true,
+            },
+            subcategory: '',
+            brand: '',
+            material: p.material || '',
+            inStock: (p.status || 'active') === 'active',
+            stockCount: p.stockQuantity ?? 0,
+            rating: 0,
+            reviews: 0,
+            isNew: true,
+            isSale: hasDiscount,
+            isWishlisted: false,
+            isFeatured: false,
+            tags: p.tags || [],
+            sku: p.sku || '',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          } as UiProduct;
+        });
+        setAllProducts(mapped);
+        setFilteredProducts(mapped);
+      } catch {}
+    })();
+  }, []);
 
   const filterOptions: FilterOptions = {
     priceRanges: [
@@ -87,9 +157,7 @@ export default function EnhancedNewArrivalsPage() {
     { value: 'rating', label: 'Highest Rated' },
   ];
 
-  const handleLoadMore = () => {
-    setVisibleProducts(prev => prev + 10);
-  };
+  const handleLoadMore = () => setVisibleProducts(prev => prev + 12);
 
   const displayedProducts = filteredProducts.slice(0, visibleProducts);
   const hasMoreProducts = visibleProducts < filteredProducts.length;
@@ -235,7 +303,7 @@ export default function EnhancedNewArrivalsPage() {
             {/* Right Content - Featured Products Showcase */}
             <div className="relative">
               <div className="grid grid-cols-2 gap-6">
-                {ringsProducts.slice(0, 3).map((product, index) => (
+                {allProducts.slice(0, 3).map((product, index) => (
                   <div
                     key={product.id}
                     className={`relative group cursor-pointer ${
@@ -244,7 +312,7 @@ export default function EnhancedNewArrivalsPage() {
                   >
                     <div className="aspect-square overflow-hidden rounded-2xl bg-white shadow-xl hover:shadow-2xl transition-all duration-500 border border-gray-100">
                       <Image
-                        src={product.images[0]}
+                        src={product.thumbnail || product.images[0]}
                         alt={product.name}
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                       />
@@ -348,18 +416,18 @@ export default function EnhancedNewArrivalsPage() {
           <div className="font-heading my-6 sm:my-8 md:flex justify-center items-center gap-2 flex-col text-accent">
             <h1 className="text-2xl lg:text-3xl">New Arrivals</h1>
             <h2 className="text-sm sm:text-base">
-              ({ringsProducts.length} results)
+              ({allProducts.length} results)
             </h2>
           </div>
 
           <ProductFilters
-            products={ringsProducts}
+            products={allProducts}
             filterOptions={filterOptions}
             sortOptions={sortOptions}
             onFiltersChange={setFilteredProducts}
           >
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6 items-center">
-              {filteredProducts.map(product => (
+              {filteredProducts.slice(0, visibleProducts).map(product => (
                 <ProductCard key={product.id} product={product} />
               ))}
             </div>
