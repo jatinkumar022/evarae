@@ -8,4 +8,4 @@ import './productModel';
 import './pendingSignupModel';
 import './reviewModel';
 import './userModel';
-import './userProfileModel';
+import './userProfile';
