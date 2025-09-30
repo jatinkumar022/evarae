@@ -267,6 +267,42 @@ export default function CheckoutPage() {
     try {
       setError(null);
 
+      // Client-side validation
+      const trimmed = {
+        fullName: (newAddress.fullName || '').trim(),
+        phone: (newAddress.phone || '').replace(/\D/g, ''),
+        line1: (newAddress.line1 || '').trim(),
+        line2: (newAddress.line2 || '').trim(),
+        city: (newAddress.city || '').trim(),
+        state: (newAddress.state || '').trim(),
+        postalCode: (newAddress.postalCode || '').trim(),
+        country: (newAddress.country || '').trim() || 'IN',
+      };
+      if (!trimmed.fullName) {
+        toastApi.error('Invalid address', 'Full name is required');
+        return;
+      }
+      if (!trimmed.phone || trimmed.phone.length < 6) {
+        toastApi.error('Invalid address', 'Enter a valid phone');
+        return;
+      }
+      if (!trimmed.line1) {
+        toastApi.error('Invalid address', 'Address line 1 is required');
+        return;
+      }
+      if (!trimmed.city) {
+        toastApi.error('Invalid address', 'City is required');
+        return;
+      }
+      if (!trimmed.state) {
+        toastApi.error('Invalid address', 'State is required');
+        return;
+      }
+      if (!trimmed.postalCode) {
+        toastApi.error('Invalid address', 'Postal code is required');
+        return;
+      }
+
       if (saveForFuture) {
         const beforeIds = new Set(
           addresses.map(a => a.id).filter(Boolean) as string[]
@@ -277,14 +313,7 @@ export default function CheckoutPage() {
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
           body: JSON.stringify({
-            fullName: newAddress.fullName,
-            phone: newAddress.phone,
-            line1: newAddress.line1,
-            line2: newAddress.line2,
-            city: newAddress.city,
-            state: newAddress.state,
-            postalCode: newAddress.postalCode,
-            country: newAddress.country,
+            ...trimmed,
             isDefaultShipping: false,
           }),
         });
@@ -375,7 +404,7 @@ export default function CheckoutPage() {
         const id = `${Date.now()}`;
         const isDefault = false;
         const addr: Address = {
-          ...newAddress,
+          ...trimmed,
           id,
           savedForFuture: false,
           isDefaultShipping: isDefault,

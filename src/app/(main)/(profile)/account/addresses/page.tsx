@@ -42,6 +42,7 @@ export default function AddressesPage() {
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState<Address>(emptyAddress);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const load = async () => {
     setLoading(true);
@@ -65,6 +66,7 @@ export default function AddressesPage() {
   const openAdd = () => {
     setEditingId(null);
     setForm(emptyAddress);
+    setFieldErrors({});
     setShowModal(true);
   };
 
@@ -84,13 +86,35 @@ export default function AddressesPage() {
       isDefaultBilling: !!addr.isDefaultBilling,
       _id: addr._id,
     });
+    setFieldErrors({});
     setShowModal(true);
+  };
+
+  const validateClient = (a: Address) => {
+    const errs: Record<string, string> = {};
+    if (!a.fullName.trim()) errs.fullName = 'Full name is required';
+    const phone = a.phone.replace(/\D/g, '');
+    if (!phone || phone.length < 6) errs.phone = 'Enter a valid phone';
+    if (!a.line1.trim()) errs.line1 = 'Address line 1 is required';
+    if (!a.city.trim()) errs.city = 'City is required';
+    if (!a.state.trim()) errs.state = 'State is required';
+    if (!a.postalCode.trim()) errs.postalCode = 'Postal code is required';
+    if (!a.country.trim()) errs.country = 'Country is required';
+    return errs;
   };
 
   const submit = async () => {
     try {
       setSaving(true);
       setError(null);
+      const errs = validateClient(form);
+      setFieldErrors(errs);
+      if (Object.keys(errs).length > 0) {
+        const first = Object.values(errs)[0];
+        toastApi.error('Invalid address', first);
+        setSaving(false);
+        return;
+      }
       const url = editingId
         ? `/api/account/addresses/${editingId}`
         : '/api/account/addresses';
@@ -197,7 +221,7 @@ export default function AddressesPage() {
                     <div>
                       <div className="flex items-center gap-2 mb-1">
                         <h3 className="font-semibold text-gray-900">
-                          {a.label}
+                          {a.fullName}
                         </h3>
                         {a.isDefaultShipping && (
                           <span className="inline-flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-[oklch(0.66_0.14_358.91)]/10 to-[oklch(0.58_0.16_8)]/10 text-[oklch(0.66_0.14_358.91)] text-xs font-medium rounded-full">
@@ -205,9 +229,7 @@ export default function AddressesPage() {
                           </span>
                         )}
                       </div>
-                      <span className="text-sm text-gray-600">
-                        {a.fullName} • {a.phone}
-                      </span>
+                      <span className="text-sm text-gray-600">{a.phone}</span>
                     </div>
                   </div>
                 </div>
@@ -257,67 +279,115 @@ export default function AddressesPage() {
                 {editingId ? 'Edit Address' : 'Add Address'}
               </div>
               <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-3">
-                <input
-                  className="border rounded-lg px-3 py-2 text-sm"
-                  placeholder="Label"
-                  value={form.label}
-                  onChange={e => setForm({ ...form, label: e.target.value })}
-                />
-                <input
-                  className="border rounded-lg px-3 py-2 text-sm"
-                  placeholder="Full Name"
-                  value={form.fullName}
-                  onChange={e => setForm({ ...form, fullName: e.target.value })}
-                />
-                <input
-                  className="border rounded-lg px-3 py-2 text-sm"
-                  placeholder="Phone"
-                  value={form.phone}
-                  onChange={e =>
-                    setForm({
-                      ...form,
-                      phone: e.target.value.replace(/\D/g, '').slice(0, 15),
-                    })
-                  }
-                />
-                <input
-                  className="border rounded-lg px-3 py-2 text-sm"
-                  placeholder="Address line 1"
-                  value={form.line1}
-                  onChange={e => setForm({ ...form, line1: e.target.value })}
-                />
+                {/* Label removed as it's not important */}
+                <div>
+                  <input
+                    className="border rounded-lg px-3 py-2 text-sm w-full"
+                    placeholder="Full Name"
+                    value={form.fullName}
+                    onChange={e =>
+                      setForm({ ...form, fullName: e.target.value })
+                    }
+                  />
+                  {fieldErrors.fullName && (
+                    <div className="text-xs text-red-600 mt-1">
+                      {fieldErrors.fullName}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <input
+                    className="border rounded-lg px-3 py-2 text-sm w-full"
+                    placeholder="Phone"
+                    value={form.phone}
+                    onChange={e =>
+                      setForm({
+                        ...form,
+                        phone: e.target.value.replace(/\D/g, '').slice(0, 15),
+                      })
+                    }
+                  />
+                  {fieldErrors.phone && (
+                    <div className="text-xs text-red-600 mt-1">
+                      {fieldErrors.phone}
+                    </div>
+                  )}
+                </div>
+                <div className="md:col-span-2">
+                  <input
+                    className="border rounded-lg px-3 py-2 text-sm w-full"
+                    placeholder="Address line 1"
+                    value={form.line1}
+                    onChange={e => setForm({ ...form, line1: e.target.value })}
+                  />
+                  {fieldErrors.line1 && (
+                    <div className="text-xs text-red-600 mt-1">
+                      {fieldErrors.line1}
+                    </div>
+                  )}
+                </div>
                 <input
                   className="border rounded-lg px-3 py-2 text-sm"
                   placeholder="Address line 2"
                   value={form.line2}
                   onChange={e => setForm({ ...form, line2: e.target.value })}
                 />
-                <input
-                  className="border rounded-lg px-3 py-2 text-sm"
-                  placeholder="City"
-                  value={form.city}
-                  onChange={e => setForm({ ...form, city: e.target.value })}
-                />
-                <input
-                  className="border rounded-lg px-3 py-2 text-sm"
-                  placeholder="State"
-                  value={form.state}
-                  onChange={e => setForm({ ...form, state: e.target.value })}
-                />
-                <input
-                  className="border rounded-lg px-3 py-2 text-sm"
-                  placeholder="Postal Code"
-                  value={form.postalCode}
-                  onChange={e =>
-                    setForm({ ...form, postalCode: e.target.value })
-                  }
-                />
-                <input
-                  className="border rounded-lg px-3 py-2 text-sm"
-                  placeholder="Country"
-                  value={form.country}
-                  onChange={e => setForm({ ...form, country: e.target.value })}
-                />
+                <div>
+                  <input
+                    className="border rounded-lg px-3 py-2 text-sm w-full"
+                    placeholder="City"
+                    value={form.city}
+                    onChange={e => setForm({ ...form, city: e.target.value })}
+                  />
+                  {fieldErrors.city && (
+                    <div className="text-xs text-red-600 mt-1">
+                      {fieldErrors.city}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <input
+                    className="border rounded-lg px-3 py-2 text-sm w-full"
+                    placeholder="State"
+                    value={form.state}
+                    onChange={e => setForm({ ...form, state: e.target.value })}
+                  />
+                  {fieldErrors.state && (
+                    <div className="text-xs text-red-600 mt-1">
+                      {fieldErrors.state}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <input
+                    className="border rounded-lg px-3 py-2 text-sm w-full"
+                    placeholder="Postal Code"
+                    value={form.postalCode}
+                    onChange={e =>
+                      setForm({ ...form, postalCode: e.target.value })
+                    }
+                  />
+                  {fieldErrors.postalCode && (
+                    <div className="text-xs text-red-600 mt-1">
+                      {fieldErrors.postalCode}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <input
+                    className="border rounded-lg px-3 py-2 text-sm w-full"
+                    placeholder="Country"
+                    value={form.country}
+                    onChange={e =>
+                      setForm({ ...form, country: e.target.value })
+                    }
+                  />
+                  {fieldErrors.country && (
+                    <div className="text-xs text-red-600 mt-1">
+                      {fieldErrors.country}
+                    </div>
+                  )}
+                </div>
                 <label className="text-xs text-gray-700 flex items-center gap-2">
                   <input
                     type="checkbox"
