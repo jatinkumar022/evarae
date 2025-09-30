@@ -139,8 +139,8 @@ export async function POST(request: Request) {
         { upsert: true, new: true }
       );
     } else {
-      // Reliable add: try to increment existing, otherwise add new
-      const updated = await Cart.findOneAndUpdate(
+      // Reliable add: try to increment existing exact variant
+      let updated = await Cart.findOneAndUpdate(
         {
           user: uid,
           'items.product': pid,
@@ -152,6 +152,19 @@ export async function POST(request: Request) {
       );
 
       if (!updated) {
+        // Fallback: merge by product, regardless of variant differences
+        updated = await Cart.findOneAndUpdate(
+          {
+            user: uid,
+            'items.product': pid,
+          },
+          { $inc: { 'items.$.quantity': quantity } },
+          { new: true }
+        );
+      }
+
+      if (!updated) {
+        // No existing item for this product -> push new line
         await Cart.findOneAndUpdate(
           { user: uid },
           {
