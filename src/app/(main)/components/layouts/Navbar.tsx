@@ -33,7 +33,6 @@ import {
   ChevronRight,
   Package,
   Settings,
-  CreditCard,
   MapPin,
   Bell,
   Shield,

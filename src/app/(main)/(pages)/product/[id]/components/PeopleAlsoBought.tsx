@@ -38,6 +38,7 @@ export function PeopleAlsoBought({ currentProduct }: PeopleAlsoBoughtProps) {
             slug?: string;
           }>;
           material?: string;
+          colors?: string[];
           status?: string;
           stockQuantity?: number;
           tags?: string[];

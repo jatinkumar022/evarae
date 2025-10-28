@@ -212,7 +212,6 @@ export async function POST(request: Request) {
   } catch (err: unknown) {
     // Log server-side for diagnosis
     try {
-      // eslint-disable-next-line no-console
       console.error('[addresses POST] error:', err);
     } catch {}
 

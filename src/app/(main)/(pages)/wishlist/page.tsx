@@ -10,7 +10,6 @@ import { GiCrystalShine } from 'react-icons/gi';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Cart } from '@/app/(main)/assets/Common';
 import ProductOptionsModal from '@/app/(main)/components/ui/ProductOptionsModal';
-import { useCartStore } from '@/lib/data/mainStore/cartStore';
 
 // Combine all products from different categories
 const allJewelleryProducts = [
@@ -35,7 +34,6 @@ export default function AllJewelleryPage() {
   const [isMobile, setIsMobile] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const addToCart = useCartStore(s => s.add);
 
   // Detect screen size
   useEffect(() => {

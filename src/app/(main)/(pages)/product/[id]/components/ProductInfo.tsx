@@ -212,19 +212,19 @@ export function ProductInfo({ product }: ProductInfoProps) {
         {product.price && (
           <div className="space-y-2 lg:space-y-3">
             {/* Primary CTA - Add to Cart */}
-            <button
-              onClick={onAddToCart}
+              <button
+                onClick={onAddToCart}
               className="w-full bg-primary text-white py-3 px-5 rounded-sm text-sm lg:text-base font-medium hover:bg-primary-dark transition-colors flex items-center justify-center gap-2"
-            >
-              <Cart className="w-4 h-4" />
-              Add to Cart
-            </button>
+              >
+                <Cart className="w-4 h-4" />
+                Add to Cart
+              </button>
 
             {/* Secondary action - Wishlist */}
             <button className="w-full border border-primary/40 text-primary py-2 px-5 rounded-sm text-sm lg:text-base font-medium hover:bg-primary hover:!text-white transition-colors flex items-center justify-center gap-2">
-              <Heart className="w-4 h-4" />
+                <Heart className="w-4 h-4" />
               Add to Wishlist
-            </button>
+              </button>
           </div>
         )}
 
