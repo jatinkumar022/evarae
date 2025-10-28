@@ -40,7 +40,6 @@ import {
   LogOut,
   User as MenuUser,
   Heart as MenuHeart,
-  Gift,
   Star,
   Clock,
   Truck,
