@@ -73,6 +73,7 @@ export default function EnhancedNewArrivalsPage() {
             slug?: string;
           }>;
           material?: string;
+          colors?: string[];
           status?: string;
           stockQuantity?: number;
           tags?: string[];
@@ -103,6 +104,7 @@ export default function EnhancedNewArrivalsPage() {
             subcategory: '',
             brand: '',
             material: p.material || '',
+            colors: p.colors || [],
             inStock: (p.status || 'active') === 'active',
             stockCount: p.stockQuantity ?? 0,
             rating: 0,

@@ -259,8 +259,10 @@ export function ProductReviews({ product }: ProductReviewsProps) {
           <div className="flex-1">
             <div className="space-y-1.5 lg:space-y-2">
               {[5, 4, 3, 2, 1].map(star => {
-                const count = Math.floor(Math.random() * 10) + 1; // Mock data
-                const percentage = (count / product.reviews) * 100;
+                // Static mock data to prevent hydration mismatch
+                const mockCounts = { 5: 8, 4: 3, 3: 1, 2: 0, 1: 0 };
+                const count = mockCounts[star as keyof typeof mockCounts];
+                const percentage = product.reviews > 0 ? (count / product.reviews) * 100 : 0;
                 return (
                   <div key={star} className="flex items-center gap-2 lg:gap-3">
                     <span className="text-xs lg:text-sm text-primary-dark w-3 lg:w-4">

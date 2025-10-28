@@ -32,7 +32,7 @@ export async function GET(request: Request) {
 
     const products = await Product.find(filter)
       .select(
-        'name slug images thumbnail price discountPrice status tags material colors'
+        'name slug images thumbnail price discountPrice status tags material colors stockQuantity'
       )
       .populate('categories', 'name slug')
       .sort({ createdAt: -1 })

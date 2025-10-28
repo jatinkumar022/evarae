@@ -13,6 +13,7 @@ export interface Product {
   subcategory?: string;
   brand: string;
   material: string;
+  colors?: string[];
   weight?: number;
   thumbnail?: string;
   dimensions?: {

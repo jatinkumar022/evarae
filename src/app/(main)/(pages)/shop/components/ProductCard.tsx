@@ -7,7 +7,7 @@ import { GiCrystalShine } from 'react-icons/gi';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Cart } from '@/app/(main)/assets/Common';
 import Link from 'next/link';
-import { useCartStore } from '@/lib/data/mainStore/cartStore';
+import ProductOptionsModal from '@/app/(main)/components/ui/ProductOptionsModal';
 
 interface ProductCardProps {
   product: Product;
@@ -16,7 +16,7 @@ interface ProductCardProps {
 export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const addToCart = useCartStore(s => s.add);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     const checkScreen = () => setIsMobile(window.innerWidth < 1024); // lg breakpoint
@@ -34,23 +34,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!product?.id) return;
-    const optimisticProduct = {
-      _id: product.id,
-      id: product.id,
-      name: product.name,
-      price: product.price ?? 0,
-      discountPrice: product.price ?? 0,
-      images: product.images as string[],
-      thumbnail: (product.images?.[0] as string) || undefined,
-      stockQuantity: product.stockCount ?? 1,
-    };
-    // fire-and-forget add with optimistic UI
-    addToCart({
-      productSlug: String(product.id),
-      quantity: 1,
-      optimisticProduct,
-    }).catch(() => {});
+    setIsModalOpen(true);
   };
 
   return (
@@ -164,7 +148,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             </span>
             Add to Cart
           </button>
-          {product.inStock && product.stockCount <= 3 && (
+          {product.inStock && product.stockCount !== undefined && product.stockCount < 10 && (
             <p className="text-xs text-primary font-medium text-center flex items-center gap-1 animate-caret-blink ">
               <span className="inline-block w-2 h-2 bg-primary rounded-full "></span>
               Only {product.stockCount} left!
@@ -173,6 +157,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           <p className="text-xs text-primary font-medium text-center flex items-center gap-1 animate-caret-blink "></p>
         </div>
       </div>
+      
+      {/* Product Options Modal */}
+      <ProductOptionsModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        product={product}
+      />
     </Link>
   );
 };

@@ -3,12 +3,14 @@ import { useEffect, useState } from 'react';
 import { Heart, Share2 } from 'lucide-react';
 import Container from '@/app/(main)/components/layouts/Container';
 import ProductFilters from '@/app/(main)/components/filters/ProductFilters';
-import { FilterOptions, SortOption } from '@/lib/types/product';
+import { FilterOptions, SortOption, Product } from '@/lib/types/product';
 import { allProducts } from '@/lib/data/products';
 import Image from 'next/image';
 import { GiCrystalShine } from 'react-icons/gi';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Cart } from '@/app/(main)/assets/Common';
+import ProductOptionsModal from '@/app/(main)/components/ui/ProductOptionsModal';
+import { useCartStore } from '@/lib/data/mainStore/cartStore';
 
 // Combine all products from different categories
 const allJewelleryProducts = [
@@ -31,6 +33,9 @@ export default function AllJewelleryPage() {
     useState(allJewelleryProducts);
   const [visibleProducts, setVisibleProducts] = useState(10);
   const [isMobile, setIsMobile] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const addToCart = useCartStore(s => s.add);
 
   // Detect screen size
   useEffect(() => {
@@ -39,6 +44,11 @@ export default function AllJewelleryPage() {
     window.addEventListener('resize', checkScreen);
     return () => window.removeEventListener('resize', checkScreen);
   }, []);
+
+  const handleAddToCart = (product: Product) => {
+    setSelectedProduct(product);
+    setIsModalOpen(true);
+  };
   const filterOptions: FilterOptions = {
     priceRanges: [
       { value: 'under-1k', label: 'Under ₹1,000' },
@@ -336,13 +346,16 @@ export default function AllJewelleryPage() {
                         )}
                     </div>
                   </div>
-                  <div className="w-full bg-primary text-white py-2 px-3 rounded-md text-xs sm:text-sm  hover:bg-primary-dark transition-colors flex items-center justify-center gap-1">
+                  <div 
+                    className="w-full bg-primary text-white py-2 px-3 rounded-md text-xs sm:text-sm hover:bg-primary-dark transition-colors flex items-center justify-center gap-1 cursor-pointer"
+                    onClick={() => handleAddToCart(product)}
+                  >
                     <span className="text-accent">
                       <Cart className="w-4 h-4 text-white" />
                     </span>
                     Add to Cart
                   </div>
-                  {product.inStock && product.stockCount <= 3 && (
+                  {product.inStock && product.stockCount !== undefined && product.stockCount < 10 && (
                     <p className="text-xs text-primary font-medium text-center flex items-center gap-1 animate-caret-blink ">
                       <span className="inline-block w-2 h-2 bg-primary rounded-full "></span>
                       Only {product.stockCount} left!
@@ -374,6 +387,13 @@ export default function AllJewelleryPage() {
           )}
         </ProductFilters>
       </Container>
+      
+      {/* Product Options Modal */}
+      <ProductOptionsModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        product={selectedProduct}
+      />
     </>
   );
 }

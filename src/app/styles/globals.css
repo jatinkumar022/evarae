@@ -203,6 +203,14 @@
   /* Firefox */
 }
 
+button {
+  cursor: pointer;
+}
+
+Button {
+  cursor: pointer;
+}
+
 /* Glass Select Dropdown Styles */
 .glass-select {
   -webkit-appearance: none;

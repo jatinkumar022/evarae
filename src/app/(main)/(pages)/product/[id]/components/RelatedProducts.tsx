@@ -81,6 +81,7 @@ export function RelatedProducts({
           subcategory: '',
           brand: '',
           material: p.material || '',
+          colors: p.colors || [],
           inStock: (p.status || 'active') === 'active',
           stockCount: p.stockQuantity ?? 0,
           rating: 0,

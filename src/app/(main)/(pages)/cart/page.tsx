@@ -304,7 +304,7 @@ export default function CartPage() {
                             </div>
                             {product.inStock &&
                               product.stockCount !== undefined &&
-                              product.stockCount <= 3 && (
+                              product.stockCount < 10 && (
                                 <p className="text-xs text-primary mt-1">
                                   Only {product.stockCount} left!
                                 </p>

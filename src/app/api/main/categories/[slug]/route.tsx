@@ -39,7 +39,7 @@ export async function GET(request: Request, { params }: RouteContext) {
       categories: categoryId,
       status: 'active',
     })
-      .select('name slug images thumbnail price discountPrice status')
+      .select('name slug images thumbnail price discountPrice status stockQuantity material colors')
       .limit(24)
       .lean();
 

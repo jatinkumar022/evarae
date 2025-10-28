@@ -102,6 +102,7 @@ function SearchPageInner() {
     images?: string[];
     categories?: Array<{ _id?: string; name?: string; slug?: string }>;
     material?: string;
+    colors?: string[];
     status?: string;
     stockQuantity?: number;
     tags?: string[];
@@ -133,6 +134,7 @@ function SearchPageInner() {
           subcategory: '',
           brand: '',
           material: p.material || '',
+          colors: p.colors || [],
           inStock: (p.status || 'active') === 'active',
           stockCount: p.stockQuantity ?? 0,
           rating: 0,
