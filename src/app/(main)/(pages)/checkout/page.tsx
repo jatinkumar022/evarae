@@ -275,31 +275,91 @@ export default function CheckoutPage() {
         line2: (newAddress.line2 || '').trim(),
         city: (newAddress.city || '').trim(),
         state: (newAddress.state || '').trim(),
-        postalCode: (newAddress.postalCode || '').trim(),
+        postalCode: (newAddress.postalCode || '').replace(/\D/g, ''),
         country: (newAddress.country || '').trim() || 'IN',
       };
+      
+      // Full Name validation
       if (!trimmed.fullName) {
         toastApi.error('Invalid address', 'Full name is required');
         return;
-      }
-      if (!trimmed.phone || trimmed.phone.length < 6) {
-        toastApi.error('Invalid address', 'Enter a valid phone');
+      } else if (trimmed.fullName.length < 2) {
+        toastApi.error('Invalid address', 'Full name must be at least 2 characters');
+        return;
+      } else if (trimmed.fullName.length > 50) {
+        toastApi.error('Invalid address', 'Full name cannot exceed 50 characters');
         return;
       }
+      
+      // Phone validation - exactly 10 digits
+      if (!trimmed.phone) {
+        toastApi.error('Invalid address', 'Phone number is required');
+        return;
+      } else if (trimmed.phone.length !== 10) {
+        toastApi.error('Invalid address', 'Phone number must be exactly 10 digits');
+        return;
+      } else if (!/^[6-9]/.test(trimmed.phone)) {
+        toastApi.error('Invalid address', 'Phone number must start with 6, 7, 8, or 9');
+        return;
+      }
+      
+      // Address Line 1 validation
       if (!trimmed.line1) {
         toastApi.error('Invalid address', 'Address line 1 is required');
         return;
+      } else if (trimmed.line1.length < 5) {
+        toastApi.error('Invalid address', 'Address must be at least 5 characters');
+        return;
+      } else if (trimmed.line1.length > 100) {
+        toastApi.error('Invalid address', 'Address cannot exceed 100 characters');
+        return;
       }
+      
+      // Address Line 2 validation (optional but if provided, should be valid)
+      if (trimmed.line2 && trimmed.line2.length > 100) {
+        toastApi.error('Invalid address', 'Address line 2 cannot exceed 100 characters');
+        return;
+      }
+      
+      // City validation
       if (!trimmed.city) {
         toastApi.error('Invalid address', 'City is required');
         return;
+      } else if (trimmed.city.length < 2) {
+        toastApi.error('Invalid address', 'City name must be at least 2 characters');
+        return;
+      } else if (trimmed.city.length > 50) {
+        toastApi.error('Invalid address', 'City name cannot exceed 50 characters');
+        return;
       }
+      
+      // State validation
       if (!trimmed.state) {
         toastApi.error('Invalid address', 'State is required');
         return;
+      } else if (trimmed.state.length < 2) {
+        toastApi.error('Invalid address', 'State name must be at least 2 characters');
+        return;
+      } else if (trimmed.state.length > 50) {
+        toastApi.error('Invalid address', 'State name cannot exceed 50 characters');
+        return;
       }
+      
+      // Postal Code validation - exactly 6 digits
       if (!trimmed.postalCode) {
         toastApi.error('Invalid address', 'Postal code is required');
+        return;
+      } else if (trimmed.postalCode.length !== 6) {
+        toastApi.error('Invalid address', 'Postal code must be exactly 6 digits');
+        return;
+      }
+      
+      // Country validation
+      if (!trimmed.country) {
+        toastApi.error('Invalid address', 'Country is required');
+        return;
+      } else if (trimmed.country.length < 2) {
+        toastApi.error('Invalid address', 'Country name must be at least 2 characters');
         return;
       }
 
@@ -890,68 +950,91 @@ export default function CheckoutPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <input
-                className="border border-primary/20 rounded-md px-3 py-2 text-sm outline-none focus:border-primary"
-                placeholder="Full name"
+                type="text"
+                className="border border-primary/20 rounded-md px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-colors"
+                placeholder="Full Name"
                 value={newAddress.fullName}
                 onChange={e =>
                   setNewAddress({ ...newAddress, fullName: e.target.value })
                 }
+                maxLength={50}
               />
               <input
-                className="border border-primary/20 rounded-md px-3 py-2 text-sm outline-none focus:border-primary"
-                placeholder="Phone"
+                type="tel"
+                className="border border-primary/20 rounded-md px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-colors"
+                placeholder="Phone Number (10 digits)"
                 value={newAddress.phone}
-                onChange={e =>
-                  setNewAddress({ ...newAddress, phone: e.target.value })
-                }
+                onChange={e => {
+                  const value = e.target.value.replace(/\D/g, '').slice(0, 10);
+                  setNewAddress({ ...newAddress, phone: value });
+                }}
+                maxLength={10}
+                pattern="[0-9]{10}"
+                inputMode="numeric"
               />
               <input
-                className="border border-primary/20 rounded-md px-3 py-2 text-sm outline-none focus:border-primary md:col-span-2"
+                type="text"
+                className="border border-primary/20 rounded-md px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-colors md:col-span-2"
                 placeholder="Address line 1"
                 value={newAddress.line1}
                 onChange={e =>
                   setNewAddress({ ...newAddress, line1: e.target.value })
                 }
+                maxLength={100}
               />
               <input
-                className="border border-primary/20 rounded-md px-3 py-2 text-sm outline-none focus:border-primary md:col-span-2"
-                placeholder="Address line 2 (optional)"
+                type="text"
+                className="border border-primary/20 rounded-md px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-colors md:col-span-2"
+                placeholder="Address line 2 (Optional)"
                 value={newAddress.line2}
                 onChange={e =>
                   setNewAddress({ ...newAddress, line2: e.target.value })
                 }
+                maxLength={100}
               />
               <input
-                className="border border-primary/20 rounded-md px-3 py-2 text-sm outline-none focus:border-primary"
+                type="text"
+                className="border border-primary/20 rounded-md px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-colors"
                 placeholder="City"
                 value={newAddress.city}
                 onChange={e =>
                   setNewAddress({ ...newAddress, city: e.target.value })
                 }
+                maxLength={50}
               />
               <input
-                className="border border-primary/20 rounded-md px-3 py-2 text-sm outline-none focus:border-primary"
+                type="text"
+                className="border border-primary/20 rounded-md px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-colors"
                 placeholder="State"
                 value={newAddress.state}
                 onChange={e =>
                   setNewAddress({ ...newAddress, state: e.target.value })
                 }
+                maxLength={50}
               />
               <input
-                className="border border-primary/20 rounded-md px-3 py-2 text-sm outline-none focus:border-primary"
-                placeholder="Postal Code"
+                type="text"
+                className="border border-primary/20 rounded-md px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-colors text-center tracking-widest font-mono"
+                placeholder="123456"
                 value={newAddress.postalCode}
-                onChange={e =>
-                  setNewAddress({ ...newAddress, postalCode: e.target.value })
-                }
+                onChange={e => {
+                  const value = e.target.value.replace(/\D/g, '').slice(0, 6);
+                  setNewAddress({ ...newAddress, postalCode: value });
+                }}
+                maxLength={6}
+                pattern="[0-9]{6}"
+                inputMode="numeric"
+                style={{ letterSpacing: '0.2em' }}
               />
               <input
-                className="border border-primary/20 rounded-md px-3 py-2 text-sm outline-none focus:border-primary"
+                type="text"
+                className="border border-primary/20 rounded-md px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-colors"
                 placeholder="Country"
                 value={newAddress.country}
                 onChange={e =>
                   setNewAddress({ ...newAddress, country: e.target.value })
                 }
+                maxLength={50}
               />
 
               <div className="md:col-span-2 mt-1 space-y-2">

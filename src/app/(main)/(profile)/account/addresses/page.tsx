@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { MapPin, Plus, Edit3, Trash2, Star } from 'lucide-react';
 import toastApi from '@/lib/toast';
+import Container from '@/app/(main)/components/layouts/Container';
 
 type Address = {
   _id?: string;
@@ -92,14 +93,73 @@ export default function AddressesPage() {
 
   const validateClient = (a: Address) => {
     const errs: Record<string, string> = {};
-    if (!a.fullName.trim()) errs.fullName = 'Full name is required';
+    
+    // Full Name validation
+    if (!a.fullName.trim()) {
+      errs.fullName = 'Full name is required';
+    } else if (a.fullName.trim().length < 2) {
+      errs.fullName = 'Full name must be at least 2 characters';
+    } else if (a.fullName.trim().length > 50) {
+      errs.fullName = 'Full name cannot exceed 50 characters';
+    }
+    
+    // Phone validation - exactly 10 digits
     const phone = a.phone.replace(/\D/g, '');
-    if (!phone || phone.length < 6) errs.phone = 'Enter a valid phone';
-    if (!a.line1.trim()) errs.line1 = 'Address line 1 is required';
-    if (!a.city.trim()) errs.city = 'City is required';
-    if (!a.state.trim()) errs.state = 'State is required';
-    if (!a.postalCode.trim()) errs.postalCode = 'Postal code is required';
-    if (!a.country.trim()) errs.country = 'Country is required';
+    if (!phone) {
+      errs.phone = 'Phone number is required';
+    } else if (phone.length !== 10) {
+      errs.phone = 'Phone number must be exactly 10 digits';
+    } else if (!/^[6-9]/.test(phone)) {
+      errs.phone = 'Phone number must start with 6, 7, 8, or 9';
+    }
+    
+    // Address Line 1 validation
+    if (!a.line1.trim()) {
+      errs.line1 = 'Address line 1 is required';
+    } else if (a.line1.trim().length < 5) {
+      errs.line1 = 'Address must be at least 5 characters';
+    } else if (a.line1.trim().length > 100) {
+      errs.line1 = 'Address cannot exceed 100 characters';
+    }
+    
+    // Address Line 2 validation (optional but if provided, should be valid)
+    if (a.line2 && a.line2.trim().length > 100) {
+      errs.line2 = 'Address line 2 cannot exceed 100 characters';
+    }
+    
+    // City validation
+    if (!a.city.trim()) {
+      errs.city = 'City is required';
+    } else if (a.city.trim().length < 2) {
+      errs.city = 'City name must be at least 2 characters';
+    } else if (a.city.trim().length > 50) {
+      errs.city = 'City name cannot exceed 50 characters';
+    }
+    
+    // State validation
+    if (!a.state.trim()) {
+      errs.state = 'State is required';
+    } else if (a.state.trim().length < 2) {
+      errs.state = 'State name must be at least 2 characters';
+    } else if (a.state.trim().length > 50) {
+      errs.state = 'State name cannot exceed 50 characters';
+    }
+    
+    // Postal Code validation - exactly 6 digits
+    const postalCode = a.postalCode.replace(/\D/g, '');
+    if (!postalCode) {
+      errs.postalCode = 'Postal code is required';
+    } else if (postalCode.length !== 6) {
+      errs.postalCode = 'Postal code must be exactly 6 digits';
+    }
+    
+    // Country validation
+    if (!a.country.trim()) {
+      errs.country = 'Country is required';
+    } else if (a.country.trim().length < 2) {
+      errs.country = 'Country name must be at least 2 characters';
+    }
+    
     return errs;
   };
 
@@ -160,38 +220,38 @@ export default function AddressesPage() {
   const stats = useMemo(() => ({ total: addresses.length }), [addresses]);
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <main className="min-h-screen" style={{ backgroundColor: 'var(--bg-primary)' }}>
+      <Container className="py-8">
         <div className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] bg-clip-text text-transparent mb-2">
+          <h1 className="text-3xl md:text-4xl font-heading font-bold text-heading mb-2">
             Shipping Addresses
           </h1>
-          <p className="text-gray-600">
+          <p className="text-primary-dark">
             Manage your delivery addresses for faster checkout
           </p>
         </div>
 
         <div className="flex items-center justify-between mb-6">
-          <div className="text-sm text-gray-700">Total: {stats.total}</div>
+          <div className="text-sm text-primary-dark">Total: {stats.total}</div>
           <button
             onClick={openAdd}
-            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] text-white font-medium rounded-xl hover:shadow-lg transition-all"
+            className="btn btn-filled flex items-center gap-2"
           >
             <Plus className="w-5 h-5" /> Add New Address
           </button>
         </div>
 
         {loading ? (
-          <div className="text-sm text-gray-600">Loading...</div>
+          <div className="text-sm text-primary-dark">Loading...</div>
         ) : addresses.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-[oklch(0.84_0.04_10.35)]/30 shadow-sm p-12 text-center">
-            <MapPin className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+          <div className="bg-white rounded-2xl border border-primary/20 shadow-sm p-12 text-center">
+            <MapPin className="w-16 h-16 text-primary/30 mx-auto mb-4" />
+            <h3 className="text-xl font-heading font-semibold text-heading mb-2">
               No Addresses Found
             </h3>
             <button
               onClick={openAdd}
-              className="px-6 py-3 bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] text-white font-medium rounded-xl hover:shadow-lg transition-all"
+              className="btn btn-filled"
             >
               Add Your First Address
             </button>
@@ -203,8 +263,8 @@ export default function AddressesPage() {
                 key={a._id}
                 className={`bg-white rounded-2xl border shadow-sm p-6 hover:shadow-md transition-all ${
                   a.isDefaultShipping
-                    ? 'border-[oklch(0.66_0.14_358.91)] ring-2 ring-[oklch(0.66_0.14_358.91)]/20'
-                    : 'border-[oklch(0.84_0.04_10.35)]/30'
+                    ? 'border-primary ring-2 ring-primary/20'
+                    : 'border-primary/20'
                 }`}
               >
                 <div className="flex items-start justify-between mb-3">
@@ -212,28 +272,28 @@ export default function AddressesPage() {
                     <div
                       className={`w-12 h-12 rounded-xl flex items-center justify-center ${
                         a.isDefaultShipping
-                          ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] text-white'
-                          : 'bg-gray-100 text-gray-600'
+                          ? 'bg-primary text-white'
+                          : 'bg-primary/10 text-primary'
                       }`}
                     >
                       <MapPin className="w-6 h-6" />
                     </div>
                     <div>
                       <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-semibold text-gray-900">
+                        <h3 className="font-heading font-semibold text-heading">
                           {a.fullName}
                         </h3>
                         {a.isDefaultShipping && (
-                          <span className="inline-flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-[oklch(0.66_0.14_358.91)]/10 to-[oklch(0.58_0.16_8)]/10 text-[oklch(0.66_0.14_358.91)] text-xs font-medium rounded-full">
+                          <span className="inline-flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary text-xs font-medium rounded-full">
                             <Star className="w-3 h-3" /> Default Shipping
                           </span>
                         )}
                       </div>
-                      <span className="text-sm text-gray-600">{a.phone}</span>
+                      <span className="text-sm text-primary-dark">{a.phone}</span>
                     </div>
                   </div>
                 </div>
-                <div className="text-sm text-gray-700 mb-3">
+                <div className="text-sm text-primary-dark mb-3">
                   <p>{a.line1}</p>
                   {a.line2 && <p>{a.line2}</p>}
                   <p>
@@ -241,20 +301,20 @@ export default function AddressesPage() {
                   </p>
                   <p>{a.country}</p>
                 </div>
-                <div className="flex flex-wrap gap-2 pt-3 border-t border-gray-100">
+                <div className="flex flex-wrap gap-2 pt-3 border-t border-primary/10">
                   {!a.isDefaultShipping && (
                     <button
                       onClick={() =>
                         openEdit({ ...a, isDefaultShipping: true })
                       }
-                      className="px-3 py-2 text-xs font-medium text-[oklch(0.66_0.14_358.91)] hover:bg-gradient-to-r hover:from-[oklch(0.66_0.14_358.91)]/10 hover:to-[oklch(0.58_0.16_8)]/10 rounded-lg transition-colors"
+                      className="btn btn-ghost text-xs px-3 py-2"
                     >
                       Set Default
                     </button>
                   )}
                   <button
                     onClick={() => openEdit(a)}
-                    className="px-3 py-2 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                    className="px-3 py-2 text-xs font-medium text-primary hover:bg-red-50 rounded-lg transition-colors"
                   >
                     <Edit3 className="w-3 h-3 inline mr-1" /> Edit
                   </button>
@@ -275,19 +335,21 @@ export default function AddressesPage() {
         {showModal && (
           <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-2xl max-w-xl w-full overflow-hidden">
-              <div className="p-4 border-b font-semibold">
+              <div className="p-4 border-b border-primary/10 font-heading font-semibold text-heading">
                 {editingId ? 'Edit Address' : 'Add Address'}
               </div>
               <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-3">
                 {/* Label removed as it's not important */}
                 <div>
                   <input
-                    className="border rounded-lg px-3 py-2 text-sm w-full"
+                    type="text"
+                    className="border border-primary/20 rounded-lg px-3 py-2 text-sm w-full focus:border-primary focus:ring-1 focus:ring-primary/20 transition-colors"
                     placeholder="Full Name"
                     value={form.fullName}
                     onChange={e =>
                       setForm({ ...form, fullName: e.target.value })
                     }
+                    maxLength={50}
                   />
                   {fieldErrors.fullName && (
                     <div className="text-xs text-red-600 mt-1">
@@ -297,15 +359,17 @@ export default function AddressesPage() {
                 </div>
                 <div>
                   <input
-                    className="border rounded-lg px-3 py-2 text-sm w-full"
-                    placeholder="Phone"
+                    type="tel"
+                    className="border border-primary/20 rounded-lg px-3 py-2 text-sm w-full focus:border-primary focus:ring-1 focus:ring-primary/20 transition-colors"
+                    placeholder="Phone Number (10 digits)"
                     value={form.phone}
-                    onChange={e =>
-                      setForm({
-                        ...form,
-                        phone: e.target.value.replace(/\D/g, '').slice(0, 15),
-                      })
-                    }
+                    onChange={e => {
+                      const value = e.target.value.replace(/\D/g, '').slice(0, 10);
+                      setForm({ ...form, phone: value });
+                    }}
+                    maxLength={10}
+                    pattern="[0-9]{10}"
+                    inputMode="numeric"
                   />
                   {fieldErrors.phone && (
                     <div className="text-xs text-red-600 mt-1">
@@ -315,10 +379,12 @@ export default function AddressesPage() {
                 </div>
                 <div className="md:col-span-2">
                   <input
-                    className="border rounded-lg px-3 py-2 text-sm w-full"
+                    type="text"
+                    className="border border-primary/20 rounded-lg px-3 py-2 text-sm w-full focus:border-primary focus:ring-1 focus:ring-primary/20 transition-colors"
                     placeholder="Address line 1"
                     value={form.line1}
                     onChange={e => setForm({ ...form, line1: e.target.value })}
+                    maxLength={100}
                   />
                   {fieldErrors.line1 && (
                     <div className="text-xs text-red-600 mt-1">
@@ -326,18 +392,28 @@ export default function AddressesPage() {
                     </div>
                   )}
                 </div>
-                <input
-                  className="border rounded-lg px-3 py-2 text-sm"
-                  placeholder="Address line 2"
-                  value={form.line2}
-                  onChange={e => setForm({ ...form, line2: e.target.value })}
-                />
+                <div className="md:col-span-2">
+                  <input
+                    className="border border-primary/20 rounded-lg px-3 py-2 text-sm w-full focus:border-primary focus:ring-1 focus:ring-primary/20 transition-colors"
+                    placeholder="Address line 2 (Optional)"
+                    value={form.line2}
+                    onChange={e => setForm({ ...form, line2: e.target.value })}
+                    maxLength={100}
+                  />
+                  {fieldErrors.line2 && (
+                    <div className="text-xs text-red-600 mt-1">
+                      {fieldErrors.line2}
+                    </div>
+                  )}
+                </div>
                 <div>
                   <input
-                    className="border rounded-lg px-3 py-2 text-sm w-full"
+                    type="text"
+                    className="border border-primary/20 rounded-lg px-3 py-2 text-sm w-full focus:border-primary focus:ring-1 focus:ring-primary/20 transition-colors"
                     placeholder="City"
                     value={form.city}
                     onChange={e => setForm({ ...form, city: e.target.value })}
+                    maxLength={50}
                   />
                   {fieldErrors.city && (
                     <div className="text-xs text-red-600 mt-1">
@@ -347,10 +423,12 @@ export default function AddressesPage() {
                 </div>
                 <div>
                   <input
-                    className="border rounded-lg px-3 py-2 text-sm w-full"
+                    type="text"
+                    className="border border-primary/20 rounded-lg px-3 py-2 text-sm w-full focus:border-primary focus:ring-1 focus:ring-primary/20 transition-colors"
                     placeholder="State"
                     value={form.state}
                     onChange={e => setForm({ ...form, state: e.target.value })}
+                    maxLength={50}
                   />
                   {fieldErrors.state && (
                     <div className="text-xs text-red-600 mt-1">
@@ -360,12 +438,18 @@ export default function AddressesPage() {
                 </div>
                 <div>
                   <input
-                    className="border rounded-lg px-3 py-2 text-sm w-full"
-                    placeholder="Postal Code"
+                    type="text"
+                    className="border border-primary/20 rounded-lg px-3 py-2 text-sm w-full focus:border-primary focus:ring-1 focus:ring-primary/20 transition-colors text-center tracking-widest font-mono"
+                    placeholder="123456"
                     value={form.postalCode}
-                    onChange={e =>
-                      setForm({ ...form, postalCode: e.target.value })
-                    }
+                    onChange={e => {
+                      const value = e.target.value.replace(/\D/g, '').slice(0, 6);
+                      setForm({ ...form, postalCode: value });
+                    }}
+                    maxLength={6}
+                    pattern="[0-9]{6}"
+                    inputMode="numeric"
+                    style={{ letterSpacing: '0.2em' }}
                   />
                   {fieldErrors.postalCode && (
                     <div className="text-xs text-red-600 mt-1">
@@ -375,12 +459,14 @@ export default function AddressesPage() {
                 </div>
                 <div>
                   <input
-                    className="border rounded-lg px-3 py-2 text-sm w-full"
+                    type="text"
+                    className="border border-primary/20 rounded-lg px-3 py-2 text-sm w-full focus:border-primary focus:ring-1 focus:ring-primary/20 transition-colors"
                     placeholder="Country"
                     value={form.country}
                     onChange={e =>
                       setForm({ ...form, country: e.target.value })
                     }
+                    maxLength={50}
                   />
                   {fieldErrors.country && (
                     <div className="text-xs text-red-600 mt-1">
@@ -388,38 +474,40 @@ export default function AddressesPage() {
                     </div>
                   )}
                 </div>
-                <label className="text-xs text-gray-700 flex items-center gap-2">
+                <label className="text-xs text-primary-dark flex items-center gap-2">
                   <input
                     type="checkbox"
                     checked={form.isDefaultShipping}
                     onChange={e =>
                       setForm({ ...form, isDefaultShipping: e.target.checked })
                     }
+                    className="rounded border-primary/20 text-primary focus:ring-primary/20"
                   />{' '}
                   Default shipping
                 </label>
-                <label className="text-xs text-gray-700 flex items-center gap-2">
+                <label className="text-xs text-primary-dark flex items-center gap-2">
                   <input
                     type="checkbox"
                     checked={form.isDefaultBilling}
                     onChange={e =>
                       setForm({ ...form, isDefaultBilling: e.target.checked })
                     }
+                    className="rounded border-primary/20 text-primary focus:ring-primary/20"
                   />{' '}
                   Default billing
                 </label>
               </div>
-              <div className="p-4 border-t flex items-center justify-end gap-2">
+              <div className="p-4 border-t border-primary/10 flex items-center justify-end gap-2">
                 <button
                   onClick={() => setShowModal(false)}
-                  className="px-4 py-2 rounded-lg border"
+                  className="btn btn-outline px-4 py-2"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={submit}
                   disabled={saving}
-                  className="px-4 py-2 rounded-lg text-white bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)]"
+                  className="btn btn-filled px-4 py-2 border-2 border-primary"
                 >
                   {saving ? 'Saving...' : editingId ? 'Update' : 'Add'}
                 </button>
@@ -427,7 +515,7 @@ export default function AddressesPage() {
             </div>
           </div>
         )}
-      </div>
+      </Container>
     </main>
   );
 }

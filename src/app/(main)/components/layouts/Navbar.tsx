@@ -361,11 +361,7 @@ export default function Navbar() {
           label: 'Notifications',
           href: '/account/profile?tab=preferences',
         },
-        {
-          icon: CreditCard,
-          label: 'Payment Methods',
-          href: '/account/payments',
-        },
+       
         { icon: MapPin, label: 'Addresses', href: '/account/addresses' },
       ],
     },

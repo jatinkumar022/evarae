@@ -312,11 +312,13 @@ export default function EnhancedNewArrivalsPage() {
                       index === 0 ? 'col-span-2' : ''
                     }`}
                   >
-                    <div className="aspect-square overflow-hidden rounded-2xl bg-white shadow-xl hover:shadow-2xl transition-all duration-500 border border-gray-100">
+                    <div className="relative aspect-square overflow-hidden rounded-2xl bg-white shadow-xl hover:shadow-2xl transition-all duration-500 border border-gray-100">
                       <Image
                         src={product.thumbnail || product.images[0]}
                         alt={product.name}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                        fill
+                        className="object-cover group-hover:scale-110 transition-transform duration-700"
+                        sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                       />
                       <div className="absolute inset-0 bg-black/0  transition-all duration-300" />
                       <div className="absolute bottom-4 left-4 right-4 transform translate-y-8 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all z-50">

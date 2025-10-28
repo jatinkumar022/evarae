@@ -211,25 +211,20 @@ export function ProductInfo({ product }: ProductInfoProps) {
         )}
         {product.price && (
           <div className="space-y-2 lg:space-y-3">
-            {/* Primary CTA - Buy Now */}
-            <button className="w-full bg-primary text-white py-2 px-5 rounded-sm text-sm lg:text-base font-medium hover:bg-primary-dark transition-colors">
-              Buy Now
+            {/* Primary CTA - Add to Cart */}
+            <button
+              onClick={onAddToCart}
+              className="w-full bg-primary text-white py-3 px-5 rounded-sm text-sm lg:text-base font-medium hover:bg-primary-dark transition-colors flex items-center justify-center gap-2"
+            >
+              <Cart className="w-4 h-4" />
+              Add to Cart
             </button>
 
-            {/* Row for secondary actions */}
-            <div className="flex gap-2">
-              <button
-                onClick={onAddToCart}
-                className="flex-1 bg-accent text-white py-2 px-5 rounded-sm text-sm lg:text-base font-medium hover:bg-accent/90 transition-colors flex items-center justify-center gap-2"
-              >
-                <Cart className="w-4 h-4" />
-                Add to Cart
-              </button>
-              <button className="flex-1 border border-primary/40 text-primary py-2 px-5 rounded-sm text-sm lg:text-base font-medium hover:bg-primary hover:!text-white transition-colors flex items-center justify-center gap-2 ">
-                <Heart className="w-4 h-4" />
-                Wishlist
-              </button>
-            </div>
+            {/* Secondary action - Wishlist */}
+            <button className="w-full border border-primary/40 text-primary py-2 px-5 rounded-sm text-sm lg:text-base font-medium hover:bg-primary hover:!text-white transition-colors flex items-center justify-center gap-2">
+              <Heart className="w-4 h-4" />
+              Add to Wishlist
+            </button>
           </div>
         )}
 
