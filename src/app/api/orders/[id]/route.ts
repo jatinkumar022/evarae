@@ -14,9 +14,7 @@ function getUid(request: Request): string | null {
       .find(p => p.startsWith('token='))
       ?.split('=')[1];
     if (!token || !USER_JWT_SECRET) return null;
-    const payload = jwt.verify(token, USER_JWT_SECRET) as {
-      uid?: string;
-    } | null;
+    const payload = jwt.verify(token, USER_JWT_SECRET) as { uid?: string } | null;
     return payload?.uid || null;
   } catch {
     return null;
@@ -30,8 +28,7 @@ export async function GET(
   try {
     await connect();
     const uid = getUid(request);
-    if (!uid)
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!uid) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const { id: key } = await ctx.params;
     const order = await Order.findOne(
@@ -44,7 +41,7 @@ export async function GET(
       return NextResponse.json({ error: 'Order not found' }, { status: 404 });
     }
 
-    return NextResponse.json(order);
+    return NextResponse.json({ order });
   } catch (e: unknown) {
     console.error('Order fetch error:', e);
     return NextResponse.json(

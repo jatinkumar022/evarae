@@ -32,7 +32,7 @@ import type { UserAccount } from '@/lib/utils';
 import {
   ChevronRight,
   Package,
-  Settings,
+  ShieldUser ,
   MapPin,
   Bell,
   Shield,
@@ -382,23 +382,23 @@ export default function Navbar() {
       href: '/wishlist',
       submenu: [{ icon: MenuHeart, label: 'My Wishlist', href: '/wishlist' }],
     },
-    {
-      key: 'rewards',
-      icon: Gift,
-      label: 'Rewards & Points',
-      href: '/rewards',
-      submenu: [
-        { icon: Gift, label: 'My Points', href: '/rewards/points' },
-        { icon: Star, label: 'Membership Benefits', href: '/rewards/benefits' },
-        { icon: Gift, label: 'Referral Program', href: '/rewards/referrals' },
-      ],
-    },
+    // {
+    //   key: 'rewards',
+    //   icon: Gift,
+    //   label: 'Rewards & Points',
+    //   href: '/rewards',
+    //   submenu: [
+    //     { icon: Gift, label: 'My Points', href: '/rewards/points' },
+    //     { icon: Star, label: 'Membership Benefits', href: '/rewards/benefits' },
+    //     { icon: Gift, label: 'Referral Program', href: '/rewards/referrals' },
+    //   ],
+    // },
   ];
 
   const quickActions = [
     { icon: HelpCircle, label: 'Help & Support', href: '/faqs' },
-    { icon: Settings, label: 'Contact Us', href: '/contact-us' },
-    { icon: Settings, label: 'Preferences', href: '/preferences' },
+    { icon: ShieldUser, label: 'Contact Us', href: '/contact-us' },
+    // { icon: Settings, label: 'Preferences', href: '/preferences' },
   ];
 
   return (
@@ -498,7 +498,7 @@ export default function Navbar() {
                           <div className="absolute -bottom-1 -right-1 h-4 w-4 bg-green-400 rounded-full border-2 border-white"></div>
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-lg font-semibold text-gray-700 truncate">
+                          <p className="text-lg font-medium text-gray-700 truncate">
                             {currentUser.name || 'My Account'}
                           </p>
                           <p className="text-sm text-gray-600 truncate">
