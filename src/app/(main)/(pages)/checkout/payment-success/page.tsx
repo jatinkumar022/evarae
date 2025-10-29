@@ -23,7 +23,6 @@ type SuccessOrder = {
 function PaymentSuccessInner() {
   const searchParams = useSearchParams();
   const [orderDetails, setOrderDetails] = useState<SuccessOrder | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -38,15 +37,14 @@ function PaymentSuccessInner() {
         })
         .then((data: SuccessOrder) => {
           setOrderDetails(data);
-          setLoading(false);
+          // Global loader will handle loading state
         })
         .catch(() => {
           setError('Unable to load order details');
-          setLoading(false);
+          // Global loader will handle loading state
         });
-    } else {
-      setLoading(false);
     }
+    // Global loader will handle loading state
   }, [searchParams]);
 
   const downloadInvoice = async () => {
@@ -72,16 +70,7 @@ function PaymentSuccessInner() {
     }
   };
 
-  if (loading) {
-    return (
-      <Container className="py-8">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-primary-dark">Loading order details...</p>
-        </div>
-      </Container>
-    );
-  }
+  // Global loader will handle loading state
 
   return (
     <Container className="py-8 md:py-12">

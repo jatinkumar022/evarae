@@ -151,7 +151,6 @@ function formatCurrency(n: number): string {
 
 export default function OrdersHistoryPage() {
   const [orders, setOrders] = useState<OrderDoc[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -160,7 +159,6 @@ export default function OrdersHistoryPage() {
   useEffect(() => {
     (async () => {
       try {
-        setLoading(true);
         const res = await fetch('/api/orders', { credentials: 'include' });
         const data: { orders?: OrderDoc[]; error?: string } = await res.json();
         if (!res.ok) throw new Error(data?.error || 'Failed to load orders');
@@ -170,13 +168,11 @@ export default function OrdersHistoryPage() {
           orderNumber: o.orderNumber || o._id,
         }));
         setOrders(mapped);
-        setLoading(false);
         if (mapped.length === 0) {
           toastApi.info('No orders yet');
         }
       } catch (e: unknown) {
         setError(e instanceof Error ? e.message : 'Failed to load orders');
-        setLoading(false);
         toastApi.error('Failed to load orders');
       }
     })();
@@ -277,15 +273,7 @@ export default function OrdersHistoryPage() {
     alert('Tracking number copied to clipboard!');
   };
 
-  if (loading) {
-    return (
-      <main className="min-h-screen" style={{ backgroundColor: 'var(--bg-primary)' }}>
-        <Container className="py-12 text-center text-primary-dark">
-          Loading your orders...
-        </Container>
-      </main>
-    );
-  }
+  // Global loader will handle loading state
 
   if (error) {
     return (

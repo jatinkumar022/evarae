@@ -4,7 +4,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import React, { useEffect } from 'react';
 import { usePublicCategoryStore } from '@/lib/data/mainStore/categoryStore';
-import Loader from '@/app/(main)/components/layouts/Loader';
 
 export default function CategoriesPage() {
   const { categories, status, error, fetchCategories } =
@@ -40,14 +39,7 @@ export default function CategoriesPage() {
           </div>
         </section>
 
-        {/* Loading State */}
-        {status === 'loading' && (
-          <div className="px-6 lg:px-12 pb-20">
-            <div className="max-w-7xl mx-auto">
-              <Loader text="Loading categories..." fullscreen />
-            </div>
-          </div>
-        )}
+        {/* Loading State - Global loader will handle this */}
 
         {/* Error State */}
         {status === 'error' && (

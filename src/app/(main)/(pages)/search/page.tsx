@@ -19,7 +19,6 @@ import {
 import { ProductCard } from '../shop/components/ProductCard';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import Loader from '@/app/(main)/components/layouts/Loader';
 import { useSearchParams } from 'next/navigation';
 const PLACEHOLDER_PHRASES = [
   'Search Gold Jewellery',
@@ -49,7 +48,6 @@ function SearchPageInner() {
   const [searchValue, setSearchValue] = useState(initialQuery);
   const [searchResults, setSearchResults] = useState<UiProduct[]>([]);
   const [results, setResults] = useState<UiProduct[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [viewMode, setViewMode] = useState('grid');
   const router = useRouter();
   const filterOptions: FilterOptions = useMemo(
@@ -158,7 +156,6 @@ function SearchPageInner() {
         setResults([]);
         return;
       }
-      setIsLoading(true);
       try {
         const res = await fetch(
           `/api/main/search?q=${encodeURIComponent(q)}&limit=48`,
@@ -168,8 +165,10 @@ function SearchPageInner() {
         const mapped = mapApiToUi(data.products || []);
         setSearchResults(mapped);
         setResults(mapped);
-      } finally {
-        setIsLoading(false);
+      } catch (error) {
+        console.error('Search error:', error);
+        setSearchResults([]);
+        setResults([]);
       }
     },
     [mapApiToUi]
@@ -355,9 +354,8 @@ function SearchPageInner() {
         sortOptions={sortOptions}
         onFiltersChange={handleFiltersChange}
       >
-        {isLoading ? (
-          <Loader text="Searching..." />
-        ) : results.length === 0 ? (
+        {/* Loading State - Global loader will handle this */}
+        {results.length === 0 ? (
           <div className="text-center py-20">
             <Search className="h-16 w-16 text-gray-300 mx-auto mb-4" />
             <h3 className="text-xl font-medium text-gray-900 mb-2">

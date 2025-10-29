@@ -218,17 +218,7 @@ export default function CollectionsPage() {
         </div>
       </div>
 
-      {/* Loading State */}
-      {status === 'loading' && (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-16 w-16 border-4 border-indigo-600 border-t-transparent mx-auto"></div>
-            <p className="mt-4 text-lg text-gray-600 font-medium">
-              Loading collections...
-            </p>
-          </div>
-        </div>
-      )}
+      {/* Global loader will handle loading state */}
 
       {/* Collections Display */}
       {status === 'success' && filteredCollections.length > 0 && (

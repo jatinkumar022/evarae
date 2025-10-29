@@ -16,7 +16,6 @@ import { ProductCard } from '../components/ProductCard';
 import Image from 'next/image';
 import { useParams } from 'next/navigation';
 import { usePublicCategoryStore } from '@/lib/data/mainStore/categoryStore';
-import Loader from '@/app/(main)/components/layouts/Loader';
 import { List, NoItems } from '@/app/(main)/assets/Common';
 
 export default function ShopCategoryPage() {
@@ -246,9 +245,7 @@ export default function ShopCategoryPage() {
     currentCategory?.name ||
     slug.charAt(0).toUpperCase() + slug.slice(1).replace(/-/g, ' ');
 
-  if (status === 'loading') {
-    return <Loader text="Loading category..." fullscreen />;
-  }
+  // Global loader will handle loading state
 
   if (status === 'error') {
     return (

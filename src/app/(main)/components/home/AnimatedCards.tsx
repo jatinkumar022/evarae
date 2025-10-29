@@ -57,7 +57,6 @@ export default function AnimatedCards() {
   const [cardsPerPage, setCardsPerPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
   useEffect(() => {
     const load = async () => {
       try {
@@ -68,9 +67,8 @@ export default function AnimatedCards() {
         setProducts(data.products || []);
       } catch (err) {
         console.error('Failed to fetch best sellers:', err);
-      } finally {
-        setLoading(false);
       }
+      // Global loader will handle loading state
     };
     load();
   }, []);
@@ -187,13 +185,7 @@ export default function AnimatedCards() {
       </div>
     );
   };
-  if (loading) {
-    return (
-      <div className="text-center py-8 text-gray-500">
-        Loading best sellers...
-      </div>
-    );
-  }
+  // Global loader will handle loading state
 
   if (!products.length) {
     return (

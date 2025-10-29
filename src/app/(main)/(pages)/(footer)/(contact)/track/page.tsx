@@ -162,7 +162,6 @@ export default function TrackOrderPage() {
   const [orderId, setOrderId] = useState('');
   const [email, setEmail] = useState('');
   const [tracking, setTracking] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [order, setOrder] = useState<OrderDetails | null>(null);
   const [error, setError] = useState('');
 
@@ -172,7 +171,6 @@ export default function TrackOrderPage() {
       return;
     }
 
-    setLoading(true);
     setError('');
 
     // Simulate API call
@@ -184,7 +182,6 @@ export default function TrackOrderPage() {
       } else {
         setError('Order not found. Please check your Order ID and email.');
       }
-      setLoading(false);
     }, 1500);
   };
 
@@ -288,38 +285,11 @@ export default function TrackOrderPage() {
 
                 <motion.button
                   onClick={handleTrackOrder}
-                  disabled={loading}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="w-full px-6 py-4 bg-gradient-to-r from-primary to-accent text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full px-6 py-4 bg-gradient-to-r from-primary to-accent text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 font-medium"
                 >
-                  {loading ? (
-                    <span className="flex items-center justify-center">
-                      <svg
-                        className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        ></circle>
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        ></path>
-                      </svg>
-                      Tracking Order...
-                    </span>
-                  ) : (
-                    'Track My Order'
-                  )}
+                  Track My Order
                 </motion.button>
               </div>
 

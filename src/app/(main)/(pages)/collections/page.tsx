@@ -4,7 +4,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect } from 'react';
 import { usePublicCollectionStore } from '@/lib/data/mainStore/collectionStore';
-import Loader from '@/app/(main)/components/layouts/Loader';
 
 export default function CollectionsPage() {
   const { collections, status, error, fetchCollections } =
@@ -111,13 +110,7 @@ export default function CollectionsPage() {
           </p>
         </div>
 
-        {status === 'loading' && (
-          <div className="px-6 lg:px-12 pb-20">
-            <div className="max-w-7xl mx-auto">
-              <Loader text="Loading collections..." fullscreen />
-            </div>
-          </div>
-        )}
+        {/* Loading State - Global loader will handle this */}
         {status === 'error' && (
           <div className="text-center text-red-600">
             {error || 'Failed to load collections'}

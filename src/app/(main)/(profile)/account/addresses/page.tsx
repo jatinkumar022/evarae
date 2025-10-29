@@ -36,7 +36,6 @@ const emptyAddress: Address = {
 
 export default function AddressesPage() {
   const [addresses, setAddresses] = useState<Address[]>([]);
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -46,7 +45,6 @@ export default function AddressesPage() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const load = async () => {
-    setLoading(true);
     setError(null);
     try {
       const res = await fetch('/api/account/addresses', { cache: 'no-store' });
@@ -55,8 +53,6 @@ export default function AddressesPage() {
     } catch {
       setError('Failed to load addresses');
       toastApi.error('Failed to load addresses');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -241,9 +237,8 @@ export default function AddressesPage() {
           </button>
         </div>
 
-        {loading ? (
-          <div className="text-sm text-primary-dark">Loading...</div>
-        ) : addresses.length === 0 ? (
+        {/* Global loader will handle loading state */}
+        {addresses.length === 0 ? (
           <div className="bg-white rounded-2xl border border-primary/20 shadow-sm p-12 text-center">
             <MapPin className="w-16 h-16 text-primary/30 mx-auto mb-4" />
             <h3 className="text-xl font-heading font-semibold text-heading mb-2">

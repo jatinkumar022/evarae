@@ -176,13 +176,11 @@ export default function OrderDetailsPage() {
   const orderId = params.id as string;
   
   const [order, setOrder] = useState<OrderDoc | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
       try {
-        setLoading(true);
         const res = await fetch(`/api/orders/${orderId}`, { 
           credentials: 'include' 
         });
@@ -191,10 +189,8 @@ export default function OrderDetailsPage() {
         if (!res.ok) throw new Error(data?.error || 'Failed to load order');
         
         setOrder(data.order || null);
-        setLoading(false);
       } catch (e: unknown) {
         setError(e instanceof Error ? e.message : 'Failed to load order');
-        setLoading(false);
         toastApi.error('Failed to load order');
       }
     })();
@@ -235,15 +231,7 @@ export default function OrderDetailsPage() {
     toastApi.success('Tracking number copied to clipboard!');
   };
 
-  if (loading) {
-    return (
-      <div className="bg-white text-text-primary">
-        <Container className="py-12 text-center text-primary-dark">
-          Loading order details...
-        </Container>
-      </div>
-    );
-  }
+  // Global loader will handle loading state
 
   if (error || !order) {
     return (

@@ -15,7 +15,6 @@ import { ad, Banner, BannerMobile } from '@/app/(main)/assets/Shop-list';
 import { ProductCard } from '../shop/components/ProductCard';
 import Image from 'next/image';
 import { usePublicProductStore } from '@/lib/data/mainStore/productStore';
-import Loader from '@/app/(main)/components/layouts/Loader';
 
 export default function AllJewelleryPage() {
   const {
@@ -243,13 +242,7 @@ export default function AllJewelleryPage() {
           </div>
         </nav>
 
-        {status === 'loading' && (
-          <div className="px-6 lg:px-12 pb-20">
-            <div className="max-w-7xl mx-auto">
-              <Loader text="Loading products..." fullscreen />
-            </div>
-          </div>
-        )}
+        {/* Loading State - Global loader will handle this */}
         {status === 'error' && (
           <div className="text-center text-red-600">
             {error || 'Failed to load products'}

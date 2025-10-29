@@ -327,13 +327,7 @@ export default function EditProductPage() {
     );
   };
 
-  if (status === 'loading' && !currentProduct) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-      </div>
-    );
-  }
+  // Global loader will handle loading state
 
   if (!currentProduct) {
     return (
@@ -372,7 +366,7 @@ export default function EditProductPage() {
             <button
               type="submit"
               form="product-form"
-              disabled={isSubmitting || status === 'loading'}
+              disabled={isSubmitting}
               className="inline-flex items-center px-6 py-3 border border-transparent text-xs md:text-sm font-medium rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
             >
               {isSubmitting ? (

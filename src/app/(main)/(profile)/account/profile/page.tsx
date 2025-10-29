@@ -27,7 +27,6 @@ function AccountPageInner() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -183,7 +182,7 @@ function AccountPageInner() {
         }
       } catch {
       } finally {
-        setLoading(false);
+        // Global loader will handle loading state
         // No toast on initial load success to avoid noise
       }
     })();
@@ -332,21 +331,7 @@ function AccountPageInner() {
     { id: 'activity', label: 'Activity', icon: ShoppingBag },
   ] as const;
 
-  if (loading) {
-    return (
-      <main className="min-h-screen ">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="animate-pulse">
-            <div className="h-8 bg-gray-200 rounded w-1/4 mb-8"></div>
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-              <div className="h-64 bg-gray-200 rounded-xl"></div>
-              <div className="lg:col-span-3 h-96 bg-gray-200 rounded-xl"></div>
-            </div>
-          </div>
-        </div>
-      </main>
-    );
-  }
+  // Global loader will handle loading state
 
   return (
     <main className="">
