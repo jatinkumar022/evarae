@@ -48,8 +48,7 @@ export default function GlobalLoaderProvider({
           setInFlightCount(count => Math.max(0, count - 1));
           // Reset message after a short delay to avoid flickering
           setTimeout(() => {
-            setInFlightCount(current => {
-              
+            setInFlightCount(current => { 
               return current;
             });
           }, 100);

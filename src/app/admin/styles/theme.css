@@ -1,0 +1,207 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  --font-*: initial;
+  --font-outfit: Outfit, sans-serif;
+
+  --breakpoint-2xsm: 375px;
+  --breakpoint-xsm: 425px;
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
+  --breakpoint-3xl: 2000px;
+
+  --text-title-2xl: 72px;
+  --text-title-xl: 60px;
+  --text-title-lg: 48px;
+  --text-title-md: 36px;
+  --text-title-sm: 30px;
+  --text-theme-xl: 20px;
+  --text-theme-sm: 14px;
+  --text-theme-xs: 12px;
+
+  --color-white: #ffffff;
+  --color-black: #101828;
+
+  /* Primary Colors (#d16b86 based) */
+  --color-primary-25: #fdf4f7;
+  --color-primary-50: #fbeef2;
+  --color-primary-100: #f7dce5;
+  --color-primary-200: #f0b9cd;
+  --color-primary-300: #e896b5;
+  --color-primary-400: #d16b86;
+  --color-primary-500: #c45a75;
+  --color-primary-600: #a14a65;
+  --color-primary-700: #8a3d56;
+  --color-primary-800: #733047;
+  --color-primary-900: #5c2438;
+  --color-primary-950: #451829;
+
+  /* Brand colors using primary */
+  --color-brand-25: #fdf4f7;
+  --color-brand-50: #fbeef2;
+  --color-brand-100: #f7dce5;
+  --color-brand-200: #f0b9cd;
+  --color-brand-300: #e896b5;
+  --color-brand-400: #d16b86;
+  --color-brand-500: #c45a75;
+  --color-brand-600: #a14a65;
+  --color-brand-700: #8a3d56;
+  --color-brand-800: #733047;
+  --color-brand-900: #5c2438;
+  --color-brand-950: #451829;
+
+  --color-gray-25: #fcfcfd;
+  --color-gray-50: #f9fafb;
+  --color-gray-100: #f2f4f7;
+  --color-gray-200: #e4e7ec;
+  --color-gray-300: #d0d5dd;
+  --color-gray-400: #98a2b3;
+  --color-gray-500: #667085;
+  --color-gray-600: #475467;
+  --color-gray-700: #344054;
+  --color-gray-800: #1d2939;
+  --color-gray-900: #101828;
+  --color-gray-950: #0c111d;
+  --color-gray-dark: #1a2231;
+
+  /* Dark mode specific grays - more shades */
+  --color-dark-bg: #0d0d0d;
+  --color-dark-gray-1: #1a1a1a;
+  --color-dark-gray-2: #242424;
+  --color-dark-gray-3: #2a2a2a;
+  --color-dark-gray-4: #303030;
+  --color-dark-gray-5: #3a3a3a;
+  --color-dark-gray-6: #424242;
+  --color-dark-gray-7: #525252;
+  --color-dark-gray-8: #5a5a5a;
+  --color-dark-gray-9: #696969;
+
+  --color-success-25: #f6fef9;
+  --color-success-50: #ecfdf3;
+  --color-success-100: #d1fadf;
+  --color-success-500: #12b76a;
+  --color-success-600: #039855;
+
+  --color-error-25: #fffbfa;
+  --color-error-50: #fef3f2;
+  --color-error-100: #fee4e2;
+  --color-error-500: #f04438;
+  --color-error-600: #d92d20;
+
+  --shadow-theme-md:
+    0px 4px 8px -2px rgba(16, 24, 40, 0.1),
+    0px 2px 4px -2px rgba(16, 24, 40, 0.06);
+  --shadow-theme-lg:
+    0px 12px 16px -4px rgba(16, 24, 40, 0.08),
+    0px 4px 6px -2px rgba(16, 24, 40, 0.03);
+  --shadow-theme-sm:
+    0px 1px 3px 0px rgba(16, 24, 40, 0.1),
+    0px 1px 2px 0px rgba(16, 24, 40, 0.06);
+  --shadow-theme-xs: 0px 1px 2px 0px rgba(16, 24, 40, 0.05);
+  --shadow-theme-xl:
+    0px 20px 24px -4px rgba(16, 24, 40, 0.08),
+    0px 8px 8px -4px rgba(16, 24, 40, 0.03);
+  --shadow-focus-ring: 0px 0px 0px 4px rgba(209, 107, 134, 0.12);
+}
+
+@layer base {
+
+  *,
+  ::after,
+  ::before {
+    border-color: var(--color-gray-200, currentColor);
+  }
+
+  [data-admin="true"] {
+    @apply bg-gray-50;
+    background-color: var(--color-gray-50);
+  }
+
+  .dark [data-admin="true"] {
+    background-color: #0d0d0d;
+  }
+
+  /* Allow pages to control their own surfaces in dark mode.
+     Previously these selectors forced every .bg-* to #1a1a1a with !important,
+     which blocked per-page background tweaks. Removing them restores control
+     to component classes while keeping the overall admin background above. */
+
+  /* Reduce heavy borders in dark mode */
+  .dark [data-admin="true"] .border,
+  .dark [data-admin="true"] .border-gray-200,
+  .dark [data-admin="true"] .border-gray-300 {
+    border-color: rgba(255, 255, 255, 0.06) !important;
+    /* subtle divider */
+  }
+}
+
+@utility menu-item {
+  @apply relative flex items-center w-full gap-3 px-3 py-2 font-medium rounded-lg text-theme-sm transition-colors;
+}
+
+@utility menu-item-active {
+  @apply bg-primary-50 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300;
+}
+
+@utility menu-item-inactive {
+  @apply text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-dark-gray-2;
+}
+
+@utility menu-item-icon-active {
+  @apply text-primary-600 dark:text-primary-400;
+}
+
+@utility menu-item-icon-inactive {
+  @apply text-gray-500 dark:text-gray-400;
+}
+
+@utility menu-dropdown-item {
+  @apply relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-theme-sm font-medium transition-colors;
+}
+
+@utility menu-dropdown-item-active {
+  @apply bg-primary-50 text-primary-700 dark:bg-primary-900/15 dark:text-primary-300;
+}
+
+@utility menu-dropdown-item-inactive {
+  @apply text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-white/5;
+}
+
+@utility no-scrollbar {
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@utility custom-scrollbar {
+  &::-webkit-scrollbar {
+    @apply w-1.5;
+  }
+
+  &::-webkit-scrollbar-track {
+    @apply rounded-full;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    @apply bg-gray-200 rounded-full dark:bg-gray-700;
+  }
+}
+
+.dark [data-admin="true"] .custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #344054;
+}
+
+/* Mobile responsive utilities */
+@media (min-width: 320px) {
+  [data-admin="true"] .admin-container {
+    @apply px-3 sm:px-4 md:px-6;
+  }
+}

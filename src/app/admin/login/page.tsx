@@ -22,6 +22,7 @@ export default function AdminLoginPage() {
     resendInSec,
     devOtp,
     loadProfile,
+    profile,
   } = useAdminAuth();
 
   const [step, setStep] = useState<Step>('email');
@@ -30,8 +31,25 @@ export default function AdminLoginPage() {
   const inputsRef = useRef<Array<HTMLInputElement | null>>([]);
 
   useEffect(() => {
-    loadProfile();
-  }, [loadProfile]);
+    // Check if user is already authenticated
+    loadProfile().then(() => {
+      const currentProfile = useAdminAuth.getState().profile;
+      if (currentProfile) {
+        // User is already logged in, redirect to dashboard
+        router.push('/admin');
+      } else {
+        // No profile - ensure we're on email step
+        setStep('email');
+      }
+    });
+  }, [loadProfile, router]);
+
+  // Reset step to email if profile becomes null (e.g., after logout)
+  useEffect(() => {
+    if (!profile && step === 'done') {
+      setStep('email');
+    }
+  }, [profile, step]);
 
   const isValidEmail = useMemo(
     () => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email),
@@ -56,12 +74,17 @@ export default function AdminLoginPage() {
   }, [step]);
 
   useEffect(() => {
-    if (verifyStatus === 'success') {
+    // Only set to done if verifyStatus is success AND we have a valid profile
+    if (verifyStatus === 'success' && profile) {
       setStep('done');
       const t = setTimeout(() => router.push('/admin'), 800);
       return () => clearTimeout(t);
     }
-  }, [verifyStatus, router]);
+    // If verifyStatus is success but no profile, reset to email step
+    if (verifyStatus === 'success' && !profile) {
+      setStep('email');
+    }
+  }, [verifyStatus, profile, router]);
 
   const handleOtpChange = (index: number, value: string) => {
     const digit = value.replace(/\D/g, '').slice(0, 1);
@@ -121,8 +144,16 @@ export default function AdminLoginPage() {
     inputsRef.current[lastIndex]?.focus();
   };
 
+  useEffect(() => {
+    // Disable scrollbar on login page
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, []);
+
   return (
-    <main>
+    <main className="overflow-hidden h-screen">
       <Container>
         <div className="py-5 mt-10">
           <div className="max-w-xl mx-auto">

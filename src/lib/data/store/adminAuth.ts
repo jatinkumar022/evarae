@@ -93,6 +93,14 @@ export const useAdminAuth = create<AdminAuthState>((set, get) => ({
 
   logout: async () => {
     await adminAuthApi.logout();
-    set({ profile: null, email: '', devOtp: undefined });
+    set({ 
+      profile: null, 
+      email: '', 
+      devOtp: undefined,
+      requestStatus: 'idle',
+      verifyStatus: 'idle',
+      error: null,
+      resendInSec: 0,
+    });
   },
 }));

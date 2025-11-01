@@ -9,11 +9,7 @@ import {
   AlertCircle,
   Layers,
   Loader2,
-  Check,
   ImageIcon,
-  Info,
-  Sparkles,
-  Eye,
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -45,7 +41,6 @@ export default function NewCollectionPage() {
     Record<string, string>
   >({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [previewMode, setPreviewMode] = useState(false);
   const [dragOver, setDragOver] = useState(false);
 
   const handleInputChange = <K extends keyof CollectionFormData>(
@@ -156,379 +151,227 @@ export default function NewCollectionPage() {
     }
   };
 
-  const completionPercentage = Math.round(
-    (formData.name ? 25 : 0) +
-      (formData.description ? 25 : 0) +
-      (formData.image ? 40 : 0) +
-      10 // Base 10% for having the form open
-  );
-
   return (
-    <div className="min-h-screen ">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#0d0d0d]">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {/* Header */}
         <div className="mb-8">
-          {/* Navigation */}
-          <div className="flex items-center justify-between mb-6 flex-wrap gap-2">
-            <Link
-              href="/admin/collections"
-              className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-600 bg-white/80 backdrop-blur-sm rounded-xl shadow-sm hover:bg-white hover:text-gray-900 hover:shadow-md transition-all duration-200"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back
-            </Link>
-
-            <div className="flex items-center space-x-4 ">
-              <button
-                type="button"
-                onClick={() => setPreviewMode(!previewMode)}
-                className="inline-flex items-center px-4 py-2 text-sm font-medium text-indigo-600 bg-white/80 backdrop-blur-sm rounded-xl shadow-sm hover:bg-white hover:shadow-md transition-all duration-200 "
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <Link
+                href="/admin/collections"
+                className="inline-flex items-center text-sm text-gray-500 dark:text-[#696969] hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
               >
-                <Eye className="h-4 w-4 mr-2" />
-                {previewMode ? 'Edit Mode' : 'Preview'}
-              </button>
-
-              <button
-                type="submit"
-                form="collection-form"
-                disabled={isSubmitting}
-                className="inline-flex items-center px-4 py-2 text-sm font-medium text-indigo-600 bg-white/80 backdrop-blur-sm rounded-xl shadow-sm hover:bg-white hover:shadow-md transition-all duration-200"
-              >
-                {isSubmitting ? (
-                  <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                ) : (
-                  <Save className="h-5 w-5 mr-2" />
-                )}
-                {isSubmitting ? 'Creating Collection...' : 'Save '}
-              </button>
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back
+              </Link>
             </div>
+            <button
+              type="submit"
+              form="collection-form"
+              disabled={isSubmitting}
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-primary-500 hover:bg-primary-600 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+            >
+              {isSubmitting ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4 mr-2" />
+              )}
+              {isSubmitting ? 'Creating Collection...' : 'Save '}
+            </button>
           </div>
 
-          {/* Header Content */}
-          <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-2xl p-8 text-white">
-            <div className="flex items-center justify-between flex-wrap gap-3">
-              <div className="space-y-2">
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 md:w-12 md:h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur">
-                    <Sparkles className="h-6 w-6 text-white" />
-                  </div>
-                  <div>
-                    <h1 className="text-xl md:text-3xl font-bold">
-                      Create New Collection
-                    </h1>
-                    <p className="text-indigo-100 md:text-lg text-sm">
-                      Build a stunning jewelry collection
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Progress Indicator */}
-              <div className="text-center">
-                <div className="relative w-20 h-20">
-                  <svg className="w-20 h-20 transform -rotate-90">
-                    <circle
-                      cx="40"
-                      cy="40"
-                      r="30"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                      fill="transparent"
-                      className="text-white/20"
-                    />
-                    <circle
-                      cx="40"
-                      cy="40"
-                      r="30"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                      fill="transparent"
-                      strokeDasharray={`${2 * Math.PI * 30}`}
-                      strokeDashoffset={`${
-                        2 * Math.PI * 30 * (1 - completionPercentage / 100)
-                      }`}
-                      className="text-white transition-all duration-500"
-                    />
-                  </svg>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-sm font-bold">
-                      {completionPercentage}%
-                    </span>
-                  </div>
-                </div>
-                <p className="text-xs text-indigo-100 mt-1">Complete</p>
-              </div>
-            </div>
+          <div className="mt-4">
+            <h1 className=" text-xl md:text-3xl font-bold text-gray-900 dark:text-white">
+              Add New Collection
+            </h1>
+            <p className="mt-2 text-gray-600 dark:text-[#696969] text-sm md:text-base">
+              Create a new collection for your jewelry catalog
+            </p>
           </div>
         </div>
 
         {/* Error Alert */}
         {error && (
-          <div className="mb-8 bg-red-50/80 backdrop-blur-sm border border-red-200 rounded-xl p-6 shadow-sm">
+          <div className="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
             <div className="flex">
               <div className="flex-shrink-0">
-                <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
-                  <AlertCircle className="h-5 w-5 text-red-600" />
-                </div>
+                <AlertCircle className="h-5 w-5 text-red-400 dark:text-red-500" />
               </div>
-              <div className="ml-4">
-                <h3 className="text-sm md:text-lg font-semibold text-red-800 mb-1">
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-red-800 dark:text-red-400">
                   Error creating collection
                 </h3>
-                <div className="text-red-700 mb-4">{error}</div>
-                <button
-                  onClick={clearError}
-                  className="inline-flex items-center px-4 py-2 bg-red-100 text-red-800 rounded-lg hover:bg-red-200 transition-all duration-200"
-                >
-                  Dismiss
-                </button>
+                <div className="mt-2 text-sm text-red-700 dark:text-red-300">{error}</div>
+                <div className="mt-4">
+                  <button
+                    onClick={clearError}
+                    className="bg-red-100 dark:bg-red-900/30 px-3 py-1 rounded-md text-sm text-red-800 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-900/40 transition-colors"
+                  >
+                    Dismiss
+                  </button>
+                </div>
               </div>
             </div>
           </div>
         )}
 
-        {/* Preview Mode */}
-        {previewMode && (
-          <div className="mb-8 bg-white/80 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 overflow-hidden">
-            <div className="px-6 py-4 bg-gradient-to-r from-indigo-500 to-purple-600 text-white">
-              <h2 className="text-xl font-semibold">Collection Preview</h2>
-            </div>
-            <div className="p-8">
-              <div className="max-w-sm mx-auto">
-                <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-                  <div className="aspect-square bg-gray-100">
-                    {formData.image ? (
-                      <Image
-                        src={formData.image}
-                        alt={formData.name || 'Collection preview'}
-                        width={400}
-                        height={400}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <div className="text-center">
-                          <ImageIcon className="h-16 w-16 text-gray-400 mx-auto mb-2" />
-                          <p className="text-gray-500">No image uploaded</p>
-                        </div>
-                      </div>
+        <form id="collection-form" onSubmit={handleSubmit} className="space-y-8 md:space-y-10">
+          <div className="grid grid-cols-1 gap-8 md:gap-10 lg:grid-cols-3">
+            {/* Main Content */}
+            <div className="lg:col-span-2 space-y-8 md:space-y-10">
+              {/* Basic Information */}
+              <div className="bg-white dark:bg-[#191919] shadow-sm rounded-xl border border-gray-200 dark:border-[#3a3a3a] overflow-visible">
+                <div className="px-6 py-4 border-b border-gray-200 dark:border-[#2a2a2a] bg-gray-50 dark:bg-[#1f1f1f]">
+                  <div className="flex items-center">
+                    <Layers className="h-5 w-5 text-gray-600 dark:text-gray-400 mr-2" />
+                    <h2 className="md:text-lg font-semibold text-gray-900 dark:text-white">
+                      Basic Information
+                    </h2>
+                  </div>
+                </div>
+                <div className="p-6 space-y-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Collection Name *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.name}
+                      onChange={e => handleInputChange('name', e.target.value)}
+                      className={`block w-full px-3 py-2 border rounded-lg shadow-sm placeholder-gray-400 dark:placeholder-[#696969] focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-[#242424] text-gray-900 dark:text-white border-gray-300 dark:border-[#525252] text-sm md:text-base ${
+                        validationErrors.name
+                          ? 'border-red-300 dark:border-red-800'
+                          : 'border-gray-300 dark:border-[#525252]'
+                      }`}
+                      placeholder="Enter collection name"
+                    />
+                    {validationErrors.name && (
+                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                        {validationErrors.name}
+                      </p>
                     )}
                   </div>
-                  <div className="p-6">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="text-sm md:text-lg font-semibold text-gray-900">
-                        {formData.name || 'Collection Name'}
-                      </h3>
-                      <span
-                        className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                          formData.isActive
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-gray-100 text-gray-800'
-                        }`}
-                      >
-                        {formData.isActive ? 'Active' : 'Inactive'}
-                      </span>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Description
+                    </label>
+                    <textarea
+                      rows={4}
+                      value={formData.description}
+                      onChange={e =>
+                        handleInputChange('description', e.target.value)
+                      }
+                      className={`block w-full px-3 py-2 border rounded-lg shadow-sm placeholder-gray-400 dark:placeholder-[#696969] focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-[#242424] text-gray-900 dark:text-white border-gray-300 dark:border-[#525252] resize-none text-sm md:text-base `}
+                      placeholder="Describe this collection"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Sort Order
+                      </label>
+                      <input
+                        type="number"
+                        value={formData.sortOrder}
+                        onChange={e =>
+                          handleInputChange(
+                            'sortOrder',
+                            parseInt(e.target.value) || 0
+                          )
+                        }
+                        className="block w-full px-3 py-2 border border-gray-300 dark:border-[#525252] rounded-lg shadow-sm placeholder-gray-400 dark:placeholder-[#696969] focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-[#242424] text-gray-900 dark:text-white text-sm md:text-base"
+                        placeholder="0"
+                      />
                     </div>
-                    <p className="text-gray-600 text-sm">
-                      {formData.description || 'No description provided'}
-                    </p>
+
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id="isActive"
+                        checked={formData.isActive}
+                        onChange={e =>
+                          handleInputChange('isActive', e.target.checked)
+                        }
+                        className="h-4 w-4 text-primary-600 border-gray-300 dark:border-[#3a3a3a] rounded focus:ring-primary-500 dark:focus:ring-primary-600 bg-white dark:bg-[#242424]"
+                      />
+                      <label
+                        htmlFor="isActive"
+                        className="ml-2 block text-sm text-gray-900 dark:text-gray-100"
+                      >
+                        Active Collection
+                      </label>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        )}
 
-        {/* Form */}
-        {!previewMode && (
-          <form
-            id="collection-form"
-            onSubmit={handleSubmit}
-            className="space-y-8"
-          >
-            <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-              {/* Main Content */}
-              <div className="lg:col-span-2 space-y-8">
-                {/* Basic Information */}
-                <div className="bg-white/80 backdrop-blur-xl shadow-xl rounded-2xl border border-white/20 overflow-hidden">
-                  <div className="px-6 py-5 bg-gradient-to-r from-indigo-500 to-purple-600">
-                    <div className="flex items-center">
-                      <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur mr-3">
-                        <Layers className="h-5 w-5 text-white" />
-                      </div>
-                      <h2 className="text-sm md:text-xl font-semibold text-white">
-                        Basic Information
-                      </h2>
-                    </div>
-                  </div>
-                  <div className="p-8 space-y-8">
-                    {/* Collection Name */}
-                    <div className="group">
-                      <label className="block text-sm font-semibold text-gray-800 mb-3">
-                        Collection Name *
-                      </label>
-                      <div className="relative">
-                        <input
-                          type="text"
-                          required
-                          value={formData.name}
-                          onChange={e =>
-                            handleInputChange('name', e.target.value)
-                          }
-                          className={`block w-full px-4 py-3 border-2 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm  focus:border-transparent transition-all duration-200 ${
-                            validationErrors.name
-                              ? 'border-red-300 bg-red-50'
-                              : 'border-gray-200 focus:border-indigo-300 group-hover:border-gray-300'
-                          }`}
-                          placeholder="Enter collection name (e.g., 'Vintage Gold Collection')"
-                        />
-                        {formData.name && (
-                          <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                            <Check className="h-5 w-5 text-green-500" />
-                          </div>
-                        )}
-                      </div>
-                      {validationErrors.name && (
-                        <p className="mt-2 text-sm text-red-600 flex items-center">
-                          <AlertCircle className="h-4 w-4 mr-1" />
-                          {validationErrors.name}
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Description */}
-                    <div className="group">
-                      <label className="block text-sm font-semibold text-gray-800 mb-3">
-                        Description
-                      </label>
-                      <div className="relative">
-                        <textarea
-                          rows={4}
-                          value={formData.description}
-                          onChange={e =>
-                            handleInputChange('description', e.target.value)
-                          }
-                          className="block w-full px-4 py-3 border-2 border-gray-200 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none transition-all duration-200 group-hover:border-gray-300 text-sm "
-                          placeholder="Describe this collection (e.g., 'Elegant vintage-inspired gold jewelry featuring intricate designs...')"
-                        />
-                        <div className="absolute bottom-3 right-3 text-xs text-gray-400">
-                          {formData.description.length} characters
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Settings Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {/* Sort Order */}
-                      <div className="group">
-                        <label className="block text-sm font-semibold text-gray-800 mb-3">
-                          Sort Order
-                        </label>
-                        <div className="relative">
-                          <input
-                            type="number"
-                            value={formData.sortOrder}
-                            onChange={e =>
-                              handleInputChange(
-                                'sortOrder',
-                                parseInt(e.target.value) || 0
-                              )
-                            }
-                            className="block text-sm  w-full px-4 py-3 border-2 border-gray-200 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 group-hover:border-gray-300"
-                            placeholder="0"
-                          />
-                        </div>
-                        <p className="mt-2 text-xs text-gray-500">
-                          Lower numbers appear first
-                        </p>
-                      </div>
-
-                      {/* Active Status */}
-                      <div className="group">
-                        <label className="block text-sm font-semibold text-gray-800 mb-3">
-                          Collection Status
-                        </label>
-                        <div className="bg-gray-50 rounded-xl p-4">
-                          <label className="flex items-center cursor-pointer">
-                            <input
-                              type="checkbox"
-                              id="isActive"
-                              checked={formData.isActive}
-                              onChange={e =>
-                                handleInputChange('isActive', e.target.checked)
-                              }
-                              className="sr-only text-sm "
-                            />
-                            <div
-                              className={`relative w-12 h-6 rounded-full transition-colors duration-200 ${
-                                formData.isActive
-                                  ? 'bg-indigo-600'
-                                  : 'bg-gray-300'
-                              }`}
-                            >
-                              <div
-                                className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transform transition-transform duration-200 ${
-                                  formData.isActive ? 'translate-x-6' : ''
-                                }`}
-                              ></div>
-                            </div>
-                            <span className="ml-3 text-sm font-medium text-gray-900">
-                              {formData.isActive
-                                ? 'Active Collection'
-                                : 'Inactive Collection'}
-                            </span>
-                          </label>
-                          <p className="mt-2 text-xs text-gray-500">
-                            {formData.isActive
-                              ? 'Collection is visible to customers'
-                              : 'Collection is hidden from customers'}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
+            {/* Sidebar */}
+            <div className="space-y-8 md:space-y-10">
+              {/* Collection Image */}
+              <div className="bg-white dark:bg-[#191919] shadow-sm rounded-xl border border-gray-200 dark:border-[#3a3a3a] overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-200 dark:border-[#2a2a2a] bg-gray-50 dark:bg-[#1f1f1f]">
+                  <div className="flex items-center">
+                    <Upload className="h-5 w-5 text-gray-600 dark:text-gray-400 mr-2" />
+                    <h2 className="md:text-lg font-semibold text-gray-900 dark:text-white">
+                      Collection Image *
+                    </h2>
                   </div>
                 </div>
-              </div>
-
-              {/* Sidebar */}
-              <div className="space-y-8">
-                {/* Collection Image */}
-                <div className="bg-white/80 backdrop-blur-xl shadow-xl rounded-2xl border border-white/20 overflow-hidden">
-                  <div className="px-6 py-5 bg-gradient-to-r from-purple-500 to-pink-600">
-                    <div className="flex items-center">
-                      <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur mr-3">
-                        <Upload className="h-5 w-5 text-white" />
+                <div className="p-6 space-y-4">
+                  {/* Upload Area */}
+                  <div
+                    className={`border-2 border-dashed rounded-lg p-6 text-center transition-all duration-200 ${
+                      dragOver
+                        ? 'border-primary-400 bg-primary-50 dark:bg-primary-900/20 dark:border-primary-600'
+                        : formData.image
+                        ? 'border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-900/20'
+                        : 'border-gray-300 dark:border-[#3a3a3a] hover:border-gray-400 dark:hover:border-[#4a4a4a] hover:bg-gray-50 dark:hover:bg-[#1e1e1e]'
+                    }`}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                  >
+                    {formData.image ? (
+                      <div className="space-y-4">
+                        <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto">
+                          <ImageIcon className="h-6 w-6 text-green-600 dark:text-green-400" />
+                        </div>
+                        <p className="text-sm font-medium text-green-800 dark:text-green-300">
+                          Image uploaded successfully!
+                        </p>
+                        <label className="cursor-pointer inline-flex items-center px-4 py-2 bg-white dark:bg-[#242424] border border-gray-300 dark:border-[#3a3a3a] rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-all">
+                          <Upload className="h-4 w-4 mr-2" />
+                          Replace Image
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleImageSelect}
+                            className="hidden"
+                          />
+                        </label>
                       </div>
-                      <h2 className="text-xl font-semibold text-white">
-                        Collection Image *
-                      </h2>
-                    </div>
-                  </div>
-                  <div className="p-6 space-y-6">
-                    {/* Upload Area */}
-                    <div
-                      className={`border-2 border-dashed rounded-xl p-8 text-center transition-all duration-200 ${
-                        dragOver
-                          ? 'border-indigo-400 bg-indigo-50'
-                          : formData.image
-                          ? 'border-green-300 bg-green-50'
-                          : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
-                      }`}
-                      onDragOver={handleDragOver}
-                      onDragLeave={handleDragLeave}
-                      onDrop={handleDrop}
-                    >
-                      {formData.image ? (
-                        <div className="space-y-4">
-                          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
-                            <Check className="h-8 w-8 text-green-600" />
-                          </div>
-                          <p className="text-sm font-medium text-green-800">
-                            Image uploaded successfully!
-                          </p>
-                          <label className="cursor-pointer inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-all">
-                            <Upload className="h-4 w-4 mr-2" />
-                            Replace Image
+                    ) : (
+                      <div className="space-y-4">
+                        <div className="w-12 h-12 bg-gray-100 dark:bg-[#2a2a2a] rounded-full flex items-center justify-center mx-auto">
+                          <Upload className="h-6 w-6 text-gray-400 dark:text-[#696969]" />
+                        </div>
+                        <div>
+                          <label className="cursor-pointer">
+                            <span className="text-sm md:text-base font-medium text-gray-900 dark:text-gray-100 block mb-1">
+                              Upload collection image
+                            </span>
+                            <span className="text-sm text-gray-500 dark:text-gray-400 block mb-3">
+                              Drag & drop or click to browse
+                            </span>
+                            <span className="inline-flex items-center px-4 py-2 bg-primary-600 dark:bg-primary-600 text-white rounded-lg hover:bg-primary-700 dark:hover:bg-primary-700 transition-all">
+                              <Upload className="h-4 w-4 mr-2" />
+                              Choose File
+                            </span>
                             <input
                               type="file"
                               accept="image/*"
@@ -537,157 +380,94 @@ export default function NewCollectionPage() {
                             />
                           </label>
                         </div>
-                      ) : (
-                        <div className="space-y-4">
-                          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto">
-                            <Upload className="h-8 w-8 text-gray-400" />
-                          </div>
-                          <div>
-                            <label className="cursor-pointer">
-                              <span className="text-sm md:text-lg font-semibold text-gray-900 block mb-1">
-                                Upload collection image
-                              </span>
-                              <span className="text-sm text-gray-500 block mb-3">
-                                Drag & drop or click to browse
-                              </span>
-                              <span className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-all">
-                                <Upload className="h-4 w-4 mr-2" />
-                                Choose File
-                              </span>
-                              <input
-                                type="file"
-                                accept="image/*"
-                                onChange={handleImageSelect}
-                                className="hidden"
-                              />
-                            </label>
-                          </div>
-                          <p className="text-xs text-gray-500">
-                            PNG, JPG up to 5MB
-                          </p>
-                        </div>
-                      )}
-                    </div>
-
-                    {validationErrors.image && (
-                      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                        <p className="text-sm text-red-600 flex items-center">
-                          <AlertCircle className="h-4 w-4 mr-2" />
-                          {validationErrors.image}
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          PNG, JPG up to 5MB
                         </p>
                       </div>
                     )}
-
-                    {/* Image Preview */}
-                    {formData.image && (
-                      <div className="space-y-4">
-                        <div className="relative group">
-                          <div className="aspect-square w-full max-w-xs mx-auto rounded-xl overflow-hidden shadow-lg">
-                            <Image
-                              src={formData.image}
-                              alt="Collection preview"
-                              width={300}
-                              height={300}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => handleInputChange('image', '')}
-                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 shadow-lg"
-                          >
-                            <X className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </div>
-                    )}
                   </div>
-                </div>
 
-                {/* Form Summary */}
-                <div className="bg-gradient-to-br from-indigo-50 to-purple-50 backdrop-blur-xl shadow-xl rounded-2xl border border-indigo-200 overflow-hidden">
-                  <div className="px-6 py-5 bg-gradient-to-r from-indigo-600 to-purple-600">
-                    <div className="flex items-center">
-                      <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur mr-3">
-                        <Info className="h-5 w-5 text-white" />
-                      </div>
-                      <h2 className="text-xl font-semibold text-white">
-                        Summary
-                      </h2>
+                  {validationErrors.image && (
+                    <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                      <p className="text-sm text-red-600 dark:text-red-400 flex items-center">
+                        <AlertCircle className="h-4 w-4 mr-2" />
+                        {validationErrors.image}
+                      </p>
                     </div>
-                  </div>
-                  <div className="p-6 space-y-4">
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between p-3 bg-white rounded-lg">
-                        <span className="text-sm text-gray-600">
-                          Collection Name:
-                        </span>
-                        <span className="font-semibold text-gray-900 truncate ml-2">
-                          {formData.name || 'Not set'}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between p-3 bg-white rounded-lg">
-                        <span className="text-sm text-gray-600">Status:</span>
-                        <span
-                          className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
-                            formData.isActive
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-gray-100 text-gray-800'
-                          }`}
+                  )}
+
+                  {/* Image Preview */}
+                  {formData.image && (
+                    <div className="space-y-4">
+                      <div className="relative group">
+                        <div className="aspect-square w-full max-w-xs mx-auto rounded-xl overflow-hidden shadow-lg border border-gray-200 dark:border-[#2a2a2a]">
+                          <Image
+                            src={formData.image}
+                            alt="Collection preview"
+                            width={300}
+                            height={300}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleInputChange('image', '')}
+                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 shadow-lg"
                         >
-                          {formData.isActive ? 'Active' : 'Inactive'}
-                        </span>
+                          <X className="h-4 w-4" />
+                        </button>
                       </div>
-                      <div className="flex items-center justify-between p-3 bg-white rounded-lg">
-                        <span className="text-sm text-gray-600">
-                          Sort Order:
-                        </span>
-                        <span className="font-semibold text-gray-900">
-                          {formData.sortOrder}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between p-3 bg-white rounded-lg">
-                        <span className="text-sm text-gray-600">Image:</span>
-                        <div className="flex items-center">
-                          {formData.image ? (
-                            <div className="flex items-center text-green-600">
-                              <Check className="h-4 w-4 mr-1" />
-                              <span className="text-sm font-medium">
-                                Uploaded
-                              </span>
-                            </div>
-                          ) : (
-                            <span className="text-sm text-gray-500">
-                              Not set
-                            </span>
-                          )}
-                        </div>
-                      </div>
+                      <p className="text-xs text-gray-600 dark:text-gray-400 break-all text-center">
+                        {formData.image}
+                      </p>
                     </div>
+                  )}
+                </div>
+              </div>
 
-                    {/* Progress Bar */}
-                    <div className="pt-4 border-t border-indigo-200">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium text-indigo-800">
-                          Completion
-                        </span>
-                        <span className="text-sm font-bold text-indigo-800">
-                          {completionPercentage}%
-                        </span>
-                      </div>
-                      <div className="w-full bg-indigo-200 rounded-full h-2">
-                        <div
-                          className="bg-gradient-to-r from-indigo-600 to-purple-600 h-2 rounded-full transition-all duration-500"
-                          style={{ width: `${completionPercentage}%` }}
-                        ></div>
-                      </div>
-                    </div>
+              {/* Form Summary */}
+              <div className="bg-white dark:bg-[#191919] shadow-sm rounded-xl overflow-hidden border border-gray-200 dark:border-[#3a3a3a]">
+                <div className="px-6 py-4 bg-gray-50 dark:bg-[#1f1f1f]">
+                  <h2 className="md:text-lg font-semibold text-gray-900 dark:text-white">
+                    Form Summary
+                  </h2>
+                </div>
+                <div className="p-6 space-y-3 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600 dark:text-gray-400">Collection Name:</span>
+                    <span className="font-medium text-gray-900 dark:text-gray-200">
+                      {formData.name || 'Not set'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600 dark:text-gray-400">Status:</span>
+                    <span
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        formData.isActive
+                          ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
+                          : 'bg-gray-100 dark:bg-[#2a2a2a] text-gray-800 dark:text-gray-300'
+                      }`}
+                    >
+                      {formData.isActive ? 'Active' : 'Inactive'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600 dark:text-gray-400">Sort Order:</span>
+                    <span className="font-medium text-gray-900 dark:text-gray-200">
+                      {formData.sortOrder}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600 dark:text-gray-400">Image:</span>
+                    <span className="font-medium text-gray-900 dark:text-gray-200">
+                      {formData.image ? 'Uploaded' : 'Not set'}
+                    </span>
                   </div>
                 </div>
               </div>
             </div>
-          </form>
-        )}
+          </div>
+        </form>
       </div>
     </div>
   );

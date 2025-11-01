@@ -1,8 +1,9 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { type Product } from '@/lib/data/store/productStore';
 import { Package } from 'lucide-react';
+import Modal from './Modal';
 
 interface Props {
   isOpen: boolean;
@@ -22,7 +23,10 @@ export default function ProductSelectionModal({
   const [tempSelection, setTempSelection] =
     useState<string[]>(selectedProducts);
 
-  if (!isOpen) return null; // ✅ don't render modal if closed
+  // Update temp selection when selectedProducts changes
+  useEffect(() => {
+    setTempSelection(selectedProducts);
+  }, [selectedProducts]);
 
   const toggleProduct = (id: string) => {
     setTempSelection(prev =>
@@ -36,71 +40,68 @@ export default function ProductSelectionModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Overlay */}
-      <div
-        className="absolute inset-0 bg-black/40"
-        onClick={onClose} // ✅ close when clicking outside
-      />
-
-      {/* Modal */}
-      <div className="relative w-full max-w-4xl bg-white rounded-lg shadow-lg p-6 z-50">
-        <h2 className="text-lg font-semibold mb-4">Select Products</h2>
-
-        {products.length === 0 ? (
-          <p className="text-sm text-gray-500">No products available.</p>
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-h-[60vh] overflow-y-auto">
-            {products.map(product => {
-              const isSelected = tempSelection.includes(product._id);
-              return (
-                <div
-                  key={product._id}
-                  onClick={() => toggleProduct(product._id)}
-                  className={`cursor-pointer rounded-lg border p-3 flex flex-col items-center transition ${
-                    isSelected
-                      ? 'border-indigo-500 bg-indigo-50'
-                      : 'border-gray-200 bg-white hover:bg-gray-50'
-                  }`}
-                >
-                  {product.images?.[0] ? (
-                    <Image
-                      src={product.images[0]}
-                      alt={product.name}
-                      width={120}
-                      height={120}
-                      className="object-cover rounded-md"
-                    />
-                  ) : (
-                    <div className="w-[120px] h-[120px] bg-gray-100 flex items-center justify-center rounded-md">
-                      <Package className="h-8 w-8 text-gray-400" />
-                    </div>
-                  )}
-                  <p className="mt-2 text-sm font-medium text-gray-700 text-center">
-                    {product.name}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        {/* Actions */}
-        <div className="mt-6 flex justify-end space-x-3">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50"
-          >
-            Cancel
-          </button>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Select Products"
+      size="lg"
+      footer={(
+        <>
           <button
             onClick={handleSave}
-            className="px-4 py-2 rounded-md bg-indigo-600 text-white hover:bg-indigo-700"
+            className="w-full sm:w-auto inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary-600 text-sm font-medium text-white hover:bg-primary-700 dark:bg-primary-600 dark:hover:bg-primary-700"
           >
             Save Selection
           </button>
+          <button
+            onClick={onClose}
+            className="w-full sm:w-auto inline-flex justify-center rounded-md border border-gray-300 dark:border-[#3a3a3a] shadow-sm px-4 py-2 bg-white dark:bg-[#242424] text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a]"
+          >
+            Cancel
+          </button>
+        </>
+      )}
+    >
+      {products.length === 0 ? (
+        <div className="text-center py-8">
+          <Package className="mx-auto h-12 w-12 text-gray-400 dark:text-[#696969] mb-2" />
+          <p className="text-sm text-gray-500 dark:text-gray-400">No products available.</p>
         </div>
-      </div>
-    </div>
+      ) : (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-h-[60vh] overflow-y-auto">
+          {products.map(product => {
+            const isSelected = tempSelection.includes(product._id);
+            return (
+              <div
+                key={product._id}
+                onClick={() => toggleProduct(product._id)}
+                className={`cursor-pointer rounded-lg border-2 p-3 flex flex-col items-center transition-all ${
+                  isSelected
+                    ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 dark:border-primary-600'
+                    : 'border-gray-200 dark:border-[#3a3a3a] bg-white dark:bg-[#1e1e1e] hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'
+                }`}
+              >
+                {product.images?.[0] ? (
+                  <Image
+                    src={product.images[0]}
+                    alt={product.name}
+                    width={120}
+                    height={120}
+                    className="object-cover rounded-md"
+                  />
+                ) : (
+                  <div className="w-[120px] h-[120px] bg-gray-100 dark:bg-[#2a2a2a] flex items-center justify-center rounded-md">
+                    <Package className="h-8 w-8 text-gray-400 dark:text-[#696969]" />
+                  </div>
+                )}
+                <p className="mt-2 text-sm font-medium text-gray-700 dark:text-gray-300 text-center">
+                  {product.name}
+                </p>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </Modal>
   );
 }
