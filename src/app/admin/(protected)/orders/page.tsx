@@ -23,7 +23,7 @@ export default function OrdersPage() {
     orders,
     filters,
     pagination,
-    status,
+    // status,
     setFilters,
   } = useOrderStore();
 
@@ -96,7 +96,7 @@ export default function OrdersPage() {
 
     // Sort
     result.sort((a, b) => {
-      let aVal: any, bVal: any;
+      let aVal: string | number, bVal: string | number;
       switch (filters.sortBy) {
         case 'createdAt':
           aVal = new Date(a.createdAt).getTime();
@@ -114,7 +114,12 @@ export default function OrdersPage() {
           aVal = new Date(a.createdAt).getTime();
           bVal = new Date(b.createdAt).getTime();
       }
-      return filters.sortOrder === 'asc' ? aVal - bVal : bVal - aVal;
+      if (typeof aVal === 'string' && typeof bVal === 'string') {
+        return filters.sortOrder === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+      }
+      const aNum = typeof aVal === 'number' ? aVal : Number(aVal) || 0;
+      const bNum = typeof bVal === 'number' ? bVal : Number(bVal) || 0;
+      return filters.sortOrder === 'asc' ? aNum - bNum : bNum - aNum;
     });
 
     return result;

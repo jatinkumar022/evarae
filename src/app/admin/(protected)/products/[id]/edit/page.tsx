@@ -23,6 +23,7 @@ import { useCategoryStore } from '@/lib/data/store/categoryStore';
 import { CustomSelect } from '@/app/admin/components/CustomSelect';
 import { useUploadStore } from '@/lib/data/store/uploadStore';
 import { setDummyProductsInStore, setDummyCategoriesInStore } from '@/lib/data/dummyDataHelper';
+import { dummyProducts } from '@/lib/data/dummyProducts';
 
 interface ProductFormData {
   name: string;
@@ -82,13 +83,14 @@ export default function EditProductPage() {
 
   const {
     currentProduct,
-    fetchProduct,
+    // fetchProduct,
     updateProduct,
-    status,
+    // status,
     error,
     clearError,
   } = useProductStore();
-  const { categories, fetchCategories } = useCategoryStore();
+  const { categories, // fetchCategories
+    } = useCategoryStore();
   const { uploadFile } = useUploadStore();
 
   const [formData, setFormData] = useState<ProductFormData>({
@@ -121,9 +123,8 @@ export default function EditProductPage() {
     // Load dummy data
     setDummyCategoriesInStore();
     if (productId) {
-      const { dummyProducts } = require('@/lib/data/dummyProducts');
       setDummyProductsInStore();
-      const product = dummyProducts.find((p: any) => p._id === productId);
+      const product = dummyProducts.find((p) => p._id === productId);
       if (product) {
         useProductStore.setState({ currentProduct: product, status: 'success', error: null });
       } else {

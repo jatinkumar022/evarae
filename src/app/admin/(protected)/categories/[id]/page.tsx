@@ -9,13 +9,14 @@ import {
   Trash2,
   Layers,
   Package,
-  Tag,
+  // Tag,
   AlertCircle,
 } from 'lucide-react';
 import { useCategoryStore } from '@/lib/data/store/categoryStore';
 import { useProductStore } from '@/lib/data/store/productStore';
 import { setDummyCategoriesInStore, setDummyProductsInStore } from '@/lib/data/dummyDataHelper';
 import { dummyCategories } from '@/lib/data/dummyCategories';
+import { dummyProducts } from '@/lib/data/dummyProducts';
 import Modal from '@/app/admin/components/Modal';
 
 export default function CategoryViewPage() {
@@ -25,15 +26,15 @@ export default function CategoryViewPage() {
 
   const {
     currentCategory,
-    status,
+    // status,
     error,
-    fetchCategory,
+    // fetchCategory,
     deleteCategory,
     clearError,
   } = useCategoryStore();
   const {
     productsByCategory,
-    fetchProductsByCategory,
+    // fetchProductsByCategory,
   } = useProductStore();
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -41,11 +42,10 @@ export default function CategoryViewPage() {
   useEffect(() => {
     // Load dummy data and find the category
     if (id && typeof id === 'string') {
-      const { dummyProducts } = require('@/lib/data/dummyProducts');
       setDummyCategoriesInStore();
       setDummyProductsInStore();
       
-      const category = dummyCategories.find((c: any) => c._id === id);
+      const category = dummyCategories.find((c) => c._id === id);
       if (category) {
         useCategoryStore.setState({ currentCategory: category, status: 'success', error: null });
       } else {
@@ -53,8 +53,8 @@ export default function CategoryViewPage() {
       }
       
       // Find products in this category
-      const categoryProducts = dummyProducts.filter((p: any) => 
-        p.categories.some((cat: any) => cat._id === id)
+      const categoryProducts = dummyProducts.filter((p) => 
+        p.categories.some((cat) => cat._id === id)
       );
       useProductStore.setState({ productsByCategory: { [id]: categoryProducts } });
     }

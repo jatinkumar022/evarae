@@ -33,7 +33,7 @@ export default function EditCollectionPage() {
 
   const {
     currentCollection,
-    fetchCollection,
+    // fetchCollection,
     updateCollection,
     error,
     clearError,

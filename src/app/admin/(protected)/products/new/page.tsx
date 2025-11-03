@@ -77,8 +77,10 @@ const statusOptions = [
 
 export default function NewProductPage() {
   const router = useRouter();
-  const { createProduct, status, error, clearError } = useProductStore();
-  const { categories, fetchCategories } = useCategoryStore();
+  const { createProduct, // status,
+    error, clearError } = useProductStore();
+  const { categories, // fetchCategories
+    } = useCategoryStore();
   const { uploadFile } = useUploadStore();
 
   const [formData, setFormData] = useState<ProductFormData>({

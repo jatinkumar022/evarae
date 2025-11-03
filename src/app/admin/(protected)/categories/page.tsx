@@ -20,9 +20,9 @@ import { setDummyCategoriesInStore } from '@/lib/data/dummyDataHelper';
 export default function CategoriesPage() {
   const {
     categories,
-    status,
+    // status,
     error,
-    fetchCategories,
+    // fetchCategories,
     deleteCategory,
     updateCategory,
     clearError,
@@ -334,7 +334,7 @@ export default function CategoriesPage() {
           </div>
           <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
             <p className="text-sm text-gray-600 dark:text-gray-300">
-              Are you sure you want to delete "{categoryToDelete?.name}"? This action cannot be undone.
+              Are you sure you want to delete {categoryToDelete?.name}? This action cannot be undone.
             </p>
           </div>
         </div>

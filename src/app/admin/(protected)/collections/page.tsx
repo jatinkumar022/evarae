@@ -20,9 +20,9 @@ import { setDummyCollectionsInStore } from '@/lib/data/dummyDataHelper';
 export default function CollectionsPage() {
   const {
     collections,
-    status,
+    // status,  
     error,
-    fetchCollections,
+    // fetchCollections,
     deleteCollection,
     updateCollection,
     clearError,
@@ -31,8 +31,6 @@ export default function CollectionsPage() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [collectionToDelete, setCollectionToDelete] =
     useState<Collection | null>(null);
-  const [expanded, setExpanded] = useState<Set<string>>(new Set());
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchTerm, setSearchTerm] = useState('');
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
 
@@ -68,15 +66,6 @@ export default function CollectionsPage() {
         console.error('Failed to delete collection:', error);
       }
     }
-  };
-
-  const toggleExpand = (id: string) => {
-    setExpanded(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
   };
 
   const filteredCollections = collections.filter(
@@ -351,7 +340,7 @@ export default function CollectionsPage() {
           </div>
           <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
             <p className="text-sm text-gray-600 dark:text-gray-300">
-              Are you sure you want to delete "{collectionToDelete?.name}"? This action cannot be undone.
+              Are you sure you want to delete {collectionToDelete?.name}? This action cannot be undone.
             </p>
           </div>
         </div>

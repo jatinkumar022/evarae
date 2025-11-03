@@ -8,6 +8,7 @@ import {
   Package,
   Download,
 } from 'lucide-react';
+import { CustomSelect } from '@/app/admin/components/CustomSelect';
 
 interface AnalyticsData {
   totalRevenue: number;
@@ -113,155 +114,159 @@ export default function AnalyticsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Analytics</h1>
-          <p className="text-gray-600">
+      <div className="flex md:items-center gap-3 sm:gap-4 flex-col md:flex-row justify-between">
+        <div className="w-full md:w-auto">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Analytics</h1>
+          <p className="text-sm sm:text-base text-gray-600 dark:text-[#696969] mt-1">
             Track your business performance and insights
           </p>
         </div>
-        <div className="flex space-x-3">
-          <select
-            value={timeRange}
-            onChange={e => setTimeRange(e.target.value)}
-            className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-          >
-            <option value="7days">Last 7 days</option>
-            <option value="30days">Last 30 days</option>
-            <option value="3months">Last 3 months</option>
-            <option value="6months">Last 6 months</option>
-            <option value="1year">Last year</option>
-          </select>
-          <button className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-            <Download className="h-4 w-4 mr-2" />
-            Export Report
+        <div className="flex items-end gap-2 flex-wrap w-full md:w-auto">
+          <div className="flex-1 md:flex-none min-w-[140px] sm:min-w-[160px]">
+            <CustomSelect
+              label=""
+              value={timeRange}
+              onChange={(v) => setTimeRange(v)}
+              options={[
+                { value: '7days', label: 'Last 7 days' },
+                { value: '30days', label: 'Last 30 days' },
+                { value: '3months', label: 'Last 3 months' },
+                { value: '6months', label: 'Last 6 months' },
+                { value: '1year', label: 'Last year' },
+              ]}
+            />
+          </div>
+          <button className="flex-1 md:flex-none inline-flex items-center justify-center text-xs sm:text-sm px-3 sm:px-4 py-2 border border-gray-300 dark:border-[#525252] shadow-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-[#242424] hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors">
+            <Download className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 flex-shrink-0" />
+            <span className="hidden xs:inline">Export Report</span>
+            <span className="xs:hidden">Export</span>
           </button>
         </div>
       </div>
 
       {/* Key Metrics */}
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
+      <div className="grid grid-cols-1 gap-3 sm:gap-4 md:gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="bg-white dark:bg-[#191919] overflow-hidden shadow rounded-lg border border-gray-200 dark:border-[#525252]">
+          <div className="p-4 sm:p-5 md:p-6">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <DollarSign className="h-6 w-6 text-green-400" />
+                <DollarSign className="h-5 w-5 sm:h-6 sm:w-6 text-green-400" />
               </div>
-              <div className="ml-5 w-0 flex-1">
+              <div className="ml-3 sm:ml-4 md:ml-5 w-0 flex-1 min-w-0">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
+                  <dt className="text-xs sm:text-sm font-medium text-gray-500 dark:text-[#696969] truncate">
                     Total Revenue
                   </dt>
-                  <dd className="text-lg font-medium text-gray-900">
+                  <dd className="text-base sm:text-lg font-medium text-gray-900 dark:text-white truncate">
                     {formatCompactCurrency(analytics.totalRevenue)}
                   </dd>
                 </dl>
               </div>
             </div>
           </div>
-          <div className="bg-gray-50 px-5 py-3">
-            <div className="text-sm">
-              <div className="flex items-center">
-                <TrendingUp className="h-4 w-4 text-green-400" />
-                <span className="ml-2 font-medium text-green-600">
+          <div className="bg-gray-50 dark:bg-[#1d1d1d] px-4 sm:px-5 md:px-6 py-2.5 sm:py-3 border-t border-gray-200 dark:border-[#525252]">
+            <div className="text-xs sm:text-sm">
+              <div className="flex items-center flex-wrap gap-1">
+                <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-400 flex-shrink-0" />
+                <span className="font-medium text-green-600 dark:text-green-400">
                   {analytics.revenueGrowth}%
                 </span>
-                <span className="ml-2 text-gray-500">from last period</span>
+                <span className="text-gray-500 dark:text-[#696969] text-xs">from last period</span>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
+        <div className="bg-white dark:bg-[#191919] overflow-hidden shadow rounded-lg border border-gray-200 dark:border-[#525252]">
+          <div className="p-4 sm:p-5 md:p-6">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <ShoppingBag className="h-6 w-6 text-blue-400" />
+                <ShoppingBag className="h-5 w-5 sm:h-6 sm:w-6 text-blue-400" />
               </div>
-              <div className="ml-5 w-0 flex-1">
+              <div className="ml-3 sm:ml-4 md:ml-5 w-0 flex-1 min-w-0">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
+                  <dt className="text-xs sm:text-sm font-medium text-gray-500 dark:text-[#696969] truncate">
                     Total Orders
                   </dt>
-                  <dd className="text-lg font-medium text-gray-900">
+                  <dd className="text-base sm:text-lg font-medium text-gray-900 dark:text-white truncate">
                     {analytics.totalOrders}
                   </dd>
                 </dl>
               </div>
             </div>
           </div>
-          <div className="bg-gray-50 px-5 py-3">
-            <div className="text-sm">
-              <div className="flex items-center">
-                <TrendingUp className="h-4 w-4 text-green-400" />
-                <span className="ml-2 font-medium text-green-600">
+          <div className="bg-gray-50 dark:bg-[#1d1d1d] px-4 sm:px-5 md:px-6 py-2.5 sm:py-3 border-t border-gray-200 dark:border-[#525252]">
+            <div className="text-xs sm:text-sm">
+              <div className="flex items-center flex-wrap gap-1">
+                <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-400 flex-shrink-0" />
+                <span className="font-medium text-green-600 dark:text-green-400">
                   {analytics.ordersGrowth}%
                 </span>
-                <span className="ml-2 text-gray-500">from last period</span>
+                <span className="text-gray-500 dark:text-[#696969] text-xs">from last period</span>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
+        <div className="bg-white dark:bg-[#191919] overflow-hidden shadow rounded-lg border border-gray-200 dark:border-[#525252]">
+          <div className="p-4 sm:p-5 md:p-6">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <Users className="h-6 w-6 text-purple-400" />
+                <Users className="h-5 w-5 sm:h-6 sm:w-6 text-purple-400" />
               </div>
-              <div className="ml-5 w-0 flex-1">
+              <div className="ml-3 sm:ml-4 md:ml-5 w-0 flex-1 min-w-0">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
+                  <dt className="text-xs sm:text-sm font-medium text-gray-500 dark:text-[#696969] truncate">
                     Total Customers
                   </dt>
-                  <dd className="text-lg font-medium text-gray-900">
+                  <dd className="text-base sm:text-lg font-medium text-gray-900 dark:text-white truncate">
                     {analytics.totalCustomers}
                   </dd>
                 </dl>
               </div>
             </div>
           </div>
-          <div className="bg-gray-50 px-5 py-3">
-            <div className="text-sm">
-              <div className="flex items-center">
-                <TrendingUp className="h-4 w-4 text-green-400" />
-                <span className="ml-2 font-medium text-green-600">
+          <div className="bg-gray-50 dark:bg-[#1d1d1d] px-4 sm:px-5 md:px-6 py-2.5 sm:py-3 border-t border-gray-200 dark:border-[#525252]">
+            <div className="text-xs sm:text-sm">
+              <div className="flex items-center flex-wrap gap-1">
+                <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-400 flex-shrink-0" />
+                <span className="font-medium text-green-600 dark:text-green-400">
                   {analytics.customersGrowth}%
                 </span>
-                <span className="ml-2 text-gray-500">from last period</span>
+                <span className="text-gray-500 dark:text-[#696969] text-xs">from last period</span>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
+        <div className="bg-white dark:bg-[#191919] overflow-hidden shadow rounded-lg border border-gray-200 dark:border-[#525252]">
+          <div className="p-4 sm:p-5 md:p-6">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <Package className="h-6 w-6 text-orange-400" />
+                <Package className="h-5 w-5 sm:h-6 sm:w-6 text-orange-400" />
               </div>
-              <div className="ml-5 w-0 flex-1">
+              <div className="ml-3 sm:ml-4 md:ml-5 w-0 flex-1 min-w-0">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
+                  <dt className="text-xs sm:text-sm font-medium text-gray-500 dark:text-[#696969] truncate">
                     Total Products
                   </dt>
-                  <dd className="text-lg font-medium text-gray-900">
+                  <dd className="text-base sm:text-lg font-medium text-gray-900 dark:text-white truncate">
                     {analytics.totalProducts}
                   </dd>
                 </dl>
               </div>
             </div>
           </div>
-          <div className="bg-gray-50 px-5 py-3">
-            <div className="text-sm">
-              <div className="flex items-center">
-                <TrendingUp className="h-4 w-4 text-green-400" />
-                <span className="ml-2 font-medium text-green-600">
+          <div className="bg-gray-50 dark:bg-[#1d1d1d] px-4 sm:px-5 md:px-6 py-2.5 sm:py-3 border-t border-gray-200 dark:border-[#525252]">
+            <div className="text-xs sm:text-sm">
+              <div className="flex items-center flex-wrap gap-1">
+                <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-400 flex-shrink-0" />
+                <span className="font-medium text-green-600 dark:text-green-400">
                   {analytics.productsGrowth}%
                 </span>
-                <span className="ml-2 text-gray-500">from last period</span>
+                <span className="text-gray-500 dark:text-[#696969] text-xs">from last period</span>
               </div>
             </div>
           </div>
@@ -269,14 +274,14 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Charts and Insights */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:gap-5 md:gap-6 lg:grid-cols-2">
         {/* Monthly Revenue Chart */}
-        <div className="bg-white shadow rounded-lg">
-          <div className="px-4 py-5 sm:p-6">
-            <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
+        <div className="bg-white dark:bg-[#191919] shadow rounded-lg border border-gray-200 dark:border-[#525252] overflow-hidden">
+          <div className="p-4 sm:p-5 md:p-6">
+            <h3 className="text-base sm:text-lg leading-6 font-medium text-gray-900 dark:text-white mb-3 sm:mb-4">
               Monthly Revenue
             </h3>
-            <div className="h-64 flex items-end justify-between space-x-2">
+            <div className="h-48 sm:h-56 md:h-64 flex items-end justify-between gap-0.5 sm:gap-1 md:gap-2 overflow-x-auto">
               {analytics.monthlyRevenue.map(item => {
                 const maxRevenue = Math.max(
                   ...analytics.monthlyRevenue.map(m => m.revenue)
@@ -285,16 +290,16 @@ export default function AnalyticsPage() {
                 return (
                   <div
                     key={item.month}
-                    className="flex-1 flex flex-col items-center"
+                    className="flex-1 min-w-[28px] sm:min-w-[32px] md:min-w-[36px] flex flex-col items-center"
                   >
-                    <div className="text-xs text-gray-500 mb-2">
+                    <div className="text-[10px] xs:text-xs text-gray-500 dark:text-[#696969] mb-1 sm:mb-2 text-center leading-tight">
                       {formatCompactCurrency(item.revenue)}
                     </div>
                     <div
-                      className="w-full bg-gradient-to-t from-primary to-primary/70 rounded-t"
+                      className="w-full bg-gradient-to-t from-primary-600 to-primary-400 rounded-t dark:from-primary-500 dark:to-primary-300 min-h-[4px]"
                       style={{ height: `${height}%` }}
                     ></div>
-                    <div className="text-xs text-gray-500 mt-2">
+                    <div className="text-[10px] xs:text-xs text-gray-500 dark:text-[#696969] mt-1 sm:mt-2">
                       {item.month}
                     </div>
                   </div>
@@ -305,31 +310,31 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Top Categories */}
-        <div className="bg-white shadow rounded-lg">
-          <div className="px-4 py-5 sm:p-6">
-            <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
+        <div className="bg-white dark:bg-[#191919] shadow rounded-lg border border-gray-200 dark:border-[#525252]">
+          <div className="p-4 sm:p-5 md:p-6">
+            <h3 className="text-base sm:text-lg leading-6 font-medium text-gray-900 dark:text-white mb-3 sm:mb-4">
               Top Categories by Sales
             </h3>
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {analytics.topCategories.map(category => (
                 <div
                   key={category.name}
-                  className="flex items-center justify-between"
+                  className="flex items-center justify-between gap-2"
                 >
-                  <div className="flex items-center">
-                    <div className="w-3 h-3 bg-primary rounded-full mr-3"></div>
-                    <span className="text-sm font-medium text-gray-900">
+                  <div className="flex items-center min-w-0 flex-1">
+                    <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-primary-600 dark:bg-primary-500 rounded-full mr-2 sm:mr-3 flex-shrink-0"></div>
+                    <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white truncate">
                       {category.name}
                     </span>
                   </div>
-                  <div className="flex items-center space-x-4">
-                    <div className="w-32 bg-gray-200 rounded-full h-2">
+                  <div className="flex items-center gap-2 sm:gap-3 md:gap-4 flex-shrink-0">
+                    <div className="w-20 sm:w-24 md:w-32 bg-gray-200 dark:bg-[#525252] rounded-full h-1.5 sm:h-2">
                       <div
-                        className="bg-primary h-2 rounded-full"
+                        className="bg-primary-600 dark:bg-primary-500 h-1.5 sm:h-2 rounded-full"
                         style={{ width: `${category.percentage}%` }}
                       ></div>
                     </div>
-                    <span className="text-sm text-gray-500 w-12 text-right">
+                    <span className="text-xs sm:text-sm text-gray-500 dark:text-[#696969] w-12 sm:w-14 text-right whitespace-nowrap">
                       {category.sales} sales
                     </span>
                   </div>
@@ -340,33 +345,33 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Top Products */}
-        <div className="bg-white shadow rounded-lg">
-          <div className="px-4 py-5 sm:p-6">
-            <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
+        <div className="bg-white dark:bg-[#191919] shadow rounded-lg border border-gray-200 dark:border-[#525252]">
+          <div className="p-4 sm:p-5 md:p-6">
+            <h3 className="text-base sm:text-lg leading-6 font-medium text-gray-900 dark:text-white mb-3 sm:mb-4">
               Top Performing Products
             </h3>
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {analytics.topProducts.map((product, index) => (
                 <div
                   key={product.name}
-                  className="flex items-center justify-between"
+                  className="flex items-center justify-between gap-2"
                 >
-                  <div className="flex items-center">
-                    <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center mr-3">
-                      <span className="text-sm font-medium text-gray-600">
+                  <div className="flex items-center min-w-0 flex-1">
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gray-200 dark:bg-[#525252] rounded-full flex items-center justify-center mr-2 sm:mr-3 flex-shrink-0">
+                      <span className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">
                         {index + 1}
                       </span>
                     </div>
-                    <div>
-                      <div className="text-sm font-medium text-gray-900">
+                    <div className="min-w-0 flex-1">
+                      <div className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white truncate">
                         {product.name}
                       </div>
-                      <div className="text-sm text-gray-500">
+                      <div className="text-xs sm:text-sm text-gray-500 dark:text-[#696969]">
                         {product.sales} sales
                       </div>
                     </div>
                   </div>
-                  <div className="text-sm font-medium text-gray-900">
+                  <div className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white flex-shrink-0 ml-2">
                     {formatCompactCurrency(product.revenue)}
                   </div>
                 </div>
@@ -376,36 +381,36 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Recent Activity */}
-        <div className="bg-white shadow rounded-lg">
-          <div className="px-4 py-5 sm:p-6">
-            <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
+        <div className="bg-white dark:bg-[#191919] shadow rounded-lg border border-gray-200 dark:border-[#525252]">
+          <div className="p-4 sm:p-5 md:p-6">
+            <h3 className="text-base sm:text-lg leading-6 font-medium text-gray-900 dark:text-white mb-3 sm:mb-4">
               Recent Activity
             </h3>
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {analytics.recentActivity.map((activity, index) => (
-                <div key={index} className="flex items-start space-x-3">
+                <div key={index} className="flex items-start gap-2 sm:gap-3">
                   <div className="flex-shrink-0">
-                    <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gray-200 dark:bg-[#525252] rounded-full flex items-center justify-center">
                       {activity.type === 'order' && (
-                        <ShoppingBag className="h-4 w-4 text-blue-500" />
+                        <ShoppingBag className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-500" />
                       )}
                       {activity.type === 'customer' && (
-                        <Users className="h-4 w-4 text-green-500" />
+                        <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-500" />
                       )}
                       {activity.type === 'product' && (
-                        <Package className="h-4 w-4 text-orange-500" />
+                        <Package className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-orange-500" />
                       )}
                     </div>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-gray-900">
+                    <p className="text-xs sm:text-sm text-gray-900 dark:text-white break-words">
                       {activity.description}
                     </p>
-                    <p className="text-sm text-gray-500">{activity.time}</p>
+                    <p className="text-xs sm:text-sm text-gray-500 dark:text-[#696969] mt-0.5">{activity.time}</p>
                   </div>
                   {activity.amount && (
-                    <div className="text-sm font-medium text-gray-900">
-                      {formatCurrency(activity.amount)}
+                    <div className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white flex-shrink-0 ml-2">
+                      {formatCompactCurrency(activity.amount)}
                     </div>
                   )}
                 </div>
@@ -416,37 +421,37 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Additional Insights */}
-      <div className="bg-white shadow rounded-lg">
-        <div className="px-4 py-5 sm:p-6">
-          <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
+      <div className="bg-white dark:bg-[#191919] shadow rounded-lg border border-gray-200 dark:border-[#525252]">
+        <div className="p-4 sm:p-5 md:p-6">
+          <h3 className="text-base sm:text-lg leading-6 font-medium text-gray-900 dark:text-white mb-3 sm:mb-4">
             Business Insights
           </h3>
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:gap-5 md:gap-6 sm:grid-cols-3">
             <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">
+              <div className="text-xl sm:text-2xl font-bold text-green-600 dark:text-green-400">
                 ₹
                 {Math.round(
                   analytics.totalRevenue / analytics.totalOrders
                 ).toLocaleString()}
               </div>
-              <div className="text-sm text-gray-500">Average Order Value</div>
+              <div className="text-xs sm:text-sm text-gray-500 dark:text-[#696969] mt-1">Average Order Value</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">
+              <div className="text-xl sm:text-2xl font-bold text-blue-600 dark:text-blue-400">
                 {Math.round(
                   (analytics.totalOrders / analytics.totalCustomers) * 100
                 ) / 100}
               </div>
-              <div className="text-sm text-gray-500">Orders per Customer</div>
+              <div className="text-xs sm:text-sm text-gray-500 dark:text-[#696969] mt-1">Orders per Customer</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-purple-600">
+              <div className="text-xl sm:text-2xl font-bold text-purple-600 dark:text-purple-400">
                 {Math.round(
                   analytics.totalRevenue / analytics.totalProducts / 1000
                 )}
                 K
               </div>
-              <div className="text-sm text-gray-500">Revenue per Product</div>
+              <div className="text-xs sm:text-sm text-gray-500 dark:text-[#696969] mt-1">Revenue per Product</div>
             </div>
           </div>
         </div>

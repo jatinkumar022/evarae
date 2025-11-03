@@ -1,174 +1,93 @@
 'use client';
-import { useState } from 'react';
-import Link from 'next/link';
+import { useEffect, useMemo } from 'react';
 import {
   Search,
-  Filter,
-  Eye,
-  Mail,
+  User,
   Phone,
   MapPin,
-  ShoppingBag,
-  Star,
-  Calendar,
-  MoreHorizontal,
-  UserPlus,
+  Download,
 } from 'lucide-react';
-
-interface Customer {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  address: {
-    street: string;
-    city: string;
-    state: string;
-    pincode: string;
-  };
-  totalOrders: number;
-  totalSpent: number;
-  lastOrderDate: string;
-  joinDate: string;
-  isActive: boolean;
-  tags: string[];
-}
-
-const mockCustomers: Customer[] = [
-  {
-    id: 'CUST-001',
-    name: 'Priya Sharma',
-    email: 'priya.sharma@email.com',
-    phone: '+91 98765 43210',
-    address: {
-      street: '123 Main Street',
-      city: 'Mumbai',
-      state: 'Maharashtra',
-      pincode: '400001',
-    },
-    totalOrders: 5,
-    totalSpent: 450000,
-    lastOrderDate: '2024-01-15T10:00:00Z',
-    joinDate: '2023-06-15T10:00:00Z',
-    isActive: true,
-    tags: ['VIP', 'Regular'],
-  },
-  {
-    id: 'CUST-002',
-    name: 'Rahul Patel',
-    email: 'rahul.patel@email.com',
-    phone: '+91 87654 32109',
-    address: {
-      street: '456 Oak Avenue',
-      city: 'Delhi',
-      state: 'Delhi',
-      pincode: '110001',
-    },
-    totalOrders: 3,
-    totalSpent: 225000,
-    lastOrderDate: '2024-01-14T15:30:00Z',
-    joinDate: '2023-08-20T14:30:00Z',
-    isActive: true,
-    tags: ['New'],
-  },
-  {
-    id: 'CUST-003',
-    name: 'Anjali Singh',
-    email: 'anjali.singh@email.com',
-    phone: '+91 76543 21098',
-    address: {
-      street: '789 Pine Road',
-      city: 'Bangalore',
-      state: 'Karnataka',
-      pincode: '560001',
-    },
-    totalOrders: 8,
-    totalSpent: 680000,
-    lastOrderDate: '2024-01-13T09:15:00Z',
-    joinDate: '2023-03-10T09:15:00Z',
-    isActive: true,
-    tags: ['VIP', 'Loyal'],
-  },
-  {
-    id: 'CUST-004',
-    name: 'Vikram Mehta',
-    email: 'vikram.mehta@email.com',
-    phone: '+91 65432 10987',
-    address: {
-      street: '321 Elm Street',
-      city: 'Chennai',
-      state: 'Tamil Nadu',
-      pincode: '600001',
-    },
-    totalOrders: 2,
-    totalSpent: 160000,
-    lastOrderDate: '2024-01-12T16:45:00Z',
-    joinDate: '2023-11-05T16:45:00Z',
-    isActive: true,
-    tags: ['New'],
-  },
-  {
-    id: 'CUST-005',
-    name: 'Sneha Reddy',
-    email: 'sneha.reddy@email.com',
-    phone: '+91 54321 09876',
-    address: {
-      street: '654 Maple Drive',
-      city: 'Hyderabad',
-      state: 'Telangana',
-      pincode: '500001',
-    },
-    totalOrders: 12,
-    totalSpent: 950000,
-    lastOrderDate: '2024-01-10T11:20:00Z',
-    joinDate: '2023-01-15T11:20:00Z',
-    isActive: true,
-    tags: ['VIP', 'Loyal', 'Premium'],
-  },
-];
+import { useCustomerStore, Customer } from '@/lib/data/store/customerStore';
+import { CustomSelect } from '@/app/admin/components/CustomSelect';
+import { setDummyCustomersInStore } from '@/lib/data/dummyDataHelper';
 
 export default function CustomersPage() {
-  const [customers] = useState<Customer[]>(mockCustomers);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [sortBy, setSortBy] = useState('name');
+  const {
+    customers,
+    filters,
+    pagination,
+    // status,
+    setFilters,
+  } = useCustomerStore();
 
-  const filteredCustomers = customers.filter(customer => {
-    const matchesSearch =
-      customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      customer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      customer.phone.includes(searchTerm);
-    const matchesStatus =
-      statusFilter === 'all' ||
-      customer.isActive === (statusFilter === 'active');
-    return matchesSearch && matchesStatus;
-  });
+  // Use dummy data instead of API calls
+  useEffect(() => {
+    setDummyCustomersInStore();
+  }, []);
 
-  const sortedCustomers = [...filteredCustomers].sort((a, b) => {
-    switch (sortBy) {
-      case 'name':
-        return a.name.localeCompare(b.name);
-      case 'totalSpent':
-        return b.totalSpent - a.totalSpent;
-      case 'totalOrders':
-        return b.totalOrders - a.totalOrders;
-      case 'lastOrder':
-        return (
-          new Date(b.lastOrderDate).getTime() -
-          new Date(a.lastOrderDate).getTime()
-        );
-      default:
-        return 0;
+  // Filter customers locally
+  const filteredCustomers = useMemo(() => {
+    let result = [...customers];
+
+    // Search filter
+    if (filters.search) {
+      const searchLower = filters.search.toLowerCase();
+      result = result.filter(customer =>
+        customer.name.toLowerCase().includes(searchLower) ||
+        customer.email.toLowerCase().includes(searchLower) ||
+        customer.phone.includes(searchLower) ||
+        customer.profile?.addresses.some(addr => 
+          addr.city.toLowerCase().includes(searchLower) ||
+          addr.state.toLowerCase().includes(searchLower)
+        )
+      );
     }
-  });
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-IN', {
+    // Role filter
+    if (filters.role) {
+      result = result.filter(customer => customer.role === filters.role);
+    }
+
+    // Sort
+    result.sort((a, b) => {
+      let aVal: string | number, bVal: string | number;
+      switch (filters.sortBy) {
+        case 'createdAt':
+          aVal = new Date(a.createdAt).getTime();
+          bVal = new Date(b.createdAt).getTime();
+          break;
+        case 'name':
+          aVal = a.name.toLowerCase();
+          bVal = b.name.toLowerCase();
+          break;
+        case 'totalSpent':
+          aVal = a.totalSpent || 0;
+          bVal = b.totalSpent || 0;
+          break;
+        case 'totalOrders':
+          aVal = a.totalOrders || 0;
+          bVal = b.totalOrders || 0;
+          break;
+        case 'lastOrder':
+          aVal = a.lastOrderDate ? new Date(a.lastOrderDate).getTime() : 0;
+          bVal = b.lastOrderDate ? new Date(b.lastOrderDate).getTime() : 0;
+          break;
+        default:
+          aVal = new Date(a.createdAt).getTime();
+          bVal = new Date(b.createdAt).getTime();
+      }
+      return filters.sortOrder === 'asc' ? (aVal > bVal ? 1 : -1) : (bVal > aVal ? 1 : -1);
+    });
+
+    return result;
+  }, [customers, filters]);
+
+  const formatCurrency = (amount: number) =>
+    new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR',
       maximumFractionDigits: 0,
     }).format(amount);
-  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-IN', {
@@ -178,234 +97,235 @@ export default function CustomersPage() {
     });
   };
 
-  const getCustomerTier = (totalSpent: number) => {
-    if (totalSpent >= 500000)
-      return { tier: 'Premium', color: 'bg-purple-100 text-purple-800' };
-    if (totalSpent >= 200000)
-      return { tier: 'Gold', color: 'bg-yellow-100 text-yellow-800' };
-    if (totalSpent >= 100000)
-      return { tier: 'Silver', color: 'bg-gray-100 text-gray-800' };
-    return { tier: 'Bronze', color: 'bg-orange-100 text-orange-800' };
+  const getCustomerTier = (totalSpent?: number) => {
+    if (!totalSpent) return { tier: 'New', color: 'bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-300' };
+    if (totalSpent >= 500000) return { tier: 'Premium', color: 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300' };
+    if (totalSpent >= 200000) return { tier: 'Gold', color: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300' };
+    if (totalSpent >= 100000) return { tier: 'Silver', color: 'bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-300' };
+    return { tier: 'Bronze', color: 'bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300' };
+  };
+
+  const getDefaultAddress = (customer: Customer) => {
+    return customer.profile?.addresses?.find(addr => addr.isDefaultShipping) || 
+           customer.profile?.addresses?.[0];
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex md:items-center gap-4 flex-col md:flex-row justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Customers</h1>
-          <p className="text-gray-600">Manage your customer database</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Customers</h1>
+          <p className="text-gray-600 dark:text-[#696969]">Manage customer database and view customer details</p>
         </div>
-        <button className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
-          <UserPlus className="h-4 w-4 mr-2" />
-          Add Customer
-        </button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            className="inline-flex items-center text-xs md:text-sm px-4 py-2 border border-gray-300 dark:border-[#525252] shadow-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-[#242424] hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors"
+          >
+            <Download className="h-4 w-4 mr-2" /> Export
+          </button>
+        </div>
       </div>
 
       {/* Filters */}
-      <div className="bg-white shadow rounded-lg p-6">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
-          <div>
-            <label
-              htmlFor="search"
-              className="block text-sm font-medium text-gray-700"
-            >
+      <div className="bg-white dark:bg-[#191919] shadow rounded-lg p-6 border border-gray-200 dark:border-[#525252]">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="sm:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               Search
             </label>
             <div className="mt-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-[#696969]" />
               <input
                 type="text"
-                id="search"
-                value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
-                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm"
-                placeholder="Search customers..."
+                value={filters.search}
+                onChange={e => setFilters({ search: e.target.value })}
+                placeholder="Search by name, email, phone, city..."
+                className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-[#525252] rounded-md sm:text-sm bg-white dark:bg-[#242424] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#696969] focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-600 dark:focus:border-primary-600"
               />
             </div>
           </div>
 
           <div>
-            <label
-              htmlFor="status"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Status
-            </label>
-            <select
-              id="status"
-              value={statusFilter}
-              onChange={e => setStatusFilter(e.target.value)}
-              className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md"
-            >
-              <option value="all">All Customers</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
+            <CustomSelect
+              label="Role"
+              value={filters.role}
+              onChange={(v) => setFilters({ role: v })}
+              options={[
+                { value: '', label: 'All Roles' },
+                { value: 'user', label: 'User' },
+                { value: 'admin', label: 'Admin' },
+              ]}
+            />
           </div>
 
           <div>
-            <label
-              htmlFor="sort"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Sort By
-            </label>
-            <select
-              id="sort"
-              value={sortBy}
-              onChange={e => setSortBy(e.target.value)}
-              className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md"
-            >
-              <option value="name">Name</option>
-              <option value="totalSpent">Total Spent</option>
-              <option value="totalOrders">Total Orders</option>
-              <option value="lastOrder">Last Order</option>
-            </select>
-          </div>
-
-          <div className="flex items-end">
-            <button className="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
-              <Filter className="h-4 w-4 mr-2" />
-              More Filters
-            </button>
+            <CustomSelect
+              label="Sort By"
+              value={filters.sortBy}
+              onChange={(v) => setFilters({ sortBy: v })}
+              options={[
+                { value: 'createdAt', label: 'Join Date' },
+                { value: 'name', label: 'Name' },
+                { value: 'totalSpent', label: 'Total Spent' },
+                { value: 'totalOrders', label: 'Total Orders' },
+                { value: 'lastOrder', label: 'Last Order' },
+              ]}
+            />
           </div>
         </div>
       </div>
 
-      {/* Customers Grid */}
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {sortedCustomers.map(customer => {
-          const tier = getCustomerTier(customer.totalSpent);
-          return (
-            <div
-              key={customer.id}
-              className="bg-white shadow rounded-lg hover:shadow-md transition-shadow"
-            >
-              <div className="p-6">
-                {/* Customer Header */}
-                <div className="flex items-start justify-between">
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-lg font-medium text-gray-900 truncate">
-                      {customer.name}
+      {/* Customers Table */}
+      <div className="bg-white dark:bg-[#191919] shadow rounded-lg border border-gray-200 dark:border-[#525252] overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200 dark:divide-[#525252]">
+            <thead className="bg-gray-50 dark:bg-[#1d1d1d]">
+              <tr>
+                <th className="px-3 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Customer
+                </th>
+                <th className="px-3 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Contact
+                </th>
+                <th className="px-3 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Location
+                </th>
+                <th className="px-3 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Orders
+                </th>
+                <th className="px-3 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Total Spent
+                </th>
+                <th className="px-3 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Joined
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white dark:bg-[#1d1d1d] divide-y divide-gray-200 dark:divide-[#525252]">
+              {filteredCustomers.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-3 sm:px-4 py-12 text-center">
+                    <User className="mx-auto h-12 w-12 text-gray-400 dark:text-[#696969]" />
+                    <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">
+                      No customers found
                     </h3>
-                    <p className="text-sm text-gray-500">{customer.id}</p>
-                  </div>
-                  <div className="ml-2 flex-shrink-0">
-                    <button className="text-gray-400 hover:text-gray-600">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
+                    <p className="mt-1 text-sm text-gray-500 dark:text-[#696969]">
+                      Try adjusting your search or filter criteria.
+                    </p>
+                  </td>
+                </tr>
+              ) : (
+                filteredCustomers.map((customer) => {
+                  const defaultAddress = getDefaultAddress(customer);
+                  const tier = getCustomerTier(customer.totalSpent);
+                  return (
+                    <tr key={customer._id} className="transition-colors">
+                      {/* Customer Name */}
+                      <td className="px-3 sm:px-4 py-4 whitespace-nowrap hover:bg-gray-50 dark:hover:bg-[#242424] transition-colors">
+                        <div className="flex items-center gap-3">
+                          <div className="flex-shrink-0 h-10 w-10 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center">
+                            <User className="h-5 w-5 text-primary-600 dark:text-primary-400" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="text-sm font-semibold text-gray-900 dark:text-white">
+                              {customer.name}
+                            </div>
+                            <div className="mt-1">
+                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${tier.color}`}>
+                                {tier.tier}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </td>
 
-                {/* Contact Info */}
-                <div className="mt-4 space-y-2">
-                  <div className="flex items-center text-sm text-gray-600">
-                    <Mail className="h-4 w-4 mr-2 text-gray-400" />
-                    <span className="truncate">{customer.email}</span>
-                  </div>
-                  <div className="flex items-center text-sm text-gray-600">
-                    <Phone className="h-4 w-4 mr-2 text-gray-400" />
-                    <span>{customer.phone}</span>
-                  </div>
-                  <div className="flex items-start text-sm text-gray-600">
-                    <MapPin className="h-4 w-4 mr-2 mt-0.5 text-gray-400 flex-shrink-0" />
-                    <span className="truncate">
-                      {customer.address.street}, {customer.address.city}
-                    </span>
-                  </div>
-                </div>
+                      {/* Contact */}
+                      <td className="px-3 sm:px-4 py-4 whitespace-nowrap hover:bg-gray-50 dark:hover:bg-[#242424] transition-colors">
+                        <div className="text-sm font-medium text-gray-900 dark:text-white">
+                          {customer.email}
+                        </div>
+                        <div className="text-sm text-gray-500 dark:text-[#696969] flex items-center gap-1 mt-1">
+                          <Phone className="h-3 w-3" />
+                          {customer.phone}
+                        </div>
+                      </td>
 
-                {/* Stats */}
-                <div className="mt-6 grid grid-cols-2 gap-4">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-gray-900">
-                      {customer.totalOrders}
-                    </div>
-                    <div className="text-sm text-gray-500">Orders</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-gray-900">
-                      {formatCurrency(customer.totalSpent)}
-                    </div>
-                    <div className="text-sm text-gray-500">Total Spent</div>
-                  </div>
-                </div>
+                      {/* Location */}
+                      <td className="px-3 sm:px-4 py-4 whitespace-nowrap hover:bg-gray-50 dark:hover:bg-[#242424] transition-colors">
+                        {defaultAddress ? (
+                          <div className="text-sm text-gray-900 dark:text-white">
+                            <div className="flex items-center gap-1">
+                              <MapPin className="h-3 w-3 text-gray-400" />
+                              <span>{defaultAddress.city}</span>
+                            </div>
+                            <div className="text-xs text-gray-500 dark:text-[#696969] mt-1">
+                              {defaultAddress.state}
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="text-sm text-gray-500 dark:text-[#696969]">—</span>
+                        )}
+                      </td>
 
-                {/* Customer Tier */}
-                <div className="mt-4">
-                  <span
-                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${tier.color}`}
-                  >
-                    {tier.tier} Customer
-                  </span>
-                </div>
+                      {/* Orders */}
+                      <td className="px-3 sm:px-4 py-4 whitespace-nowrap hover:bg-gray-50 dark:hover:bg-[#242424] transition-colors">
+                        <div className="text-sm font-semibold text-gray-900 dark:text-white">
+                          {customer.totalOrders || 0}
+                        </div>
+                        {customer.lastOrderDate && (
+                          <div className="text-xs text-gray-500 dark:text-[#696969] mt-1">
+                            Last: {formatDate(customer.lastOrderDate)}
+                          </div>
+                        )}
+                      </td>
 
-                {/* Tags */}
-                {customer.tags.length > 0 && (
-                  <div className="mt-4 flex flex-wrap gap-1">
-                    {customer.tags.map(tag => (
-                      <span
-                        key={tag}
-                        className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                )}
+                      {/* Total Spent */}
+                      <td className="px-3 sm:px-4 py-4 whitespace-nowrap hover:bg-gray-50 dark:hover:bg-[#242424] transition-colors">
+                        <div className="text-sm font-semibold text-gray-900 dark:text-white">
+                          {customer.totalSpent ? formatCurrency(customer.totalSpent) : '₹0'}
+                        </div>
+                      </td>
 
-                {/* Dates */}
-                <div className="mt-4 space-y-2 text-sm text-gray-500">
-                  <div className="flex items-center">
-                    <Calendar className="h-4 w-4 mr-2" />
-                    <span>Joined: {formatDate(customer.joinDate)}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <ShoppingBag className="h-4 w-4 mr-2" />
-                    <span>
-                      Last Order: {formatDate(customer.lastOrderDate)}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div className="mt-6 flex items-center justify-between">
-                  <Link
-                    href={`/admin/customers/${customer.id}`}
-                    className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
-                  >
-                    <Eye className="h-4 w-4 mr-2" />
-                    View Details
-                  </Link>
-                  <div className="flex items-center">
-                    <Star className="h-4 w-4 text-yellow-400" />
-                    <span className="ml-1 text-sm text-gray-600">
-                      {customer.totalOrders > 10
-                        ? '5.0'
-                        : customer.totalOrders > 5
-                        ? '4.5'
-                        : '4.0'}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {sortedCustomers.length === 0 && (
-        <div className="text-center py-12">
-          <UserPlus className="mx-auto h-12 w-12 text-gray-400" />
-          <h3 className="mt-2 text-sm font-medium text-gray-900">
-            No customers found
-          </h3>
-          <p className="mt-1 text-sm text-gray-500">
-            Try adjusting your search or filter criteria.
-          </p>
+                      {/* Joined Date */}
+                      <td className="px-3 sm:px-4 py-4 whitespace-nowrap hover:bg-gray-50 dark:hover:bg-[#242424] transition-colors">
+                        <div className="text-sm text-gray-900 dark:text-white">
+                          {formatDate(customer.createdAt)}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
         </div>
-      )}
+
+        {/* Pagination */}
+        {pagination && pagination.totalPages > 1 && filteredCustomers.length > 0 && (
+          <div className="px-4 py-4 border-t border-gray-200 dark:border-[#525252] flex items-center justify-between">
+            <div className="text-sm text-gray-700 dark:text-gray-300">
+              Showing {filteredCustomers.length} of {filteredCustomers.length} results
+            </div>
+            <div className="flex space-x-2">
+              <button
+                onClick={() => setFilters({ page: (pagination.page || 1) - 1 })}
+                disabled={!pagination.hasPrev}
+                className="px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-[#242424] border border-gray-300 dark:border-[#525252] rounded-md hover:bg-gray-50 dark:hover:bg-[#2f2f2f] disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Previous
+              </button>
+              <button
+                onClick={() => setFilters({ page: (pagination.page || 1) + 1 })}
+                disabled={!pagination.hasNext}
+                className="px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-[#242424] border border-gray-300 dark:border-[#525252] rounded-md hover:bg-gray-50 dark:hover:bg-[#2f2f2f] disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

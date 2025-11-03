@@ -10,7 +10,7 @@ import {
   Layers,
   Package,
   Plus,
-  Loader2,
+  // Loader2,
   AlertCircle,
 } from 'lucide-react';
 import { useCollectionStore } from '@/lib/data/store/collectionStore';
@@ -27,10 +27,10 @@ export default function CollectionViewPage() {
   const {
     currentCollection,
     allProducts,
-    status,
+    // status,
     error,
-    fetchCollection,
-    fetchProducts,
+    // fetchCollection,
+    // fetchProducts,
     updateCollectionProducts,
     deleteCollection,
     clearError,

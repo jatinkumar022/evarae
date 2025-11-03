@@ -1,116 +1,148 @@
 'use client';
-import { useState } from 'react';
-import { Save, Bell, Shield, CreditCard, Truck, Globe } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import {
+  Save,
+  Loader2,
+  User,
+  Globe,
+  Mail,
+  Phone,
+  MapPin,
+  Link as LinkIcon,
+  FileText,
+  Facebook,
+  Instagram,
+  Youtube,
+  Twitter,
+} from 'lucide-react';
+import { CustomSelect } from '@/app/admin/components/CustomSelect';
+import { useAdminAuth } from '@/lib/data/store/adminAuth';
 
-interface Settings {
-  general: {
-    storeName: string;
-    storeEmail: string;
-    storePhone: string;
-    storeAddress: string;
-    currency: string;
-    timezone: string;
-    language: string;
-  };
-  notifications: {
-    emailNotifications: boolean;
-    orderNotifications: boolean;
-    inventoryAlerts: boolean;
-    customerNotifications: boolean;
-    marketingEmails: boolean;
-  };
-  security: {
-    twoFactorAuth: boolean;
-    sessionTimeout: number;
-    passwordExpiry: number;
-    loginAttempts: number;
-  };
-  shipping: {
-    freeShippingThreshold: number;
-    defaultShippingCost: number;
-    shippingZones: Array<{
-      name: string;
-      cost: number;
-      countries: string[];
-    }>;
-  };
-  payment: {
-    acceptCreditCards: boolean;
-    acceptUPI: boolean;
-    acceptNetBanking: boolean;
-    acceptWallets: boolean;
-    paymentGateway: string;
+interface FooterSettings {
+  tagline: string;
+  phone: string;
+  email: string;
+  location: string;
+  socialLinks: {
+    instagram: string;
+    twitter: string;
+    facebook: string;
+    youtube: string;
   };
 }
 
-const mockSettings: Settings = {
+interface AdminAccount {
+  name: string;
+  email: string;
+}
+
+interface GeneralSettings {
+  storeName: string;
+  currency: string;
+  timezone: string;
+}
+
+interface SettingsState {
+  footer: FooterSettings;
+  adminAccount: AdminAccount;
+  general: GeneralSettings;
+}
+
+const defaultSettings: SettingsState = {
+  footer: {
+    tagline: 'Exquisite Jewellery for Every Occasion. Crafted with passion, designed for elegance.',
+    phone: '+91 9328901475',
+    email: 'support@caelvi.com',
+    location: 'Ahmedabad',
+    socialLinks: {
+      instagram: '#',
+      twitter: '#',
+      facebook: '#',
+      youtube: '#',
+    },
+  },
+  adminAccount: {
+    name: 'Admin User',
+    email: 'admin@caelvi.com',
+  },
   general: {
-    storeName: 'Caelvi Jewellery',
-    storeEmail: 'admin@caelvi.com',
-    storePhone: '+91 98765 43210',
-    storeAddress: '123 Jewellery Street, Mumbai, Maharashtra 400001',
+    storeName: 'Caelvi',
     currency: 'INR',
     timezone: 'Asia/Kolkata',
-    language: 'English',
-  },
-  notifications: {
-    emailNotifications: true,
-    orderNotifications: true,
-    inventoryAlerts: true,
-    customerNotifications: true,
-    marketingEmails: false,
-  },
-  security: {
-    twoFactorAuth: false,
-    sessionTimeout: 30,
-    passwordExpiry: 90,
-    loginAttempts: 5,
-  },
-  shipping: {
-    freeShippingThreshold: 100000,
-    defaultShippingCost: 500,
-    shippingZones: [
-      {
-        name: 'Local (Same City)',
-        cost: 200,
-        countries: ['India'],
-      },
-      {
-        name: 'Domestic (Same State)',
-        cost: 400,
-        countries: ['India'],
-      },
-      {
-        name: 'Domestic (Other States)',
-        cost: 600,
-        countries: ['India'],
-      },
-    ],
-  },
-  payment: {
-    acceptCreditCards: true,
-    acceptUPI: true,
-    acceptNetBanking: true,
-    acceptWallets: true,
-    paymentGateway: 'Razorpay',
   },
 };
 
 export default function SettingsPage() {
-  const [settings, setSettings] = useState<Settings>(mockSettings);
-  const [activeTab, setActiveTab] = useState('general');
-
+  const { profile } = useAdminAuth();
+  const [settings, setSettings] = useState<SettingsState>(defaultSettings);
+  const [originalSettings, setOriginalSettings] = useState<SettingsState>(defaultSettings);
   const [isSaving, setIsSaving] = useState(false);
+  const [activeSection, setActiveSection] = useState<'footer' | 'admin' | 'general'>('general');
 
-  const handleInputChange = (
-    section: keyof Settings,
-    field: string,
-    value: unknown
-  ) => {
+  // Load admin profile when available
+  useEffect(() => {
+    if (profile) {
+      setSettings(prev => ({
+        ...prev,
+        adminAccount: {
+          ...prev.adminAccount,
+          name: profile.name,
+          email: profile.email,
+        },
+      }));
+      setOriginalSettings(prev => ({
+        ...prev,
+        adminAccount: {
+          ...prev.adminAccount,
+          name: profile.name,
+          email: profile.email,
+        },
+      }));
+    }
+  }, [profile]);
+
+  // Check if form is dirty
+  const isDirty = JSON.stringify(settings) !== JSON.stringify(originalSettings);
+
+  const handleFooterChange = (field: keyof FooterSettings, value: string) => {
     setSettings(prev => ({
       ...prev,
-      [section]: {
-        ...prev[section],
+      footer: {
+        ...prev.footer,
+        [field]: value,
+      },
+    }));
+  };
+
+  const handleSocialLinkChange = (platform: keyof FooterSettings['socialLinks'], value: string) => {
+    setSettings(prev => ({
+      ...prev,
+      footer: {
+        ...prev.footer,
+        socialLinks: {
+          ...prev.footer.socialLinks,
+          [platform]: value,
+        },
+      },
+    }));
+  };
+
+
+  const handleAdminChange = (field: keyof AdminAccount, value: string) => {
+    setSettings(prev => ({
+      ...prev,
+      adminAccount: {
+        ...prev.adminAccount,
+        [field]: value,
+      },
+    }));
+  };
+
+  const handleGeneralChange = (field: keyof GeneralSettings, value: string) => {
+    setSettings(prev => ({
+      ...prev,
+      general: {
+        ...prev.general,
         [field]: value,
       },
     }));
@@ -118,505 +150,384 @@ export default function SettingsPage() {
 
   const handleSave = async () => {
     setIsSaving(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setIsSaving(false);
-    // Show success message
-    alert('Settings saved successfully!');
-  };
-
-  const tabs = [
-    { id: 'general', name: 'General', icon: Globe },
-    { id: 'notifications', name: 'Notifications', icon: Bell },
-    { id: 'security', name: 'Security', icon: Shield },
-    { id: 'shipping', name: 'Shipping', icon: Truck },
-    { id: 'payment', name: 'Payment', icon: CreditCard },
-  ];
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      maximumFractionDigits: 0,
-    }).format(amount);
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      setOriginalSettings({ ...settings });
+      // Show success notification
+      alert('Settings saved successfully!');
+    } catch (error) {
+      console.error('Failed to save settings:', error);
+      alert('Failed to save settings. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex md:items-center gap-4 flex-col md:flex-row justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
-          <p className="text-gray-600">Manage your store configuration</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Settings</h1>
+          <p className="text-sm sm:text-base text-gray-600 dark:text-[#696969] mt-1">
+            Manage store settings and your admin account
+          </p>
         </div>
-        <button
-          onClick={handleSave}
-          disabled={isSaving}
-          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50"
-        >
-          <Save className="h-4 w-4 mr-2" />
-          {isSaving ? 'Saving...' : 'Save Changes'}
-        </button>
+        {isDirty && (
+          <div className="hidden md:flex items-center gap-3">
+            <span className="text-xs text-amber-600 dark:text-amber-400 font-medium">
+              Unsaved changes
+            </span>
+            <button
+              onClick={handleSave}
+              disabled={isSaving}
+              className="flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 dark:bg-primary-600 dark:hover:bg-primary-700 text-white font-medium rounded-lg shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isSaving ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4" />
+                  Save Changes
+                </>
+              )}
+            </button>
+          </div>
+        )}
       </div>
 
-      <div className="bg-white shadow rounded-lg">
-        {/* Tabs */}
-        <div className="border-b border-gray-200">
-          <nav className="-mb-px flex space-x-8 px-6">
-            {tabs.map(tab => {
-              const Icon = tab.icon;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 ${
-                    activeTab === tab.id
-                      ? 'border-primary text-primary'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-                >
-                  <Icon className="h-4 w-4" />
-                  <span>{tab.name}</span>
-                </button>
-              );
-            })}
+      {/* Section Tabs */}
+      <div className="bg-white dark:bg-[#191919] shadow rounded-lg border border-gray-200 dark:border-[#525252] overflow-hidden">
+        <div className="border-b border-gray-200 dark:border-[#525252]">
+          <nav className="flex overflow-x-auto">
+            <button
+              onClick={() => setActiveSection('general')}
+              className={`px-4 sm:px-6 py-3 sm:py-4 border-b-2 font-medium text-sm transition-colors whitespace-nowrap ${
+                activeSection === 'general'
+                  ? 'border-primary-600 dark:border-primary-500 text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20'
+                  : 'border-transparent text-gray-500 dark:text-[#696969] hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-[#525252]'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <FileText className="h-4 w-4" />
+                <span>General</span>
+              </div>
+            </button>
+            <button
+              onClick={() => setActiveSection('admin')}
+              className={`px-4 sm:px-6 py-3 sm:py-4 border-b-2 font-medium text-sm transition-colors whitespace-nowrap ${
+                activeSection === 'admin'
+                  ? 'border-primary-600 dark:border-primary-500 text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20'
+                  : 'border-transparent text-gray-500 dark:text-[#696969] hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-[#525252]'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <User className="h-4 w-4" />
+                <span>Admin Account</span>
+              </div>
+            </button>
+            <button
+              onClick={() => setActiveSection('footer')}
+              className={`px-4 sm:px-6 py-3 sm:py-4 border-b-2 font-medium text-sm transition-colors whitespace-nowrap ${
+                activeSection === 'footer'
+                  ? 'border-primary-600 dark:border-primary-500 text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20'
+                  : 'border-transparent text-gray-500 dark:text-[#696969] hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-[#525252]'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <Globe className="h-4 w-4" />
+                <span>Footer Settings</span>
+              </div>
+            </button>
           </nav>
         </div>
 
-        {/* Tab Content */}
-        <div className="p-6">
-          {activeTab === 'general' && (
-            <div className="space-y-6">
-              <h3 className="text-lg font-medium text-gray-900">
-                General Settings
+        {/* Footer Settings */}
+        {activeSection === 'footer' && (
+          <div className="p-4 sm:p-5 md:p-6 space-y-6">
+            {/* Contact Information */}
+            <div>
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                Contact Information
               </h3>
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Phone Number
+                  </label>
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-[#696969]" />
+                    <input
+                      type="tel"
+                      value={settings.footer.phone}
+                      onChange={e => handleFooterChange('phone', e.target.value)}
+                      className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-[#525252] rounded-md shadow-sm bg-white dark:bg-[#242424] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#696969] focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-600 dark:focus:border-primary-600 sm:text-sm"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Email Address
+                  </label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-[#696969]" />
+                    <input
+                      type="email"
+                      value={settings.footer.email}
+                      onChange={e => handleFooterChange('email', e.target.value)}
+                      className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-[#525252] rounded-md shadow-sm bg-white dark:bg-[#242424] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#696969] focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-600 dark:focus:border-primary-600 sm:text-sm"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Location
+                  </label>
+                  <div className="relative">
+                    <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-[#696969]" />
+                    <input
+                      type="text"
+                      value={settings.footer.location}
+                      onChange={e => handleFooterChange('location', e.target.value)}
+                      className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-[#525252] rounded-md shadow-sm bg-white dark:bg-[#242424] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#696969] focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-600 dark:focus:border-primary-600 sm:text-sm"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Tagline */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Footer Tagline
+              </label>
+              <textarea
+                rows={3}
+                value={settings.footer.tagline}
+                onChange={e => handleFooterChange('tagline', e.target.value)}
+                className="block w-full px-3 py-2 border border-gray-300 dark:border-[#525252] rounded-md shadow-sm bg-white dark:bg-[#242424] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#696969] focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-600 dark:focus:border-primary-600 sm:text-sm"
+                placeholder="Enter tagline..."
+              />
+            </div>
+
+            {/* Social Media Links */}
+            <div>
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                Social Media Links
+              </h3>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <div className="flex items-center gap-2">
+                      <Instagram className="h-4 w-4" />
+                      Instagram URL
+                    </div>
+                  </label>
+                  <div className="relative">
+                    <LinkIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-[#696969]" />
+                    <input
+                      type="url"
+                      value={settings.footer.socialLinks.instagram}
+                      onChange={e => handleSocialLinkChange('instagram', e.target.value)}
+                      className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-[#525252] rounded-md shadow-sm bg-white dark:bg-[#242424] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#696969] focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-600 dark:focus:border-primary-600 sm:text-sm"
+                      placeholder="https://instagram.com/..."
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <div className="flex items-center gap-2">
+                      <Twitter className="h-4 w-4" />
+                      Twitter/X URL
+                    </div>
+                  </label>
+                  <div className="relative">
+                    <LinkIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-[#696969]" />
+                    <input
+                      type="url"
+                      value={settings.footer.socialLinks.twitter}
+                      onChange={e => handleSocialLinkChange('twitter', e.target.value)}
+                      className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-[#525252] rounded-md shadow-sm bg-white dark:bg-[#242424] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#696969] focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-600 dark:focus:border-primary-600 sm:text-sm"
+                      placeholder="https://twitter.com/..."
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <div className="flex items-center gap-2">
+                      <Facebook className="h-4 w-4" />
+                      Facebook URL
+                    </div>
+                  </label>
+                  <div className="relative">
+                    <LinkIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-[#696969]" />
+                    <input
+                      type="url"
+                      value={settings.footer.socialLinks.facebook}
+                      onChange={e => handleSocialLinkChange('facebook', e.target.value)}
+                      className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-[#525252] rounded-md shadow-sm bg-white dark:bg-[#242424] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#696969] focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-600 dark:focus:border-primary-600 sm:text-sm"
+                      placeholder="https://facebook.com/..."
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <div className="flex items-center gap-2">
+                      <Youtube className="h-4 w-4" />
+                      YouTube URL
+                    </div>
+                  </label>
+                  <div className="relative">
+                    <LinkIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-[#696969]" />
+                    <input
+                      type="url"
+                      value={settings.footer.socialLinks.youtube}
+                      onChange={e => handleSocialLinkChange('youtube', e.target.value)}
+                      className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-[#525252] rounded-md shadow-sm bg-white dark:bg-[#242424] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#696969] focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-600 dark:focus:border-primary-600 sm:text-sm"
+                      placeholder="https://youtube.com/..."
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        )}
+
+        {/* Admin Account */}
+        {activeSection === 'admin' && (
+          <div className="p-4 sm:p-5 md:p-6 space-y-6">
+            <div>
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                Account Information
+              </h3>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Full Name
+                  </label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-[#696969]" />
+                    <input
+                      type="text"
+                      value={settings.adminAccount.name}
+                      onChange={e => handleAdminChange('name', e.target.value)}
+                      className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-[#525252] rounded-md shadow-sm bg-white dark:bg-[#242424] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#696969] focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-600 dark:focus:border-primary-600 sm:text-sm"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Email Address
+                  </label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-[#696969]" />
+                    <input
+                      type="email"
+                      value={settings.adminAccount.email}
+                      onChange={e => handleAdminChange('email', e.target.value)}
+                      className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-[#525252] rounded-md shadow-sm bg-white dark:bg-[#242424] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#696969] focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-600 dark:focus:border-primary-600 sm:text-sm"
+                      disabled
+                    />
+                  </div>
+                  <p className="mt-1 text-xs text-gray-500 dark:text-[#696969]">
+                    Email cannot be changed
+                  </p>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        )}
+
+        {/* General Settings */}
+        {activeSection === 'general' && (
+          <div className="p-4 sm:p-5 md:p-6 space-y-6">
+            <div>
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                Store Settings
+              </h3>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Store Name
                   </label>
                   <input
                     type="text"
                     value={settings.general.storeName}
-                    onChange={e =>
-                      handleInputChange('general', 'storeName', e.target.value)
-                    }
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
+                    onChange={e => handleGeneralChange('storeName', e.target.value)}
+                    className="block w-full px-3 py-2 border border-gray-300 dark:border-[#525252] rounded-md shadow-sm bg-white dark:bg-[#242424] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#696969] focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-600 dark:focus:border-primary-600 sm:text-sm"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Store Email
-                  </label>
-                  <input
-                    type="email"
-                    value={settings.general.storeEmail}
-                    onChange={e =>
-                      handleInputChange('general', 'storeEmail', e.target.value)
-                    }
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Store Phone
-                  </label>
-                  <input
-                    type="tel"
-                    value={settings.general.storePhone}
-                    onChange={e =>
-                      handleInputChange('general', 'storePhone', e.target.value)
-                    }
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Currency
-                  </label>
-                  <select
+                  <CustomSelect
+                    label="Currency"
                     value={settings.general.currency}
-                    onChange={e =>
-                      handleInputChange('general', 'currency', e.target.value)
-                    }
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
-                  >
-                    <option value="INR">Indian Rupee (₹)</option>
-                    <option value="USD">US Dollar ($)</option>
-                    <option value="EUR">Euro (€)</option>
-                  </select>
+                    onChange={(v) => handleGeneralChange('currency', v)}
+                    options={[
+                      { value: 'INR', label: 'Indian Rupee (₹)' },
+                      { value: 'USD', label: 'US Dollar ($)' },
+                      { value: 'EUR', label: 'Euro (€)' },
+                      { value: 'GBP', label: 'British Pound (£)' },
+                    ]}
+                  />
                 </div>
 
-                <div className="sm:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Store Address
-                  </label>
-                  <textarea
-                    rows={3}
-                    value={settings.general.storeAddress}
-                    onChange={e =>
-                      handleInputChange(
-                        'general',
-                        'storeAddress',
-                        e.target.value
-                      )
-                    }
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
+                <div>
+                  <CustomSelect
+                    label="Timezone"
+                    value={settings.general.timezone}
+                    onChange={(v) => handleGeneralChange('timezone', v)}
+                    options={[
+                      { value: 'Asia/Kolkata', label: 'Asia/Kolkata (IST)' },
+                      { value: 'UTC', label: 'UTC' },
+                      { value: 'America/New_York', label: 'America/New_York (EST)' },
+                      { value: 'Europe/London', label: 'Europe/London (GMT)' },
+                    ]}
                   />
                 </div>
               </div>
             </div>
-          )}
-
-          {activeTab === 'notifications' && (
-            <div className="space-y-6">
-              <h3 className="text-lg font-medium text-gray-900">
-                Notification Settings
-              </h3>
-              <div className="space-y-4">
-                {Object.entries(settings.notifications).map(([key, value]) => (
-                  <div key={key} className="flex items-center justify-between">
-                    <div>
-                      <label className="text-sm font-medium text-gray-700">
-                        {key
-                          .replace(/([A-Z])/g, ' $1')
-                          .replace(/^./, str => str.toUpperCase())}
-                      </label>
-                      <p className="text-sm text-gray-500">
-                        Receive notifications for{' '}
-                        {key.toLowerCase().replace(/([A-Z])/g, ' $1')}
-                      </p>
-                    </div>
-                    <button
-                      onClick={() =>
-                        handleInputChange('notifications', key, !value)
-                      }
-                      className={`${
-                        value ? 'bg-primary' : 'bg-gray-200'
-                      } relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2`}
-                    >
-                      <span
-                        className={`${
-                          value ? 'translate-x-5' : 'translate-x-0'
-                        } pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
-                      />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'security' && (
-            <div className="space-y-6">
-              <h3 className="text-lg font-medium text-gray-900">
-                Security Settings
-              </h3>
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <label className="text-sm font-medium text-gray-700">
-                      Two-Factor Authentication
-                    </label>
-                    <p className="text-sm text-gray-500">
-                      Add an extra layer of security to your account
-                    </p>
-                  </div>
-                  <button
-                    onClick={() =>
-                      handleInputChange(
-                        'security',
-                        'twoFactorAuth',
-                        !settings.security.twoFactorAuth
-                      )
-                    }
-                    className={`${
-                      settings.security.twoFactorAuth
-                        ? 'bg-primary'
-                        : 'bg-gray-200'
-                    } relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2`}
-                  >
-                    <span
-                      className={`${
-                        settings.security.twoFactorAuth
-                          ? 'translate-x-5'
-                          : 'translate-x-0'
-                      } pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
-                    />
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Session Timeout (minutes)
-                    </label>
-                    <input
-                      type="number"
-                      value={settings.security.sessionTimeout}
-                      onChange={e =>
-                        handleInputChange(
-                          'security',
-                          'sessionTimeout',
-                          parseInt(e.target.value)
-                        )
-                      }
-                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Password Expiry (days)
-                    </label>
-                    <input
-                      type="number"
-                      value={settings.security.passwordExpiry}
-                      onChange={e =>
-                        handleInputChange(
-                          'security',
-                          'passwordExpiry',
-                          parseInt(e.target.value)
-                        )
-                      }
-                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Max Login Attempts
-                    </label>
-                    <input
-                      type="number"
-                      value={settings.security.loginAttempts}
-                      onChange={e =>
-                        handleInputChange(
-                          'security',
-                          'loginAttempts',
-                          parseInt(e.target.value)
-                        )
-                      }
-                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'shipping' && (
-            <div className="space-y-6">
-              <h3 className="text-lg font-medium text-gray-900">
-                Shipping Settings
-              </h3>
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Free Shipping Threshold
-                  </label>
-                  <input
-                    type="number"
-                    value={settings.shipping.freeShippingThreshold}
-                    onChange={e =>
-                      handleInputChange(
-                        'shipping',
-                        'freeShippingThreshold',
-                        parseInt(e.target.value)
-                      )
-                    }
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
-                  />
-                  <p className="mt-1 text-sm text-gray-500">
-                    Orders above{' '}
-                    {formatCurrency(settings.shipping.freeShippingThreshold)}{' '}
-                    get free shipping
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Default Shipping Cost
-                  </label>
-                  <input
-                    type="number"
-                    value={settings.shipping.defaultShippingCost}
-                    onChange={e =>
-                      handleInputChange(
-                        'shipping',
-                        'defaultShippingCost',
-                        parseInt(e.target.value)
-                      )
-                    }
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <h4 className="text-md font-medium text-gray-900 mb-4">
-                  Shipping Zones
-                </h4>
-                <div className="space-y-4">
-                  {settings.shipping.shippingZones.map((zone, index) => (
-                    <div
-                      key={index}
-                      className="border border-gray-200 rounded-lg p-4"
-                    >
-                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700">
-                            Zone Name
-                          </label>
-                          <input
-                            type="text"
-                            value={zone.name}
-                            onChange={e => {
-                              const newZones = [
-                                ...settings.shipping.shippingZones,
-                              ];
-                              newZones[index].name = e.target.value;
-                              handleInputChange(
-                                'shipping',
-                                'shippingZones',
-                                newZones
-                              );
-                            }}
-                            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700">
-                            Shipping Cost
-                          </label>
-                          <input
-                            type="number"
-                            value={zone.cost}
-                            onChange={e => {
-                              const newZones = [
-                                ...settings.shipping.shippingZones,
-                              ];
-                              newZones[index].cost = parseInt(e.target.value);
-                              handleInputChange(
-                                'shipping',
-                                'shippingZones',
-                                newZones
-                              );
-                            }}
-                            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700">
-                            Countries
-                          </label>
-                          <input
-                            type="text"
-                            value={zone.countries.join(', ')}
-                            onChange={e => {
-                              const newZones = [
-                                ...settings.shipping.shippingZones,
-                              ];
-                              newZones[index].countries = e.target.value
-                                .split(',')
-                                .map(c => c.trim());
-                              handleInputChange(
-                                'shipping',
-                                'shippingZones',
-                                newZones
-                              );
-                            }}
-                            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'payment' && (
-            <div className="space-y-6">
-              <h3 className="text-lg font-medium text-gray-900">
-                Payment Settings
-              </h3>
-              <div className="space-y-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Payment Gateway
-                  </label>
-                  <select
-                    value={settings.payment.paymentGateway}
-                    onChange={e =>
-                      handleInputChange(
-                        'payment',
-                        'paymentGateway',
-                        e.target.value
-                      )
-                    }
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
-                  >
-                    <option value="Razorpay">Razorpay</option>
-                    <option value="PayU">PayU</option>
-                    <option value="PayPal">PayPal</option>
-                    <option value="Stripe">Stripe</option>
-                  </select>
-                </div>
-
-                <div className="space-y-4">
-                  <h4 className="text-md font-medium text-gray-900">
-                    Payment Methods
-                  </h4>
-                  {Object.entries(settings.payment)
-                    .filter(([key]) => key.startsWith('accept'))
-                    .map(([key, value]) => (
-                      <div
-                        key={key}
-                        className="flex items-center justify-between"
-                      >
-                        <div>
-                          <label className="text-sm font-medium text-gray-700">
-                            {key
-                              .replace('accept', '')
-                              .replace(/([A-Z])/g, ' $1')
-                              .trim()}
-                          </label>
-                          <p className="text-sm text-gray-500">
-                            Accept{' '}
-                            {key
-                              .replace('accept', '')
-                              .toLowerCase()
-                              .replace(/([A-Z])/g, ' $1')}{' '}
-                            payments
-                          </p>
-                        </div>
-                        <button
-                          onClick={() =>
-                            handleInputChange('payment', key, !value)
-                          }
-                          className={`${
-                            value ? 'bg-primary' : 'bg-gray-200'
-                          } relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2`}
-                        >
-                          <span
-                            className={`${
-                              value ? 'translate-x-5' : 'translate-x-0'
-                            } pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
-                          />
-                        </button>
-                      </div>
-                    ))}
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
+
+      {/* Fixed Save Button - Mobile Only */}
+      {isDirty && (
+        <div className="fixed bottom-0 left-0 right-0 md:hidden z-50 p-4 bg-white dark:bg-[#191919] border-t border-gray-200 dark:border-[#525252] shadow-lg">
+          <button
+            onClick={handleSave}
+            disabled={isSaving}
+            className="w-full flex items-center justify-center gap-2 px-6 py-2 bg-primary-600 hover:bg-primary-700 dark:bg-primary-600 dark:hover:bg-primary-700 text-white rounded-lg shadow-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isSaving ? (
+              <>
+                <Loader2 className="h-5 w-5 animate-spin" />
+                <span>Saving Changes...</span>
+              </>
+            ) : (
+              <>
+                <Save className="h-5 w-5" />
+                <span>Save Changes</span>
+              </>
+            )}
+          </button>
+        </div>
+      )}
+
+      {/* Add bottom padding for mobile when save button is visible */}
+      {isDirty && <div className="md:hidden h-24" />}
     </div>
   );
 }

@@ -5,7 +5,7 @@ import {
   ArrowLeft,
   Edit,
   Trash2,
-  Loader2,
+  // Loader2,
   Package,
   Tag,
   AlertCircle,
@@ -14,6 +14,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useProductStore } from '@/lib/data/store/productStore';
 import { setDummyProductsInStore } from '@/lib/data/dummyDataHelper';
+import { dummyProducts } from '@/lib/data/dummyProducts';
 import Modal from '@/app/admin/components/Modal';
 
 export default function ProductDetailPage() {
@@ -23,9 +24,9 @@ export default function ProductDetailPage() {
 
   const {
     currentProduct,
-    fetchProduct,
+    // fetchProduct,
     deleteProduct,
-    status,
+    // status,
     error,
     clearError,
   } = useProductStore();
@@ -35,9 +36,8 @@ export default function ProductDetailPage() {
   useEffect(() => {
     // Load dummy data and find the product
     if (productId) {
-      const { dummyProducts } = require('@/lib/data/dummyProducts');
       setDummyProductsInStore();
-      const product = dummyProducts.find((p: any) => p._id === productId);
+      const product = dummyProducts.find((p) => p._id === productId);
       if (product) {
         useProductStore.setState({ currentProduct: product, status: 'success', error: null });
       } else {

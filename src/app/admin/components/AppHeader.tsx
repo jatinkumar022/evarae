@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSidebar } from "../context/SidebarContext";
@@ -10,21 +10,13 @@ import Modal from "./Modal";
 import { useAdminAuth } from "@/lib/data/store/adminAuth";
 
 export default function AppHeader() {
-  const { isMobileOpen, toggleSidebar, toggleMobileSidebar } = useSidebar();
+  const { isMobileOpen, toggleMobileSidebar } = useSidebar();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const router = useRouter();
   const { logout } = useAdminAuth();
   const { resetTheme } = useTheme();
-
-  const handleToggle = () => {
-    if (typeof window !== "undefined" && window.innerWidth >= 1024) {
-      toggleSidebar();
-    } else {
-      toggleMobileSidebar();
-    }
-  };
 
   const handleLogoutClick = () => {
     setIsUserMenuOpen(false);
@@ -112,9 +104,9 @@ export default function AppHeader() {
       <div className="flex flex-col items-center justify-between w-full lg:flex-row lg:px-6">
         <div className="flex items-center justify-between w-full gap-2 px-3 py-3 border-b border-gray-200 dark:border-gray-800 sm:gap-4 lg:justify-normal lg:border-b-0 lg:px-0 lg:py-4">
           <button
-            className="flex items-center justify-center w-10 h-10 text-gray-500 border border-gray-200 rounded-lg dark:border-[#242424] lg:h-11 lg:w-11 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#242424] transition-colors"
-            onClick={handleToggle}
-            aria-label="Toggle Sidebar"
+            className="flex items-center justify-center w-10 h-10 text-gray-500 border border-gray-200 rounded-lg dark:border-[#242424] lg:hidden dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#242424] transition-colors"
+            onClick={toggleMobileSidebar}
+            aria-label="Toggle Mobile Menu"
           >
             {isMobileOpen ? (
               <X className="w-5 h-5" />
@@ -152,7 +144,7 @@ export default function AppHeader() {
             className="relative flex items-center justify-center w-11 h-11 text-gray-500 transition-colors bg-white rounded-full hover:text-gray-700 hover:bg-gray-100 dark:bg-[#1a1a1a] dark:text-gray-400 dark:hover:bg-[#232323] dark:hover:text-white"
             onClick={() => setIsNotificationOpen(!isNotificationOpen)}
           >
-            <span className="absolute right-0 top-0.5 z-10 h-2 w-2 rounded-full bg-primary-500">
+            <span className="absolute right-0 top-0.5 z-10 h-2 w-2 rounded-full bg-primary-500 flex">
               <span className="absolute inline-flex w-full h-full bg-primary-500 rounded-full opacity-75 animate-ping"></span>
             </span>
             <Bell className="w-5 h-5" />

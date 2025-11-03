@@ -27,15 +27,32 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
   className = "",
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [dropdownPosition, setDropdownPosition] = useState<{ top: number; left: number; width: number } | null>(null);
   const selectRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const selectedOption = options.find((opt) => opt.value === value);
 
+  const updateDropdownPosition = () => {
+    if (buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setDropdownPosition({
+        top: rect.bottom + 4,
+        left: rect.left,
+        width: rect.width,
+      });
+    }
+  };
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
       if (
         selectRef.current &&
-        !selectRef.current.contains(event.target as Node)
+        !selectRef.current.contains(target) &&
+        dropdownRef.current &&
+        !dropdownRef.current.contains(target)
       ) {
         setIsOpen(false);
       }
@@ -43,6 +60,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
 
     if (isOpen) {
       document.addEventListener("mousedown", handleClickOutside);
+      updateDropdownPosition();
     }
 
     return () => {
@@ -50,49 +68,86 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
     };
   }, [isOpen]);
 
-  return (
-    <div className={`relative ${className}`} ref={selectRef}>
-      {label && (
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          {label}
-        </label>
-      )}
-      <button
-        type="button"
-        disabled={disabled}
-        onClick={() => !disabled && setIsOpen(!isOpen)}
-        className={`
-          w-full px-3 py-2 text-left 
-          bg-white dark:bg-[#242424] 
-          border border-gray-300 dark:border-[#525252] 
-          rounded-md 
-          text-sm 
-          text-gray-900 dark:text-white 
-          placeholder-gray-400 dark:placeholder-[#696969]
-          focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 focus:border-primary-500 dark:focus:border-primary-400
-          disabled:opacity-50 disabled:cursor-not-allowed
-          flex items-center justify-between
-          transition-colors
-          ${isOpen ? "ring-2 ring-primary-500 dark:ring-primary-400 border-primary-500 dark:border-primary-400" : ""}
-        `}
-      >
-        <span className={selectedOption ? "" : "text-gray-400 dark:text-[#696969]"}>
-          {selectedOption ? selectedOption.label : placeholder}
-        </span>
-        <ChevronDown
-          className={`h-4 w-4 text-gray-400 dark:text-gray-500 transition-transform ${
-            isOpen ? "transform rotate-180" : ""
-          }`}
-        />
-      </button>
+  useEffect(() => {
+    if (isOpen) {
+      const handleScroll = () => {
+        updateDropdownPosition();
+      };
+      const handleResize = () => {
+        updateDropdownPosition();
+      };
 
-      {isOpen && (
+      window.addEventListener("scroll", handleScroll, true);
+      window.addEventListener("resize", handleResize);
+
+      return () => {
+        window.removeEventListener("scroll", handleScroll, true);
+        window.removeEventListener("resize", handleResize);
+      };
+    }
+  }, [isOpen]);
+
+  return (
+    <>
+      <div className={`relative ${className}`} ref={selectRef}>
+        {label && (
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            {label}
+          </label>
+        )}
+        <button
+          ref={buttonRef}
+          type="button"
+          disabled={disabled}
+          onClick={() => {
+            if (!disabled) {
+              if (!isOpen) {
+                updateDropdownPosition();
+              }
+              setIsOpen(!isOpen);
+            }
+          }}
+          className={`
+            w-full px-3 py-2 text-left 
+            bg-white dark:bg-[#242424] 
+            border border-gray-300 dark:border-[#525252] 
+            rounded-md 
+            text-sm 
+            text-gray-900 dark:text-white 
+            placeholder-gray-400 dark:placeholder-[#696969]
+            focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 focus:border-primary-500 dark:focus:border-primary-400
+            disabled:opacity-50 disabled:cursor-not-allowed
+            flex items-center justify-between
+            transition-colors
+            ${isOpen ? "ring-2 ring-primary-500 dark:ring-primary-400 border-primary-500 dark:border-primary-400" : ""}
+          `}
+        >
+          <span className={selectedOption ? "" : "text-gray-400 dark:text-[#696969]"}>
+            {selectedOption ? selectedOption.label : placeholder}
+          </span>
+          <ChevronDown
+            className={`h-4 w-4 text-gray-400 dark:text-gray-500 transition-transform ${
+              isOpen ? "transform rotate-180" : ""
+            }`}
+          />
+        </button>
+      </div>
+
+      {isOpen && dropdownPosition && (
         <>
           <div
-            className="fixed inset-0 z-10"
+            className="fixed inset-0 z-[40]"
             onClick={() => setIsOpen(false)}
           />
-          <div className="absolute z-20 mt-1 w-full bg-white dark:bg-[#2a2a2a] border border-gray-200 dark:border-[#525252] rounded-md shadow-lg max-h-60 overflow-auto">
+          <div
+            ref={dropdownRef}
+            className="fixed z-[50] bg-white dark:bg-[#2a2a2a] border border-gray-200 dark:border-[#525252] rounded-md shadow-lg max-h-60 overflow-auto"
+            style={{
+              top: `${dropdownPosition.top}px`,
+              left: `${dropdownPosition.left}px`,
+              width: `${dropdownPosition.width}px`,
+            }}
+          >
             <div className="py-1">
               {options.map((option) => (
                 <button
@@ -123,7 +178,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
           </div>
         </>
       )}
-    </div>
+    </>
   );
 };
 

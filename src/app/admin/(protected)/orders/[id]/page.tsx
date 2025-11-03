@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import {
   ArrowLeft,
   Package,
@@ -19,20 +19,20 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useOrderStore, Order } from '@/lib/data/store/orderStore';
 import { setDummyOrdersInStore } from '@/lib/data/dummyDataHelper';
+import { dummyOrders } from '@/lib/data/dummyOrders';
 import { CustomSelect } from '@/app/admin/components/CustomSelect';
 
 export default function OrderDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const orderId = params.id as string;
 
   const {
     currentOrder,
-    fetchOrder,
+    // fetchOrder,
     updateOrderStatus,
     updatePaymentStatus,
     updateTracking,
-    status,
+    // status,
     error,
     clearError,
   } = useOrderStore();
@@ -55,9 +55,8 @@ export default function OrderDetailPage() {
   useEffect(() => {
     // Load dummy data and find the order
     if (orderId) {
-      const { dummyOrders } = require('@/lib/data/dummyOrders');
       setDummyOrdersInStore();
-      const order = dummyOrders.find((o: any) => o._id === orderId);
+      const order = dummyOrders.find((o) => o._id === orderId);
       if (order) {
         useOrderStore.setState({ currentOrder: order, status: 'success', error: null });
         const initialValues = {

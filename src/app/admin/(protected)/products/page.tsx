@@ -9,7 +9,7 @@ import {
   Trash2,
   Eye,
   Package,
-  Loader2,
+  // Loader2,
   MoreVertical,
 } from 'lucide-react';
 import { useProductStore, Product } from '@/lib/data/store/productStore';
@@ -21,17 +21,17 @@ import { setDummyProductsInStore, setDummyCategoriesInStore } from '@/lib/data/d
 export default function ProductsPage() {
   const {
     products,
-    productsByCategory,
     filters,
     pagination,
-    status,
+    // status,
 
     setFilters,
-    fetchProducts,
+    // fetchProducts,
     deleteProduct,
   } = useProductStore();
 
-  const { categories, fetchCategories } = useCategoryStore();
+  const { categories, // fetchCategories
+    } = useCategoryStore();
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
@@ -372,7 +372,7 @@ export default function ProductsPage() {
           </div>
           <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
             <p className="text-sm text-gray-600 dark:text-gray-300">
-              Are you sure you want to delete "{productToDelete?.name}"? This action cannot be undone.
+              Are you sure you want to delete {productToDelete?.name}? This action cannot be undone.
             </p>
           </div>
         </div>
