@@ -37,6 +37,8 @@ export default function CategoriesPage() {
   const [filterActive, setFilterActive] = useState<
     'all' | 'active' | 'inactive'
   >('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 9;
 
   useEffect(() => {
     // Load dummy categories
@@ -72,6 +74,17 @@ export default function CategoriesPage() {
 
     return matchesSearch && matchesFilter;
   });
+
+  // Pagination
+  const totalPages = Math.ceil(filteredCategories.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedCategories = filteredCategories.slice(startIndex, endIndex);
+
+  // Reset to page 1 when search or filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterActive]);
 
   const activeCount = categories.filter(cat => cat.isActive).length;
   const inactiveCount = categories.length - activeCount;
@@ -158,9 +171,9 @@ export default function CategoriesPage() {
             </div>
           )}
 
-          {filteredCategories.length > 0 ? (
+          {paginatedCategories.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-              {filteredCategories.map(category => {
+              {paginatedCategories.map(category => {
                 const isDropdownOpen = activeDropdown === category._id;
                 return (
                   <div
@@ -295,6 +308,32 @@ export default function CategoriesPage() {
                   Create First Category
                 </Link>
               )}
+            </div>
+          )}
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="mt-6 flex items-center justify-between px-4 py-4 border-t border-gray-200 dark:border-[#525252]">
+              <div className="text-sm text-gray-700 dark:text-gray-300">
+                Showing {startIndex + 1} to {Math.min(endIndex, filteredCategories.length)} of{' '}
+                {filteredCategories.length} results
+              </div>
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                  className="px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-[#242424] border border-gray-300 dark:border-[#525252] rounded-md hover:bg-gray-50 dark:hover:bg-[#2f2f2f] disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Previous
+                </button>
+                <button
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-[#242424] border border-gray-300 dark:border-[#525252] rounded-md hover:bg-gray-50 dark:hover:bg-[#2f2f2f] disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Next
+                </button>
+              </div>
             </div>
           )}
         </div>

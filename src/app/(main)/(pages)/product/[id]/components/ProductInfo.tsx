@@ -16,6 +16,7 @@ import CustomSelect from '@/app/(main)/components/filters/CustomSelect';
 import { ringsCat } from '@/app/(main)/assets/CategoryGrid';
 import Image from 'next/image';
 import { useCartStore } from '@/lib/data/mainStore/cartStore';
+import CartNotification from '@/app/(main)/components/ui/CartNotification';
 interface ProductInfoProps {
   product: Product;
 }
@@ -24,6 +25,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
   const [quantity, setQuantity] = useState(1);
   const [selectedVariant, setSelectedVariant] = useState('default');
   const [isStickyVisible, setIsStickyVisible] = useState(false);
+  const [showNotification, setShowNotification] = useState(false);
   const addToCart = useCartStore(s => s.add);
 
   // Mock variants - in real app, this would come from product data
@@ -79,7 +81,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
     return stars;
   };
 
-  const onAddToCart = () => {
+  const onAddToCart = async () => {
     const optimisticProduct = {
       _id: product.id,
       id: product.id,
@@ -90,12 +92,18 @@ export function ProductInfo({ product }: ProductInfoProps) {
       thumbnail: (product.images?.[0] as string) || undefined,
       stockQuantity: product.stockCount ?? 1,
     };
-    addToCart({
-      productSlug: String(product.id),
-      quantity,
-      selectedColor: selectedVariant,
-      optimisticProduct,
-    }).catch(() => {});
+    try {
+      await addToCart({
+        productSlug: String(product.id),
+        quantity,
+        selectedColor: selectedVariant,
+        optimisticProduct,
+      });
+      // Show notification after successful add to cart
+      setShowNotification(true);
+    } catch (error) {
+      console.error('Failed to add to cart:', error);
+    }
   };
 
   return (
@@ -149,7 +157,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
             </div>
           ) : (
             <div className="text-center">
-              <button className="w-full bg-primary text-white py-3 px-6 rounded-md text-base lg:text-lg font-medium hover:bg-primary-dark transition-colors">
+              <button className="w-full bg-primary text-white py-2 px-6 rounded-md text-base lg:text-lg font-medium hover:bg-primary-dark transition-colors">
                 REQUEST STORE AVAILABILITY
               </button>
             </div>
@@ -214,7 +222,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
             {/* Primary CTA - Add to Cart */}
               <button
                 onClick={onAddToCart}
-              className="w-full bg-primary text-white py-3 px-5 rounded-sm text-sm lg:text-base font-medium hover:bg-primary-dark transition-colors flex items-center justify-center gap-2"
+              className="w-full bg-primary border border-primary text-white py-2 px-5 rounded-sm text-sm lg:text-base font-medium hover:bg-primary-dark transition-colors flex items-center justify-center gap-2"
               >
                 <Cart className="w-4 h-4" />
                 Add to Cart
@@ -281,13 +289,20 @@ export function ProductInfo({ product }: ProductInfoProps) {
             </div>
             <button
               onClick={onAddToCart}
-              className="bg-primary text-white px-4 lg:px-6 py-2 lg:py-3 rounded-md font-medium hover:bg-primary-dark transition-colors whitespace-nowrap"
+              className="bg-primary text-white px-4 lg:px-6 py-2 lg:py-2 rounded-md font-medium hover:bg-primary-dark transition-colors whitespace-nowrap"
             >
               Add to Cart
             </button>
           </div>
         </div>
       )}
+
+      {/* Cart Notification */}
+      <CartNotification
+        isVisible={showNotification}
+        onClose={() => setShowNotification(false)}
+        productName={product.name}
+      />
     </>
   );
 }

@@ -198,18 +198,18 @@ export function ProductReviews({ product }: ProductReviewsProps) {
             {product.reviews} reviews • {product.rating} average rating
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <button
             onClick={() => {
               setLightboxEntries(allPhotoEntries);
               setLightboxIndex(0);
               setIsLightboxOpen(true);
             }}
-            className="bg-primary text-white px-4 lg:px-6 py-2  rounded-md hover:bg-primary-dark transition-colors flex items-center gap-2 text-sm lg:text-base self-start sm:self-auto"
+            className="bg-primary text-white px-4 lg:px-6 py-2  rounded-md hover:bg-primary-dark transition-colors flex items-center gap-2 text-sm lg:text-base self-start sm:self-auto w-full sm:w-auto"
           >
             See all photos ({allPhotos.length})
           </button>
-          <button className="bg-primary text-white px-4 lg:px-6 py-2  rounded-md hover:bg-primary-dark transition-colors flex items-center gap-2 text-sm lg:text-base self-start sm:self-auto">
+          <button className="bg-primary text-white px-4 lg:px-6 py-2  rounded-md hover:bg-primary-dark transition-colors flex items-center gap-2 text-sm lg:text-base self-start sm:self-auto w-full sm:w-auto">
             <MessageCircle className="w-3 h-3 lg:w-4 lg:h-4" />
             Write a Review
           </button>

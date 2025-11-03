@@ -34,6 +34,8 @@ export default function OrdersPage() {
   // Use dummy data instead of API calls
   useEffect(() => {
     setDummyOrdersInStore();
+    // Set limit to 10 orders per page
+    setFilters({ limit: 10 });
   }, []);
 
   // Calculate dropdown position based on button position
@@ -64,8 +66,8 @@ export default function OrdersPage() {
     }
   }, [openDropdownId]);
 
-  // Filter orders locally
-  const filteredOrders = useMemo(() => {
+  // Filter and paginate orders locally
+  const filteredAndPaginatedOrders = useMemo(() => {
     let result = [...orders];
 
     // Search filter
@@ -122,7 +124,28 @@ export default function OrdersPage() {
       return filters.sortOrder === 'asc' ? aNum - bNum : bNum - aNum;
     });
 
-    return result;
+    // Pagination
+    const total = result.length;
+    const limit = filters.limit || 10;
+    const page = filters.page || 1;
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const paginatedResult = result.slice(startIndex, endIndex);
+
+    // Update pagination info
+    const totalPages = Math.ceil(total / limit);
+    useOrderStore.setState({
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+        hasNext: page < totalPages,
+        hasPrev: page > 1,
+      },
+    });
+
+    return paginatedResult;
   }, [orders, filters]);
 
   const formatCurrency = (amount: number) =>
@@ -211,7 +234,7 @@ export default function OrdersPage() {
               <input
                 type="text"
                 value={filters.search}
-                onChange={e => setFilters({ search: e.target.value })}
+                onChange={e => setFilters({ search: e.target.value, page: 1 })}
                 placeholder="Search by order number, customer name, phone..."
                 className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-[#525252] rounded-md sm:text-sm bg-white dark:bg-[#242424] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#696969] focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-600 dark:focus:border-primary-600"
               />
@@ -222,7 +245,7 @@ export default function OrdersPage() {
             <CustomSelect
               label="Order Status"
               value={filters.orderStatus}
-              onChange={(v) => setFilters({ orderStatus: v })}
+              onChange={(v) => setFilters({ orderStatus: v, page: 1 })}
               options={[
                 { value: '', label: 'All Statuses' },
                 { value: 'pending', label: 'Pending' },
@@ -240,7 +263,7 @@ export default function OrdersPage() {
             <CustomSelect
               label="Payment Status"
               value={filters.paymentStatus}
-              onChange={(v) => setFilters({ paymentStatus: v })}
+              onChange={(v) => setFilters({ paymentStatus: v, page: 1 })}
               options={[
                 { value: '', label: 'All Payments' },
                 { value: 'pending', label: 'Pending' },
@@ -256,7 +279,7 @@ export default function OrdersPage() {
             <CustomSelect
               label="Sort By"
               value={filters.sortBy}
-              onChange={(v) => setFilters({ sortBy: v })}
+              onChange={(v) => setFilters({ sortBy: v, page: 1 })}
               options={[
                 { value: 'createdAt', label: 'Date' },
                 { value: 'totalAmount', label: 'Amount' },
@@ -300,7 +323,7 @@ export default function OrdersPage() {
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-[#1d1d1d] divide-y divide-gray-200 dark:divide-[#525252]">
-              {filteredOrders.length === 0 ? (
+              {filteredAndPaginatedOrders.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="px-3 sm:px-4 py-12 text-center">
                     <Package className="mx-auto h-12 w-12 text-gray-400 dark:text-[#696969]" />
@@ -313,7 +336,7 @@ export default function OrdersPage() {
                   </td>
                 </tr>
               ) : (
-                filteredOrders.map((order) => {
+                filteredAndPaginatedOrders.map((order) => {
                   const isDropdownOpen = openDropdownId === order._id;
                   return (
                     <tr key={order._id} className="transition-colors">
@@ -460,21 +483,23 @@ export default function OrdersPage() {
         </div>
 
         {/* Pagination */}
-        {pagination && pagination.totalPages > 1 && filteredOrders.length > 0 && (
+        {pagination && pagination.totalPages > 1 && (
           <div className="px-4 py-4 border-t border-gray-200 dark:border-[#525252] flex items-center justify-between">
             <div className="text-sm text-gray-700 dark:text-gray-300">
-              Showing {filteredOrders.length} of {filteredOrders.length} results
+              Showing {(pagination.page - 1) * pagination.limit + 1} to{' '}
+              {Math.min(pagination.page * pagination.limit, pagination.total)}{' '}
+              of {pagination.total} results
             </div>
             <div className="flex space-x-2">
               <button
-                onClick={() => setFilters({ page: (pagination.page || 1) - 1 })}
+                onClick={() => setFilters({ page: pagination.page - 1 })}
                 disabled={!pagination.hasPrev}
                 className="px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-[#242424] border border-gray-300 dark:border-[#525252] rounded-md hover:bg-gray-50 dark:hover:bg-[#2f2f2f] disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Previous
               </button>
               <button
-                onClick={() => setFilters({ page: (pagination.page || 1) + 1 })}
+                onClick={() => setFilters({ page: pagination.page + 1 })}
                 disabled={!pagination.hasNext}
                 className="px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-[#242424] border border-gray-300 dark:border-[#525252] rounded-md hover:bg-gray-50 dark:hover:bg-[#2f2f2f] disabled:opacity-50 disabled:cursor-not-allowed"
               >

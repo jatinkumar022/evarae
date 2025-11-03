@@ -191,23 +191,23 @@ export default function EnhancedNewArrivalsPage() {
         </div>
 
         <Container className="relative z-10">
-          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center min-h-[80vh] py-20">
+          <div className="grid lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12 items-center min-h-[60vh] sm:min-h-[70vh] py-8 sm:py-12 lg:py-16">
             {/* Left Content */}
-            <div className="text-left lg:pr-8">
+            <div className="text-left lg:pr-6">
               {/* New Badge */}
-              <div className="flex items-center gap-3 mb-8">
-                <div className="flex items-center gap-2 bg-white/80 backdrop-blur-md border border-white/40 rounded-full px-6 py-3 shadow-lg">
-                  <Sparkles className="w-4 h-4 text-[var(--color-primary)] animate-bounce" />
-                  <span className="font-medium text-sm tracking-widest uppercase text-[var(--color-primary)]">
+              <div className="flex items-center gap-2 mb-4 sm:mb-6">
+                <div className="flex items-center gap-1.5 sm:gap-2 bg-white/80 backdrop-blur-md border border-white/40 rounded-full px-3 sm:px-4 py-1.5 sm:py-2 shadow-lg">
+                  <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 text-[var(--color-primary)] animate-bounce" />
+                  <span className="font-medium text-xs sm:text-sm tracking-wider uppercase text-[var(--color-primary)]">
                     Fresh Arrivals
                   </span>
-                  <Sparkles className="w-4 h-4 text-[var(--color-primary)] animate-bounce delay-300" />
+                  <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 text-[var(--color-primary)] animate-bounce delay-300" />
                 </div>
               </div>
 
               {/* Main Heading */}
               <h1
-                className="text-4xl md:text-6xl font-semibold mb-6 leading-tight font-heading"
+                className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold mb-3 sm:mb-4 leading-tight font-heading"
                 style={{ color: 'var(--text-heading)' }}
               >
                 Discover Our
@@ -217,14 +217,14 @@ export default function EnhancedNewArrivalsPage() {
               </h1>
 
               <div
-                className="text-xl font-light mb-6 font-serif"
+                className="text-base sm:text-lg md:text-xl font-light mb-3 sm:mb-4 font-serif"
                 style={{ color: 'var(--color-primary-dark)' }}
               >
                 &ldquo;Where elegance meets affordability.&ldquo;
               </div>
 
               <p
-                className="text-lg leading-relaxed mb-8 max-w-2xl"
+                className="text-sm sm:text-base lg:text-lg leading-relaxed mb-4 sm:mb-6 max-w-2xl"
                 style={{ color: 'var(--text-primary)' }}
               >
                 Explore our newest arrivals featuring exquisite imitation
@@ -234,30 +234,30 @@ export default function EnhancedNewArrivalsPage() {
               </p>
 
               {/* CTA Buttons */}
-              <div className="flex flex-col sm:flex-row gap-4 mb-12">
-                <button className="btn btn-filled !px-6 !py-4 flex items-center gap-3 justify-center group !font-medium !text-base !font-sans">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mb-6 sm:mb-8">
+                <button className="btn btn-filled !px-4 !py-2 sm:!px-5 sm:!py-2.5 flex items-center gap-2 justify-center group !font-medium !text-sm sm:!text-base !font-sans">
                   <Crown
-                    className="w-6 h-6 group-hover:animate-pulse"
+                    className="w-4 h-4 sm:w-5 sm:h-5 group-hover:animate-pulse"
                     strokeWidth={1.5}
                   />
                   Explore Collection
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" />
                 </button>
-                <button className="btn btn-outline !px-6 !py-4 flex items-center gap-3 justify-center !font-medium !text-base !font-sans">
-                  <Play className="w-5 h-5" strokeWidth={1.5} />
+                <button className="btn btn-outline !px-4 !py-2 sm:!px-5 sm:!py-2.5 flex items-center gap-2 justify-center !font-medium !text-sm sm:!text-base !font-sans">
+                  <Play className="w-4 h-4 sm:w-5 sm:h-5" strokeWidth={1.5} />
                   Watch Showcase
                 </button>
               </div>
 
               {/* Trust Indicators */}
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
                 <div className="text-center">
                   <Award
-                    className="w-8 h-8 mx-auto mb-2 text-[var(--color-primary)]"
+                    className="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 mx-auto mb-1 sm:mb-2 text-[var(--color-primary)]"
                     strokeWidth={1.5}
                   />
                   <div
-                    className="text-sm font-medium"
+                    className="text-xs sm:text-sm font-medium"
                     style={{ color: 'var(--text-heading)' }}
                   >
                     Premium Quality
@@ -265,11 +265,11 @@ export default function EnhancedNewArrivalsPage() {
                 </div>
                 <div className="text-center">
                   <Truck
-                    className="w-8 h-8 mx-auto mb-2 text-[var(--color-primary)]"
+                    className="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 mx-auto mb-1 sm:mb-2 text-[var(--color-primary)]"
                     strokeWidth={1.5}
                   />
                   <div
-                    className="text-sm font-medium"
+                    className="text-xs sm:text-sm font-medium"
                     style={{ color: 'var(--text-heading)' }}
                   >
                     Free Shipping
@@ -277,11 +277,11 @@ export default function EnhancedNewArrivalsPage() {
                 </div>
                 <div className="text-center">
                   <Shield
-                    className="w-8 h-8 mx-auto mb-2 text-[var(--color-primary)]"
+                    className="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 mx-auto mb-1 sm:mb-2 text-[var(--color-primary)]"
                     strokeWidth={1.5}
                   />
                   <div
-                    className="text-sm font-medium"
+                    className="text-xs sm:text-sm font-medium"
                     style={{ color: 'var(--text-heading)' }}
                   >
                     Secure Shopping
@@ -289,11 +289,11 @@ export default function EnhancedNewArrivalsPage() {
                 </div>
                 <div className="text-center">
                   <Users
-                    className="w-8 h-8 mx-auto mb-2 text-[var(--color-primary)]"
+                    className="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 mx-auto mb-1 sm:mb-2 text-[var(--color-primary)]"
                     strokeWidth={1.5}
                   />
                   <div
-                    className="text-sm font-medium"
+                    className="text-xs sm:text-sm font-medium"
                     style={{ color: 'var(--text-heading)' }}
                   >
                     10K+ Customers
@@ -304,7 +304,7 @@ export default function EnhancedNewArrivalsPage() {
 
             {/* Right Content - Featured Products Showcase */}
             <div className="relative">
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:gap-6">
                 {allProducts.slice(0, 3).map((product, index) => (
                   <div
                     key={product.id}
@@ -312,7 +312,7 @@ export default function EnhancedNewArrivalsPage() {
                       index === 0 ? 'col-span-2' : ''
                     }`}
                   >
-                    <div className="relative aspect-square overflow-hidden rounded-2xl bg-white shadow-xl hover:shadow-2xl transition-all duration-500 border border-gray-100">
+                    <div className="relative aspect-square overflow-hidden rounded-lg sm:rounded-xl lg:rounded-2xl bg-white shadow-lg hover:shadow-xl transition-all duration-500 border border-gray-100">
                       <Image
                         src={product.thumbnail || product.images[0]}
                         alt={product.name}
@@ -321,18 +321,18 @@ export default function EnhancedNewArrivalsPage() {
                         sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                       />
                       <div className="absolute inset-0 bg-black/0  transition-all duration-300" />
-                      <div className="absolute bottom-4 left-4 right-4 transform translate-y-8 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all z-50">
-                        <div className="bg-black/20 backdrop-blur-md rounded-xl p-4">
-                          <h4 className="font-medium text-white mb-1">
+                      <div className="absolute bottom-2 sm:bottom-3 lg:bottom-4 left-2 sm:left-3 lg:left-4 right-2 sm:right-3 lg:right-4 transform translate-y-8 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all z-50">
+                        <div className="bg-black/20 backdrop-blur-md rounded-lg sm:rounded-xl p-2 sm:p-3 lg:p-4">
+                          <h4 className="font-medium text-white mb-1 text-xs sm:text-sm lg:text-base">
                             {product.name}
                           </h4>
                           <div className="flex items-center justify-between">
-                            <span className="text-lg font-medium text-white">
+                            <span className="text-sm sm:text-base lg:text-lg font-medium text-white">
                               ₹{product.price?.toLocaleString()}
                             </span>
                             <div className="flex items-center gap-1">
-                              <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                              <span className="text-sm text-white">
+                              <Star className="w-3 h-3 sm:w-4 sm:h-4 text-yellow-400 fill-current" />
+                              <span className="text-xs sm:text-sm text-white">
                                 {product.rating}
                               </span>
                             </div>
@@ -345,12 +345,12 @@ export default function EnhancedNewArrivalsPage() {
               </div>
 
               {/* Floating Stats */}
-              <div className="absolute -top-6 -right-6 bg-white rounded-2xl shadow-xl p-6 border border-gray-100">
+              <div className="absolute -top-3 -right-3 sm:-top-4 sm:-right-4 lg:-top-6 lg:-right-6 bg-white rounded-xl sm:rounded-2xl shadow-xl p-3 sm:p-4 lg:p-6 border border-gray-100">
                 <div className="text-center">
-                  <div className="text-3xl font-medium text-[var(--color-primary)] mb-1">
+                  <div className="text-xl sm:text-2xl lg:text-3xl font-medium text-[var(--color-primary)] mb-0.5 sm:mb-1">
                     24+
                   </div>
-                  <div className="text-sm text-gray-600">New This Week</div>
+                  <div className="text-xs sm:text-sm text-gray-600">New This Week</div>
                 </div>
               </div>
             </div>
@@ -364,31 +364,31 @@ export default function EnhancedNewArrivalsPage() {
           background:
             'linear-gradient(90deg, var(--color-primary) 0%, var(--color-primary-dark) 100%)',
         }}
-        className="text-white py-4 shadow-lg"
+        className="text-white py-2.5 sm:py-3 lg:py-4 shadow-lg"
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <Timer className="w-6 h-6 text-yellow-300 animate-pulse" />
-              <div>
-                <span className="font-medium text-lg">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-2 sm:gap-3 lg:gap-4">
+            <div className="flex items-center gap-2 sm:gap-3 lg:gap-4">
+              <Timer className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-yellow-300 animate-pulse flex-shrink-0" />
+              <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-0">
+                <span className="font-medium text-sm sm:text-base lg:text-lg">
                   Limited Time: Up to 40% OFF
                 </span>
-                <span className="ml-4 text-pink-100">
+                <span className="sm:ml-2 lg:ml-4 text-pink-100 text-xs sm:text-sm lg:text-base">
                   on New Arrivals Collection
                 </span>
               </div>
             </div>
-            <div className="flex items-center gap-4">
-              <span className="text-yellow-300 font-medium">Ends in:</span>
-              <div className="flex items-center gap-2">
-                <div className="bg-white/20 px-3 py-1 rounded-lg font-mono font-medium">
+            <div className="flex items-center gap-2 sm:gap-3 lg:gap-4">
+              <span className="text-yellow-300 font-medium text-xs sm:text-sm lg:text-base">Ends in:</span>
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <div className="bg-white/20 px-2 sm:px-2.5 lg:px-3 py-0.5 sm:py-1 rounded-md sm:rounded-lg font-mono font-medium text-xs sm:text-sm">
                   {timeRemaining.hours.toString().padStart(2, '0')}h
                 </div>
-                <div className="bg-white/20 px-3 py-1 rounded-lg font-mono font-medium">
+                <div className="bg-white/20 px-2 sm:px-2.5 lg:px-3 py-0.5 sm:py-1 rounded-md sm:rounded-lg font-mono font-medium text-xs sm:text-sm">
                   {timeRemaining.minutes.toString().padStart(2, '0')}m
                 </div>
-                <div className="bg-white/20 px-3 py-1 rounded-lg font-mono font-medium">
+                <div className="bg-white/20 px-2 sm:px-2.5 lg:px-3 py-0.5 sm:py-1 rounded-md sm:rounded-lg font-mono font-medium text-xs sm:text-sm">
                   {timeRemaining.seconds.toString().padStart(2, '0')}s
                 </div>
               </div>
@@ -398,10 +398,10 @@ export default function EnhancedNewArrivalsPage() {
       </div>
 
       {/* Enhanced Product Section */}
-      <div className="py-20" style={{ backgroundColor: 'var(--bg-secondary)' }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="py-8 sm:py-12 lg:py-16" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
           {/* Breadcrumb */}
-          <nav className="py-4 sm:py-6 text-xs sm:text-sm">
+          <nav className="py-2 sm:py-3 lg:py-4 text-xs sm:text-sm">
             <div className="flex items-center gap-1 sm:gap-2">
               <Link
                 href="/"
@@ -417,9 +417,9 @@ export default function EnhancedNewArrivalsPage() {
             </div>
           </nav>
 
-          <div className="font-heading my-6 sm:my-8 md:flex justify-center items-center gap-2 flex-col text-accent">
-            <h1 className="text-2xl lg:text-3xl">New Arrivals</h1>
-            <h2 className="text-sm sm:text-base">
+          <div className="font-heading my-4 sm:my-5 lg:my-6 md:flex justify-center items-center gap-1.5 sm:gap-2 flex-col text-accent">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl">New Arrivals</h1>
+            <h2 className="text-xs sm:text-sm lg:text-base">
               ({allProducts.length} results)
             </h2>
           </div>
@@ -437,10 +437,10 @@ export default function EnhancedNewArrivalsPage() {
             </div>
 
             {hasMoreProducts && (
-              <div className="flex justify-center mt-8">
+              <div className="flex justify-center mt-6 sm:mt-8">
                 <button
                   onClick={handleLoadMore}
-                  className="btn btn-filled btn-animated"
+                  className="btn btn-filled btn-animated !px-4 !py-2 sm:!px-5 sm:!py-2.5 !text-sm sm:!text-base"
                 >
                   Load More ({displayedProducts.length} of{' '}
                   {filteredProducts.length})
@@ -449,8 +449,8 @@ export default function EnhancedNewArrivalsPage() {
             )}
 
             {filteredProducts.length === 0 && (
-              <div className="text-center py-12">
-                <p className="text-primary-dark text-lg">
+              <div className="text-center py-8 sm:py-12">
+                <p className="text-primary-dark text-sm sm:text-base lg:text-lg">
                   No products match your filters.
                 </p>
               </div>
@@ -460,12 +460,12 @@ export default function EnhancedNewArrivalsPage() {
       </div>
 
       {/* Instagram Section */}
-      <div className="py-20" style={{ backgroundColor: 'var(--bg-primary)' }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <div className="font-heading my-6 sm:my-8 md:flex justify-center items-center gap-2 flex-col text-accent">
-              <h1 className="text-2xl lg:text-3xl">Follow Our Journey</h1>
-              <h2 className="text-sm sm:text-base">
+      <div className="py-12 sm:py-16 lg:py-20" style={{ backgroundColor: 'var(--bg-primary)' }}>
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
+          <div className="text-center mb-8 sm:mb-12 lg:mb-16">
+            <div className="font-heading my-4 sm:my-5 lg:my-6 md:flex justify-center items-center gap-1.5 sm:gap-2 flex-col text-accent">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl">Follow Our Journey</h1>
+              <h2 className="text-xs sm:text-sm lg:text-base">
                 Get inspired by our community and see how our jewelry looks in
                 real life
               </h2>
@@ -474,18 +474,18 @@ export default function EnhancedNewArrivalsPage() {
             <Link
               href={'https://www.instagram.com/caelvi.store'}
               target="_blank"
-              className="flex items-center justify-center gap-2   text-primary"
+              className="flex items-center justify-center gap-2 text-primary text-sm sm:text-base"
             >
-              <Instagram className="w-4 h-4" />
+              <Instagram className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               CAELVISTORE
             </Link>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-3 lg:gap-4">
             {[...Array(12)].map((_, index) => (
               <div
                 key={index}
-                className="aspect-square rounded-xl overflow-hidden bg-gradient-to-br from-[var(--bg-cart)] to-[var(--bg-menu)] group cursor-pointer"
+                className="aspect-square rounded-lg sm:rounded-xl overflow-hidden bg-gradient-to-br from-[var(--bg-cart)] to-[var(--bg-menu)] group cursor-pointer"
               >
                 <Image
                   src={worldOne}
@@ -496,9 +496,9 @@ export default function EnhancedNewArrivalsPage() {
             ))}
           </div>
 
-          <div className="text-center mt-12">
-            <button className="btn btn-outline !px-8 !py-4 flex items-center gap-3 mx-auto ">
-              <Instagram className="w-5 h-5" />
+          <div className="text-center mt-8 sm:mt-10 lg:mt-12">
+            <button className="btn btn-outline !px-5 !py-2.5 sm:!px-6 sm:!py-3 lg:!px-8 lg:!py-4 flex items-center gap-2 sm:gap-3 mx-auto !text-sm sm:!text-base">
+              <Instagram className="w-4 h-4 sm:w-5 sm:h-5" />
               Follow Us on Instagram
             </button>
           </div>

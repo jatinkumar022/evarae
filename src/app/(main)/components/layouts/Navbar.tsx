@@ -11,12 +11,6 @@ import {
   Store,
   Menu,
 } from '@/app/(main)/assets/Navbar';
-import {
-  ringsCat,
-  earringsCat,
-  braceletsCat,
-  pendantsCat,
-} from '@/app/(main)/assets/CategoryGrid';
 import { useEffect, useRef, useState } from 'react';
 import { RxCross2 } from 'react-icons/rx';
 import Link from 'next/link';
@@ -94,12 +88,59 @@ function IconButton({
   );
 }
 
-const popularCategories = [
-  { name: 'Rings', href: '#', image: ringsCat },
-  { name: 'Earrings', href: '#', image: earringsCat },
-  { name: 'Bracelets', href: '#', image: braceletsCat },
-  { name: 'Pendants', href: '#', image: pendantsCat },
-];
+// Search history localStorage key
+const SEARCH_HISTORY_KEY = 'caelvi_search_history';
+const MAX_SEARCH_HISTORY = 10;
+
+// Helper functions for search history
+const getSearchHistory = (): string[] => {
+  if (typeof window === 'undefined') return [];
+  try {
+    const history = localStorage.getItem(SEARCH_HISTORY_KEY);
+    return history ? JSON.parse(history) : [];
+  } catch {
+    return [];
+  }
+};
+
+const saveSearchToHistory = (query: string): void => {
+  if (typeof window === 'undefined' || !query.trim()) return;
+  try {
+    const history = getSearchHistory();
+    const trimmedQuery = query.trim().toLowerCase();
+    
+    // Remove if already exists (to move to top)
+    const filteredHistory = history.filter(
+      item => item.toLowerCase() !== trimmedQuery
+    );
+    
+    // Add to beginning and limit to MAX_SEARCH_HISTORY
+    const updatedHistory = [
+      query.trim(), // Keep original casing
+      ...filteredHistory,
+    ].slice(0, MAX_SEARCH_HISTORY);
+    
+    localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(updatedHistory));
+  } catch {
+    // Silently fail if localStorage is not available
+  }
+};
+
+const clearSearchHistory = (): void => {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.removeItem(SEARCH_HISTORY_KEY);
+  } catch {
+    // Silently fail if localStorage is not available
+  }
+};
+
+type Category = {
+  _id: string;
+  name: string;
+  slug: string;
+  image?: string;
+};
 
 export default function Navbar() {
   const { items, load } = useCartStore();
@@ -112,14 +153,15 @@ export default function Navbar() {
     'Search Diamond Jewellery',
     'Search Rings, Earrings & more...',
   ];
-  const [currentUser, setCurrentUser] = useState<UserAccount | null>(null);
-  const trendingSearches = [
-    'Rings',
-    'Diamond Necklace',
-    'Gold Chains',
-    '22k Gold',
-    'Gifts for Her',
+  const shortPlaceholders = [
+    'Search Jewellery',
+    'Search Rings, Earrings & more...',
+    'Search...',
   ];
+  const [currentUser, setCurrentUser] = useState<UserAccount | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [searchHistory, setSearchHistory] = useState<string[]>([]);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(false);
   const [currentPlaceholder, setCurrentPlaceholder] = useState(0);
   const [inputValue, setInputValue] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -144,6 +186,31 @@ export default function Navbar() {
   const pathname = usePathname();
 
   const isCartPage = pathname === '/cart';
+
+  // Fetch categories when search opens
+  useEffect(() => {
+    if (isSearchOpen && categories.length === 0 && !isLoadingCategories) {
+      setIsLoadingCategories(true);
+      fetch('/api/main/categories', { cache: 'no-store' })
+        .then(res => res.json())
+        .then(data => {
+          setCategories(data.categories || []);
+        })
+        .catch(err => {
+          console.error('Failed to fetch categories:', err);
+        })
+        .finally(() => {
+          setIsLoadingCategories(false);
+        });
+    }
+  }, [isSearchOpen, categories.length, isLoadingCategories]);
+
+  // Load search history when search opens
+  useEffect(() => {
+    if (isSearchOpen) {
+      setSearchHistory(getSearchHistory());
+    }
+  }, [isSearchOpen]);
 
   useEffect(() => {
     (async () => {
@@ -1044,17 +1111,19 @@ export default function Navbar() {
               <Container>
                 <div className="py-8">
                   {/* Search Input */}
-                  <div className="relative border border-border px-4 flex items-center rounded-md py-1">
+                  <div className="relative border border-border px-2 sm:px-3 md:px-4 flex items-center rounded-md py-1">
                     <Search
                       onClick={() => {
                         if (inputValue.trim()) {
+                          saveSearchToHistory(inputValue.trim());
                           router.push(
                             `/search?q=${encodeURIComponent(inputValue.trim())}`
                           );
                           setIsSearchOpen(false);
+                          setInputValue('');
                         }
                       }}
-                      className="h-5 w-5 flex-shrink-0 text-primary mr-4"
+                      className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0 text-primary mr-2 sm:mr-4 cursor-pointer"
                     />
                     <input
                       type="text"
@@ -1062,17 +1131,19 @@ export default function Navbar() {
                       onChange={e => setInputValue(e.target.value)}
                       onKeyPress={e => {
                         if (e.key === 'Enter' && inputValue.trim()) {
+                          saveSearchToHistory(inputValue.trim());
                           router.push(
                             `/search?q=${encodeURIComponent(inputValue.trim())}`
                           );
                           setIsSearchOpen(false);
+                          setInputValue('');
                         }
                       }}
-                      className="w-full bg-transparent text-lg placeholder-gray-400 focus:outline-none  relative z-10"
+                      className="w-full bg-transparent text-sm sm:text-base md:text-lg placeholder-gray-400 focus:outline-none relative z-10"
                       autoFocus
                     />
                     {inputValue === '' && (
-                      <div className="absolute left-14 inset-y-0 flex items-center pointer-events-none ">
+                      <div className="absolute left-10 sm:left-14 inset-y-0 flex items-center pointer-events-none">
                         <AnimatePresence mode="wait">
                           <motion.p
                             key={currentPlaceholder}
@@ -1080,9 +1151,14 @@ export default function Navbar() {
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -5 }}
                             transition={{ duration: 0.3 }}
-                            className="text-lg text-gray-600  "
+                            className="text-sm sm:text-base md:text-lg text-gray-600"
                           >
-                            {placeholders[currentPlaceholder]}
+                            <span className="hidden sm:inline">
+                              {placeholders[currentPlaceholder]}
+                            </span>
+                            <span className="sm:hidden">
+                              {shortPlaceholders[currentPlaceholder]}
+                            </span>
                           </motion.p>
                         </AnimatePresence>
                       </div>
@@ -1090,10 +1166,12 @@ export default function Navbar() {
                     <button
                       onClick={() => {
                         if (inputValue.trim()) {
+                          saveSearchToHistory(inputValue.trim());
                           router.push(
                             `/search?q=${encodeURIComponent(inputValue.trim())}`
                           );
                           setIsSearchOpen(false);
+                          setInputValue('');
                         }
                       }}
                       className="px-4 py-1.5 hidden lg:block bg-primary text-white rounded-md hover:bg-primary/90 transition-colors ml-4"
@@ -1115,48 +1193,96 @@ export default function Navbar() {
                       <h3 className="text-sm font-medium text-gray-700">
                         Popular Categories
                       </h3>
-                      <div className="mt-4 grid grid-cols-2 gap-4">
-                        {popularCategories.map(cat => (
-                          <Link
-                            href={cat.href}
-                            key={cat.name}
-                            className="group block"
-                          >
-                            <div className="aspect-square w-full overflow-hidden rounded-md bg-gray-100">
-                              <Image
-                                src={cat.image}
-                                alt={cat.name}
-                                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                              />
-                            </div>
-                            <p className="mt-2 text-sm font-medium text-gray-800 transition-colors group-hover:text-primary">
-                              {cat.name}
-                            </p>
-                          </Link>
-                        ))}
-                      </div>
+                      {isLoadingCategories ? (
+                        <div className="mt-4 grid grid-cols-2 gap-4">
+                          {[...Array(4)].map((_, i) => (
+                            <div
+                              key={i}
+                              className="aspect-square w-full rounded-md bg-gray-100 animate-pulse"
+                            />
+                          ))}
+                        </div>
+                      ) : categories.length > 0 ? (
+                        <div className="mt-4 grid grid-cols-2 gap-4">
+                          {categories.slice(0, 4).map(cat => (
+                            <Link
+                              href={`/shop/${cat.slug}`}
+                              key={cat._id || cat.slug}
+                              onClick={() => setIsSearchOpen(false)}
+                              className="group block"
+                            >
+                              <div className="aspect-square w-full overflow-hidden rounded-md bg-gray-100">
+                                {cat.image ? (
+                                  <Image
+                                    src={cat.image}
+                                    alt={cat.name}
+                                    width={200}
+                                    height={200}
+                                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                  />
+                                ) : (
+                                  <div className="h-full w-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
+                                    <span className="text-gray-500 text-sm font-medium">
+                                      {cat.name}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                              <p className="mt-2 text-sm font-medium text-gray-800 transition-colors group-hover:text-primary">
+                                {cat.name}
+                              </p>
+                            </Link>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="mt-4 text-sm text-gray-500">
+                          No categories available
+                        </p>
+                      )}
                     </div>
                     <div>
-                      <h3 className="text-sm font-medium text-gray-700">
-                        Trending Searches
-                      </h3>
-                      <div className="mt-4 flex flex-wrap gap-3">
-                        {trendingSearches.map(term => (
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-sm font-medium text-gray-700">
+                          Recent Searches
+                        </h3>
+                        {searchHistory.length > 0 && (
                           <button
-                            key={term}
                             onClick={() => {
-                              router.push(
-                                `/search?q=${encodeURIComponent(term)}`
-                              );
-                              setIsSearchOpen(false);
+                              clearSearchHistory();
+                              setSearchHistory([]);
                             }}
-                            className="rounded-full bg-gray-100 px-4 py-1.5 text-sm text-gray-700 transition-colors hover:bg-gray-200 hover:text-gray-900"
-                            aria-label={`Search for ${term}`}
+                            className="text-xs text-gray-500 hover:text-gray-700 transition-colors"
+                            aria-label="Clear search history"
                           >
-                            {term}
+                            Clear
                           </button>
-                        ))}
+                        )}
                       </div>
+                      {searchHistory.length > 0 ? (
+                        <div className="mt-4 flex flex-wrap gap-3">
+                          {searchHistory.map((term, index) => (
+                            <button
+                              key={`${term}-${index}`}
+                              onClick={() => {
+                                saveSearchToHistory(term);
+                                router.push(
+                                  `/search?q=${encodeURIComponent(term)}`
+                                );
+                                setIsSearchOpen(false);
+                                setInputValue('');
+                              }}
+                              className="rounded-full bg-gray-100 px-4 py-1.5 text-sm text-gray-700 transition-colors hover:bg-gray-200 hover:text-gray-900"
+                              aria-label={`Search for ${term}`}
+                            >
+                              {term}
+                            </button>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="mt-4 text-sm text-gray-500">
+                          No recent searches
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>

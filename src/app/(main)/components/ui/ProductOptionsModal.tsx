@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { X, Plus, Minus, ShoppingCart } from 'lucide-react';
 import { Product } from '@/lib/types/product';
 import { useCartStore } from '@/lib/data/mainStore/cartStore';
+import CartNotification from './CartNotification';
 
 interface ProductOptionsModalProps {
   isOpen: boolean;
@@ -18,17 +19,25 @@ export default function ProductOptionsModal({
 }: ProductOptionsModalProps) {
   const [selectedColor, setSelectedColor] = useState<string>('');
   const [quantity, setQuantity] = useState(1);
+  const [showNotification, setShowNotification] = useState(false);
   const addToCart = useCartStore(s => s.add);
 
   // Reset state when modal opens/closes or product changes
   useEffect(() => {
     if (isOpen && product) {
-      setSelectedColor('');
+      // Pre-select first color if available, otherwise use material (empty string)
+      if (product.colors && product.colors.length > 0) {
+        setSelectedColor(product.colors[0]);
+      } else if (product.material && product.material.trim() !== '') {
+        setSelectedColor(''); // Material is represented by empty string in the button
+      } else {
+        setSelectedColor('');
+      }
       setQuantity(1);
     }
   }, [isOpen, product]);
 
-  if (!isOpen || !product) return null;
+  if (!product) return null;
 
   const hasColors = (product.colors && product.colors.length > 0) || (product.material && product.material.trim() !== '');
   const maxQuantity = Math.min(product.stockCount || 10, 10); // Limit to 10 or available stock
@@ -55,6 +64,8 @@ export default function ProductOptionsModal({
         selectedColor: hasColors ? selectedColor : undefined,
       });
       onClose();
+      // Show notification after modal closes
+      setShowNotification(true);
     } catch (error) {
       console.error('Failed to add to cart:', error);
     }
@@ -63,30 +74,38 @@ export default function ProductOptionsModal({
   const canAddToCart = quantity > 0 && (!hasColors || selectedColor !== '');
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Overlay */}
-      <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-        onClick={onClose}
-      />
+    <>
+      {isOpen && product && (
+        <div className="fixed inset-0 z-50 overflow-hidden">
+          {/* Overlay */}
+          <div
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
+            onClick={onClose}
+          />
 
-      {/* Modal */}
-      <div className="relative w-full max-w-md bg-white rounded-lg shadow-xl z-50 max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b">
+          {/* Modal Container - bottom on mobile, centered on desktop */}
+          <div className="fixed inset-0 flex items-end sm:items-center justify-center p-2 sm:p-4 pointer-events-none">
+            {/* Modal */}
+            <div 
+              className="relative w-full max-w-md bg-white rounded-2xl sm:rounded-lg shadow-xl z-50 max-h-[90vh] overflow-y-auto transform transition-all duration-300 ease-out pointer-events-auto border-t sm:border border-gray-200"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-white z-10">
           <h2 className="text-lg font-semibold text-primary-dark">
             Select Options
           </h2>
           <button
             onClick={onClose}
             className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+            aria-label="Close"
           >
-            <X className="w-5 h-5 text-gray-500" />
-          </button>
-        </div>
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+              </div>
 
-        {/* Product Info */}
-        <div className="p-4 border-b">
+              {/* Product Info */}
+              <div className="p-4 border-b">
           <div className="flex gap-3">
             <div className="w-16 h-16 flex-shrink-0 rounded-lg overflow-hidden">
               <Image
@@ -113,10 +132,10 @@ export default function ProductOptionsModal({
               </div>
             </div>
           </div>
-        </div>
+              </div>
 
-        {/* Options */}
-        <div className="p-4 space-y-4">
+              {/* Options */}
+              <div className="p-4 space-y-4">
           {/* Color Selection */}
           {hasColors && (
             <div>
@@ -154,8 +173,8 @@ export default function ProductOptionsModal({
             </div>
           )}
 
-          {/* Quantity Selection */}
-          <div>
+              {/* Quantity Selection */}
+              <div>
             <label className="block text-sm font-medium text-primary-dark mb-2">
               Quantity
             </label>
@@ -177,17 +196,17 @@ export default function ProductOptionsModal({
               </button>
             </div>
             <p className="text-xs text-gray-500 mt-1">
-              {maxQuantity} available in stock
-            </p>
-          </div>
-        </div>
+                {maxQuantity} available in stock
+              </p>
+              </div>
+              </div>
 
-        {/* Actions */}
-        <div className="p-4 border-t space-y-3">
+              {/* Actions */}
+              <div className="p-4 border-t space-y-2">
           <button
             onClick={handleAddToCart}
             disabled={!canAddToCart}
-            className="w-full bg-primary text-white py-3 px-4 rounded-lg font-medium hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+            className="w-full bg-primary text-white py-2.5 px-4 rounded-lg text-sm font-medium hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
           >
             <ShoppingCart className="w-4 h-4" />
             Add to Cart
@@ -195,12 +214,24 @@ export default function ProductOptionsModal({
           
           <button
             onClick={onClose}
-            className="w-full border border-gray-300 text-gray-700 py-3 px-4 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+            className="w-full border border-gray-300 text-gray-700 py-2.5 px-4 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
           >
-            Cancel
-          </button>
+                Cancel
+              </button>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
+      )}
+
+      {/* Cart Notification - Rendered outside modal so it persists */}
+      {product && (
+        <CartNotification
+          isVisible={showNotification}
+          onClose={() => setShowNotification(false)}
+          productName={product.name}
+        />
+      )}
+    </>
   );
 }

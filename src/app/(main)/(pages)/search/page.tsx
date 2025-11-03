@@ -20,6 +20,8 @@ import { ProductCard } from '../shop/components/ProductCard';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useSearchParams } from 'next/navigation';
+import { useCartStore } from '@/lib/data/mainStore/cartStore';
+import CartNotification from '@/app/(main)/components/ui/CartNotification';
 const PLACEHOLDER_PHRASES = [
   'Search Gold Jewellery',
   'Search Diamond Jewellery',
@@ -49,7 +51,10 @@ function SearchPageInner() {
   const [searchResults, setSearchResults] = useState<UiProduct[]>([]);
   const [results, setResults] = useState<UiProduct[]>([]);
   const [viewMode, setViewMode] = useState('grid');
+  const [showNotification, setShowNotification] = useState(false);
+  const [notificationProductName, setNotificationProductName] = useState('');
   const router = useRouter();
+  const addToCart = useCartStore(s => s.add);
   const filterOptions: FilterOptions = useMemo(
     () => ({
       priceRanges: [
@@ -211,9 +216,37 @@ function SearchPageInner() {
       product.images && product.images.length > 0
         ? product.images[0]
         : undefined;
+
+    const handleAddToCart = async () => {
+      if (!product?.id) return;
+
+      const optimisticProduct = {
+        _id: product.id,
+        id: product.id,
+        name: product.name,
+        price: product.price ?? 0,
+        discountPrice: product.price ?? 0,
+        images: product.images as string[],
+        thumbnail: (product.images?.[0] as string) || undefined,
+        stockQuantity: product.stockCount ?? 1,
+      };
+
+      try {
+        await addToCart({
+          productSlug: String(product.id),
+          quantity: 1,
+          optimisticProduct,
+        });
+        setNotificationProductName(product.name);
+        setShowNotification(true);
+      } catch (error) {
+        console.error('Failed to add to cart:', error);
+      }
+    };
+
     return (
-      <div className="bg-white border-b border-gray-100 p-2 sm:p-3 flex items-start gap-3 w-full max-w-full">
-        <div className="relative w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0 rounded-md overflow-hidden">
+      <div className="bg-white border-b border-gray-100 p-2 sm:p-3 lg:p-4 flex items-center gap-2 sm:gap-3 w-full max-w-full">
+        <div className="relative w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 flex-shrink-0 rounded-md overflow-hidden">
           {primaryImage ? (
             <Image
               src={primaryImage}
@@ -221,50 +254,49 @@ function SearchPageInner() {
               fill
               loading="lazy"
               className="object-cover"
-              sizes="80px"
+              sizes="(max-width: 640px) 56px, (max-width: 768px) 64px, 80px"
               priority={false}
             />
           ) : null}
         </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1 sm:gap-2">
-            <div className="min-w-0">
-              <div className="flex items-center gap-1.5 text-[10px] sm:text-xs text-gray-500">
-                <span className="truncate">{product.brand}</span>
-                <span className="text-gray-300">•</span>
-                <span className="capitalize truncate">
-                  {product.category.name}
-                </span>
-              </div>
-              <h3 className="font-medium text-gray-900 text-xs sm:text-sm leading-tight line-clamp-2">
-                {product.name}
-              </h3>
+        <div className="flex-1 min-w-0 flex items-center justify-between gap-2 sm:gap-3">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1 sm:gap-1.5 text-[9px] sm:text-[10px] md:text-xs text-gray-500">
+              <span className="truncate">{product.brand}</span>
+              <span className="text-gray-300">•</span>
+              <span className="capitalize truncate">
+                {product.category.name}
+              </span>
             </div>
-          </div>
-          <p className="hidden sm:block text-xs text-gray-600 line-clamp-2 mb-1">
-            {product.description}
-          </p>
-          <div className="flex items-center justify-between gap-2 mt-1">
-            <div className="flex items-center gap-1">
+            <h3 className="font-medium text-gray-900 text-xs sm:text-sm md:text-base leading-tight line-clamp-2 mt-0.5">
+              {product.name}
+            </h3>
+            <p className="hidden sm:block text-xs md:text-sm text-gray-600 line-clamp-2 mb-1 mt-0.5">
+              {product.description}
+            </p>
+            <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap mt-1 sm:mt-1.5">
               {product.price !== null ? (
-                <span className="text-sm sm:text-base font-bold text-gray-900">
+                <span className="text-xs sm:text-sm md:text-base font-bold text-gray-900">
                   ₹{product.price.toLocaleString()}
                 </span>
               ) : (
-                <span className="text-xs text-gray-500">Price on request</span>
+                <span className="text-[10px] sm:text-xs text-gray-500">Price on request</span>
               )}
               {product.originalPrice &&
                 product.price &&
                 product.originalPrice > product.price && (
-                  <span className="text-[10px] sm:text-xs text-gray-500 line-through">
+                  <span className="text-[9px] sm:text-[10px] md:text-xs text-gray-500 line-through">
                     ₹{product.originalPrice.toLocaleString()}
                   </span>
                 )}
             </div>
-            <button className="px-2 py-1 md:px-3 rounded bg-primary text-white text-[10px] text-xs md:text-lg hover:bg-primary-dark transition-colors">
-              Add
-            </button>
           </div>
+          <button 
+            onClick={handleAddToCart}
+            className="px-3 py-1.5 sm:px-4 sm:py-2 md:px-5 md:py-2.5 rounded-md bg-primary text-white text-xs sm:text-sm md:text-base font-medium hover:bg-primary-dark transition-colors whitespace-nowrap flex-shrink-0 self-center"
+          >
+            Add
+          </button>
         </div>
       </div>
     );
@@ -272,76 +304,76 @@ function SearchPageInner() {
 
   return (
     <Container>
-      <nav className="py-4 sm:py-6 text-xs sm:text-sm">
+      <nav className="py-2 sm:py-3 lg:py-4 text-xs sm:text-sm">
         <div className="flex items-center gap-1 sm:gap-2">
           <button
             type="button"
             onClick={() => router.back()}
-            className="inline-flex items-center gap-1 hover:text-primary transition-colors"
+            className="inline-flex items-center gap-1 hover:text-primary transition-colors text-xs sm:text-sm"
           >
-            <ArrowLeft className="w-4 h-4" />
-            Back
+            <ArrowLeft className="w-3 h-3 sm:w-4 sm:h-4" />
+            <span className="hidden sm:inline">Back</span>
           </button>
-          <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
+         
           <span className="text-primary-dark cursor-default">Search</span>
         </div>
       </nav>
 
-      <div className="flex items-center justify-center py-3 px-4">
+      <div className="flex items-center justify-center py-2 sm:py-3 px-3 sm:px-4">
         <form onSubmit={handleSearch} className="relative w-full max-w-2xl">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-primary" />
+          <Search className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-primary" />
           <input
             type="text"
             value={searchValue}
             onChange={e => setSearchValue(e.target.value)}
             placeholder=""
-            className="w-full pl-12 pr-28 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent text-base shadow-sm"
+            className="w-full pl-10 sm:pl-12 pr-24 sm:pr-28 py-2 sm:py-2.5 md:py-3 border border-gray-300 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent text-sm sm:text-base shadow-sm"
           />
           {searchValue === '' && (
-            <div className="absolute left-12 right-28 inset-y-0 flex items-center pointer-events-none overflow-hidden">
-              <span className="text-gray-400 text-sm truncate">
+            <div className="absolute left-10 sm:left-12 right-24 sm:right-28 inset-y-0 flex items-center pointer-events-none overflow-hidden">
+              <span className="text-gray-400 text-xs sm:text-sm truncate">
                 <RotatingPlaceholder />
               </span>
             </div>
           )}
           <button
             type="submit"
-            className="absolute right-2 top-1/2 -translate-y-1/2 bg-primary text-white px-4 py-1.5 rounded-lg hover:bg-primary-dark transition-colors text-sm font-medium whitespace-nowrap"
+            className="absolute right-1.5 sm:right-2 top-1/2 -translate-y-1/2 bg-primary text-white px-3 sm:px-4 py-1 sm:py-1.5 rounded-md sm:rounded-lg hover:bg-primary-dark transition-colors text-xs sm:text-sm font-medium whitespace-nowrap"
           >
             Search
           </button>
         </form>
       </div>
 
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 my-6 sm:my-8 font-heading text-accent">
-        <div className="text-center md:text-left">
-          <h1 className="text-2xl lg:text-3xl font-semibold">Search</h1>
-          <h2 className="text-sm sm:text-base text-gray-600 mt-1">
+      <div className="flex items-center justify-between gap-4 my-6 sm:my-8 font-heading text-accent">
+        <div className="text-left w-full sm:w-auto">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-semibold">Search</h1>
+          <h2 className="text-xs sm:text-sm md:text-base text-gray-600 mt-0.5 sm:mt-1">
             ({results.length} {results.length === 1 ? 'item' : 'items'} found)
           </h2>
         </div>
-        <div className="flex items-center justify-center md:justify-end gap-3">
-          <div className="flex items-center bg-gray-100 rounded-xl overflow-hidden shadow-sm">
+        <div className="flex items-center justify-end gap-2 sm:gap-3 w-full sm:w-auto">
+          <div className="flex items-center bg-gray-100 rounded-lg sm:rounded-xl overflow-hidden shadow-sm">
             <button
               onClick={() => setViewMode('grid')}
-              className={`px-3 py-2 text-sm font-medium flex items-center gap-1 transition-colors ${
+              className={`px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-medium flex items-center gap-1 transition-colors ${
                 viewMode === 'grid'
                   ? 'bg-primary text-white'
                   : 'text-gray-600 hover:bg-gray-200'
               }`}
             >
-              <Grid3X3 className="h-4 w-4" />
+              <Grid3X3 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               <span className="hidden sm:inline">Grid</span>
             </button>
             <button
               onClick={() => setViewMode('list')}
-              className={`px-3 py-2 text-sm font-medium flex items-center gap-1 transition-colors ${
+              className={`px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-medium flex items-center gap-1 transition-colors ${
                 viewMode === 'list'
                   ? 'bg-primary text-white'
                   : 'text-gray-600 hover:bg-gray-200'
               }`}
             >
-              <List className="h-4 w-4" />
+              <List className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               <span className="hidden sm:inline">List</span>
             </button>
           </div>
@@ -356,12 +388,12 @@ function SearchPageInner() {
       >
         {/* Loading State - Global loader will handle this */}
         {results.length === 0 ? (
-          <div className="text-center py-20">
-            <Search className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-xl font-medium text-gray-900 mb-2">
+          <div className="text-center py-12 sm:py-16 lg:py-20">
+            <Search className="h-12 w-12 sm:h-16 sm:w-16 text-gray-300 mx-auto mb-3 sm:mb-4" />
+            <h3 className="text-lg sm:text-xl font-medium text-gray-900 mb-1.5 sm:mb-2">
               No results found
             </h3>
-            <p className="text-gray-600 mb-4">
+            <p className="text-sm sm:text-base text-gray-600 mb-3 sm:mb-4 px-4">
               Try adjusting your search terms or filters
             </p>
             <button
@@ -370,7 +402,7 @@ function SearchPageInner() {
                 setSearchResults([]);
                 setResults([]);
               }}
-              className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
+              className="px-5 sm:px-6 py-2 sm:py-2.5 bg-primary text-white text-sm sm:text-base rounded-lg hover:bg-primary-dark transition-colors"
             >
               Clear Search
             </button>
@@ -379,8 +411,8 @@ function SearchPageInner() {
           <div
             className={
               viewMode === 'grid'
-                ? 'grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6'
-                : 'space-y-3 sm:space-y-4'
+                ? 'grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-3 md:gap-4 lg:gap-6'
+                : 'space-y-2 sm:space-y-3 lg:space-y-4'
             }
           >
             {results.map(product =>
@@ -395,6 +427,13 @@ function SearchPageInner() {
           </div>
         )}
       </ProductFilters>
+
+      {/* Cart Notification */}
+      <CartNotification
+        isVisible={showNotification}
+        onClose={() => setShowNotification(false)}
+        productName={notificationProductName}
+      />
     </Container>
   );
 }

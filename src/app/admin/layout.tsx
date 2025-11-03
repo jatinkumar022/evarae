@@ -26,10 +26,10 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
       {!isLoginPage && <AppSidebar />}
       {!isLoginPage && <Backdrop />}
       <div
-        className={`flex-1 transition-all duration-300 ease-in-out ${!isLoginPage ? mainContentMargin : ''}`}
+        className={`flex flex-col h-screen transition-all duration-300 ease-in-out ${!isLoginPage ? mainContentMargin : ''}`}
       >
         {!isLoginPage && <AppHeader />}
-        <div className={!isLoginPage ? "border border-gray-25 dark:border-[#191919d3]" : ""}>
+        <div className={`flex-1 overflow-y-auto ${!isLoginPage ? "border border-gray-25 dark:border-[#191919d3]" : ""}`}>
           {children}
         </div>
       </div>

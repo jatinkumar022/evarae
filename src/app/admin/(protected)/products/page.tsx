@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
@@ -42,13 +42,89 @@ export default function ProductsPage() {
   useEffect(() => {
     setDummyProductsInStore();
     setDummyCategoriesInStore();
+    // Set limit to 9 products per page
+    setFilters({ limit: 9 });
   }, []);
 
-  // Filter products locally when filters change
-  useEffect(() => {
-    // Filtering will be handled by the component's local state
-    // No need to refetch since we're using dummy data
-  }, [filters]);
+  // Filter and paginate products locally
+  const filteredAndPaginatedProducts = useMemo(() => {
+    let result = [...products];
+
+    // Search filter
+    if (filters.search) {
+      const searchLower = filters.search.toLowerCase();
+      result = result.filter(p =>
+        p.name.toLowerCase().includes(searchLower) ||
+        p.sku?.toLowerCase().includes(searchLower) ||
+        p.description?.toLowerCase().includes(searchLower)
+      );
+    }
+
+    // Category filter
+    if (filters.category) {
+      result = result.filter(p =>
+        p.categories.some(cat => cat._id === filters.category)
+      );
+    }
+
+    // Status filter
+    if (filters.status) {
+      result = result.filter(p => p.status === filters.status);
+    }
+
+    // Sort
+    result.sort((a, b) => {
+      let aVal: string | number, bVal: string | number;
+      switch (filters.sortBy) {
+        case 'name':
+          aVal = a.name.toLowerCase();
+          bVal = b.name.toLowerCase();
+          break;
+        case 'price':
+          aVal = a.price;
+          bVal = b.price;
+          break;
+        case 'stockQuantity':
+          aVal = a.stockQuantity;
+          bVal = b.stockQuantity;
+          break;
+        case 'createdAt':
+        default:
+          aVal = new Date(a.createdAt).getTime();
+          bVal = new Date(b.createdAt).getTime();
+          break;
+      }
+      if (typeof aVal === 'string' && typeof bVal === 'string') {
+        return filters.sortOrder === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+      }
+      const aNum = typeof aVal === 'number' ? aVal : Number(aVal) || 0;
+      const bNum = typeof bVal === 'number' ? bVal : Number(bVal) || 0;
+      return filters.sortOrder === 'asc' ? aNum - bNum : bNum - aNum;
+    });
+
+    // Pagination
+    const total = result.length;
+    const limit = filters.limit || 9;
+    const page = filters.page || 1;
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const paginatedResult = result.slice(startIndex, endIndex);
+
+    // Update pagination info
+    const totalPages = Math.ceil(total / limit);
+    useProductStore.setState({
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+        hasNext: page < totalPages,
+        hasPrev: page > 1,
+      },
+    });
+
+    return paginatedResult;
+  }, [products, filters]);
 
   const formatCurrency = (amount: number) =>
     new Intl.NumberFormat('en-IN', {
@@ -74,10 +150,11 @@ export default function ProductsPage() {
     }
   };
 
-  const handleSearch = (search: string) => setFilters({ search });
-  const handleCategoryFilter = (category: string) => setFilters({ category });
-  const handleSort = (sortBy: string) => setFilters({ sortBy });
+  const handleSearch = (search: string) => setFilters({ search, page: 1 });
+  const handleCategoryFilter = (category: string) => setFilters({ category, page: 1 });
+  const handleSort = (sortBy: string) => setFilters({ sortBy, page: 1 });
   const handlePageChange = (page: number) => setFilters({ page });
+  const handleStatusFilter = (status: string) => setFilters({ status, page: 1 });
 
   const renderProductCard = (product: Product) => {
     const isDropdownOpen = openDropdownId === product._id;
@@ -277,7 +354,7 @@ export default function ProductsPage() {
             <CustomSelect
               label="Status"
               value={filters.status}
-              onChange={(v) => setFilters({ status: v })}
+              onChange={(v) => handleStatusFilter(v)}
               options={[
                 { value: '', label: 'All Status' },
                 { value: 'active', label: 'Active' },
@@ -293,7 +370,7 @@ export default function ProductsPage() {
       <div className="bg-white dark:bg-[#191919] shadow rounded-lg border border-gray-200 dark:border-[#525252]">
         <div className="px-4 py-5 sm:p-6">
           {/* Global loader will handle loading state */}
-          {products.length === 0 ? (
+          {filteredAndPaginatedProducts.length === 0 ? (
             <div className="text-center py-12">
               <Package className="mx-auto h-12 w-12 text-gray-400 dark:text-[#696969]" />
               <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">
@@ -305,7 +382,7 @@ export default function ProductsPage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-              {products.map(renderProductCard)}
+              {filteredAndPaginatedProducts.map(renderProductCard)}
             </div>
           )}
 
