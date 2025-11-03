@@ -1,226 +1,131 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   Search,
-  Filter,
   Eye,
   Package,
   Truck,
   CheckCircle,
   Clock,
   AlertCircle,
-  MoreHorizontal,
+  XCircle,
+  MoreVertical,
   Download,
-  Printer,
 } from 'lucide-react';
-
-interface Order {
-  id: string;
-  customerName: string;
-  customerEmail: string;
-  customerPhone: string;
-  products: Array<{
-    id: string;
-    name: string;
-    price: number;
-    quantity: number;
-    image: string;
-  }>;
-  totalAmount: number;
-  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
-  paymentStatus: 'pending' | 'paid' | 'failed' | 'refunded';
-  shippingAddress: {
-    street: string;
-    city: string;
-    state: string;
-    pincode: string;
-  };
-  orderDate: string;
-  deliveryDate?: string;
-  trackingNumber?: string;
-}
-
-const mockOrders: Order[] = [
-  {
-    id: 'ORD-001',
-    customerName: 'Priya Sharma',
-    customerEmail: 'priya.sharma@email.com',
-    customerPhone: '+91 98765 43210',
-    products: [
-      {
-        id: '1',
-        name: 'Diamond Solitaire Ring',
-        price: 150000,
-        quantity: 1,
-        image: '/placeholder.jpg',
-      },
-    ],
-    totalAmount: 150000,
-    status: 'delivered',
-    paymentStatus: 'paid',
-    shippingAddress: {
-      street: '123 Main Street',
-      city: 'Mumbai',
-      state: 'Maharashtra',
-      pincode: '400001',
-    },
-    orderDate: '2024-01-15T10:00:00Z',
-    deliveryDate: '2024-01-18T14:30:00Z',
-    trackingNumber: 'TRK123456789',
-  },
-  {
-    id: 'ORD-002',
-    customerName: 'Rahul Patel',
-    customerEmail: 'rahul.patel@email.com',
-    customerPhone: '+91 87654 32109',
-    products: [
-      {
-        id: '2',
-        name: 'Gold Chain',
-        price: 75000,
-        quantity: 1,
-        image: '/placeholder.jpg',
-      },
-    ],
-    totalAmount: 75000,
-    status: 'processing',
-    paymentStatus: 'paid',
-    shippingAddress: {
-      street: '456 Oak Avenue',
-      city: 'Delhi',
-      state: 'Delhi',
-      pincode: '110001',
-    },
-    orderDate: '2024-01-14T15:30:00Z',
-  },
-  {
-    id: 'ORD-003',
-    customerName: 'Anjali Singh',
-    customerEmail: 'anjali.singh@email.com',
-    customerPhone: '+91 76543 21098',
-    products: [
-      {
-        id: '3',
-        name: 'Diamond Earrings',
-        price: 95000,
-        quantity: 1,
-        image: '/placeholder.jpg',
-      },
-    ],
-    totalAmount: 95000,
-    status: 'shipped',
-    paymentStatus: 'paid',
-    shippingAddress: {
-      street: '789 Pine Road',
-      city: 'Bangalore',
-      state: 'Karnataka',
-      pincode: '560001',
-    },
-    orderDate: '2024-01-13T09:15:00Z',
-    trackingNumber: 'TRK987654321',
-  },
-  {
-    id: 'ORD-004',
-    customerName: 'Vikram Mehta',
-    customerEmail: 'vikram.mehta@email.com',
-    customerPhone: '+91 65432 10987',
-    products: [
-      {
-        id: '4',
-        name: 'Traditional Bangles',
-        price: 85000,
-        quantity: 1,
-        image: '/placeholder.jpg',
-      },
-    ],
-    totalAmount: 85000,
-    status: 'pending',
-    paymentStatus: 'pending',
-    shippingAddress: {
-      street: '321 Elm Street',
-      city: 'Chennai',
-      state: 'Tamil Nadu',
-      pincode: '600001',
-    },
-    orderDate: '2024-01-12T16:45:00Z',
-  },
-];
+import { useOrderStore, Order } from '@/lib/data/store/orderStore';
+import { CustomSelect } from '@/app/admin/components/CustomSelect';
+import { setDummyOrdersInStore } from '@/lib/data/dummyDataHelper';
 
 export default function OrdersPage() {
-  const [orders] = useState<Order[]>(mockOrders);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [paymentFilter, setPaymentFilter] = useState('all');
+  const {
+    orders,
+    filters,
+    pagination,
+    status,
+    setFilters,
+  } = useOrderStore();
 
-  const filteredOrders = orders.filter(order => {
-    const matchesSearch =
-      order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.customerEmail.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus =
-      statusFilter === 'all' || order.status === statusFilter;
-    const matchesPayment =
-      paymentFilter === 'all' || order.paymentStatus === paymentFilter;
-    return matchesSearch && matchesStatus && matchesPayment;
-  });
+  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+  const [dropdownPosition, setDropdownPosition] = useState<{ top: number; right: number } | null>(null);
+  const buttonRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
 
-  const getStatusIcon = (status: Order['status']) => {
-    switch (status) {
-      case 'pending':
-        return <Clock className="h-4 w-4 text-yellow-500" />;
-      case 'processing':
-        return <Package className="h-4 w-4 text-blue-500" />;
-      case 'shipped':
-        return <Truck className="h-4 w-4 text-purple-500" />;
-      case 'delivered':
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'cancelled':
-        return <AlertCircle className="h-4 w-4 text-red-500" />;
-      default:
-        return <Clock className="h-4 w-4 text-gray-500" />;
-    }
+  // Use dummy data instead of API calls
+  useEffect(() => {
+    setDummyOrdersInStore();
+  }, []);
+
+  // Calculate dropdown position based on button position
+  const calculateDropdownPosition = (buttonElement: HTMLButtonElement) => {
+    const rect = buttonElement.getBoundingClientRect();
+    return {
+      top: rect.bottom + 4, // 4px gap, fixed positioning uses viewport coordinates
+      right: window.innerWidth - rect.right,
+    };
   };
 
-  const getStatusColor = (status: Order['status']) => {
-    switch (status) {
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'processing':
-        return 'bg-blue-100 text-blue-800';
-      case 'shipped':
-        return 'bg-purple-100 text-purple-800';
-      case 'delivered':
-        return 'bg-green-100 text-green-800';
-      case 'cancelled':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
+  // Handle window resize/scroll to update dropdown position
+  useEffect(() => {
+    if (openDropdownId && buttonRefs.current[openDropdownId]) {
+      const button = buttonRefs.current[openDropdownId];
+      if (button) {
+        const updatePosition = () => {
+          setDropdownPosition(calculateDropdownPosition(button));
+        };
+        updatePosition();
+        window.addEventListener('scroll', updatePosition, true);
+        window.addEventListener('resize', updatePosition);
+        return () => {
+          window.removeEventListener('scroll', updatePosition, true);
+          window.removeEventListener('resize', updatePosition);
+        };
+      }
     }
-  };
+  }, [openDropdownId]);
 
-  const getPaymentStatusColor = (status: Order['paymentStatus']) => {
-    switch (status) {
-      case 'paid':
-        return 'bg-green-100 text-green-800';
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'failed':
-        return 'bg-red-100 text-red-800';
-      case 'refunded':
-        return 'bg-gray-100 text-gray-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
+  // Filter orders locally
+  const filteredOrders = useMemo(() => {
+    let result = [...orders];
+
+    // Search filter
+    if (filters.search) {
+      const searchLower = filters.search.toLowerCase();
+      result = result.filter(order =>
+        order.orderNumber.toLowerCase().includes(searchLower) ||
+        order.shippingAddress.fullName.toLowerCase().includes(searchLower) ||
+        order.shippingAddress.phone.includes(searchLower) ||
+        order.shippingAddress.city.toLowerCase().includes(searchLower)
+      );
     }
-  };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-IN', {
+    // Order status filter
+    if (filters.orderStatus) {
+      result = result.filter(order => order.orderStatus === filters.orderStatus);
+    }
+
+    // Payment status filter
+    if (filters.paymentStatus) {
+      result = result.filter(order => order.paymentStatus === filters.paymentStatus);
+    }
+
+    // Payment method filter
+    if (filters.paymentMethod) {
+      result = result.filter(order => order.paymentMethod === filters.paymentMethod);
+    }
+
+    // Sort
+    result.sort((a, b) => {
+      let aVal: any, bVal: any;
+      switch (filters.sortBy) {
+        case 'createdAt':
+          aVal = new Date(a.createdAt).getTime();
+          bVal = new Date(b.createdAt).getTime();
+          break;
+        case 'totalAmount':
+          aVal = a.totalAmount;
+          bVal = b.totalAmount;
+          break;
+        case 'orderNumber':
+          aVal = a.orderNumber;
+          bVal = b.orderNumber;
+          break;
+        default:
+          aVal = new Date(a.createdAt).getTime();
+          bVal = new Date(b.createdAt).getTime();
+      }
+      return filters.sortOrder === 'asc' ? aVal - bVal : bVal - aVal;
+    });
+
+    return result;
+  }, [orders, filters]);
+
+  const formatCurrency = (amount: number) =>
+    new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR',
       maximumFractionDigits: 0,
     }).format(amount);
-  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-IN', {
@@ -232,250 +137,391 @@ export default function OrdersPage() {
     });
   };
 
+  const getStatusBadge = (orderStatus: Order['orderStatus']) => {
+    const config = {
+      pending: { bg: 'bg-yellow-100 dark:bg-yellow-900/30', text: 'text-yellow-800 dark:text-yellow-300', icon: Clock },
+      confirmed: { bg: 'bg-blue-100 dark:bg-blue-900/30', text: 'text-blue-800 dark:text-blue-300', icon: Package },
+      processing: { bg: 'bg-purple-100 dark:bg-purple-900/30', text: 'text-purple-800 dark:text-purple-300', icon: Package },
+      shipped: { bg: 'bg-indigo-100 dark:bg-indigo-900/30', text: 'text-indigo-800 dark:text-indigo-300', icon: Truck },
+      delivered: { bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-800 dark:text-green-300', icon: CheckCircle },
+      cancelled: { bg: 'bg-red-100 dark:bg-red-900/30', text: 'text-red-800 dark:text-red-300', icon: XCircle },
+      returned: { bg: 'bg-gray-100 dark:bg-gray-900/30', text: 'text-gray-800 dark:text-gray-300', icon: AlertCircle },
+    };
+
+    const statusConfig = config[orderStatus] || config.pending;
+    const Icon = statusConfig.icon;
+
+    return (
+      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${statusConfig.bg} ${statusConfig.text}`}>
+        <Icon className="h-3 w-3 mr-1" />
+        <span className="hidden sm:inline">{orderStatus.charAt(0).toUpperCase() + orderStatus.slice(1)}</span>
+      </span>
+    );
+  };
+
+  const getPaymentStatusBadge = (paymentStatus: Order['paymentStatus']) => {
+    const config = {
+      pending: { bg: 'bg-yellow-100 dark:bg-yellow-900/30', text: 'text-yellow-800 dark:text-yellow-300' },
+      paid: { bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-800 dark:text-green-300' },
+      failed: { bg: 'bg-red-100 dark:bg-red-900/30', text: 'text-red-800 dark:text-red-300' },
+      refunded: { bg: 'bg-gray-100 dark:bg-gray-900/30', text: 'text-gray-800 dark:text-gray-300' },
+      completed: { bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-800 dark:text-green-300' },
+    };
+
+    const statusConfig = config[paymentStatus] || config.pending;
+
+    return (
+      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${statusConfig.bg} ${statusConfig.text}`}>
+        {paymentStatus.charAt(0).toUpperCase() + paymentStatus.slice(1)}
+      </span>
+    );
+  };
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex md:items-center gap-4 flex-col md:flex-row justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Orders</h1>
-          <p className="text-gray-600">
-            Manage customer orders and track shipments
-          </p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Orders</h1>
+          <p className="text-gray-600 dark:text-[#696969]">Manage customer orders and track shipments</p>
         </div>
-        <div className="flex space-x-3">
-          <button className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-            <Download className="h-4 w-4 mr-2" />
-            Export
-          </button>
-          <button className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-            <Printer className="h-4 w-4 mr-2" />
-            Print
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            className="inline-flex items-center text-xs md:text-sm px-4 py-2 border border-gray-300 dark:border-[#525252] shadow-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-[#242424] hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors"
+          >
+            <Download className="h-4 w-4 mr-2" /> Export
           </button>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="bg-white shadow rounded-lg p-6">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
-          <div>
-            <label
-              htmlFor="search"
-              className="block text-sm font-medium text-gray-700"
-            >
+      <div className="bg-white dark:bg-[#191919] shadow rounded-lg p-6 border border-gray-200 dark:border-[#525252]">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="sm:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               Search
             </label>
             <div className="mt-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-[#696969]" />
               <input
                 type="text"
-                id="search"
-                value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
-                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm"
-                placeholder="Search orders..."
+                value={filters.search}
+                onChange={e => setFilters({ search: e.target.value })}
+                placeholder="Search by order number, customer name, phone..."
+                className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-[#525252] rounded-md sm:text-sm bg-white dark:bg-[#242424] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#696969] focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-600 dark:focus:border-primary-600"
               />
             </div>
           </div>
 
           <div>
-            <label
-              htmlFor="status"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Order Status
-            </label>
-            <select
-              id="status"
-              value={statusFilter}
-              onChange={e => setStatusFilter(e.target.value)}
-              className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md"
-            >
-              <option value="all">All Statuses</option>
-              <option value="pending">Pending</option>
-              <option value="processing">Processing</option>
-              <option value="shipped">Shipped</option>
-              <option value="delivered">Delivered</option>
-              <option value="cancelled">Cancelled</option>
-            </select>
+            <CustomSelect
+              label="Order Status"
+              value={filters.orderStatus}
+              onChange={(v) => setFilters({ orderStatus: v })}
+              options={[
+                { value: '', label: 'All Statuses' },
+                { value: 'pending', label: 'Pending' },
+                { value: 'confirmed', label: 'Confirmed' },
+                { value: 'processing', label: 'Processing' },
+                { value: 'shipped', label: 'Shipped' },
+                { value: 'delivered', label: 'Delivered' },
+                { value: 'cancelled', label: 'Cancelled' },
+                { value: 'returned', label: 'Returned' },
+              ]}
+            />
           </div>
 
           <div>
-            <label
-              htmlFor="payment"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Payment Status
-            </label>
-            <select
-              id="payment"
-              value={paymentFilter}
-              onChange={e => setPaymentFilter(e.target.value)}
-              className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md"
-            >
-              <option value="all">All Payments</option>
-              <option value="paid">Paid</option>
-              <option value="pending">Pending</option>
-              <option value="failed">Failed</option>
-              <option value="refunded">Refunded</option>
-            </select>
+            <CustomSelect
+              label="Payment Status"
+              value={filters.paymentStatus}
+              onChange={(v) => setFilters({ paymentStatus: v })}
+              options={[
+                { value: '', label: 'All Payments' },
+                { value: 'pending', label: 'Pending' },
+                { value: 'paid', label: 'Paid' },
+                { value: 'failed', label: 'Failed' },
+                { value: 'refunded', label: 'Refunded' },
+                { value: 'completed', label: 'Completed' },
+              ]}
+            />
           </div>
 
-          <div className="flex items-end">
-            <button className="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
-              <Filter className="h-4 w-4 mr-2" />
-              More Filters
-            </button>
+          <div>
+            <CustomSelect
+              label="Sort By"
+              value={filters.sortBy}
+              onChange={(v) => setFilters({ sortBy: v })}
+              options={[
+                { value: 'createdAt', label: 'Date' },
+                { value: 'totalAmount', label: 'Amount' },
+                { value: 'orderNumber', label: 'Order Number' },
+              ]}
+            />
           </div>
         </div>
       </div>
 
       {/* Orders Table */}
-      <div className="bg-white shadow rounded-lg">
-        <div className="px-4 py-5 sm:p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg leading-6 font-medium text-gray-900">
-              {filteredOrders.length} Orders
-            </h3>
-          </div>
-
-          <div className="overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+      <div className="bg-white dark:bg-[#191919] shadow rounded-lg border border-gray-200 dark:border-[#525252] overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200 dark:divide-[#525252]">
+            <thead className="bg-gray-50 dark:bg-[#1d1d1d]">
+              <tr>
+                <th className="px-3 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Order
+                </th>
+                <th className="px-3 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden sm:table-cell">
+                  Customer
+                </th>
+                <th className="px-3 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden md:table-cell">
+                  Items
+                </th>
+                <th className="px-3 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Total
+                </th>
+                <th className="px-3 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden lg:table-cell">
+                  Status
+                </th>
+                <th className="px-3 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden lg:table-cell">
+                  Payment
+                </th>
+                <th className="px-3 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden xl:table-cell">
+                  Date
+                </th>
+                <th className="sticky right-0 px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider bg-gray-50 dark:bg-[#1d1d1d] z-10">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white dark:bg-[#1d1d1d] divide-y divide-gray-200 dark:divide-[#525252]">
+              {filteredOrders.length === 0 ? (
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Order
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Customer
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Products
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Total
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Payment
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Date
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
+                  <td colSpan={8} className="px-3 sm:px-4 py-12 text-center">
+                    <Package className="mx-auto h-12 w-12 text-gray-400 dark:text-[#696969]" />
+                    <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">
+                      No orders found
+                    </h3>
+                    <p className="mt-1 text-sm text-gray-500 dark:text-[#696969]">
+                      Try adjusting your search or filter criteria.
+                    </p>
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredOrders.map(order => (
-                  <tr key={order.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">
-                        {order.id}
-                      </div>
-                      {order.trackingNumber && (
-                        <div className="text-sm text-gray-500">
-                          Track: {order.trackingNumber}
+              ) : (
+                filteredOrders.map((order) => {
+                  const isDropdownOpen = openDropdownId === order._id;
+                  return (
+                    <tr key={order._id} className="transition-colors">
+                      {/* Order Number & Mobile Customer Info */}
+                      <td className="px-3 sm:px-4 py-4 whitespace-nowrap hover:bg-gray-50 dark:hover:bg-[#242424] transition-colors">
+                        <div className="text-sm font-semibold text-gray-900 dark:text-white">
+                          {order.orderNumber}
                         </div>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">
-                        {order.customerName}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        {order.customerEmail}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        {order.customerPhone}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm text-gray-900">
-                        {order.products.map(product => (
-                          <div
-                            key={product.id}
-                            className="flex items-center space-x-2"
-                          >
-                            <div className="flex-shrink-0 h-8 w-8 bg-gray-200 rounded"></div>
-                            <div>
-                              <div className="text-sm font-medium text-gray-900">
-                                {product.name}
+                        <div className="text-xs text-gray-500 dark:text-[#696969] mt-1 sm:hidden">
+                          {order.shippingAddress.fullName}
+                        </div>
+                        <div className="text-xs text-gray-500 dark:text-[#696969] mt-1 sm:hidden">
+                          {order.shippingAddress.phone}
+                        </div>
+                        <div className="text-xs text-gray-500 dark:text-[#696969] mt-1 xl:hidden">
+                          {formatDate(order.createdAt)}
+                        </div>
+                        <div className="mt-2 sm:hidden">
+                          {getStatusBadge(order.orderStatus)}
+                        </div>
+                        <div className="mt-2 sm:hidden lg:hidden">
+                          {getPaymentStatusBadge(order.paymentStatus)}
+                        </div>
+                        {order.trackingNumber && (
+                          <div className="mt-2 flex items-center gap-1 text-xs text-gray-500 dark:text-[#696969]">
+                            <Truck className="h-3 w-3" />
+                            <span className="truncate max-w-[150px]">{order.trackingNumber}</span>
+                          </div>
+                        )}
+                      </td>
+
+                      {/* Customer - Desktop */}
+                      <td className="px-3 sm:px-4 py-4 whitespace-nowrap hidden sm:table-cell hover:bg-gray-50 dark:hover:bg-[#242424] transition-colors">
+                        <div className="text-sm font-medium text-gray-900 dark:text-white">
+                          {order.shippingAddress.fullName}
+                        </div>
+                        <div className="text-sm text-gray-500 dark:text-[#696969]">
+                          {order.shippingAddress.phone}
+                        </div>
+                        <div className="text-xs text-gray-500 dark:text-[#696969]">
+                          {order.shippingAddress.city}, {order.shippingAddress.state}
+                        </div>
+                      </td>
+
+                      {/* Items - Desktop */}
+                      <td className="px-3 sm:px-4 py-4 hidden md:table-cell hover:bg-gray-50 dark:hover:bg-[#242424] transition-colors">
+                        <div className="text-sm text-gray-900 dark:text-white">
+                          <div className="flex items-center gap-2 mb-2">
+                            {order.items[0]?.image ? (
+                              <Image
+                                src={order.items[0].image}
+                                alt={order.items[0].name}
+                                width={32}
+                                height={32}
+                                className="rounded-md"
+                              />
+                            ) : (
+                              <div className="w-8 h-8 bg-gray-200 dark:bg-[#525252] rounded-md flex items-center justify-center">
+                                <Package className="h-4 w-4 text-gray-400" />
                               </div>
-                              <div className="text-sm text-gray-500">
-                                Qty: {product.quantity}
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <div className="text-sm font-medium truncate">{order.items[0].name}</div>
+                              <div className="text-xs text-gray-500 dark:text-[#696969]">
+                                Qty: {order.items[0].quantity}
                               </div>
                             </div>
                           </div>
-                        ))}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">
-                        {formatCurrency(order.totalAmount)}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        {getStatusIcon(order.status)}
-                        <span
-                          className={`ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
-                            order.status
-                          )}`}
-                        >
-                          {order.status.charAt(0).toUpperCase() +
-                            order.status.slice(1)}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPaymentStatusColor(
-                          order.paymentStatus
-                        )}`}
-                      >
-                        {order.paymentStatus.charAt(0).toUpperCase() +
-                          order.paymentStatus.slice(1)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {formatDate(order.orderDate)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <div className="flex items-center justify-end space-x-2">
-                        <Link
-                          href={`/admin/orders/${order.id}`}
-                          className="inline-flex items-center px-2 py-1 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50"
-                        >
-                          <Eye className="h-3 w-3 mr-1" />
-                          View
-                        </Link>
-                        <button className="inline-flex items-center px-2 py-1 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50">
-                          <MoreHorizontal className="h-3 w-3" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                          {order.items.length > 1 && (
+                            <div className="text-xs text-gray-500 dark:text-[#696969]">
+                              +{order.items.length - 1} more item{order.items.length - 1 !== 1 ? 's' : ''}
+                            </div>
+                          )}
+                        </div>
+                      </td>
 
-          {filteredOrders.length === 0 && (
-            <div className="text-center py-12">
-              <Package className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-2 text-sm font-medium text-gray-900">
-                No orders found
-              </h3>
-              <p className="mt-1 text-sm text-gray-500">
-                Try adjusting your search or filter criteria.
-              </p>
-            </div>
-          )}
+                      {/* Total */}
+                      <td className="px-3 sm:px-4 py-4 whitespace-nowrap hover:bg-gray-50 dark:hover:bg-[#242424] transition-colors">
+                        <div className="text-sm font-semibold text-gray-900 dark:text-white">
+                          {formatCurrency(order.totalAmount)}
+                        </div>
+                        {order.discountAmount > 0 && (
+                          <div className="text-xs text-green-600 dark:text-green-400">
+                            -{formatCurrency(order.discountAmount)} discount
+                          </div>
+                        )}
+                      </td>
+
+                      {/* Status - Desktop */}
+                      <td className="px-3 sm:px-4 py-4 whitespace-nowrap hidden lg:table-cell hover:bg-gray-50 dark:hover:bg-[#242424] transition-colors">
+                        {getStatusBadge(order.orderStatus)}
+                        {order.trackingNumber && (
+                          <div className="mt-2 flex items-center gap-1 text-xs text-gray-500 dark:text-[#696969]">
+                            <Truck className="h-3 w-3" />
+                            <span className="truncate max-w-[120px]">{order.trackingNumber}</span>
+                          </div>
+                        )}
+                      </td>
+
+                      {/* Payment Status - Desktop */}
+                      <td className="px-3 sm:px-4 py-4 whitespace-nowrap hidden lg:table-cell hover:bg-gray-50 dark:hover:bg-[#242424] transition-colors">
+                        {getPaymentStatusBadge(order.paymentStatus)}
+                        <div className="text-xs text-gray-500 dark:text-[#696969] mt-1">
+                          {order.paymentMethod.toUpperCase()}
+                        </div>
+                      </td>
+
+                      {/* Date - Desktop */}
+                      <td className="px-3 sm:px-4 py-4 whitespace-nowrap hidden xl:table-cell hover:bg-gray-50 dark:hover:bg-[#242424] transition-colors">
+                        <div className="text-sm text-gray-900 dark:text-white">
+                          {formatDate(order.createdAt)}
+                        </div>
+                      </td>
+
+                      {/* Actions */}
+                      <td className="sticky right-0 px-3 sm:px-4 py-4 whitespace-nowrap text-right text-sm font-medium bg-white dark:bg-[#1d1d1d] hover:bg-gray-50 dark:hover:bg-[#242424] z-10 transition-colors">
+                        <div className="relative inline-block">
+                          <button
+                            ref={(el) => {
+                              buttonRefs.current[order._id] = el;
+                            }}
+                            onClick={(e) => {
+                              if (isDropdownOpen) {
+                                setOpenDropdownId(null);
+                                setDropdownPosition(null);
+                              } else {
+                                const position = calculateDropdownPosition(e.currentTarget);
+                                setDropdownPosition(position);
+                                setOpenDropdownId(order._id);
+                              }
+                            }}
+                            className="inline-flex items-center px-2 py-1 border border-gray-300 dark:border-[#525252] shadow-sm text-xs font-medium rounded text-gray-700 dark:text-gray-300 bg-white dark:bg-[#242424] hover:bg-gray-50 dark:hover:bg-[#2a2a2a]"
+                          >
+                            <MoreVertical className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
         </div>
+
+        {/* Pagination */}
+        {pagination && pagination.totalPages > 1 && filteredOrders.length > 0 && (
+          <div className="px-4 py-4 border-t border-gray-200 dark:border-[#525252] flex items-center justify-between">
+            <div className="text-sm text-gray-700 dark:text-gray-300">
+              Showing {filteredOrders.length} of {filteredOrders.length} results
+            </div>
+            <div className="flex space-x-2">
+              <button
+                onClick={() => setFilters({ page: (pagination.page || 1) - 1 })}
+                disabled={!pagination.hasPrev}
+                className="px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-[#242424] border border-gray-300 dark:border-[#525252] rounded-md hover:bg-gray-50 dark:hover:bg-[#2f2f2f] disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Previous
+              </button>
+              <button
+                onClick={() => setFilters({ page: (pagination.page || 1) + 1 })}
+                disabled={!pagination.hasNext}
+                className="px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-[#242424] border border-gray-300 dark:border-[#525252] rounded-md hover:bg-gray-50 dark:hover:bg-[#2f2f2f] disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </div>
+
+      {/* Dropdown Menu - Rendered outside table to avoid overflow constraints */}
+      {openDropdownId && dropdownPosition && (
+        <>
+          <div
+            className="fixed inset-0 z-[9998]"
+            onClick={() => {
+              setOpenDropdownId(null);
+              setDropdownPosition(null);
+            }}
+          />
+          <div
+            className="fixed min-w-48 rounded-md shadow-xl bg-white dark:bg-[#1d1d1d] ring-1 ring-black ring-opacity-5 z-[9999] border border-gray-200 dark:border-[#525252]"
+            style={{
+              top: `${dropdownPosition.top}px`,
+              right: `${dropdownPosition.right}px`,
+            }}
+          >
+            <div className="py-1">
+              <Link
+                href={`/admin/orders/${openDropdownId}`}
+                onClick={() => {
+                  setOpenDropdownId(null);
+                  setDropdownPosition(null);
+                }}
+                className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#525252] whitespace-nowrap"
+              >
+                <Eye className="h-4 w-4 mr-2 flex-shrink-0" /> View Details
+              </Link>
+              <button
+                onClick={() => {
+                  setOpenDropdownId(null);
+                  setDropdownPosition(null);
+                  // Handle export/invoice
+                }}
+                className="w-full flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#525252] whitespace-nowrap"
+              >
+                <Download className="h-4 w-4 mr-2 flex-shrink-0" /> Download Invoice
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

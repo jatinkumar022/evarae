@@ -136,7 +136,7 @@ const AppSidebar: React.FC = () => {
       >
         <Link href="/admin">
           {(isExpanded || isHovered || isMobileOpen) ? (
-              <span className="text-xl font-bold text-primary-600 dark:text-primary-400">
+              <span className="text-xl font-heading text-primary-600 dark:text-primary-400">
                 Caelvi Admin
               </span>
           ) : (

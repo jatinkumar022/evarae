@@ -26,9 +26,11 @@
 import { dummyProducts } from './dummyProducts';
 import { dummyCategories } from './dummyCategories';
 import { dummyCollections } from './dummyCollections';
+import { dummyOrders } from './dummyOrders';
 import { useProductStore } from '@/lib/data/store/productStore';
 import { useCategoryStore } from '@/lib/data/store/categoryStore';
 import { useCollectionStore } from '@/lib/data/store/collectionStore';
+import { useOrderStore } from '@/lib/data/store/orderStore';
 
 /**
  * Set dummy products in the product store
@@ -64,11 +66,31 @@ export const setDummyCollectionsInStore = () => {
 };
 
 /**
+ * Set dummy orders in the order store
+ */
+export const setDummyOrdersInStore = () => {
+  useOrderStore.setState({ 
+    orders: dummyOrders,
+    pagination: {
+      page: 1,
+      limit: 12,
+      total: dummyOrders.length,
+      totalPages: Math.ceil(dummyOrders.length / 12),
+      hasNext: false,
+      hasPrev: false,
+    },
+    status: 'success',
+    error: null 
+  });
+};
+
+/**
  * Set all dummy data in all stores at once
  */
 export const setAllDummyDataInStores = () => {
   setDummyProductsInStore();
   setDummyCategoriesInStore();
   setDummyCollectionsInStore();
+  setDummyOrdersInStore();
 };
 
