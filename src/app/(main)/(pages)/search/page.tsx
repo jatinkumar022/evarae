@@ -8,7 +8,7 @@ import {
   memo,
   Suspense,
 } from 'react';
-import { Search, Grid3X3, List, ArrowLeft, ChevronRight } from 'lucide-react';
+import { Search, Grid3X3, List, ArrowLeft } from 'lucide-react';
 import Container from '@/app/(main)/components/layouts/Container';
 import ProductFilters from '@/app/(main)/components/filters/ProductFilters';
 import {
