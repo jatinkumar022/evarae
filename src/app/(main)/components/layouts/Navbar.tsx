@@ -1343,7 +1343,7 @@ export default function Navbar() {
                   </div>
                   <div className="flex-1">
                     <p className="text-sm text-gray-600">
-                      Are you sure you want to sign out? You'll need to sign in again to access your account.
+                      Are you sure you want to sign out? You&apos;ll need to sign in again to access your account.
                     </p>
                   </div>
                 </div>

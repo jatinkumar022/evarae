@@ -10,7 +10,6 @@ import {
   New,
   Search,
   Heart,
-  ShoppingBag,
   User,
 } from '@/app/(main)/assets/Navbar';
 // import MegaMenuContent from './Submenus/MegaMenuContent';
