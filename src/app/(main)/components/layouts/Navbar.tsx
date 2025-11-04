@@ -37,6 +37,7 @@ import {
   Star,
   Clock,
   Truck,
+  X,
 } from 'lucide-react';
 import { useCartStore } from '@/lib/data/mainStore/cartStore';
 import { usePublicCategoryStore } from '@/lib/data/mainStore/categoryStore';
@@ -323,14 +324,19 @@ export default function Navbar() {
 
   const handleLogout = async () => {
     try {
+      setIsLoggingOut(true);
       await userAuthApi.logout();
-    } finally {
       setCurrentUser(null);
       setLoginStep('email');
       setLoginEmail('');
       setLoginPassword('');
       setLoginOtp(Array(6).fill(''));
+      setShowLogoutModal(false);
       router.push('/');
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      setIsLoggingOut(false);
     }
   };
 
@@ -356,6 +362,8 @@ export default function Navbar() {
 
   const [activeSubmenu, setActiveSubmenu] = useState<string | null>(null);
   const [showProfileDrawer, setShowProfileDrawer] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const toggleSubmenu = (menuKey: string) => {
     setActiveSubmenu(activeSubmenu === menuKey ? null : menuKey);
   };
@@ -379,6 +387,26 @@ export default function Navbar() {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [showProfileDrawer, setShowProfileDrawer]);
+
+  // Handle Escape key and body scroll lock for logout modal
+  useEffect(() => {
+    if (showLogoutModal) {
+      const originalStyle = window.getComputedStyle(document.body).overflow;
+      document.body.style.overflow = 'hidden';
+
+      const handleEscape = (e: KeyboardEvent) => {
+        if (e.key === 'Escape' && !isLoggingOut) {
+          setShowLogoutModal(false);
+        }
+      };
+      document.addEventListener('keydown', handleEscape);
+      
+      return () => {
+        document.body.style.overflow = originalStyle;
+        document.removeEventListener('keydown', handleEscape);
+      };
+    }
+  }, [showLogoutModal, isLoggingOut]);
 
   const menuItems = [
     {
@@ -631,8 +659,11 @@ export default function Navbar() {
                       {/* Logout Button */}
                       <div className="p-2">
                         <button
-                          onClick={handleLogout}
-                          className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200 font-medium"
+                          onClick={() => {
+                            setShowLogoutModal(true);
+                            setShowProfileDrawer(false);
+                          }}
+                          className="w-full flex items-center gap-3 px-4 py-3 text-sm text-[#d92d20] hover:bg-red-50 rounded-lg transition-colors duration-200 font-medium"
                         >
                           <LogOut className="w-5 h-5" />
                           Sign Out
@@ -1273,6 +1304,81 @@ export default function Navbar() {
         isOpen={isMobileMenuOpen}
         onClose={() => setIsMobileMenuOpen(false)}
       />
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutModal && (
+        <>
+          {/* Overlay */}
+          <div
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity z-40"
+            onClick={() => !isLoggingOut && setShowLogoutModal(false)}
+          />
+
+          {/* Modal Container */}
+          <div className="fixed inset-0 flex items-end sm:items-center justify-center p-2 sm:p-4 pointer-events-none z-50">
+            <div
+              className="relative w-full sm:max-w-md bg-white rounded-2xl shadow-xl flex flex-col pointer-events-auto border border-[oklch(0.84_0.04_10.35)]/30"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className="rounded-t-2xl flex items-center justify-between p-5 border-b border-[oklch(0.84_0.04_10.35)]/30 bg-white flex-shrink-0">
+                <h2 className="text-lg font-medium text-gray-900">
+                  Sign Out
+                </h2>
+                <button
+                  onClick={() => !isLoggingOut && setShowLogoutModal(false)}
+                  className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                  aria-label="Close"
+                  disabled={isLoggingOut}
+                >
+                  <X className="w-5 h-5 text-gray-500" />
+                </button>
+              </div>
+
+              {/* Content */}
+              <div className="p-5 sm:p-6">
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                    <LogOut className="h-6 w-6 text-[#d92d20]" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm text-gray-600">
+                      Are you sure you want to sign out? You'll need to sign in again to access your account.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer Buttons - Fixed at Bottom */}
+              <div className="rounded-b-2xl border-t border-[oklch(0.84_0.04_10.35)]/30 bg-gray-50 p-5 flex flex-col-reverse sm:flex-row gap-3 sm:justify-end flex-shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setShowLogoutModal(false)}
+                  disabled={isLoggingOut}
+                  className="px-5 py-2.5 border border-gray-300 text-gray-700 text-sm font-normal rounded-md hover:bg-white transition-colors disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  disabled={isLoggingOut}
+                  className="px-5 py-2.5 bg-[#d92d20] text-white text-sm font-normal rounded-md hover:bg-[#c0231a] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isLoggingOut ? (
+                    <span className="flex items-center gap-2 justify-center">
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Signing out...
+                    </span>
+                  ) : (
+                    'Sign Out'
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </>
   );
 }

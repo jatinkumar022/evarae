@@ -459,13 +459,13 @@ const MobileNavMenu = ({ isOpen, onClose }: MobileNavMenuProps) => {
                   Account
                 </h3>
                 <div className="space-y-2">
-                  <button
+                  <Link href={'/account/profile?tab=profile'}
                     className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 hover:text-primary"
                     aria-label="My Account - Sign in or manage your account"
                   >
                     <User className="h-4 w-4" />
                     My Account
-                  </button>
+                  </Link>
                   <Link
                     href={'/wishlist'}
                     className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 hover:text-primary"
@@ -474,19 +474,7 @@ const MobileNavMenu = ({ isOpen, onClose }: MobileNavMenuProps) => {
                     <Heart className="h-4 w-4" />
                     Wishlist
                   </Link>
-                  <button
-                    className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 hover:text-primary"
-                    aria-label="Shopping Bag - View cart with 5 items"
-                  >
-                    <ShoppingBag className="h-4 w-4" />
-                    Shopping Bag
-                    <span
-                      className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] text-white"
-                      aria-label="5 items in cart"
-                    >
-                      5
-                    </span>
-                  </button>
+                
                 </div>
               </div>
             </div>
