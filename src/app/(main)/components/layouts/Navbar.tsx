@@ -42,6 +42,12 @@ import {
 import { useCartStore } from '@/lib/data/mainStore/cartStore';
 import { usePublicCategoryStore } from '@/lib/data/mainStore/categoryStore';
 
+const Cross =({className}: {className: string})=>{
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 256 256" className={className}><path d="M204.24,195.76a6,6,0,1,1-8.48,8.48L128,136.49,60.24,204.24a6,6,0,0,1-8.48-8.48L119.51,128,51.76,60.24a6,6,0,0,1,8.48-8.48L128,119.51l67.76-67.75a6,6,0,0,1,8.48,8.48L136.49,128Z"></path></svg>
+  )
+}
+
 const philosopher = Philosopher({
   subsets: ['latin'],
   weight: ['400', '700'],
@@ -536,7 +542,7 @@ export default function Navbar() {
               {/* Desktop hover dropdown for Login or Profile */}
               <div className="sm:relative group">
                 <IconButton
-                  ariaLabel="My Account - Sign in or manage your account"
+                  ariaLabel={showProfileDrawer ? "Close profile menu" : "My Account - Sign in or manage your account"}
                   onClick={() => {
                     if (!currentUser) {
                       // if not logged in → click = redirect
@@ -547,12 +553,16 @@ export default function Navbar() {
                     }
                   }}
                 >
-                  <User className="h-5 w-5" />
+                  {currentUser && showProfileDrawer ? (
+                    <Cross className="h-5 w-5" />
+                  ) : (
+                    <User className="h-5 w-5" />
+                  )}
                 </IconButton>
                 {currentUser && showProfileDrawer && (
                   <div
                     ref={drawerRef}
-                    className="absolute right-0 mt-2 sm:w-[340px] w-screen sm:rounded-md border border-gray-200 bg-white shadow-lg z-50"
+                    className="absolute left-1/2 -translate-x-1/2 sm:left-auto sm:translate-x-0 sm:right-0 mt-2 w-[calc(100vw-2rem)] max-w-[340px] sm:w-[340px] sm:rounded-md rounded-md border border-gray-200 bg-white shadow-lg z-50"
                   >
                     {/* User Profile Header */}
                     <div className="bg-gradient-to-r from-[#d56a90]/5 to-[#d56a90]/10 p-6 border-b border-gray-100">
