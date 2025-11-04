@@ -56,7 +56,7 @@ export async function GET(request: Request) {
   } catch (error) {
     console.error('Public products GET error:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch products' },
+      { error: 'Unable to load products. Please try again later' },
       { status: 500 }
     );
   }

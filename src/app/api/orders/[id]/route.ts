@@ -28,7 +28,12 @@ export async function GET(
   try {
     await connect();
     const uid = getUid(request);
-    if (!uid) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!uid) {
+      return NextResponse.json(
+        { error: 'Please log in to view order details' },
+        { status: 401 }
+      );
+    }
 
     const { id: key } = await ctx.params;
     const order = await Order.findOne(
@@ -38,14 +43,17 @@ export async function GET(
     ).lean();
 
     if (!order) {
-      return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+      return NextResponse.json(
+        { error: 'Order not found. Please check the order number' },
+        { status: 404 }
+      );
     }
 
     return NextResponse.json({ order });
-  } catch (e: unknown) {
-    console.error('Order fetch error:', e);
+  } catch (error: unknown) {
+    console.error('[orders/[id] GET] Error:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch order' },
+      { error: 'Unable to load order details. Please try again later' },
       { status: 500 }
     );
   }

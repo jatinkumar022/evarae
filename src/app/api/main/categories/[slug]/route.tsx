@@ -47,7 +47,7 @@ export async function GET(request: Request, { params }: RouteContext) {
   } catch (error) {
     console.error('Public category GET error:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch category' },
+      { error: 'Unable to load category. Please try again later' },
       { status: 500 }
     );
   }

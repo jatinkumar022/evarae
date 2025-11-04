@@ -37,7 +37,7 @@ export async function GET() {
   } catch (error) {
     console.error('Random products GET error:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch random products' },
+      { error: 'Unable to load products. Please try again later' },
       { status: 500 }
     );
   }

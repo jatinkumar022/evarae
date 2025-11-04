@@ -18,32 +18,55 @@ function getCookie(req: Request, name: string): string | null {
 
 export async function POST(request: Request) {
   try {
-    if (!USER_JWT_SECRET)
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    console.log('Account update request received');
+    
+    if (!USER_JWT_SECRET) {
+      console.error('[account/update] USER_JWT_SECRET is not set');
+      return NextResponse.json({ error: 'Please log in to continue' }, { status: 401 });
+    }
+    
     await connect();
 
     const token = getCookie(request, 'token');
-    if (!token)
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!token) {
+      console.error('[account/update] No token found in cookies');
+      return NextResponse.json({ error: 'Please log in to continue' }, { status: 401 });
+    }
 
-    const payload = jwt.verify(token, USER_JWT_SECRET) as {
-      uid?: string;
-    } | null;
-    if (!payload?.uid)
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    let payload: { uid?: string } | null = null;
+    try {
+      payload = jwt.verify(token, USER_JWT_SECRET) as {
+        uid?: string;
+      } | null;
+    } catch (jwtError) {
+      console.error('[account/update] JWT verification failed:', jwtError);
+      return NextResponse.json({ error: 'Your session has expired. Please log in again' }, { status: 401 });
+    }
+    
+    if (!payload?.uid) {
+      console.error('[account/update] No uid in payload:', payload);
+      return NextResponse.json({ error: 'Please log in to continue' }, { status: 401 });
+    }
+    console.log('User ID from token:', payload.uid);
 
     const body = (await request.json()) as Record<string, unknown>;
+    console.log('Request body:', body);
 
     // Basic user fields allowed to update
     const { name } = body as { name?: unknown };
 
     const user = await User.findById(payload.uid);
-    if (!user)
-      return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    if (!user) {
+      console.error('[account/update] User not found with ID:', payload.uid);
+      return NextResponse.json({ error: 'Account not found. Please log in again' }, { status: 404 });
+    }
+    console.log('User found:', user._id);
 
-    if (typeof name === 'string' && name.trim()) user.name = name.trim();
-
-    await user.save();
+    if (typeof name === 'string' && name.trim()) {
+      user.name = name.trim();
+      await user.save();
+      console.log('User name updated');
+    }
 
     // Profile fields (supported only)
     const profileUpdates: Record<string, unknown> = {};
@@ -55,6 +78,7 @@ export async function POST(request: Request) {
       if (Object.prototype.hasOwnProperty.call(body, key)) {
         const v = body[key] as T;
         profileUpdates[key] = mapper ? mapper(v) : v;
+        console.log(`Adding profile update for ${key}:`, profileUpdates[key]);
       }
     };
 
@@ -78,17 +102,76 @@ export async function POST(request: Request) {
 
     copyIfPresent('twoFactorEnabled', Boolean as (v: unknown) => boolean);
 
+
+    // Check for duplicate phone number if phone is being updated
+    if (profileUpdates.phone && typeof profileUpdates.phone === 'string') {
+      const phoneValue = String(profileUpdates.phone).trim();
+      if (phoneValue) {
+        // Check if phone is already taken by another user
+        const existingProfile = await UserProfile.findOne({
+          phone: phoneValue,
+          user: { $ne: user._id }, // Exclude current user
+        });
+        
+        if (existingProfile) {
+          console.error('[account/update] Phone number already exists for another user');
+          return NextResponse.json(
+            { error: 'This phone number is already registered with another account' },
+            { status: 409 }
+          );
+        }
+      }
+    }
+
     // Upsert profile
-    const profile = await UserProfile.findOneAndUpdate(
-      { user: user._id },
-      { $set: { user: user._id, ...profileUpdates } },
-      { new: true, upsert: true }
-    );
+    let profile;
+    try {
+      profile = await UserProfile.findOneAndUpdate(
+        { user: user._id },
+        { $set: { user: user._id, ...profileUpdates } },
+        { new: true, upsert: true }
+      );
+    } catch (dbError: unknown) {
+      // Handle duplicate key error specifically
+      if (
+        dbError instanceof Error &&
+        dbError.message.includes('E11000') &&
+        dbError.message.includes('phone')
+      ) {
+        console.error('[account/update] Duplicate phone number error:', dbError);
+        return NextResponse.json(
+          { error: 'This phone number is already registered with another account' },
+          { status: 409 }
+        );
+      }
+      throw dbError; // Re-throw if it's a different error
+    }
 
     return NextResponse.json({ ok: true, profile });
-  } catch {
+  } catch (error) {
+    console.error('[account/update] Unexpected error:', error);
+    console.error('[account/update] Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+    
+    // Handle specific error types
+    if (error instanceof Error) {
+      if (error.message.includes('ValidationError') || error.message.includes('Cast')) {
+        return NextResponse.json(
+          { error: 'Please check all fields and try again' },
+          { status: 400 }
+        );
+      }
+      if (error.message.includes('not found') || error.message.includes('NotFound')) {
+        return NextResponse.json(
+          { error: 'Account not found. Please log in again' },
+          { status: 404 }
+        );
+      }
+    }
+    
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unable to save changes';
     return NextResponse.json(
-      { error: 'Internal Server Error' },
+      { error: 'Unable to save your changes. Please try again later' },
       { status: 500 }
     );
   }

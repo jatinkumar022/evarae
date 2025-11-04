@@ -61,7 +61,7 @@ export async function GET(request: Request) {
   } catch (error) {
     console.error('Products GET error:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch products' },
+      { error: 'Unable to load products. Please try again later' },
       { status: 500 }
     );
   }
@@ -131,7 +131,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('Product POST error:', error);
     return NextResponse.json(
-      { error: 'Failed to create product' },
+      { error: 'Unable to create product. Please check all fields and try again' },
       { status: 500 }
     );
   }

@@ -24,7 +24,7 @@ export async function POST(request: Request) {
     const exists = await User.exists({ email: normalized });
     if (exists) {
       return NextResponse.json(
-        { error: 'Email already registered' },
+        { error: 'This email is already registered. Please log in instead' },
         { status: 400 }
       );
     }
@@ -69,9 +69,9 @@ export async function POST(request: Request) {
       devOtp: process.env.NODE_ENV !== 'production' ? otp : undefined,
     });
   } catch (error) {
-    console.error('signup request-otp error', error);
+    console.error('[auth/signup/request-otp] Error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error' },
+      { error: 'Unable to send OTP. Please try again later' },
       { status: 500 }
     );
   }

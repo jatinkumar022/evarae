@@ -25,7 +25,7 @@ export async function GET(request: Request) {
   } catch (error) {
     console.error('Collections GET error:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch collections' },
+      { error: 'Unable to load collections. Please try again later' },
       { status: 500 }
     );
   }
@@ -84,7 +84,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('Collection POST error:', error);
     return NextResponse.json(
-      { error: 'Failed to create collection' },
+      { error: 'Unable to create collection. Please check all fields and try again' },
       { status: 500 }
     );
   }

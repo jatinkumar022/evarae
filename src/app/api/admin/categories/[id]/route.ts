@@ -22,7 +22,7 @@ export async function GET(request: Request, { params }: RouteContext) {
   } catch (error) {
     console.error('Category GET error:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch category' },
+      { error: 'Category not found' },
       { status: 500 }
     );
   }
@@ -120,7 +120,7 @@ export async function PUT(request: Request, { params }: RouteContext) {
   } catch (error) {
     console.error('Category PUT error:', error);
     return NextResponse.json(
-      { error: 'Failed to update category' },
+      { error: 'Unable to update category. Please check all fields and try again' },
       { status: 500 }
     );
   }
@@ -148,7 +148,7 @@ export async function DELETE(request: Request, { params }: RouteContext) {
   } catch (error) {
     console.error('Category DELETE error:', error);
     return NextResponse.json(
-      { error: 'Failed to delete category' },
+      { error: 'Unable to delete category. Please try again' },
       { status: 500 }
     );
   }

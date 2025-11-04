@@ -30,8 +30,12 @@ export async function POST(request: Request) {
   try {
     await connect();
     const uid = getUid(request);
-    if (!uid)
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!uid) {
+      return NextResponse.json(
+        { error: 'Please log in to verify payment' },
+        { status: 401 }
+      );
+    }
 
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature } =
       (await request.json()) as {

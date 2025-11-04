@@ -21,6 +21,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useSearchParams } from 'next/navigation';
 import { useCartStore } from '@/lib/data/mainStore/cartStore';
+import { usePublicCategoryStore } from '@/lib/data/mainStore/categoryStore';
 import CartNotification from '@/app/(main)/components/ui/CartNotification';
 const PLACEHOLDER_PHRASES = [
   'Search Gold Jewellery',
@@ -55,6 +56,7 @@ function SearchPageInner() {
   const [notificationProductName, setNotificationProductName] = useState('');
   const router = useRouter();
   const addToCart = useCartStore(s => s.add);
+  const { categories } = usePublicCategoryStore();
   const filterOptions: FilterOptions = useMemo(
     () => ({
       priceRanges: [
@@ -73,15 +75,9 @@ function SearchPageInner() {
         'Pearl Beads',
         'Oxidised Alloy',
       ],
-      subcategories: [
-        'Diamond Rings',
-        'Gold Chains',
-        'Pearl Earrings',
-        'Designer Bracelets',
-        'Traditional Pendants',
-      ],
+      subcategories: categories.map(cat => cat.name),
     }),
-    []
+    [categories]
   );
 
   const sortOptions: SortOption[] = useMemo(

@@ -57,7 +57,7 @@ export async function GET(request: Request) {
   } catch (error) {
     console.error('Reviews GET error:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch reviews' },
+      { error: 'Unable to load reviews. Please try again later' },
       { status: 500 }
     );
   }
@@ -125,7 +125,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('Review POST error:', error);
     return NextResponse.json(
-      { error: 'Failed to create review' },
+      { error: 'Unable to create review. Please check all fields and try again' },
       { status: 500 }
     );
   }

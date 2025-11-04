@@ -90,9 +90,10 @@ export async function GET(request: Request) {
     }));
 
     return NextResponse.json({ items, addresses });
-  } catch {
+  } catch (error) {
+    console.error('[checkout GET] Error:', error);
     return NextResponse.json(
-      { error: 'Failed to load checkout data' },
+      { error: 'Unable to load checkout information. Please try again' },
       { status: 500 }
     );
   }

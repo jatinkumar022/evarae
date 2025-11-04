@@ -36,7 +36,7 @@ export async function GET(
   } catch (error) {
     console.error('Product GET by ID error:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch product' },
+      { error: 'Product not found' },
       { status: 500 }
     );
   }
@@ -136,7 +136,7 @@ export async function PUT(
   } catch (error) {
     console.error('Product PUT error:', error);
     return NextResponse.json(
-      { error: 'Failed to update product' },
+      { error: 'Unable to update product. Please check all fields and try again' },
       { status: 500 }
     );
   }
@@ -172,7 +172,7 @@ export async function DELETE(
   } catch (error) {
     console.error('Product DELETE error:', error);
     return NextResponse.json(
-      { error: 'Failed to delete product' },
+      { error: 'Unable to delete product. Please try again' },
       { status: 500 }
     );
   }

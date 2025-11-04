@@ -19,7 +19,7 @@ export async function GET(request: Request) {
   } catch (error) {
     console.error('Categories GET error:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch categories' },
+      { error: 'Unable to load categories. Please try again later' },
       { status: 500 }
     );
   }
@@ -92,7 +92,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('Category POST error:', error);
     return NextResponse.json(
-      { error: 'Failed to create category' },
+      { error: 'Unable to create category. Please check all fields and try again' },
       { status: 500 }
     );
   }

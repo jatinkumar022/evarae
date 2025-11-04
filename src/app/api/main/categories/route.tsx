@@ -15,7 +15,7 @@ export async function GET() {
   } catch (error) {
     console.error('Public categories GET error:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch categories' },
+      { error: 'Unable to load categories. Please try again later' },
       { status: 500 }
     );
   }

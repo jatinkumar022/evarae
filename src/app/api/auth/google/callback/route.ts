@@ -30,15 +30,16 @@ async function fetchGoogleUserInfo(accessToken: string) {
   const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
-  if (!res.ok) throw new Error('Failed to fetch user info');
+  if (!res.ok) throw new Error('Unable to fetch user information from Google');
   return res.json();
 }
 
 export async function GET(request: Request) {
   try {
     if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET || !USER_JWT_SECRET) {
+      console.error('[auth/google/callback] Auth credentials not configured');
       return NextResponse.json(
-        { error: 'Auth not configured' },
+        { error: 'Google sign-in is temporarily unavailable' },
         { status: 500 }
       );
     }
@@ -97,7 +98,8 @@ export async function GET(request: Request) {
     });
 
     return res;
-  } catch {
+  } catch (error) {
+    console.error('[auth/google/callback] Error:', error);
     try {
       const url = new URL(request.url);
       return NextResponse.redirect(
@@ -105,7 +107,7 @@ export async function GET(request: Request) {
       );
     } catch {
       return NextResponse.json(
-        { error: 'Google auth failed' },
+        { error: 'Unable to complete Google sign-in. Please try again' },
         { status: 500 }
       );
     }

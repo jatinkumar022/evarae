@@ -24,7 +24,7 @@ export async function GET(request: Request, { params }: RouteContext) {
   } catch (error) {
     console.error('Collection GET error:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch collection' },
+      { error: 'Collection not found' },
       { status: 500 }
     );
   }
@@ -80,7 +80,7 @@ export async function PUT(request: Request, { params }: RouteContext) {
   } catch (error) {
     console.error('Collection PUT error:', error);
     return NextResponse.json(
-      { error: 'Failed to update collection' },
+      { error: 'Unable to update collection. Please check all fields and try again' },
       { status: 500 }
     );
   }
@@ -107,7 +107,7 @@ export async function DELETE(request: Request, { params }: RouteContext) {
   } catch (error) {
     console.error('Collection DELETE error:', error);
     return NextResponse.json(
-      { error: 'Failed to delete collection' },
+      { error: 'Unable to delete collection. Please try again' },
       { status: 500 }
     );
   }

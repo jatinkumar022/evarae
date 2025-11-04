@@ -359,12 +359,17 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({
         return false;
       }
 
-      // Subcategory filter
-      if (
-        filters.subcategory.length > 0 &&
-        !filters.subcategory.includes(product.subcategory ?? '')
-      ) {
-        return false;
+      // Subcategory/Category filter
+      if (filters.subcategory.length > 0) {
+        const matchesSubcategory = filters.subcategory.includes(
+          product.subcategory ?? ''
+        );
+        const matchesCategory = filters.subcategory.includes(
+          product.category.name ?? ''
+        );
+        if (!matchesSubcategory && !matchesCategory) {
+          return false;
+        }
       }
 
       // Feature filters

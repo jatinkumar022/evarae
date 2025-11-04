@@ -39,6 +39,7 @@ import {
   Truck,
 } from 'lucide-react';
 import { useCartStore } from '@/lib/data/mainStore/cartStore';
+import { usePublicCategoryStore } from '@/lib/data/mainStore/categoryStore';
 
 const philosopher = Philosopher({
   subsets: ['latin'],
@@ -135,15 +136,9 @@ const clearSearchHistory = (): void => {
   }
 };
 
-type Category = {
-  _id: string;
-  name: string;
-  slug: string;
-  image?: string;
-};
-
 export default function Navbar() {
   const { items, load } = useCartStore();
+  const { categories, status } = usePublicCategoryStore();
   useEffect(() => {
     load();
   }, [load]);
@@ -159,9 +154,8 @@ export default function Navbar() {
     'Search...',
   ];
   const [currentUser, setCurrentUser] = useState<UserAccount | null>(null);
-  const [categories, setCategories] = useState<Category[]>([]);
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
-  const [isLoadingCategories, setIsLoadingCategories] = useState(false);
+  const isLoadingCategories = status === 'loading';
   const [currentPlaceholder, setCurrentPlaceholder] = useState(0);
   const [inputValue, setInputValue] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -186,24 +180,6 @@ export default function Navbar() {
   const pathname = usePathname();
 
   const isCartPage = pathname === '/cart';
-
-  // Fetch categories when search opens
-  useEffect(() => {
-    if (isSearchOpen && categories.length === 0 && !isLoadingCategories) {
-      setIsLoadingCategories(true);
-      fetch('/api/main/categories', { cache: 'no-store' })
-        .then(res => res.json())
-        .then(data => {
-          setCategories(data.categories || []);
-        })
-        .catch(err => {
-          console.error('Failed to fetch categories:', err);
-        })
-        .finally(() => {
-          setIsLoadingCategories(false);
-        });
-    }
-  }, [isSearchOpen, categories.length, isLoadingCategories]);
 
   // Load search history when search opens
   useEffect(() => {

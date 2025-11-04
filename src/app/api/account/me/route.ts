@@ -10,7 +10,11 @@ type BasicUser = { _id: unknown; name: string; email: string };
 
 export async function GET(request: Request) {
   try {
-    if (!USER_JWT_SECRET) return NextResponse.json({ user: null });
+    if (!USER_JWT_SECRET) {
+      console.error('[account/me] USER_JWT_SECRET is not set');
+      return NextResponse.json({ user: null });
+    }
+    
     await connect();
 
     const cookieHeader = request.headers.get('cookie') || '';
@@ -19,17 +23,33 @@ export async function GET(request: Request) {
       .map(p => p.trim())
       .find(p => p.startsWith('token='))
       ?.split('=')[1];
-    if (!token) return NextResponse.json({ user: null });
+    
+    if (!token) {
+      return NextResponse.json({ user: null });
+    }
 
-    const payload = jwt.verify(token, USER_JWT_SECRET) as {
-      uid?: string;
-    } | null;
-    if (!payload?.uid) return NextResponse.json({ user: null });
+    let payload: { uid?: string } | null = null;
+    try {
+      payload = jwt.verify(token, USER_JWT_SECRET) as {
+        uid?: string;
+      } | null;
+    } catch (jwtError) {
+      console.error('[account/me] JWT verification failed:', jwtError);
+      return NextResponse.json({ user: null });
+    }
+    
+    if (!payload?.uid) {
+      return NextResponse.json({ user: null });
+    }
 
     const userDoc = await User.findById(payload.uid)
       .select({ name: 1, email: 1 })
       .lean<BasicUser | null>();
-    if (!userDoc) return NextResponse.json({ user: null });
+    
+    if (!userDoc) {
+      console.error('[account/me] User not found:', payload.uid);
+      return NextResponse.json({ user: null });
+    }
 
     const profile = await UserProfile.findOne({ user: payload.uid }).lean();
 
@@ -41,7 +61,8 @@ export async function GET(request: Request) {
         profile: profile || null,
       },
     });
-  } catch {
+  } catch (error) {
+    console.error('[account/me] Unexpected error:', error);
     return NextResponse.json({ user: null });
   }
 }

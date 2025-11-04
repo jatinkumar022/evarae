@@ -57,7 +57,7 @@ export async function GET(request: Request) {
   } catch (error) {
     console.error('Search products GET error:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch search results' },
+      { error: 'Unable to search. Please try again later' },
       { status: 500 }
     );
   }

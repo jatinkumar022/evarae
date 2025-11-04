@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ChevronDown, Check } from 'lucide-react';
 
 type Option = {
@@ -13,6 +13,7 @@ type CustomDropdownProps = {
   options: Option[];
   className?: string;
   error?: boolean;
+  small?: boolean;
 };
 
 const CustomDropdown: React.FC<CustomDropdownProps> = ({
@@ -22,14 +23,30 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
   options,
   className = '',
   error = false,
+  small = false,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const selectedOption = options.find(option => option.value === value);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const selectedItemRef = useRef<HTMLButtonElement>(null);
 
   const handleSelect = (optionValue: string) => {
     onChange(optionValue);
     setIsOpen(false);
   };
+
+  // Auto-scroll to selected item when dropdown opens
+  useEffect(() => {
+    if (isOpen && selectedItemRef.current && dropdownRef.current) {
+      // Small delay to ensure DOM is rendered
+      setTimeout(() => {
+        selectedItemRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'nearest',
+        });
+      }, 10);
+    }
+  }, [isOpen, value]);
 
   return (
     <div className={`relative ${className}`}>
@@ -42,7 +59,7 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
-          className={`w-full rounded-xl border bg-white px-4 py-3 text-sm text-left flex items-center justify-between hover:border-[oklch(0.66_0.14_358.91)]/50 focus:outline-none focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/20 focus:border-[oklch(0.66_0.14_358.91)] transition-all duration-200 ${
+          className={`w-full rounded-xl border bg-white px-4 ${small ? 'py-1.5 sm:py-2' : 'py-2 sm:py-3'} text-sm text-left flex items-center justify-between hover:border-[oklch(0.66_0.14_358.91)]/50 focus:outline-none focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/20 focus:border-[oklch(0.66_0.14_358.91)] transition-all duration-200 ${
             error ? 'border-red-300' : 'border-[oklch(0.84_0.04_10.35)]/40'
           }`}
         >
@@ -58,13 +75,17 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
 
         {isOpen && (
           <>
-            <div className="absolute top-full left-0 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-50 overflow-hidden max-h-48 overflow-y-auto">
+            <div
+              ref={dropdownRef}
+              className="absolute top-full left-0 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-20 overflow-hidden max-h-48 overflow-y-auto"
+            >
               {options.map(option => (
                 <button
                   key={option.value}
+                  ref={option.value === value ? selectedItemRef : null}
                   type="button"
                   onClick={() => handleSelect(option.value)}
-                  className={`w-full px-4 py-3 text-left text-sm flex items-center justify-between hover:bg-gradient-to-r hover:from-[oklch(0.66_0.14_358.91)]/10 hover:to-[oklch(0.58_0.16_8)]/10 focus:outline-none transition-colors duration-150 ${
+                  className={`w-full px-4 py-2 sm:py-3 text-left text-sm flex items-center justify-between hover:bg-gradient-to-r hover:from-[oklch(0.66_0.14_358.91)]/10 hover:to-[oklch(0.58_0.16_8)]/10 focus:outline-none transition-colors duration-150 ${
                     option.value === value
                       ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)]/10 to-[oklch(0.58_0.16_8)]/10 text-[oklch(0.66_0.14_358.91)]'
                       : 'text-gray-900'
@@ -78,7 +99,7 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
               ))}
             </div>
             <div
-              className="fixed inset-0 z-40"
+              className="fixed inset-0 z-10"
               onClick={() => setIsOpen(false)}
             />
           </>

@@ -5,8 +5,9 @@ const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID as string;
 export async function GET(request: Request) {
   try {
     if (!GOOGLE_CLIENT_ID) {
+      console.error('[auth/google] GOOGLE_CLIENT_ID not configured');
       return NextResponse.json(
-        { error: 'GOOGLE_CLIENT_ID not configured' },
+        { error: 'Google sign-in is temporarily unavailable' },
         { status: 500 }
       );
     }
@@ -26,9 +27,10 @@ export async function GET(request: Request) {
 
     const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
     return NextResponse.redirect(authUrl);
-  } catch {
+  } catch (error) {
+    console.error('[auth/google] Error:', error);
     return NextResponse.json(
-      { error: 'Failed to start Google auth' },
+      { error: 'Unable to start Google sign-in. Please try again' },
       { status: 500 }
     );
   }

@@ -53,8 +53,12 @@ export async function POST(request: Request) {
   try {
     await connect();
     const uid = getUid(request);
-    if (!uid)
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!uid) {
+      return NextResponse.json(
+        { error: 'Please log in to place an order' },
+        { status: 401 }
+      );
+    }
 
     const { addressId, couponCode } = (await request.json()) as {
       addressId?: string;
@@ -68,19 +72,24 @@ export async function POST(request: Request) {
       UserProfile.findOne({ user: uid }).lean<UserProfileLean | null>(),
     ]);
 
-    if (!cart || !cart.items || cart.items.length === 0)
-      return NextResponse.json({ error: 'Cart is empty' }, { status: 400 });
+    if (!cart || !cart.items || cart.items.length === 0) {
+      return NextResponse.json(
+        { error: 'Your cart is empty. Please add items before checkout' },
+        { status: 400 }
+      );
+    }
 
     const address: Address | undefined =
       (profile?.addresses || []).find(
         (a: Address) => String(a._id) === String(addressId)
       ) ||
       (profile?.addresses || []).find((a: Address) => !!a.isDefaultShipping);
-    if (!address)
+    if (!address) {
       return NextResponse.json(
-        { error: 'No shipping address selected' },
+        { error: 'Please select a shipping address to continue' },
         { status: 400 }
       );
+    }
 
     const items: OrderItemLean[] = cart.items.map(ci => ({
       product: ci.product?._id || '',
@@ -168,9 +177,10 @@ export async function POST(request: Request) {
       paymentLink,
       amount: total,
     });
-  } catch {
+  } catch (error) {
+    console.error('[checkout/order POST] Error:', error);
     return NextResponse.json(
-      { error: 'Failed to create order' },
+      { error: 'Unable to place order. Please try again' },
       { status: 500 }
     );
   }

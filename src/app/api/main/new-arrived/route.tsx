@@ -20,7 +20,7 @@ export async function GET() {
   } catch (error) {
     console.error('Latest products GET error:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch latest products' },
+      { error: 'Unable to load latest products. Please try again later' },
       { status: 500 }
     );
   }

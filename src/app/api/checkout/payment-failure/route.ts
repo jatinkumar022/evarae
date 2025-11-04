@@ -6,8 +6,12 @@ export async function POST(request: Request) {
   try {
     await connect();
     const { orderId, reason } = await request.json();
-    if (!orderId)
-      return NextResponse.json({ error: 'orderId required' }, { status: 400 });
+    if (!orderId) {
+      return NextResponse.json(
+        { error: 'Order ID is required' },
+        { status: 400 }
+      );
+    }
 
     const order = await Order.findByIdAndUpdate(
       orderId,
@@ -18,13 +22,18 @@ export async function POST(request: Request) {
       },
       { new: true }
     );
-    if (!order)
-      return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+    if (!order) {
+      return NextResponse.json(
+        { error: 'Order not found. Please check your order number' },
+        { status: 404 }
+      );
+    }
 
     return NextResponse.json({ ok: true });
-  } catch {
+  } catch (error) {
+    console.error('[checkout/payment-failure] Error:', error);
     return NextResponse.json(
-      { error: 'Failed to update order' },
+      { error: 'Unable to process payment failure. Please contact support' },
       { status: 500 }
     );
   }

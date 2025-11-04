@@ -86,27 +86,39 @@ function extractProductKey(body: unknown): string | null {
 }
 
 export async function GET(request: Request) {
-  await connect();
-  const uid = getUserIdFromRequest(request);
-  if (!uid) return NextResponse.json({ items: [], savedItems: [] });
+  try {
+    await connect();
+    const uid = getUserIdFromRequest(request);
+    if (!uid) return NextResponse.json({ items: [], savedItems: [] });
 
-  const cart = await Cart.findOne({ user: uid })
-    .populate('items.product')
-    .populate('savedItems.product')
-    .lean<CartDoc | null>();
+    const cart = await Cart.findOne({ user: uid })
+      .populate('items.product')
+      .populate('savedItems.product')
+      .lean<CartDoc | null>();
 
-  return NextResponse.json({
-    items: cart?.items ?? [],
-    savedItems: cart?.savedItems ?? [],
-  });
+    return NextResponse.json({
+      items: cart?.items ?? [],
+      savedItems: cart?.savedItems ?? [],
+    });
+  } catch (error) {
+    console.error('[account/cart GET] Error:', error);
+    return NextResponse.json({
+      items: [],
+      savedItems: [],
+    });
+  }
 }
 
 export async function POST(request: Request) {
   try {
     await connect();
     const uid = getUserIdFromRequest(request);
-    if (!uid)
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!uid) {
+      return NextResponse.json(
+        { error: 'Please log in to update your cart' },
+        { status: 401 }
+      );
+    }
 
     const url = new URL(request.url);
     const action = url.searchParams.get('action');
@@ -185,9 +197,29 @@ export async function POST(request: Request) {
       items: cart?.items ?? [],
       savedItems: cart?.savedItems ?? [],
     });
-  } catch {
+  } catch (error) {
+    console.error('[account/cart POST] Error:', error);
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unable to update cart';
+    
+    // Handle specific error types
+    if (error instanceof Error) {
+      if (error.message.includes('not found') || error.message.includes('NotFound')) {
+        return NextResponse.json(
+          { error: 'Product not found' },
+          { status: 404 }
+        );
+      }
+      if (error.message.includes('Unauthorized') || error.message.includes('token')) {
+        return NextResponse.json(
+          { error: 'Authentication required' },
+          { status: 401 }
+        );
+      }
+    }
+    
     return NextResponse.json(
-      { error: 'Failed to update cart' },
+      { error: errorMessage },
       { status: 500 }
     );
   }
@@ -197,8 +229,12 @@ export async function PATCH(request: Request) {
   try {
     await connect();
     const uid = getUserIdFromRequest(request);
-    if (!uid)
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!uid) {
+      return NextResponse.json(
+        { error: 'Please log in to update your cart' },
+        { status: 401 }
+      );
+    }
 
     const body = (await request.json()) as unknown;
     const productKey = extractProductKey(body);
@@ -246,9 +282,28 @@ export async function PATCH(request: Request) {
       items: cart?.items ?? [],
       savedItems: cart?.savedItems ?? [],
     });
-  } catch {
+  } catch (error) {
+    console.error('[account/cart PATCH] Error:', error);
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unable to update cart item';
+    
+    if (error instanceof Error) {
+      if (error.message.includes('not found') || error.message.includes('NotFound')) {
+        return NextResponse.json(
+          { error: 'Product not found' },
+          { status: 404 }
+        );
+      }
+      if (error.message.includes('Unauthorized') || error.message.includes('token')) {
+        return NextResponse.json(
+          { error: 'Authentication required' },
+          { status: 401 }
+        );
+      }
+    }
+    
     return NextResponse.json(
-      { error: 'Failed to update cart' },
+      { error: errorMessage },
       { status: 500 }
     );
   }
@@ -258,8 +313,12 @@ export async function DELETE(request: Request) {
   try {
     await connect();
     const uid = getUserIdFromRequest(request);
-    if (!uid)
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!uid) {
+      return NextResponse.json(
+        { error: 'Please log in to update your cart' },
+        { status: 401 }
+      );
+    }
 
     const url = new URL(request.url);
     const action = url.searchParams.get('action');
@@ -302,9 +361,28 @@ export async function DELETE(request: Request) {
       items: cart?.items ?? [],
       savedItems: cart?.savedItems ?? [],
     });
-  } catch {
+  } catch (error) {
+    console.error('[account/cart DELETE] Error:', error);
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unable to remove item from cart';
+    
+    if (error instanceof Error) {
+      if (error.message.includes('not found') || error.message.includes('NotFound')) {
+        return NextResponse.json(
+          { error: 'Product not found' },
+          { status: 404 }
+        );
+      }
+      if (error.message.includes('Unauthorized') || error.message.includes('token')) {
+        return NextResponse.json(
+          { error: 'Authentication required' },
+          { status: 401 }
+        );
+      }
+    }
+    
     return NextResponse.json(
-      { error: 'Failed to remove from cart' },
+      { error: errorMessage },
       { status: 500 }
     );
   }

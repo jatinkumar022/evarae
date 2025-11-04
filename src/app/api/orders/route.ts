@@ -27,17 +27,22 @@ export async function GET(request: Request) {
   try {
     await connect();
     const uid = getUid(request);
-    if (!uid)
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!uid) {
+      return NextResponse.json(
+        { error: 'Please log in to view your orders' },
+        { status: 401 }
+      );
+    }
 
     const orders = await Order.find({ user: uid })
       .sort({ createdAt: -1 })
       .lean();
 
     return NextResponse.json({ orders });
-  } catch {
+  } catch (error) {
+    console.error('[orders GET] Error:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch orders' },
+      { error: 'Unable to load your orders. Please try again later' },
       { status: 500 }
     );
   }

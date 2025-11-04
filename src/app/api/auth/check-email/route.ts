@@ -11,9 +11,10 @@ export async function POST(request: Request) {
     }
     const exists = !!(await User.exists({ email: email.toLowerCase() }));
     return NextResponse.json({ exists });
-  } catch {
+  } catch (error) {
+    console.error('[auth/check-email] Error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error' },
+      { error: 'Unable to check email. Please try again' },
       { status: 500 }
     );
   }

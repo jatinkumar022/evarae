@@ -33,7 +33,7 @@ export async function GET(request: Request, { params }: RouteContext) {
   } catch (error) {
     console.error('Public collection GET error:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch collection' },
+      { error: 'Unable to load collection. Please try again later' },
       { status: 500 }
     );
   }

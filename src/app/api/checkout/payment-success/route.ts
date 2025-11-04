@@ -7,8 +7,12 @@ export async function POST(request: Request) {
   try {
     await connect();
     const { orderId, providerOrderId } = await request.json();
-    if (!orderId)
-      return NextResponse.json({ error: 'orderId required' }, { status: 400 });
+    if (!orderId) {
+      return NextResponse.json(
+        { error: 'Order ID is required' },
+        { status: 400 }
+      );
+    }
 
     const order = await Order.findByIdAndUpdate(
       orderId,
@@ -19,16 +23,21 @@ export async function POST(request: Request) {
       },
       { new: true }
     );
-    if (!order)
-      return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+    if (!order) {
+      return NextResponse.json(
+        { error: 'Order not found. Please check your order number' },
+        { status: 404 }
+      );
+    }
 
     // Optional: clear cart for this user
     await Cart.updateOne({ user: order.user }, { $set: { items: [] } });
 
     return NextResponse.json({ ok: true });
-  } catch {
+  } catch (error) {
+    console.error('[checkout/payment-success] Error:', error);
     return NextResponse.json(
-      { error: 'Failed to update order' },
+      { error: 'Unable to process payment confirmation. Please contact support' },
       { status: 500 }
     );
   }

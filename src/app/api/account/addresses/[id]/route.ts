@@ -65,16 +65,24 @@ export async function PUT(
   const { id } = await ctx.params;
   try {
     if (!USER_JWT_SECRET)
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: 'Please log in to continue' }, { status: 401 });
     await connect();
     const token = getCookie(request, 'token');
     if (!token)
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    const payload = jwt.verify(token, USER_JWT_SECRET) as {
-      uid?: string;
-    } | null;
+      return NextResponse.json({ error: 'Please log in to continue' }, { status: 401 });
+    
+    let payload: { uid?: string } | null = null;
+    try {
+      payload = jwt.verify(token, USER_JWT_SECRET) as {
+        uid?: string;
+      } | null;
+    } catch (jwtError) {
+      console.error('[addresses PUT] JWT verification failed:', jwtError);
+      return NextResponse.json({ error: 'Your session has expired. Please log in again' }, { status: 401 });
+    }
+    
     if (!payload?.uid)
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: 'Please log in to continue' }, { status: 401 });
 
     const raw: Partial<Address> = await request.json();
     const $setFields = sanitizePartialAddress(raw);
@@ -97,9 +105,22 @@ export async function PUT(
       .select({ addresses: 1 })
       .lean<UserProfileLean | null>();
     return NextResponse.json({ ok: true, addresses: profile?.addresses || [] });
-  } catch {
+  } catch (error) {
+    console.error('[addresses PUT] Error:', error);
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unable to update address';
+    
+    if (error instanceof Error) {
+      if (error.message.includes('Cast to ObjectId failed') || error.message.includes('Invalid')) {
+        return NextResponse.json(
+          { error: 'Address not found' },
+          { status: 404 }
+        );
+      }
+    }
+    
     return NextResponse.json(
-      { error: 'Failed to update address' },
+      { error: 'Unable to update address. Please try again' },
       { status: 500 }
     );
   }
@@ -112,16 +133,24 @@ export async function PATCH(
   const { id } = await ctx.params;
   try {
     if (!USER_JWT_SECRET)
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: 'Please log in to continue' }, { status: 401 });
     await connect();
     const token = getCookie(request, 'token');
     if (!token)
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    const payload = jwt.verify(token, USER_JWT_SECRET) as {
-      uid?: string;
-    } | null;
+      return NextResponse.json({ error: 'Please log in to continue' }, { status: 401 });
+    
+    let payload: { uid?: string } | null = null;
+    try {
+      payload = jwt.verify(token, USER_JWT_SECRET) as {
+        uid?: string;
+      } | null;
+    } catch (jwtError) {
+      console.error('[addresses PATCH] JWT verification failed:', jwtError);
+      return NextResponse.json({ error: 'Your session has expired. Please log in again' }, { status: 401 });
+    }
+    
     if (!payload?.uid)
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: 'Please log in to continue' }, { status: 401 });
 
     // Unset default on all addresses
     await UserProfile.updateOne(
@@ -138,9 +167,22 @@ export async function PATCH(
       .select({ addresses: 1 })
       .lean<UserProfileLean | null>();
     return NextResponse.json({ ok: true, addresses: profile?.addresses || [] });
-  } catch {
+  } catch (error) {
+    console.error('[addresses PATCH] Error:', error);
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unable to set default address';
+    
+    if (error instanceof Error) {
+      if (error.message.includes('Cast to ObjectId failed') || error.message.includes('Invalid')) {
+        return NextResponse.json(
+          { error: 'Address not found' },
+          { status: 404 }
+        );
+      }
+    }
+    
     return NextResponse.json(
-      { error: 'Failed to set default address' },
+      { error: 'Unable to set default address. Please try again' },
       { status: 500 }
     );
   }
@@ -153,16 +195,24 @@ export async function DELETE(
   const { id } = await ctx.params;
   try {
     if (!USER_JWT_SECRET)
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: 'Please log in to continue' }, { status: 401 });
     await connect();
     const token = getCookie(request, 'token');
     if (!token)
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    const payload = jwt.verify(token, USER_JWT_SECRET) as {
-      uid?: string;
-    } | null;
+      return NextResponse.json({ error: 'Please log in to continue' }, { status: 401 });
+    
+    let payload: { uid?: string } | null = null;
+    try {
+      payload = jwt.verify(token, USER_JWT_SECRET) as {
+        uid?: string;
+      } | null;
+    } catch (jwtError) {
+      console.error('[addresses DELETE] JWT verification failed:', jwtError);
+      return NextResponse.json({ error: 'Your session has expired. Please log in again' }, { status: 401 });
+    }
+    
     if (!payload?.uid)
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: 'Please log in to continue' }, { status: 401 });
 
     await UserProfile.updateOne(
       { user: payload.uid },
@@ -172,9 +222,22 @@ export async function DELETE(
       .select({ addresses: 1 })
       .lean<UserProfileLean | null>();
     return NextResponse.json({ ok: true, addresses: profile?.addresses || [] });
-  } catch {
+  } catch (error) {
+    console.error('[addresses DELETE] Error:', error);
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unable to delete address';
+    
+    if (error instanceof Error) {
+      if (error.message.includes('Cast to ObjectId failed') || error.message.includes('Invalid')) {
+        return NextResponse.json(
+          { error: 'Address not found' },
+          { status: 404 }
+        );
+      }
+    }
+    
     return NextResponse.json(
-      { error: 'Failed to delete address' },
+      { error: 'Unable to delete address. Please try again' },
       { status: 500 }
     );
   }

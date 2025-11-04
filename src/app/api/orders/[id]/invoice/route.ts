@@ -214,8 +214,12 @@ export async function GET(
   try {
     await connect();
     const uid = getUid(request);
-    if (!uid)
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!uid) {
+      return NextResponse.json(
+        { error: 'Please log in to download invoice' },
+        { status: 401 }
+      );
+    }
 
     const { id } = await context.params;
     const key = id;
@@ -253,9 +257,10 @@ export async function GET(
         'Cache-Control': 'private, no-store, no-cache, must-revalidate',
       },
     });
-  } catch {
+  } catch (error) {
+    console.error('[orders/[id]/invoice GET] Error:', error);
     return NextResponse.json(
-      { error: 'Failed to generate invoice' },
+      { error: 'Unable to generate invoice. Please try again later' },
       { status: 500 }
     );
   }

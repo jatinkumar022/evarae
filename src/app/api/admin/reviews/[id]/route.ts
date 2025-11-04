@@ -22,7 +22,7 @@ export async function GET(request: Request, { params }: RouteContext) {
   } catch (error) {
     console.error('Review GET error:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch review' },
+      { error: 'Review not found' },
       { status: 500 }
     );
   }
@@ -79,7 +79,7 @@ export async function PUT(request: Request, { params }: RouteContext) {
   } catch (error) {
     console.error('Review PUT error:', error);
     return NextResponse.json(
-      { error: 'Failed to update review' },
+      { error: 'Unable to update review. Please check all fields and try again' },
       { status: 500 }
     );
   }
@@ -103,7 +103,7 @@ export async function DELETE(request: Request, { params }: RouteContext) {
   } catch (error) {
     console.error('Review DELETE error:', error);
     return NextResponse.json(
-      { error: 'Failed to delete review' },
+      { error: 'Unable to delete review. Please try again' },
       { status: 500 }
     );
   }

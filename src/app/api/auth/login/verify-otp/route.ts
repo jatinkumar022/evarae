@@ -75,9 +75,9 @@ export async function POST(request: Request) {
 
     return res;
   } catch (error) {
-    console.error('login verify-otp error', error);
+    console.error('[auth/login/verify-otp] Error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error' },
+      { error: 'Unable to verify OTP. Please try again' },
       { status: 500 }
     );
   }

@@ -64,9 +64,9 @@ export async function POST(request: Request) {
       devOtp: process.env.NODE_ENV !== 'production' ? otp : undefined,
     });
   } catch (error) {
-    console.error('request-otp error', error);
+    console.error('[admin/auth/request-otp] Error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error' },
+      { error: 'Unable to send OTP. Please try again later' },
       { status: 500 }
     );
   }

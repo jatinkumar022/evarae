@@ -23,7 +23,10 @@ export async function POST(request: Request) {
     const normalized = email.toLowerCase();
     const user = await User.findOne({ email: normalized });
     if (!user) {
-      return NextResponse.json({ error: 'Email not found' }, { status: 404 });
+      return NextResponse.json(
+        { error: 'No account found with this email. Please sign up first' },
+        { status: 404 }
+      );
     }
 
     if (user.loginOtpLastSentAt) {
@@ -56,9 +59,9 @@ export async function POST(request: Request) {
     });
     return res;
   } catch (error) {
-    console.error('login request-otp error', error);
+    console.error('[auth/login/request-otp] Error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error' },
+      { error: 'Unable to send OTP. Please try again later' },
       { status: 500 }
     );
   }

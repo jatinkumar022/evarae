@@ -67,8 +67,12 @@ export async function POST(request: Request) {
   try {
     await connect();
     const uid = getUid(request);
-    if (!uid)
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!uid) {
+      return NextResponse.json(
+        { error: 'Please log in to create payment order' },
+        { status: 401 }
+      );
+    }
 
     // Validate Razorpay credentials
     const keyIdPreview = RAZORPAY_KEY_ID
@@ -303,10 +307,10 @@ export async function POST(request: Request) {
         { status: 502 }
       );
     }
-  } catch (e: unknown) {
-    console.error('Order creation error:', e);
+  } catch (error: unknown) {
+    console.error('[checkout/razorpay/create-order] Error:', error);
     return NextResponse.json(
-      { error: 'Failed to create payment order' },
+      { error: 'Unable to create payment order. Please try again' },
       { status: 500 }
     );
   }

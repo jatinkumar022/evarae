@@ -158,26 +158,27 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     if (!USER_JWT_SECRET)
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: 'Please log in to continue' }, { status: 401 });
 
     await connect();
 
     const token = getCookie(request, 'token');
     if (!token)
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: 'Please log in to continue' }, { status: 401 });
 
     let payload: { uid?: string } | null = null;
     try {
       payload = jwt.verify(token, USER_JWT_SECRET) as { uid?: string } | null;
-    } catch {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    } catch (jwtError) {
+      console.error('[addresses POST] JWT verification failed:', jwtError);
+      return NextResponse.json({ error: 'Your session has expired. Please log in again' }, { status: 401 });
     }
     if (!payload?.uid)
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: 'Please log in to continue' }, { status: 401 });
 
     // Validate uid for ObjectId to avoid cast errors during upsert
     if (!mongoose.isValidObjectId(payload.uid)) {
-      return NextResponse.json({ error: 'Invalid user id' }, { status: 400 });
+      return NextResponse.json({ error: 'Invalid account. Please log in again' }, { status: 400 });
     }
 
     const rawPartial = await parseAddressBody(request);
@@ -219,20 +220,23 @@ export async function POST(request: Request) {
       return err;
     }
 
-    // Map common Mongoose/Mongo errors
+    // Map common Mongoose/Mongo errors to user-friendly messages
     const anyErr = err as { name?: string; message?: string; code?: number };
     if (anyErr?.name === 'ValidationError') {
+      // Extract field name from validation error if possible
+      const fieldMatch = anyErr.message?.match(/path `(\w+)`/);
+      const fieldName = fieldMatch ? fieldMatch[1] : 'field';
       return NextResponse.json(
-        { error: anyErr.message || 'Invalid data' },
+        { error: `Please check your ${fieldName} and try again` },
         { status: 400 }
       );
     }
     if (anyErr?.name === 'MongoServerError' && anyErr?.code === 11000) {
-      return NextResponse.json({ error: 'Duplicate data' }, { status: 409 });
+      return NextResponse.json({ error: 'This address already exists' }, { status: 409 });
     }
 
     return NextResponse.json(
-      { error: 'Failed to save address. Please try again.' },
+      { error: 'Unable to save address. Please check all fields and try again' },
       { status: 500 }
     );
   }

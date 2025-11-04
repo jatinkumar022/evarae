@@ -10,8 +10,9 @@ const SESSION_HOURS = Number(process.env.SESSION_HOURS || 72);
 export async function POST(request: Request) {
   try {
     if (!USER_JWT_SECRET) {
+      console.error('[auth/login] USER_JWT_SECRET is not configured');
       return NextResponse.json(
-        { error: 'USER_JWT_SECRET not configured' },
+        { error: 'Service temporarily unavailable. Please try again later' },
         { status: 500 }
       );
     }
@@ -26,7 +27,7 @@ export async function POST(request: Request) {
       typeof password !== 'string'
     ) {
       return NextResponse.json(
-        { error: 'Email and password are required' },
+        { error: 'Please enter both email and password' },
         { status: 400 }
       );
     }
@@ -34,7 +35,7 @@ export async function POST(request: Request) {
     const user = await User.findOne({ email: email.toLowerCase() });
     if (!user || !user.passwordHash) {
       return NextResponse.json(
-        { error: 'Invalid credentials' },
+        { error: 'Invalid email or password. Please check and try again' },
         { status: 401 }
       );
     }
@@ -42,7 +43,7 @@ export async function POST(request: Request) {
     const ok = await bcrypt.compare(password, user.passwordHash);
     if (!ok) {
       return NextResponse.json(
-        { error: 'Invalid credentials' },
+        { error: 'Invalid email or password. Please check and try again' },
         { status: 401 }
       );
     }
@@ -66,9 +67,9 @@ export async function POST(request: Request) {
 
     return res;
   } catch (error) {
-    console.error('user login error', error);
+    console.error('[auth/login] Error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error' },
+      { error: 'Unable to sign in. Please try again later' },
       { status: 500 }
     );
   }

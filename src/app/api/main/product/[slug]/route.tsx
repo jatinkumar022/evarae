@@ -59,7 +59,7 @@ export async function GET(request: Request, { params }: RouteContext) {
   } catch (error) {
     console.error('Public product GET error:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch product' },
+      { error: 'Product not found or unavailable' },
       { status: 500 }
     );
   }

@@ -37,9 +37,9 @@ export async function POST(request: Request) {
       email: admin.email,
     });
   } catch (error) {
-    console.error('create-admin error', error);
+    console.error('[admin/auth/create-user] Error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error' },
+      { error: 'Unable to create admin user. Please try again' },
       { status: 500 }
     );
   }

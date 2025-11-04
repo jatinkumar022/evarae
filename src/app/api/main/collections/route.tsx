@@ -21,7 +21,7 @@ export async function GET() {
   } catch (error) {
     console.error('Public collections GET error:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch collections' },
+      { error: 'Unable to load collections. Please try again later' },
       { status: 500 }
     );
   }

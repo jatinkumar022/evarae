@@ -51,12 +51,20 @@ export async function POST(request: Request) {
       const payload = jwt.verify(userToken, USER_JWT_SECRET) as {
         uid?: string;
       } | null;
-      if (!payload?.uid)
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      if (!payload?.uid) {
+        return NextResponse.json(
+          { error: 'Your session has expired. Please log in again' },
+          { status: 401 }
+        );
+      }
 
       const user = await User.findById(payload.uid);
-      if (!user)
-        return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      if (!user) {
+        return NextResponse.json(
+          { error: 'Account not found. Please sign up again' },
+          { status: 404 }
+        );
+      }
 
       user.name = name;
       user.passwordHash = await bcrypt.hash(password, 10);
@@ -70,8 +78,12 @@ export async function POST(request: Request) {
       const payload = jwt.verify(signupToken, SIGNUP_JWT_SECRET) as {
         email?: string;
       } | null;
-      if (!payload?.email)
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      if (!payload?.email) {
+        return NextResponse.json(
+          { error: 'Your signup session has expired. Please start again' },
+          { status: 401 }
+        );
+      }
 
       const email = payload.email.toLowerCase();
       const exists = await User.exists({ email });
@@ -117,11 +129,14 @@ export async function POST(request: Request) {
       return res;
     }
 
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  } catch (error) {
-    console.error('complete-profile error', error);
     return NextResponse.json(
-      { error: 'Internal Server Error' },
+      { error: 'Please complete signup to continue' },
+      { status: 401 }
+    );
+  } catch (error) {
+    console.error('[auth/complete-profile] Error:', error);
+    return NextResponse.json(
+      { error: 'Unable to complete profile. Please try again' },
       { status: 500 }
     );
   }

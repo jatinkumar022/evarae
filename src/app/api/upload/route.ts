@@ -7,7 +7,10 @@ export async function POST(request: Request) {
     const file = formData.get('file') as File | null;
 
     if (!file) {
-      return NextResponse.json({ error: 'File is required' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Please select a file to upload' },
+        { status: 400 }
+      );
     }
 
     // Convert File → Buffer
@@ -31,9 +34,9 @@ export async function POST(request: Request) {
       public_id: result.public_id,
     });
   } catch (error) {
-    console.error('Cloudinary upload error:', error);
+    console.error('[upload] Error:', error);
     return NextResponse.json(
-      { error: 'Failed to upload file' },
+      { error: 'Unable to upload file. Please try again' },
       { status: 500 }
     );
   }
