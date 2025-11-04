@@ -8,10 +8,11 @@ import {
   Heart,
   ShoppingBag,
   Star,
-  Check,
   Mail,
   Phone,
-  Calendar,
+  X,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Controller } from 'react-hook-form';
@@ -19,6 +20,7 @@ import CustomDropdown from '@/app/(main)/components/ui/customDropdown';
 import CustomDatePicker from '@/app/(main)/components/ui/customDatePicker';
 import { useProfileForm } from '@/app/(main)/hooks/useProfileForm';
 import { useProfileData } from '@/app/(main)/hooks/useProfileData';
+import toastApi from '@/lib/toast';
 
 function AccountPageInner() {
   const searchParams = useSearchParams();
@@ -27,9 +29,21 @@ function AccountPageInner() {
   const [activeTab, setActiveTab] = useState<
     'profile' | 'preferences' | 'privacy' | 'activity' | 'stats'
   >('profile');
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
+  const [passwordMethod, setPasswordMethod] = useState<'password' | 'otp'>('password');
+  const [oldPassword, setOldPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [otp, setOtp] = useState('');
+  const [showOldPassword, setShowOldPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isRequestingOtp, setIsRequestingOtp] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState('');
 
   // Fetch profile data
-  const { profileData, email, ordersPreview, isLoading, setProfileData } =
+  const { profileData, email, hasPassword, ordersPreview,  setProfileData } =
     useProfileData();
 
   // Initialize form with profile data
@@ -62,6 +76,122 @@ function AccountPageInner() {
       setActiveTab(tab);
     }
   }, [searchParams]);
+
+  // Reset password modal state when closed and handle body scroll
+  useEffect(() => {
+    if (isChangePasswordOpen) {
+      // Disable body scroll when modal is open
+      const originalStyle = window.getComputedStyle(document.body).overflow;
+      document.body.style.overflow = 'hidden';
+      
+      // Handle ESC key
+      const handleEscape = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          setIsChangePasswordOpen(false);
+        }
+      };
+      document.addEventListener('keydown', handleEscape);
+      
+      return () => {
+        document.body.style.overflow = originalStyle;
+        document.removeEventListener('keydown', handleEscape);
+      };
+    } else {
+      // Reset form state when closed
+      setPasswordMethod('password');
+      setOldPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      setOtp('');
+      setPasswordError('');
+    }
+  }, [isChangePasswordOpen]);
+
+  // Request OTP handler
+  const handleRequestOtp = async () => {
+    try {
+      setIsRequestingOtp(true);
+      setPasswordError('');
+      const res = await fetch('/api/account/request-password-otp', {
+        method: 'POST',
+        credentials: 'include',
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to send OTP');
+      }
+      toastApi.success('OTP sent', data.message || 'Check your email for the OTP');
+      if (data.devOtp) {
+        console.log('Dev OTP:', data.devOtp);
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to send OTP';
+      setPasswordError(message);
+      toastApi.error('Failed to send OTP', message);
+    } finally {
+      setIsRequestingOtp(false);
+    }
+  };
+
+  // Change password handler
+  const handleChangePassword = async () => {
+    setPasswordError('');
+    
+    // Validation
+    if (!newPassword || newPassword.length < 6) {
+      setPasswordError('Password must be at least 6 characters long');
+      return;
+    }
+    
+    if (newPassword !== confirmPassword) {
+      setPasswordError('New passwords do not match');
+      return;
+    }
+
+    if (passwordMethod === 'password' && !oldPassword) {
+      setPasswordError('Please enter your current password');
+      return;
+    }
+
+    if (passwordMethod === 'password' && oldPassword === newPassword) {
+      setPasswordError('New password must be different from your current password');
+      return;
+    }
+
+    if (passwordMethod === 'otp' && !otp) {
+      setPasswordError('Please enter the OTP');
+      return;
+    }
+
+    try {
+      setIsChangingPassword(true);
+      const res = await fetch('/api/account/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          method: passwordMethod,
+          oldPassword: passwordMethod === 'password' ? oldPassword : undefined,
+          otp: passwordMethod === 'otp' ? otp : undefined,
+          newPassword,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to change password');
+      }
+
+      toastApi.success('Password changed', 'Your password has been updated successfully');
+      setIsChangePasswordOpen(false);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to change password';
+      setPasswordError(message);
+      toastApi.error('Failed to change password', message);
+    } finally {
+      setIsChangingPassword(false);
+    }
+  };
 
   const genderOptions = [
     { value: 'prefer_not_to_say', label: 'Prefer not to say' },
@@ -492,43 +622,26 @@ function AccountPageInner() {
                                 Security
                               </h3>
                       <div className="space-y-3">
-                        <div className="flex items-start justify-between p-3 sm:p-4 bg-gray-50 rounded-xl">
-                          <div>
-                            <h4 className="text-sm font-normal text-gray-900">
-                              Two-Factor Authentication
-                            </h4>
-                            <p className="text-xs text-gray-600">
-                              Add an extra layer of security to your account
-                            </p>
-                          </div>
-                          <Controller
-                            name="twoFactorEnabled"
-                            control={form.control}
-                            render={({ field }) => (
-                              <button
-                                type="button"
-                                onClick={() => field.onChange(!field.value)}
-                                className="px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] text-white text-xs font-normal rounded-lg hover:shadow-md transition-all"
-                              >
-                                {field.value ? 'Disable' : 'Enable'}
-                              </button>
-                            )}
-                          />
-                        </div>
+                     
 
-                        <div className="flex items-start justify-between p-3 sm:p-4 bg-gray-50 rounded-xl">
-                          <div>
-                            <h4 className="text-sm font-normal text-gray-900">
-                              Change Password
-                            </h4>
-                            <p className="text-xs text-gray-600">
-                              Update your password regularly for better security
-                            </p>
+                        {hasPassword && (
+                          <div className="flex items-start justify-between p-3 sm:p-4 bg-gray-50 rounded-xl">
+                            <div>
+                              <h4 className="text-sm font-normal text-gray-900">
+                                Change Password
+                              </h4>
+                              <p className="text-xs text-gray-600">
+                                Update your password regularly for better security
+                              </p>
+                            </div>
+                            <button
+                              onClick={() => setIsChangePasswordOpen(true)}
+                              className="px-3 sm:px-4 py-1.5 sm:py-2 border border-gray-300 text-gray-700 text-xs font-normal rounded-lg hover:bg-gray-50 transition-colors"
+                            >
+                              Change
+                            </button>
                           </div>
-                          <button className="px-3 sm:px-4 py-1.5 sm:py-2 border border-gray-300 text-gray-700 text-xs font-normal rounded-lg hover:bg-gray-50 transition-colors">
-                            Change
-                          </button>
-                        </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -677,6 +790,227 @@ function AccountPageInner() {
         </div>
 
       </div>
+
+      {/* Change Password Modal */}
+      {isChangePasswordOpen && (
+        <>
+          {/* Overlay */}
+          <div
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity z-40"
+            onClick={() => setIsChangePasswordOpen(false)}
+          />
+
+          {/* Modal Container - bottom on mobile, centered on desktop */}
+          <div className="fixed inset-0 flex items-end sm:items-center justify-center p-2 sm:p-4 pointer-events-none z-50">
+            <div
+              className="relative w-full max-w-md bg-white rounded-2xl sm:rounded-lg shadow-xl max-h-[90vh] overflow-y-auto transform transition-all duration-300 ease-out pointer-events-auto border-t sm:border border-gray-200"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-white z-10">
+                <h2 className="text-base sm:text-lg font-medium text-gray-900">
+                  Change Password
+                </h2>
+                <button
+                  onClick={() => setIsChangePasswordOpen(false)}
+                  className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                  aria-label="Close"
+                >
+                  <X className="w-5 h-5 text-gray-500" />
+                </button>
+              </div>
+
+              {/* Content */}
+              <div className="p-4 sm:p-6 space-y-4">
+                {/* Method Selection */}
+                <div className="flex gap-2 border-b border-gray-200 pb-3">
+                  <button
+                    onClick={() => {
+                      setPasswordMethod('password');
+                      setPasswordError('');
+                    }}
+                    className={`flex-1 px-3 py-2 text-xs sm:text-sm rounded-lg transition-colors ${
+                      passwordMethod === 'password'
+                        ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)]/10 to-[oklch(0.58_0.16_8)]/10 text-[oklch(0.66_0.14_358.91)] font-medium'
+                        : 'text-gray-600 hover:bg-gray-50'
+                    }`}
+                  >
+                    Current Password
+                  </button>
+                  <button
+                    onClick={() => {
+                      setPasswordMethod('otp');
+                      setPasswordError('');
+                      if (!otp) {
+                        handleRequestOtp();
+                      }
+                    }}
+                    className={`flex-1 px-3 py-2 text-xs sm:text-sm rounded-lg transition-colors ${
+                      passwordMethod === 'otp'
+                        ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)]/10 to-[oklch(0.58_0.16_8)]/10 text-[oklch(0.66_0.14_358.91)] font-medium'
+                        : 'text-gray-600 hover:bg-gray-50'
+                    }`}
+                  >
+                    OTP
+                  </button>
+                </div>
+
+                {/* Error Message */}
+                {passwordError && (
+                  <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                    <p className="text-xs text-red-600">{passwordError}</p>
+                  </div>
+                )}
+
+                {/* Old Password or OTP */}
+                {passwordMethod === 'password' ? (
+                  <div className="space-y-2">
+                    <label className="block text-xs font-medium text-gray-700">
+                      Current Password
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showOldPassword ? 'text' : 'password'}
+                        value={oldPassword}
+                        onChange={(e) => {
+                          setOldPassword(e.target.value);
+                          setPasswordError('');
+                        }}
+                        className="w-full rounded-xl border border-[oklch(0.84_0.04_10.35)]/40 bg-white px-4 py-2 sm:py-3 text-sm focus:border-[oklch(0.66_0.14_358.91)] focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/20 focus:outline-none transition-colors pr-10"
+                        placeholder="Enter current password"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowOldPassword(!showOldPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      >
+                        {showOldPassword ? (
+                          <EyeOff className="w-4 h-4" />
+                        ) : (
+                          <Eye className="w-4 h-4" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="block text-xs font-medium text-gray-700">
+                        Enter OTP
+                      </label>
+                      <button
+                        onClick={handleRequestOtp}
+                        disabled={isRequestingOtp}
+                        className="text-xs text-[oklch(0.66_0.14_358.91)] hover:underline disabled:opacity-50"
+                      >
+                        {isRequestingOtp ? 'Sending...' : 'Resend OTP'}
+                      </button>
+                    </div>
+                    <input
+                      type="text"
+                      value={otp}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/\D/g, '').slice(0, 6);
+                        setOtp(value);
+                        setPasswordError('');
+                      }}
+                      className="w-full rounded-xl border border-[oklch(0.84_0.04_10.35)]/40 bg-white px-4 py-2 sm:py-3 focus:border-[oklch(0.66_0.14_358.91)] focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/20 focus:outline-none transition-colors text-center text-lg tracking-widest"
+                      placeholder="000000"
+                      maxLength={6}
+                      inputMode="numeric"
+                    />
+                  </div>
+                )}
+
+                {/* New Password */}
+                <div className="space-y-2">
+                  <label className="block text-xs font-medium text-gray-700">
+                    New Password
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showNewPassword ? 'text' : 'password'}
+                      value={newPassword}
+                      onChange={(e) => {
+                        setNewPassword(e.target.value);
+                        setPasswordError('');
+                      }}
+                      className="w-full rounded-xl border border-[oklch(0.84_0.04_10.35)]/40 bg-white px-4 py-2 sm:py-3 text-sm focus:border-[oklch(0.66_0.14_358.91)] focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/20 focus:outline-none transition-colors pr-10"
+                      placeholder="Enter new password (min 6 characters)"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      {showNewPassword ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Confirm Password */}
+                <div className="space-y-2">
+                  <label className="block text-xs font-medium text-gray-700">
+                    Confirm New Password
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      value={confirmPassword}
+                      onChange={(e) => {
+                        setConfirmPassword(e.target.value);
+                        setPasswordError('');
+                      }}
+                      className="w-full rounded-xl border border-[oklch(0.84_0.04_10.35)]/40 bg-white px-4 py-2 sm:py-3 text-sm focus:border-[oklch(0.66_0.14_358.91)] focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/20 focus:outline-none transition-colors pr-10"
+                      placeholder="Confirm new password"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      {showConfirmPassword ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="p-4 border-t bg-gray-50 flex flex-col-reverse sm:flex-row gap-3 sm:justify-end">
+                <button
+                  onClick={() => setIsChangePasswordOpen(false)}
+                  disabled={isChangingPassword}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 text-xs sm:text-sm font-normal rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleChangePassword}
+                  disabled={isChangingPassword}
+                  className="px-4 py-2 bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] text-white text-xs sm:text-sm font-normal rounded-lg hover:shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isChangingPassword ? (
+                    <span className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Changing...
+                    </span>
+                  ) : (
+                    'Change Password'
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </main>
   );
 }

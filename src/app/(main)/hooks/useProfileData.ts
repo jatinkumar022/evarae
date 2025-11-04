@@ -12,6 +12,7 @@ interface ApiOrder {
 export function useProfileData() {
   const [profileData, setProfileData] = useState<Partial<ProfileFormData>>({});
   const [email, setEmail] = useState('');
+  const [hasPassword, setHasPassword] = useState(true);
   const [ordersPreview, setOrdersPreview] = useState<ApiOrder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -26,6 +27,7 @@ export function useProfileData() {
         
         if (u) {
           setEmail(u.email || '');
+          setHasPassword(u.hasPassword ?? true);
           const p = u.profile || {};
           
           const profile: Partial<ProfileFormData> = {
@@ -78,6 +80,7 @@ export function useProfileData() {
   return {
     profileData,
     email,
+    hasPassword,
     ordersPreview,
     isLoading,
     setProfileData, // Allow manual updates after save

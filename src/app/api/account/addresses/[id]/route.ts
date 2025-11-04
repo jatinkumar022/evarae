@@ -107,8 +107,6 @@ export async function PUT(
     return NextResponse.json({ ok: true, addresses: profile?.addresses || [] });
   } catch (error) {
     console.error('[addresses PUT] Error:', error);
-    const errorMessage =
-      error instanceof Error ? error.message : 'Unable to update address';
     
     if (error instanceof Error) {
       if (error.message.includes('Cast to ObjectId failed') || error.message.includes('Invalid')) {
@@ -169,8 +167,6 @@ export async function PATCH(
     return NextResponse.json({ ok: true, addresses: profile?.addresses || [] });
   } catch (error) {
     console.error('[addresses PATCH] Error:', error);
-    const errorMessage =
-      error instanceof Error ? error.message : 'Unable to set default address';
     
     if (error instanceof Error) {
       if (error.message.includes('Cast to ObjectId failed') || error.message.includes('Invalid')) {
@@ -224,8 +220,6 @@ export async function DELETE(
     return NextResponse.json({ ok: true, addresses: profile?.addresses || [] });
   } catch (error) {
     console.error('[addresses DELETE] Error:', error);
-    const errorMessage =
-      error instanceof Error ? error.message : 'Unable to delete address';
     
     if (error instanceof Error) {
       if (error.message.includes('Cast to ObjectId failed') || error.message.includes('Invalid')) {

@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { connect } from '@/dbConfig/dbConfig';
 import User from '@/models/userModel';
+import UserProfile from '@/models/userProfile';
 import PendingSignup from '@/models/pendingSignupModel';
 
 const USER_JWT_SECRET = process.env.USER_JWT_SECRET as string;
@@ -70,6 +71,14 @@ export async function POST(request: Request) {
       user.passwordHash = await bcrypt.hash(password, 10);
       await user.save();
 
+      // Save phone number to UserProfile
+      const normalizedPhone = phone.replace(/\D/g, '').slice(0, 10);
+      await UserProfile.findOneAndUpdate(
+        { user: user._id },
+        { $set: { user: user._id, phone: normalizedPhone } },
+        { new: true, upsert: true }
+      );
+
       return NextResponse.json({ ok: true });
     }
 
@@ -96,9 +105,15 @@ export async function POST(request: Request) {
       const user = await User.create({
         name,
         email,
-        phone,
         isVerified: true,
         passwordHash: await bcrypt.hash(password, 10),
+      });
+
+      // Save phone number to UserProfile
+      const normalizedPhone = phone.replace(/\D/g, '').slice(0, 10);
+      await UserProfile.create({
+        user: user._id,
+        phone: normalizedPhone,
       });
 
       // Remove pending signup

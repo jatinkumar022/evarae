@@ -6,7 +6,7 @@ import UserProfile from '@/models/userProfile';
 
 const USER_JWT_SECRET = process.env.USER_JWT_SECRET as string;
 
-type BasicUser = { _id: unknown; name: string; email: string };
+type BasicUser = { _id: unknown; name: string; email: string; passwordHash?: string | null };
 
 export async function GET(request: Request) {
   try {
@@ -43,8 +43,8 @@ export async function GET(request: Request) {
     }
 
     const userDoc = await User.findById(payload.uid)
-      .select({ name: 1, email: 1 })
-      .lean<BasicUser | null>();
+      .select({ name: 1, email: 1, passwordHash: 1 })
+      .lean<BasicUser & { passwordHash?: string | null } | null>();
     
     if (!userDoc) {
       console.error('[account/me] User not found:', payload.uid);
@@ -58,6 +58,7 @@ export async function GET(request: Request) {
         id: payload.uid,
         name: userDoc.name,
         email: userDoc.email,
+        hasPassword: !!userDoc.passwordHash, // Indicate if user has password (not Google sign-in)
         profile: profile || null,
       },
     });

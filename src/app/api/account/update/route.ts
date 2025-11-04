@@ -168,8 +168,6 @@ export async function POST(request: Request) {
       }
     }
     
-    const errorMessage =
-      error instanceof Error ? error.message : 'Unable to save changes';
     return NextResponse.json(
       { error: 'Unable to save your changes. Please try again later' },
       { status: 500 }
