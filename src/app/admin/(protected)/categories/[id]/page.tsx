@@ -14,9 +14,6 @@ import {
 } from 'lucide-react';
 import { useCategoryStore } from '@/lib/data/store/categoryStore';
 import { useProductStore } from '@/lib/data/store/productStore';
-import { setDummyCategoriesInStore, setDummyProductsInStore } from '@/lib/data/dummyDataHelper';
-import { dummyCategories } from '@/lib/data/dummyCategories';
-import { dummyProducts } from '@/lib/data/dummyProducts';
 import Modal from '@/app/admin/components/Modal';
 
 export default function CategoryViewPage() {
@@ -26,39 +23,26 @@ export default function CategoryViewPage() {
 
   const {
     currentCategory,
-    // status,
+    status,
     error,
-    // fetchCategory,
+    fetchCategory,
     deleteCategory,
     clearError,
   } = useCategoryStore();
   const {
     productsByCategory,
-    // fetchProductsByCategory,
+    fetchProductsByCategory,
   } = useProductStore();
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   useEffect(() => {
-    // Load dummy data and find the category
+    // Fetch category and products from API
     if (id && typeof id === 'string') {
-      setDummyCategoriesInStore();
-      setDummyProductsInStore();
-      
-      const category = dummyCategories.find((c) => c._id === id);
-      if (category) {
-        useCategoryStore.setState({ currentCategory: category, status: 'success', error: null });
-      } else {
-        useCategoryStore.setState({ currentCategory: null, status: 'error', error: 'Category not found' });
-      }
-      
-      // Find products in this category
-      const categoryProducts = dummyProducts.filter((p) => 
-        p.categories.some((cat) => cat._id === id)
-      );
-      useProductStore.setState({ productsByCategory: { [id]: categoryProducts } });
+      fetchCategory(id);
+      fetchProductsByCategory(id);
     }
-  }, [id]);
+  }, [id, fetchCategory, fetchProductsByCategory]);
 
   const products = productsByCategory[id as string] || [];
 
@@ -88,7 +72,7 @@ export default function CategoryViewPage() {
           <h3 className="text-lg font-medium text-gray-900 dark:text-white">
             Category not found
           </h3>
-          <p className="mt-1 text-sm text-gray-500 dark:text-[#696969]">
+          <p className="mt-1 text-sm text-gray-500 dark:text-[#bdbdbd]">
             The category you&apos;re looking for doesn&apos;t exist.
           </p>
           <Link
@@ -205,8 +189,8 @@ export default function CategoryViewPage() {
                     </div>
                   ) : (
                     <div className="text-center py-8">
-                      <Layers className="mx-auto h-12 w-12 text-gray-400 dark:text-[#696969]" />
-                      <p className="mt-2 text-sm text-gray-500 dark:text-[#696969]">
+                      <Layers className="mx-auto h-12 w-12 text-gray-400 dark:text-[#bdbdbd]" />
+                      <p className="mt-2 text-sm text-gray-500 dark:text-[#bdbdbd]">
                         No image available
                       </p>
                     </div>
@@ -253,7 +237,7 @@ export default function CategoryViewPage() {
                             />
                           ) : (
                             <div className="h-full w-full flex items-center justify-center">
-                              <Package className="h-8 w-8 text-gray-400 dark:text-[#696969]" />
+                              <Package className="h-8 w-8 text-gray-400 dark:text-[#bdbdbd]" />
                             </div>
                           )}
                         </div>
@@ -261,8 +245,8 @@ export default function CategoryViewPage() {
                     </div>
                   ) : (
                     <div className="text-center py-8">
-                      <Package className="mx-auto h-12 w-12 text-gray-400 dark:text-[#696969]" />
-                      <p className="mt-2 text-sm text-gray-500 dark:text-[#696969]">
+                      <Package className="mx-auto h-12 w-12 text-gray-400 dark:text-[#bdbdbd]" />
+                      <p className="mt-2 text-sm text-gray-500 dark:text-[#bdbdbd]">
                         No products in this category
                       </p>
                     </div>
@@ -284,7 +268,7 @@ export default function CategoryViewPage() {
                   <div className="p-6">
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-gray-500 dark:text-[#696969]">
+                        <span className="text-sm font-medium text-gray-500 dark:text-[#bdbdbd]">
                           Status
                         </span>
                         <span
@@ -298,7 +282,7 @@ export default function CategoryViewPage() {
                         </span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-gray-500 dark:text-[#696969]">
+                        <span className="text-sm font-medium text-gray-500 dark:text-[#bdbdbd]">
                           Products Count
                         </span>
                         <span className="text-sm text-gray-900 dark:text-white">
@@ -319,7 +303,7 @@ export default function CategoryViewPage() {
                   <div className="p-6">
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-gray-500 dark:text-[#696969]">
+                        <span className="text-sm font-medium text-gray-500 dark:text-[#bdbdbd]">
                           Category ID
                         </span>
                         <span className="md:text-sm text-gray-900 dark:text-white font-mono text-xs">
@@ -327,7 +311,7 @@ export default function CategoryViewPage() {
                         </span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-gray-500 dark:text-[#696969]">
+                        <span className="text-sm font-medium text-gray-500 dark:text-[#bdbdbd]">
                           Slug
                         </span>
                         <span className="text-sm text-gray-900 dark:text-white font-mono">
@@ -335,7 +319,7 @@ export default function CategoryViewPage() {
                         </span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-gray-500 dark:text-[#696969]">
+                        <span className="text-sm font-medium text-gray-500 dark:text-[#bdbdbd]">
                           Sort Order
                         </span>
                         <span className="text-sm text-gray-900 dark:text-white">
@@ -343,7 +327,7 @@ export default function CategoryViewPage() {
                         </span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-gray-500 dark:text-[#696969]">
+                        <span className="text-sm font-medium text-gray-500 dark:text-[#bdbdbd]">
                           Created
                         </span>
                         <span className="text-sm text-gray-900 dark:text-white">
@@ -351,7 +335,7 @@ export default function CategoryViewPage() {
                         </span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-gray-500 dark:text-[#696969]">
+                        <span className="text-sm font-medium text-gray-500 dark:text-[#bdbdbd]">
                           Updated
                         </span>
                         <span className="text-sm text-gray-900 dark:text-white">

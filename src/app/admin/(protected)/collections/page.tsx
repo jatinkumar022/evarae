@@ -15,14 +15,13 @@ import {
 import { useCollectionStore } from '@/lib/data/store/collectionStore';
 import { Collection } from '@/lib/data/store/collectionStore';
 import Modal from '@/app/admin/components/Modal';
-import { setDummyCollectionsInStore } from '@/lib/data/dummyDataHelper';
 
 export default function CollectionsPage() {
   const {
     collections,
-    // status,  
+    status,
     error,
-    // fetchCollections,
+    fetchCollections,
     deleteCollection,
     updateCollection,
     clearError,
@@ -37,16 +36,17 @@ export default function CollectionsPage() {
   const itemsPerPage = 9;
 
   useEffect(() => {
-    // Load dummy collections instead of API call
-    setDummyCollectionsInStore();
-  }, []); // run once
+    // Fetch collections from API
+    fetchCollections();
+  }, [fetchCollections]);
 
   const handleToggleStatus = async (id: string) => {
     try {
       const collection = collections.find(col => col._id === id);
       if (collection) {
-        // ⚠️ Requires backend to allow partial updates
         await updateCollection(id, { isActive: !collection.isActive });
+        // Refresh collections after update
+        fetchCollections();
       }
     } catch (error) {
       console.error('Failed to toggle status:', error);
@@ -64,6 +64,8 @@ export default function CollectionsPage() {
         await deleteCollection(collectionToDelete._id);
         setIsDeleteModalOpen(false);
         setCollectionToDelete(null);
+        // Refresh collections after deletion
+        fetchCollections();
       } catch (error) {
         console.error('Failed to delete collection:', error);
       }
@@ -95,17 +97,17 @@ export default function CollectionsPage() {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
             Collections
           </h1>
-          <p className="text-gray-600 dark:text-[#696969]">
+          <p className="text-gray-600 dark:text-[#bdbdbd]">
             Manage your jewellery collections with style
           </p>
           <div className="flex flex-wrap items-center gap-4 mt-2">
-            <span className="text-sm text-gray-600 dark:text-[#696969]">
+            <span className="text-sm text-gray-600 dark:text-[#bdbdbd]">
               Active: <span className="font-medium text-green-600 dark:text-green-400">{collections.filter(c => c.isActive).length}</span>
             </span>
-            <span className="text-sm text-gray-600 dark:text-[#696969]">
-              Inactive: <span className="font-medium text-gray-500 dark:text-[#696969]">{collections.filter(c => !c.isActive).length}</span>
+            <span className="text-sm text-gray-600 dark:text-[#bdbdbd]">
+              Inactive: <span className="font-medium text-gray-500 dark:text-[#bdbdbd]">{collections.filter(c => !c.isActive).length}</span>
             </span>
-            <span className="text-sm text-gray-600 dark:text-[#696969]">
+            <span className="text-sm text-gray-600 dark:text-[#bdbdbd]">
               Products: <span className="font-medium">{collections.reduce((acc, c) => acc + (c.products?.length || 0), 0)}</span>
             </span>
           </div>
@@ -160,25 +162,28 @@ export default function CollectionsPage() {
               Search
             </label>
             <div className="mt-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-[#696969]" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-[#bdbdbd]" />
               <input
                 type="text"
                 placeholder="Search collections..."
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
-                className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-[#525252] rounded-md sm:text-sm bg-white dark:bg-[#242424] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#696969] focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-600 dark:focus:border-primary-600"
+                className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-[#525252] rounded-md sm:text-sm bg-white dark:bg-[#242424] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#bdbdbd] focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-600 dark:focus:border-primary-600"
               />
             </div>
           </div>
         </div>
       </div>
 
-      {/* Global loader will handle loading state */}
-
       {/* Collections Grid */}
       <div className="bg-white dark:bg-[#191919] shadow rounded-lg border border-gray-200 dark:border-[#525252]">
         <div className="px-4 py-5 sm:p-6">
-          {paginatedCollections.length > 0 ? (
+          {status === 'loading' ? (
+            <div className="text-center py-12">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
+              <p className="mt-2 text-sm text-gray-500 dark:text-[#bdbdbd]">Loading collections...</p>
+            </div>
+          ) : paginatedCollections.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
               {paginatedCollections.map(collection => {
                 const isDropdownOpen = activeDropdown === collection._id;
@@ -271,7 +276,7 @@ export default function CollectionsPage() {
                         />
                       ) : (
                         <div className="h-full w-full flex items-center justify-center">
-                          <Layers className="h-12 w-12 text-gray-400 dark:text-[#696969]" />
+                          <Layers className="h-12 w-12 text-gray-400 dark:text-[#bdbdbd]" />
                         </div>
                       )}
                     </div>
@@ -281,10 +286,10 @@ export default function CollectionsPage() {
                       <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-1 truncate">
                         {collection.name}
                       </h3>
-                      <p className="text-sm text-gray-500 dark:text-[#696969] line-clamp-2 mb-2">
+                      <p className="text-sm text-gray-500 dark:text-[#bdbdbd] line-clamp-2 mb-2">
                         {collection.description || 'No description available'}
                       </p>
-                      <div className="flex items-center text-sm text-gray-500 dark:text-[#696969]">
+                      <div className="flex items-center text-sm text-gray-500 dark:text-[#bdbdbd]">
                         <Package className="h-4 w-4 mr-1" />
                         <span>{collection.products?.length || 0} products</span>
                       </div>
@@ -295,11 +300,11 @@ export default function CollectionsPage() {
             </div>
           ) : (
             <div className="text-center py-12">
-              <Layers className="mx-auto h-12 w-12 text-gray-400 dark:text-[#696969]" />
+              <Layers className="mx-auto h-12 w-12 text-gray-400 dark:text-[#bdbdbd]" />
               <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">
                 {searchTerm ? 'No collections found' : 'No collections yet'}
               </h3>
-              <p className="mt-1 text-sm text-gray-500 dark:text-[#696969]">
+              <p className="mt-1 text-sm text-gray-500 dark:text-[#bdbdbd]">
                 {searchTerm
                   ? 'Try adjusting your search criteria.'
                   : 'Get started by creating your first collection.'}

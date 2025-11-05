@@ -33,7 +33,7 @@ function SearchBar() {
           placeholder="Search..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="h-11 w-full rounded-lg bg-gray-50 dark:bg-[#141414] py-2.5 pl-12 pr-4 text-sm text-gray-800 dark:text-white placeholder:text-gray-400 dark:placeholder:text-[#696969] focus:outline-none focus:ring-2 focus:ring-primary-500/10 dark:focus:ring-primary-600/20 xl:w-[430px]"
+          className="h-11 w-full rounded-lg bg-gray-50 dark:bg-[#141414] py-2.5 pl-12 pr-4 text-sm text-gray-800 dark:text-white placeholder:text-gray-400 dark:placeholder:text-[#bdbdbd] focus:outline-none focus:ring-2 focus:ring-primary-500/10 dark:focus:ring-primary-600/20 xl:w-[430px]"
         />
       </div>
     </form>
@@ -347,8 +347,8 @@ export default function AppHeader() {
                     <div className="max-h-96 overflow-y-auto">
                       {notifications.length === 0 ? (
                         <div className="p-8 text-center">
-                          <Bell className="w-12 h-12 mx-auto text-gray-400 dark:text-[#696969] mb-3" />
-                          <p className="text-sm text-gray-500 dark:text-[#696969]">No notifications</p>
+                          <Bell className="w-12 h-12 mx-auto text-gray-400 dark:text-[#bdbdbd] mb-3" />
+                          <p className="text-sm text-gray-500 dark:text-[#bdbdbd]">No notifications</p>
                         </div>
                       ) : (
                         <div className="py-2">
@@ -382,10 +382,10 @@ export default function AppHeader() {
                                           <span className="flex-shrink-0 w-2 h-2 rounded-full bg-primary-500 mt-1.5" />
                                         )}
                                       </div>
-                                      <p className="mt-1 text-xs text-gray-600 dark:text-[#696969] line-clamp-2">
+                                      <p className="mt-1 text-xs text-gray-600 dark:text-[#bdbdbd] line-clamp-2">
                                         {notification.message}
                                       </p>
-                                      <p className="mt-1.5 text-xs text-gray-500 dark:text-[#696969]">
+                                      <p className="mt-1.5 text-xs text-gray-500 dark:text-[#bdbdbd]">
                                         {notification.time}
                                       </p>
                                     </div>
@@ -409,10 +409,10 @@ export default function AppHeader() {
                                           <span className="flex-shrink-0 w-2 h-2 rounded-full bg-primary-500 mt-1.5" />
                                         )}
                                       </div>
-                                      <p className="mt-1 text-xs text-gray-600 dark:text-[#696969] line-clamp-2">
+                                      <p className="mt-1 text-xs text-gray-600 dark:text-[#bdbdbd] line-clamp-2">
                                         {notification.message}
                                       </p>
-                                      <p className="mt-1.5 text-xs text-gray-500 dark:text-[#696969]">
+                                      <p className="mt-1.5 text-xs text-gray-500 dark:text-[#bdbdbd]">
                                         {notification.time}
                                       </p>
                                     </div>

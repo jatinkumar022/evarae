@@ -114,7 +114,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
             rounded-md 
             text-sm 
             text-gray-900 dark:text-white 
-            placeholder-gray-400 dark:placeholder-[#696969]
+            placeholder-gray-400 dark:placeholder-[#bdbdbd]
             focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 focus:border-primary-500 dark:focus:border-primary-400
             disabled:opacity-50 disabled:cursor-not-allowed
             flex items-center justify-between
@@ -122,7 +122,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
             ${isOpen ? "ring-2 ring-primary-500 dark:ring-primary-400 border-primary-500 dark:border-primary-400" : ""}
           `}
         >
-          <span className={selectedOption ? "" : "text-gray-400 dark:text-[#696969]"}>
+          <span className={selectedOption ? "" : "text-gray-400 dark:text-[#bdbdbd]"}>
             {selectedOption ? selectedOption.label : placeholder}
           </span>
           <ChevronDown

@@ -18,8 +18,6 @@ import {
 import Link from 'next/link';
 import Image from 'next/image';
 import { useOrderStore, Order } from '@/lib/data/store/orderStore';
-import { setDummyOrdersInStore } from '@/lib/data/dummyDataHelper';
-import { dummyOrders } from '@/lib/data/dummyOrders';
 import { CustomSelect } from '@/app/admin/components/CustomSelect';
 
 export default function OrderDetailPage() {
@@ -28,11 +26,11 @@ export default function OrderDetailPage() {
 
   const {
     currentOrder,
-    // fetchOrder,
+    fetchOrder,
     updateOrderStatus,
     updatePaymentStatus,
     updateTracking,
-    // status,
+    status,
     error,
     clearError,
   } = useOrderStore();
@@ -51,27 +49,26 @@ export default function OrderDetailPage() {
     courierName: string;
   } | null>(null);
 
+  // Fetch order from API
+  useEffect(() => {
+    if (orderId) {
+      fetchOrder(orderId);
+    }
+  }, [orderId, fetchOrder]);
+
   // Initialize form values when order loads
   useEffect(() => {
-    // Load dummy data and find the order
-    if (orderId) {
-      setDummyOrdersInStore();
-      const order = dummyOrders.find((o) => o._id === orderId);
-      if (order) {
-        useOrderStore.setState({ currentOrder: order, status: 'success', error: null });
-        const initialValues = {
-          orderStatus: order.orderStatus,
-          paymentStatus: order.paymentStatus,
-          trackingNumber: order.trackingNumber || '',
-          courierName: order.courierName || '',
-        };
-        setFormValues(initialValues);
-        setOriginalValues(initialValues);
-      } else {
-        useOrderStore.setState({ currentOrder: null, status: 'error', error: 'Order not found' });
-      }
+    if (currentOrder) {
+      const initialValues = {
+        orderStatus: currentOrder.orderStatus,
+        paymentStatus: currentOrder.paymentStatus,
+        trackingNumber: currentOrder.trackingNumber || '',
+        courierName: currentOrder.courierName || '',
+      };
+      setFormValues(initialValues);
+      setOriginalValues(initialValues);
     }
-  }, [orderId]);
+  }, [currentOrder]);
 
   // Check if form is dirty
   const isDirty = formValues && originalValues && (
@@ -215,7 +212,7 @@ export default function OrderDetailPage() {
           <h3 className="text-lg font-medium text-gray-900 dark:text-white">
             Order not found
           </h3>
-          <p className="mt-1 text-sm text-gray-500 dark:text-[#696969]">
+          <p className="mt-1 text-sm text-gray-500 dark:text-[#bdbdbd]">
             The order you&apos;re looking for doesn&apos;t exist.
           </p>
           <Link
@@ -346,13 +343,13 @@ export default function OrderDetailPage() {
                       <h4 className="text-sm font-semibold text-gray-900 dark:text-white">
                         {item.name}
                       </h4>
-                      <div className="mt-1 text-xs text-gray-500 dark:text-[#696969] space-y-1">
+                      <div className="mt-1 text-xs text-gray-500 dark:text-[#bdbdbd] space-y-1">
                         <p>SKU: {item.sku}</p>
                         {item.selectedColor && <p>Color: {item.selectedColor}</p>}
                         {item.selectedSize && <p>Size: {item.selectedSize}</p>}
                       </div>
                       <div className="mt-2 flex items-center justify-between">
-                        <span className="text-sm text-gray-500 dark:text-[#696969]">
+                        <span className="text-sm text-gray-500 dark:text-[#bdbdbd]">
                           Quantity: {item.quantity}
                         </span>
                         <span className="text-sm font-semibold text-gray-900 dark:text-white">
@@ -379,19 +376,19 @@ export default function OrderDetailPage() {
               <div className="p-6">
                 <dl className="space-y-4">
                   <div>
-                    <dt className="text-sm font-medium text-gray-500 dark:text-[#696969]">Full Name</dt>
+                    <dt className="text-sm font-medium text-gray-500 dark:text-[#bdbdbd]">Full Name</dt>
                     <dd className="mt-1 text-sm text-gray-900 dark:text-white">
                       {currentOrder.shippingAddress.fullName}
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-sm font-medium text-gray-500 dark:text-[#696969]">Phone</dt>
+                    <dt className="text-sm font-medium text-gray-500 dark:text-[#bdbdbd]">Phone</dt>
                     <dd className="mt-1 text-sm text-gray-900 dark:text-white">
                       {currentOrder.shippingAddress.phone}
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-sm font-medium text-gray-500 dark:text-[#696969]">Address</dt>
+                    <dt className="text-sm font-medium text-gray-500 dark:text-[#bdbdbd]">Address</dt>
                     <dd className="mt-1 text-sm text-gray-900 dark:text-white">
                       {currentOrder.shippingAddress.line1}
                       {currentOrder.shippingAddress.line2 && (
@@ -469,14 +466,14 @@ export default function OrderDetailPage() {
                 </div>
                 <dl className="space-y-2">
                   <div className="flex justify-between">
-                    <dt className="text-sm text-gray-500 dark:text-[#696969]">Payment Method</dt>
+                    <dt className="text-sm text-gray-500 dark:text-[#bdbdbd]">Payment Method</dt>
                     <dd className="text-sm font-medium text-gray-900 dark:text-white">
                       {currentOrder.paymentMethod.toUpperCase()}
                     </dd>
                   </div>
                   {currentOrder.paymentProviderOrderId && (
                     <div className="flex justify-between">
-                      <dt className="text-sm text-gray-500 dark:text-[#696969]">Order ID</dt>
+                      <dt className="text-sm text-gray-500 dark:text-[#bdbdbd]">Order ID</dt>
                       <dd className="text-sm font-mono text-gray-900 dark:text-white">
                         {currentOrder.paymentProviderOrderId}
                       </dd>
@@ -484,7 +481,7 @@ export default function OrderDetailPage() {
                   )}
                   {currentOrder.paymentProviderPaymentId && (
                     <div className="flex justify-between">
-                      <dt className="text-sm text-gray-500 dark:text-[#696969]">Payment ID</dt>
+                      <dt className="text-sm text-gray-500 dark:text-[#bdbdbd]">Payment ID</dt>
                       <dd className="text-sm font-mono text-gray-900 dark:text-white">
                         {currentOrder.paymentProviderPaymentId}
                       </dd>
@@ -492,7 +489,7 @@ export default function OrderDetailPage() {
                   )}
                   {currentOrder.paidAt && (
                     <div className="flex justify-between">
-                      <dt className="text-sm text-gray-500 dark:text-[#696969]">Paid At</dt>
+                      <dt className="text-sm text-gray-500 dark:text-[#bdbdbd]">Paid At</dt>
                       <dd className="text-sm text-gray-900 dark:text-white">
                         {formatDate(currentOrder.paidAt)}
                       </dd>
@@ -539,7 +536,7 @@ export default function OrderDetailPage() {
                     value={formValues?.trackingNumber || currentOrder.trackingNumber || ''}
                     onChange={(e) => handleTrackingNumberChange(e.target.value)}
                     placeholder="Enter tracking number"
-                    className="block w-full px-3 py-2 border border-gray-300 dark:border-[#525252] rounded-md shadow-sm bg-white dark:bg-[#242424] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#696969] focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-600 dark:focus:border-primary-600 sm:text-sm"
+                    className="block w-full px-3 py-2 border border-gray-300 dark:border-[#525252] rounded-md shadow-sm bg-white dark:bg-[#242424] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#bdbdbd] focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-600 dark:focus:border-primary-600 sm:text-sm"
                     disabled={isUpdating}
                   />
                 </div>
@@ -552,7 +549,7 @@ export default function OrderDetailPage() {
                     value={formValues?.courierName || currentOrder.courierName || ''}
                     onChange={(e) => handleCourierNameChange(e.target.value)}
                     placeholder="Enter courier name"
-                    className="block w-full px-3 py-2 border border-gray-300 dark:border-[#525252] rounded-md shadow-sm bg-white dark:bg-[#242424] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#696969] focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-600 dark:focus:border-primary-600 sm:text-sm"
+                    className="block w-full px-3 py-2 border border-gray-300 dark:border-[#525252] rounded-md shadow-sm bg-white dark:bg-[#242424] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#bdbdbd] focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-600 dark:focus:border-primary-600 sm:text-sm"
                     disabled={isUpdating}
                   />
                 </div>
@@ -570,21 +567,21 @@ export default function OrderDetailPage() {
             <div className="p-6">
               <dl className="space-y-3">
                 <div className="flex justify-between">
-                  <dt className="text-sm text-gray-500 dark:text-[#696969]">Subtotal</dt>
+                  <dt className="text-sm text-gray-500 dark:text-[#bdbdbd]">Subtotal</dt>
                   <dd className="text-sm font-medium text-gray-900 dark:text-white">
                     {formatCurrency(currentOrder.subtotalAmount)}
                   </dd>
                 </div>
                 {currentOrder.taxAmount > 0 && (
                   <div className="flex justify-between">
-                    <dt className="text-sm text-gray-500 dark:text-[#696969]">Tax</dt>
+                    <dt className="text-sm text-gray-500 dark:text-[#bdbdbd]">Tax</dt>
                     <dd className="text-sm font-medium text-gray-900 dark:text-white">
                       {formatCurrency(currentOrder.taxAmount)}
                     </dd>
                   </div>
                 )}
                 <div className="flex justify-between">
-                  <dt className="text-sm text-gray-500 dark:text-[#696969]">Shipping</dt>
+                  <dt className="text-sm text-gray-500 dark:text-[#bdbdbd]">Shipping</dt>
                   <dd className="text-sm font-medium text-gray-900 dark:text-white">
                     {formatCurrency(currentOrder.shippingAmount)}
                   </dd>
@@ -599,7 +596,7 @@ export default function OrderDetailPage() {
                 )}
                 {currentOrder.paymentChargesAmount > 0 && (
                   <div className="flex justify-between">
-                    <dt className="text-sm text-gray-500 dark:text-[#696969]">Payment Charges</dt>
+                    <dt className="text-sm text-gray-500 dark:text-[#bdbdbd]">Payment Charges</dt>
                     <dd className="text-sm font-medium text-gray-900 dark:text-white">
                       {formatCurrency(currentOrder.paymentChargesAmount)}
                     </dd>
@@ -607,7 +604,7 @@ export default function OrderDetailPage() {
                 )}
                 {currentOrder.couponCode && (
                   <div className="flex justify-between">
-                    <dt className="text-sm text-gray-500 dark:text-[#696969]">Coupon Code</dt>
+                    <dt className="text-sm text-gray-500 dark:text-[#bdbdbd]">Coupon Code</dt>
                     <dd className="text-sm font-medium text-gray-900 dark:text-white">
                       {currentOrder.couponCode}
                     </dd>
@@ -635,7 +632,7 @@ export default function OrderDetailPage() {
                 <dl className="space-y-4">
                   {currentOrder.isGift && (
                     <div>
-                      <dt className="text-sm font-medium text-gray-500 dark:text-[#696969]">Gift Order</dt>
+                      <dt className="text-sm font-medium text-gray-500 dark:text-[#bdbdbd]">Gift Order</dt>
                       <dd className="mt-1 text-sm text-gray-900 dark:text-white">
                         This is a gift order
                       </dd>
@@ -643,7 +640,7 @@ export default function OrderDetailPage() {
                   )}
                   {currentOrder.notes && (
                     <div>
-                      <dt className="text-sm font-medium text-gray-500 dark:text-[#696969]">Notes</dt>
+                      <dt className="text-sm font-medium text-gray-500 dark:text-[#bdbdbd]">Notes</dt>
                       <dd className="mt-1 text-sm text-gray-900 dark:text-white">
                         {currentOrder.notes}
                       </dd>

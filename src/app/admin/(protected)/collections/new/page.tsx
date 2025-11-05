@@ -160,7 +160,7 @@ export default function NewCollectionPage() {
             <div className="flex items-center space-x-4">
               <Link
                 href="/admin/collections"
-                className="inline-flex items-center text-sm text-gray-500 dark:text-[#696969] hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+                className="inline-flex items-center text-sm text-gray-500 dark:text-[#bdbdbd] hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back
@@ -185,7 +185,7 @@ export default function NewCollectionPage() {
             <h1 className=" text-xl md:text-3xl font-bold text-gray-900 dark:text-white">
               Add New Collection
             </h1>
-            <p className="mt-2 text-gray-600 dark:text-[#696969] text-sm md:text-base">
+            <p className="mt-2 text-gray-600 dark:text-[#bdbdbd] text-sm md:text-base">
               Create a new collection for your jewelry catalog
             </p>
           </div>
@@ -240,7 +240,7 @@ export default function NewCollectionPage() {
                       required
                       value={formData.name}
                       onChange={e => handleInputChange('name', e.target.value)}
-                      className={`block w-full px-3 py-2 border rounded-lg shadow-sm placeholder-gray-400 dark:placeholder-[#696969] focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-[#242424] text-gray-900 dark:text-white border-gray-300 dark:border-[#525252] text-sm md:text-base ${
+                      className={`block w-full px-3 py-2 border rounded-lg shadow-sm placeholder-gray-400 dark:placeholder-[#bdbdbd] focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-[#242424] text-gray-900 dark:text-white border-gray-300 dark:border-[#525252] text-sm md:text-base ${
                         validationErrors.name
                           ? 'border-red-300 dark:border-red-800'
                           : 'border-gray-300 dark:border-[#525252]'
@@ -264,7 +264,7 @@ export default function NewCollectionPage() {
                       onChange={e =>
                         handleInputChange('description', e.target.value)
                       }
-                      className={`block w-full px-3 py-2 border rounded-lg shadow-sm placeholder-gray-400 dark:placeholder-[#696969] focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-[#242424] text-gray-900 dark:text-white border-gray-300 dark:border-[#525252] resize-none text-sm md:text-base `}
+                      className={`block w-full px-3 py-2 border rounded-lg shadow-sm placeholder-gray-400 dark:placeholder-[#bdbdbd] focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-[#242424] text-gray-900 dark:text-white border-gray-300 dark:border-[#525252] resize-none text-sm md:text-base `}
                       placeholder="Describe this collection"
                     />
                   </div>
@@ -283,7 +283,7 @@ export default function NewCollectionPage() {
                             parseInt(e.target.value) || 0
                           )
                         }
-                        className="block w-full px-3 py-2 border border-gray-300 dark:border-[#525252] rounded-lg shadow-sm placeholder-gray-400 dark:placeholder-[#696969] focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-[#242424] text-gray-900 dark:text-white text-sm md:text-base"
+                        className="block w-full px-3 py-2 border border-gray-300 dark:border-[#525252] rounded-lg shadow-sm placeholder-gray-400 dark:placeholder-[#bdbdbd] focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-[#242424] text-gray-900 dark:text-white text-sm md:text-base"
                         placeholder="0"
                       />
                     </div>
@@ -358,7 +358,7 @@ export default function NewCollectionPage() {
                     ) : (
                       <div className="space-y-4">
                         <div className="w-12 h-12 bg-gray-100 dark:bg-[#2a2a2a] rounded-full flex items-center justify-center mx-auto">
-                          <Upload className="h-6 w-6 text-gray-400 dark:text-[#696969]" />
+                          <Upload className="h-6 w-6 text-gray-400 dark:text-[#bdbdbd]" />
                         </div>
                         <div>
                           <label className="cursor-pointer">

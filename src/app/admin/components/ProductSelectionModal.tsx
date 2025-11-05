@@ -64,7 +64,7 @@ export default function ProductSelectionModal({
     >
       {products.length === 0 ? (
         <div className="text-center py-8">
-          <Package className="mx-auto h-12 w-12 text-gray-400 dark:text-[#696969] mb-2" />
+          <Package className="mx-auto h-12 w-12 text-gray-400 dark:text-[#bdbdbd] mb-2" />
           <p className="text-sm text-gray-500 dark:text-gray-400">No products available.</p>
         </div>
       ) : (
@@ -91,7 +91,7 @@ export default function ProductSelectionModal({
                   />
                 ) : (
                   <div className="w-[120px] h-[120px] bg-gray-100 dark:bg-[#2a2a2a] flex items-center justify-center rounded-md">
-                    <Package className="h-8 w-8 text-gray-400 dark:text-[#696969]" />
+                    <Package className="h-8 w-8 text-gray-400 dark:text-[#bdbdbd]" />
                   </div>
                 )}
                 <p className="mt-2 text-sm font-medium text-gray-700 dark:text-gray-300 text-center">

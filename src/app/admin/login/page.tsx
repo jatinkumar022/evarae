@@ -67,7 +67,11 @@ export default function AdminLoginPage() {
     step === 'done'
       ? stepItems.length - 1
       : stepItems.findIndex(s => s.key === step);
-  const progressPercent = (currentStepIndex / (stepItems.length - 1)) * 100;
+  // Calculate progress: when on OTP step, show 100% progress (both steps completed visually)
+  const progressPercent =
+    step === 'done' || step === 'otp'
+      ? 100
+      : (currentStepIndex / (stepItems.length - 1)) * 100;
 
   useEffect(() => {
     if (step === 'otp') inputsRef.current[0]?.focus();
@@ -177,6 +181,7 @@ export default function AdminLoginPage() {
                   />
                 </div>
                 {stepItems.map((item, index) => {
+                  // Mark previous steps as completed
                   const isCompleted =
                     step === 'done' || index < currentStepIndex;
                   const isActive =
@@ -280,7 +285,7 @@ export default function AdminLoginPage() {
                     </span>
                   </p>
 
-                  <div className="flex gap-2.5 mb-6">
+                  <div className="flex gap-1.5 sm:gap-2 md:gap-2.5 mb-6 justify-center">
                     {otp.map((d, i) => (
                       <input
                         key={i}
@@ -294,7 +299,7 @@ export default function AdminLoginPage() {
                         onPaste={handleOtpPaste}
                         onChange={e => handleOtpChange(i, e.target.value)}
                         onKeyDown={e => handleOtpKeyDown(i, e)}
-                        className="aspect-square w-10 md:w-12 text-center rounded-lg border border-[oklch(0.84_0.04_10.35)] bg-white text-base font-semibold text-[oklch(0.39_0.09_17.83)] focus:outline-none focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/30 focus:border-[oklch(0.66_0.14_358.91)] transition-all hover:border-[oklch(0.66_0.14_358.91)]/50"
+                        className="aspect-square w-9 sm:w-10 md:w-12 text-center rounded-lg border border-[oklch(0.84_0.04_10.35)] bg-white text-sm sm:text-base font-semibold text-[oklch(0.39_0.09_17.83)] focus:outline-none focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/30 focus:border-[oklch(0.66_0.14_358.91)] transition-all hover:border-[oklch(0.66_0.14_358.91)]/50 flex-shrink-0"
                       />
                     ))}
                   </div>

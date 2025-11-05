@@ -1,6 +1,9 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import {
   ArrowLeft,
   Save,
@@ -18,33 +21,59 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useProductStore, type Product } from '@/lib/data/store/productStore';
+import { useProductStore } from '@/lib/data/store/productStore';
 import { useCategoryStore } from '@/lib/data/store/categoryStore';
 import { CustomSelect } from '@/app/admin/components/CustomSelect';
 import { useUploadStore } from '@/lib/data/store/uploadStore';
-import { setDummyProductsInStore, setDummyCategoriesInStore } from '@/lib/data/dummyDataHelper';
-import { dummyProducts } from '@/lib/data/dummyProducts';
 
-interface ProductFormData {
-  name: string;
-  description: string;
-  price: string;
-  discountPrice: string;
-  categories: string[];
-  material: string;
-  weight: string;
-  colors: string[];
-  stockQuantity: string;
-  sku: string;
-  status: 'active' | 'out_of_stock' | 'hidden';
-  metaTitle: string;
-  metaDescription: string;
-  tags: string[];
-  video: string;
-  images: string[]; // store URLs only
-  wallpaper: string[]; // store URLs only
-  thumbnail?: string; // store URL
-}
+// Zod schema for product form validation
+const productFormSchema = z.object({
+  name: z.string().min(1, 'Product name is required'),
+  description: z.string().min(1, 'Description is required'),
+  price: z.string().refine(
+    (val) => {
+      const num = parseFloat(val);
+      return !isNaN(num) && num > 0;
+    },
+    { message: 'Valid price is required' }
+  ),
+  discountPrice: z.string().optional(),
+  categories: z.array(z.string()).min(1, 'At least one category is required'),
+  material: z.string().optional(),
+  weight: z.string().optional(),
+  colors: z.array(z.string()),
+  stockQuantity: z.string().refine(
+    (val) => {
+      if (!val || val.trim() === '') return false;
+      const num = parseInt(val);
+      return !isNaN(num) && num >= 0;
+    },
+    { message: 'Valid stock quantity is required' }
+  ),
+  sku: z.string().optional(),
+  status: z.enum(['active', 'out_of_stock', 'hidden']),
+  metaTitle: z.string().optional(),
+  metaDescription: z.string().optional(),
+  tags: z.array(z.string()),
+  video: z.string().optional(),
+  images: z.array(z.string()).min(1, 'At least one product image is required'),
+  thumbnail: z.string().optional(),
+}).refine(
+  (data) => {
+    if (data.discountPrice && data.discountPrice.trim() !== '') {
+      const discount = parseFloat(data.discountPrice);
+      const price = parseFloat(data.price);
+      return !isNaN(discount) && !isNaN(price) && discount < price;
+    }
+    return true;
+  },
+  {
+    message: 'Discount price must be less than regular price',
+    path: ['discountPrice'],
+  }
+);
+
+type ProductFormData = z.infer<typeof productFormSchema>;
 
 const materials = [
   'Brass Alloy (Gold Color)',
@@ -83,59 +112,58 @@ export default function EditProductPage() {
 
   const {
     currentProduct,
-    // fetchProduct,
+    fetchProduct,
     updateProduct,
-    // status,
+    status,
     error,
     clearError,
   } = useProductStore();
-  const { categories, // fetchCategories
-    } = useCategoryStore();
+  const { categories, fetchCategories } = useCategoryStore();
   const { uploadFile } = useUploadStore();
 
-  const [formData, setFormData] = useState<ProductFormData>({
-    name: '',
-    description: '',
-    price: '',
-    discountPrice: '',
-    categories: [],
-    material: '',
-    weight: '',
-    colors: [],
-    stockQuantity: '0',
-    sku: '',
-    status: 'active',
-    metaTitle: '',
-    metaDescription: '',
-    tags: [],
-    video: '',
-    images: [],
-    wallpaper: [],
-    thumbnail: undefined,
+  const [tagInput, setTagInput] = useState('');
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<ProductFormData>({
+    resolver: zodResolver(productFormSchema),
+    defaultValues: {
+      name: '',
+      description: '',
+      price: '',
+      discountPrice: '',
+      categories: [],
+      material: '',
+      weight: '',
+      colors: [],
+      stockQuantity: '',
+      sku: '',
+      status: 'active',
+      metaTitle: '',
+      metaDescription: '',
+      tags: [],
+      video: '',
+      images: [],
+      thumbnail: undefined,
+    },
+    mode: 'onChange',
   });
 
-  const [validationErrors, setValidationErrors] = useState<
-    Record<string, string>
-  >({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
   useEffect(() => {
-    // Load dummy data
-    setDummyCategoriesInStore();
+    fetchCategories();
     if (productId) {
-      setDummyProductsInStore();
-      const product = dummyProducts.find((p) => p._id === productId);
-      if (product) {
-        useProductStore.setState({ currentProduct: product, status: 'success', error: null });
-      } else {
-        useProductStore.setState({ currentProduct: null, status: 'error', error: 'Product not found' });
-      }
+      fetchProduct(productId);
     }
-  }, [productId]);
+  }, [productId, fetchCategories, fetchProduct]);
 
   useEffect(() => {
     if (currentProduct) {
-      setFormData({
+      reset({
         name: currentProduct.name || '',
         description: currentProduct.description || '',
         price: currentProduct.price?.toString() || '',
@@ -144,7 +172,7 @@ export default function EditProductPage() {
         material: currentProduct.material || '',
         weight: currentProduct.weight || '',
         colors: currentProduct.colors || [],
-        stockQuantity: currentProduct.stockQuantity?.toString() || '0',
+        stockQuantity: currentProduct.stockQuantity?.toString() || '',
         sku: currentProduct.sku || '',
         status: currentProduct.status || 'active',
         metaTitle: currentProduct.metaTitle || '',
@@ -152,33 +180,17 @@ export default function EditProductPage() {
         tags: currentProduct.tags || [],
         video: currentProduct.video || '',
         images: currentProduct.images || [],
-        wallpaper: currentProduct.wallpaper || [],
         thumbnail: currentProduct.thumbnail,
       });
     }
-  }, [currentProduct]);
-
-  const handleInputChange = <K extends keyof ProductFormData>(
-    field: K,
-    value: ProductFormData[K]
-  ) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    if (validationErrors[field]) {
-      setValidationErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors[field as string];
-        return newErrors;
-      });
-    }
-  };
+  }, [currentProduct, reset]);
 
   const toggleArray = (field: 'colors' | 'categories', value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: prev[field].includes(value)
-        ? prev[field].filter(v => v !== value)
-        : [...prev[field], value],
-    }));
+    const current = watch(field);
+    const updated = current.includes(value)
+      ? current.filter(v => v !== value)
+      : [...current, value];
+    setValue(field, updated, { shouldValidate: true });
   };
 
   // Upload thumbnail and set URL
@@ -189,141 +201,98 @@ export default function EditProductPage() {
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      setValidationErrors(prev => ({
-        ...prev,
-        thumbnail: 'Invalid file type',
-      }));
+      setValue('thumbnail', undefined, { shouldValidate: true });
       return;
     }
     if (file.size > 2 * 1024 * 1024) {
-      setValidationErrors(prev => ({
-        ...prev,
-        thumbnail: 'File too large (max 2MB)',
-      }));
+      setValue('thumbnail', undefined, { shouldValidate: true });
       return;
     }
 
     await uploadFile(file);
-    const url = useUploadStore.getState().fileUrl;
-    if (url) {
-      handleInputChange('thumbnail', url);
+    const uploadState = useUploadStore.getState();
+    if (uploadState.error) {
+      console.error('Upload error:', uploadState.error);
+      return;
+    }
+    if (uploadState.fileUrl) {
+      setValue('thumbnail', uploadState.fileUrl, { shouldValidate: true });
     }
   };
 
-  // Upload images/wallpapers and append URLs
+  // Upload images and append URLs
   const handleFileSelect = async (
-    e: React.ChangeEvent<HTMLInputElement>,
-    field: 'images' | 'wallpaper'
+    e: React.ChangeEvent<HTMLInputElement>
   ) => {
     const files = Array.from(e.target.files || []);
     const validFiles = files.filter(
       file => file.type.startsWith('image/') && file.size <= 5 * 1024 * 1024
     );
 
-    if (validFiles.length !== files.length) {
-      setValidationErrors(prev => ({
-        ...prev,
-        [field]: 'Some files were skipped (only images under 5MB are allowed)',
-      }));
-    }
-
     const uploadedUrls: string[] = [];
     for (let i = 0; i < validFiles.length; i++) {
       const file = validFiles[i];
       await uploadFile(file);
-      const url = useUploadStore.getState().fileUrl;
-      if (url) uploadedUrls.push(url);
+      const uploadState = useUploadStore.getState();
+      if (uploadState.error) {
+        console.error('Upload error:', uploadState.error);
+        continue;
+      }
+      if (uploadState.fileUrl) {
+        uploadedUrls.push(uploadState.fileUrl);
+      }
     }
 
-    setFormData(prev => ({
-      ...prev,
-      [field]: [...prev[field], ...uploadedUrls],
-    }));
-  };
-
-  const removeFile = (index: number, field: 'images' | 'wallpaper') => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: prev[field].filter((_, i) => i !== index),
-    }));
-  };
-
-  const validateForm = () => {
-    const errors: Record<string, string> = {};
-
-    if (!formData.name.trim()) errors.name = 'Product name is required';
-    if (!formData.description.trim())
-      errors.description = 'Description is required';
-    if (!formData.price || parseFloat(formData.price) <= 0)
-      errors.price = 'Valid price is required';
-    if (
-      formData.discountPrice &&
-      parseFloat(formData.discountPrice) >= parseFloat(formData.price)
-    ) {
-      errors.discountPrice = 'Discount price must be less than regular price';
+    if (uploadedUrls.length > 0) {
+      const currentImages = watch('images');
+      setValue('images', [...currentImages, ...uploadedUrls], { shouldValidate: true });
     }
-    if (formData.categories.length === 0)
-      errors.categories = 'At least one category is required';
-    if (!formData.stockQuantity || parseInt(formData.stockQuantity) < 0)
-      errors.stockQuantity = 'Valid stock quantity is required';
-    if (formData.images.length === 0)
-      errors.images = 'At least one product image is required';
-    if (!formData.thumbnail) errors.thumbnail = 'Thumbnail is required';
-
-    setValidationErrors(errors);
-    return Object.keys(errors).length === 0;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const removeFile = (index: number) => {
+    const currentImages = watch('images');
+    setValue('images', currentImages.filter((_, i) => i !== index), { shouldValidate: true });
+  };
+
+  const onSubmit = async (data: ProductFormData) => {
     clearError();
 
-    if (!validateForm()) return;
-    setIsSubmitting(true);
-
     try {
-      const slug = formData.name
+      const slug = data.name
         .toLowerCase()
         .trim()
         .replace(/\s+/g, '-')
         .replace(/[^\w-]+/g, '');
 
-      // Map selected category ids to objects to satisfy typing
-      const selectedCategoryObjects: Product['categories'] = formData.categories
-        .map(id => categories.find(c => c._id === id))
-        .filter(Boolean)
-        .map(c => ({ _id: c!._id, name: c!.name, slug: c!.slug }));
-
-      const productData: Partial<Product> = {
-        name: formData.name,
+      const productData = {
+        name: data.name.trim(),
         slug,
-        description: formData.description,
-        sku: formData.sku,
-        categories: selectedCategoryObjects,
-        price: parseFloat(formData.price),
-        discountPrice: formData.discountPrice
-          ? parseFloat(formData.discountPrice)
+        description: data.description.trim(),
+        sku: data.sku?.trim() || undefined,
+        categories: data.categories as unknown as Array<{ _id: string; name: string; slug: string }>,
+        price: parseFloat(data.price) || 0,
+        discountPrice: data.discountPrice && data.discountPrice.trim() !== ''
+          ? parseFloat(data.discountPrice)
           : undefined,
-        stockQuantity: parseInt(formData.stockQuantity),
-        material: formData.material,
-        weight: formData.weight,
-        colors: formData.colors,
-        images: formData.images,
-        wallpaper: formData.wallpaper,
-        thumbnail: formData.thumbnail,
-        tags: formData.tags,
-        video: formData.video,
-        status: formData.status,
-        metaTitle: formData.metaTitle,
-        metaDescription: formData.metaDescription,
+        stockQuantity: data.stockQuantity && data.stockQuantity.trim() !== ''
+          ? parseInt(data.stockQuantity, 10)
+          : 0,
+        material: data.material?.trim() || undefined,
+        weight: data.weight?.trim() || undefined,
+        colors: data.colors,
+        images: data.images,
+        thumbnail: data.thumbnail || undefined,
+        tags: data.tags.filter(tag => tag.trim().length > 0),
+        video: data.video?.trim() && data.video.trim().length > 0 ? data.video.trim() : undefined,
+        status: data.status,
+        metaTitle: data.metaTitle?.trim() || undefined,
+        metaDescription: data.metaDescription?.trim() || undefined,
       };
 
-      await updateProduct(productId, productData);
+      await updateProduct(productId, productData as Parameters<typeof updateProduct>[1]);
       router.push('/admin/products');
     } catch (err) {
       console.error('Failed to update product', err);
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -346,7 +315,7 @@ export default function EditProductPage() {
                     <h3 className="text-sm md:text-lg font-medium text-gray-900 dark:text-white">
           Product not found
         </h3>
-        <p className="mt-1 text-sm text-gray-500 dark:text-[#696969]">
+        <p className="mt-1 text-sm text-gray-500 dark:text-[#bdbdbd]">
           The product you&apos;re looking for doesn&apos;t exist.
         </p>
         <Link
@@ -361,14 +330,14 @@ export default function EditProductPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#0d0d0d]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <div className="mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <Link
                 href="/admin/products"
-                className="inline-flex items-center text-sm text-gray-500 dark:text-[#696969] hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+                className="inline-flex items-center text-sm text-gray-500 dark:text-[#bdbdbd] hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back
@@ -393,7 +362,7 @@ export default function EditProductPage() {
             <h1 className="text-xl md:text-3xl font-bold text-gray-900 dark:text-white">
               Edit Product
             </h1>
-            <p className="mt-2 text-gray-600 dark:text-[#696969] text-sm md:text-base">
+            <p className="mt-2 text-gray-600 dark:text-[#bdbdbd] text-sm md:text-base">
               Update product information and settings
             </p>
           </div>
@@ -424,7 +393,7 @@ export default function EditProductPage() {
           </div>
         )}
 
-        <form id="product-form" onSubmit={handleSubmit} className="space-y-8 md:space-y-10">
+        <form id="product-form" onSubmit={handleSubmit(onSubmit)} className="space-y-8 md:space-y-10">
           <div className="grid grid-cols-1 gap-8 md:gap-10 lg:grid-cols-3">
             {/* Main Content */}
             <div className="lg:col-span-2 space-y-8 md:space-y-10">
@@ -445,19 +414,17 @@ export default function EditProductPage() {
                     </label>
                     <input
                       type="text"
-                      required
-                      value={formData.name}
-                      onChange={e => handleInputChange('name', e.target.value)}
-                      className={`block w-full px-3 py-2 border rounded-lg shadow-sm placeholder-gray-400 dark:placeholder-[#696969] focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-[#242424] text-gray-900 dark:text-white border-gray-300 dark:border-[#525252] text-sm md:text-base ${
-                        validationErrors.name
+                      {...register('name')}
+                      className={`block w-full px-3 py-2 border rounded-lg shadow-sm placeholder-gray-400 dark:placeholder-[#bdbdbd] focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-[#242424] text-gray-900 dark:text-white border-gray-300 dark:border-[#525252] text-sm md:text-base ${
+                        errors.name
                           ? 'border-red-300'
                           : 'border-gray-300'
                       }`}
                       placeholder="Enter product name"
                     />
-                    {validationErrors.name && (
+                    {errors.name && (
                       <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                        {validationErrors.name}
+                        {errors.name.message}
                       </p>
                     )}
                   </div>
@@ -467,22 +434,18 @@ export default function EditProductPage() {
                       Description *
                     </label>
                     <textarea
-                      required
                       rows={4}
-                      value={formData.description}
-                      onChange={e =>
-                        handleInputChange('description', e.target.value)
-                      }
-                      className={`block w-full px-3 py-2 border rounded-lg shadow-sm placeholder-gray-400 dark:placeholder-[#696969] focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-[#242424] text-gray-900 dark:text-white border-gray-300 dark:border-[#525252] resize-none text-sm md:text-base  ${
-                        validationErrors.description
+                      {...register('description')}
+                      className={`block w-full px-3 py-2 border rounded-lg shadow-sm placeholder-gray-400 dark:placeholder-[#bdbdbd] focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-[#242424] text-gray-900 dark:text-white border-gray-300 dark:border-[#525252] resize-none text-sm md:text-base  ${
+                        errors.description
                           ? 'border-red-300'
                           : 'border-gray-300'
                       }`}
                       placeholder="Describe your product in detail"
                     />
-                    {validationErrors.description && (
+                    {errors.description && (
                       <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                        {validationErrors.description}
+                        {errors.description.message}
                       </p>
                     )}
                   </div>
@@ -494,9 +457,8 @@ export default function EditProductPage() {
                       </label>
                       <input
                         type="text"
-                        value={formData.sku}
-                        onChange={e => handleInputChange('sku', e.target.value)}
-                        className="block w-full px-3 py-2 border border-gray-300 dark:border-[#525252] rounded-lg shadow-sm placeholder-gray-400 dark:placeholder-[#696969] focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-[#242424] text-gray-900 dark:text-white text-sm md:text-base "
+                        {...register('sku')}
+                        className="block w-full px-3 py-2 border border-gray-300 dark:border-[#525252] rounded-lg shadow-sm placeholder-gray-400 dark:placeholder-[#bdbdbd] focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-[#242424] text-gray-900 dark:text-white text-sm md:text-base "
                         placeholder="Auto-generated"
                       />
                     </div>
@@ -506,9 +468,9 @@ export default function EditProductPage() {
                         Status
                       </label>
                       <CustomSelect
-                        value={formData.status}
+                        value={watch('status')}
                         onChange={(v) =>
-                          handleInputChange('status', v as Product['status'])
+                          setValue('status', v as ProductFormData['status'], { shouldValidate: true })
                         }
                         options={[
                           { value: 'active', label: 'Active' },
@@ -542,25 +504,29 @@ export default function EditProductPage() {
                           ₹
                         </span>
                         <input
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          required
-                          value={formData.price}
-                          onChange={e =>
-                            handleInputChange('price', e.target.value)
-                          }
+                          type="text"
+                          inputMode="decimal"
+                          {...register('price', {
+                            onChange: (e) => {
+                              let value = e.target.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');
+                              // If starts with dot, prefix with 0
+                              if (value.startsWith('.')) {
+                                value = '0' + value;
+                              }
+                              setValue('price', value, { shouldValidate: true });
+                            },
+                          })}
                           className={`block w-full pl-8 pr-3 py-2 border rounded-lg shadow-sm placeholder-gray-400 dark:placeholder-[#777777] focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent text-sm md:text-base bg-white dark:bg-[#242424] text-gray-900 dark:text-gray-100 border-gray-300 dark:border-[#3a3a3a] ${
-                            validationErrors.price
+                            errors.price
                               ? 'border-red-300 dark:border-red-800'
                               : 'border-gray-300 dark:border-[#3a3a3a]'
                           }`}
                           placeholder="0.00"
                         />
                       </div>
-                      {validationErrors.price && (
+                      {errors.price && (
                         <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                          {validationErrors.price}
+                          {errors.price.message}
                         </p>
                       )}
                     </div>
@@ -574,24 +540,29 @@ export default function EditProductPage() {
                           ₹
                         </span>
                         <input
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          value={formData.discountPrice}
-                          onChange={e =>
-                            handleInputChange('discountPrice', e.target.value)
-                          }
+                          type="text"
+                          inputMode="decimal"
+                          {...register('discountPrice', {
+                            onChange: (e) => {
+                              let value = e.target.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');
+                              // If starts with dot, prefix with 0
+                              if (value.startsWith('.')) {
+                                value = '0' + value;
+                              }
+                              setValue('discountPrice', value, { shouldValidate: true });
+                            },
+                          })}
                           className={`block w-full pl-8 pr-3 py-2 border rounded-lg shadow-sm placeholder-gray-400 dark:placeholder-[#777777] focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent text-sm md:text-base bg-white dark:bg-[#242424] text-gray-900 dark:text-gray-100 border-gray-300 dark:border-[#3a3a3a] ${
-                            validationErrors.discountPrice
+                            errors.discountPrice
                               ? 'border-red-300 dark:border-red-800'
                               : 'border-gray-300 dark:border-[#3a3a3a]'
                           }`}
                           placeholder="0.00"
                         />
                       </div>
-                      {validationErrors.discountPrice && (
+                      {errors.discountPrice && (
                         <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                          {validationErrors.discountPrice}
+                          {errors.discountPrice.message}
                         </p>
                       )}
                     </div>
@@ -615,14 +586,14 @@ export default function EditProductPage() {
                       <label
                         key={cat._id}
                         className={`flex items-center p-3 rounded-lg border-2 text-sm md:text-base  cursor-pointer transition-all ${
-                          formData.categories.includes(cat._id)
+                          watch('categories').includes(cat._id)
                             ? 'border-gray-300 bg-gray-100 dark:border-[#333333] dark:bg-[#1e1e1e]'
                             : 'border-gray-200 dark:border-[#2a2a2a] hover:border-gray-300 dark:hover:border-[#3a3a3a]'
                         }`}
                       >
                         <input
                           type="checkbox"
-                          checked={formData.categories.includes(cat._id)}
+                          checked={watch('categories').includes(cat._id)}
                           onChange={() => toggleArray('categories', cat._id)}
                           className="h-4 w-4 text-primary-600 dark:text-primary-400 border-gray-300 dark:border-[#3a3a3a] rounded focus:ring-primary-500 dark:focus:ring-primary-600 "
                         />
@@ -632,9 +603,9 @@ export default function EditProductPage() {
                       </label>
                     ))}
                   </div>
-                  {validationErrors.categories && (
+                  {errors.categories && (
                     <p className="mt-2 text-sm text-red-600 dark:text-red-400">
-                      {validationErrors.categories}
+                      {errors.categories.message}
                     </p>
                   )}
                 </div>
@@ -654,8 +625,8 @@ export default function EditProductPage() {
                         Material
                       </label>
                       <CustomSelect
-                        value={formData.material}
-                        onChange={(v) => handleInputChange('material', v)}
+                        value={watch('material') || ''}
+                        onChange={(v) => setValue('material', v, { shouldValidate: true })}
                         options={[{ value: '', label: 'Select Material' }, ...materials.map(m => ({ value: m, label: m }))]}
                       />
                     </div>
@@ -665,14 +636,19 @@ export default function EditProductPage() {
                         Weight (grams)
                       </label>
                       <input
-                        type="number"
-                        step="0.1"
-                        min="0"
-                        value={formData.weight}
-                        onChange={e =>
-                          handleInputChange('weight', e.target.value)
-                        }
-                        className="block w-full px-3 py-2 border border-gray-300 dark:border-[#525252] rounded-lg shadow-sm placeholder-gray-400 dark:placeholder-[#696969] focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-[#242424] text-gray-900 dark:text-white text-sm md:text-base "
+                        type="text"
+                        inputMode="decimal"
+                        {...register('weight', {
+                          onChange: (e) => {
+                            let value = e.target.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');
+                            // If starts with dot, prefix with 0
+                            if (value.startsWith('.')) {
+                              value = '0' + value;
+                            }
+                            setValue('weight', value, { shouldValidate: true });
+                          },
+                        })}
+                        className="block w-full px-3 py-2 border border-gray-300 dark:border-[#525252] rounded-lg shadow-sm placeholder-gray-400 dark:placeholder-[#bdbdbd] focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-[#242424] text-gray-900 dark:text-white text-sm md:text-base"
                         placeholder="0.0"
                       />
                     </div>
@@ -687,14 +663,14 @@ export default function EditProductPage() {
                         <label
                           key={color}
                           className={`flex items-center p-2 md:p-3 rounded-lg border-2 text-sm md:text-base  cursor-pointer transition-all ${
-                            formData.colors.includes(color)
+                            watch('colors').includes(color)
                               ? 'border-gray-300 bg-gray-100 dark:border-[#333333] dark:bg-[#1e1e1e]'
                               : 'border-gray-200 dark:border-[#2a2a2a] hover:border-gray-300 dark:hover:border-[#3a3a3a]'
                           }`}
                         >
                           <input
                             type="checkbox"
-                            checked={formData.colors.includes(color)}
+                            checked={watch('colors').includes(color)}
                             onChange={() => toggleArray('colors', color)}
                             className="h-4 w-4 text-primary-600 dark:text-primary-400 border-gray-300 dark:border-[#3a3a3a] rounded focus:ring-primary-500 dark:focus:ring-primary-600"
                           />
@@ -711,23 +687,24 @@ export default function EditProductPage() {
                       Stock Quantity *
                     </label>
                     <input
-                      type="number"
-                      min="0"
-                      required
-                      value={formData.stockQuantity}
-                      onChange={e =>
-                        handleInputChange('stockQuantity', e.target.value)
-                      }
-                      className={`block w-full px-3 py-2 border rounded-lg shadow-sm placeholder-gray-400 dark:placeholder-[#696969] focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-[#242424] text-gray-900 dark:text-white border-gray-300 dark:border-[#525252] text-sm md:text-base  ${
-                        validationErrors.stockQuantity
+                      type="text"
+                      inputMode="numeric"
+                      {...register('stockQuantity', {
+                        onChange: (e) => {
+                          const value = e.target.value.replace(/[^0-9]/g, '');
+                          setValue('stockQuantity', value, { shouldValidate: true });
+                        },
+                      })}
+                      className={`block w-full px-3 py-2 border rounded-lg shadow-sm placeholder-gray-400 dark:placeholder-[#bdbdbd] focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-[#242424] text-gray-900 dark:text-white border-gray-300 dark:border-[#525252] text-sm md:text-base ${
+                        errors.stockQuantity
                           ? 'border-red-300'
                           : 'border-gray-300'
                       }`}
-                      placeholder="0"
+                      placeholder="Enter stock quantity"
                     />
-                    {validationErrors.stockQuantity && (
+                    {errors.stockQuantity && (
                       <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                        {validationErrors.stockQuantity}
+                        {errors.stockQuantity.message}
                       </p>
                     )}
                   </div>
@@ -752,15 +729,12 @@ export default function EditProductPage() {
                     <input
                       type="text"
                       maxLength={60}
-                      value={formData.metaTitle}
-                      onChange={e =>
-                        handleInputChange('metaTitle', e.target.value)
-                      }
+                      {...register('metaTitle')}
                       className="block w-full px-3 py-2 border rounded-lg shadow-sm placeholder-gray-400 dark:placeholder-[#777777] focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent text-sm md:text-base bg-white dark:bg-[#242424] text-gray-900 dark:text-gray-100 border-gray-300 dark:border-[#3a3a3a]"
                       placeholder="Auto-generated from product name"
                     />
                     <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                      {formData.metaTitle.length}/60 characters
+                      {(watch('metaTitle') || '').length}/60 characters
                     </p>
                   </div>
 
@@ -771,15 +745,12 @@ export default function EditProductPage() {
                     <textarea
                       maxLength={160}
                       rows={3}
-                      value={formData.metaDescription}
-                      onChange={e =>
-                        handleInputChange('metaDescription', e.target.value)
-                      }
+                      {...register('metaDescription')}
                       className="block w-full px-3 py-2 border rounded-lg shadow-sm placeholder-gray-400 dark:placeholder-[#777777] focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent resize-none text-sm md:text-base bg-white dark:bg-[#242424] text-gray-900 dark:text-gray-100 border-gray-300 dark:border-[#3a3a3a]"
                       placeholder="Brief description for search engines"
                     />
                     <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                      {formData.metaDescription.length}/160 characters
+                      {(watch('metaDescription') || '').length}/160 characters
                     </p>
                   </div>
 
@@ -787,24 +758,51 @@ export default function EditProductPage() {
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Tags
                     </label>
-                    <input
-                      type="text"
-                      value={formData.tags.join(', ')}
-                      onChange={e =>
-                        handleInputChange(
-                          'tags',
-                          e.target.value
-                            .split(',')
-                            .map(t => t.trim())
-                            .filter(t => t)
-                        )
-                      }
-                      className="block w-full px-3 py-2 border rounded-lg shadow-sm placeholder-gray-400 dark:placeholder-[#777777] focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent text-sm md:text-base bg-white dark:bg-[#242424] text-gray-900 dark:text-gray-100 border-gray-300 dark:border-[#3a3a3a]"
-                      placeholder="jewelry, gold, necklace, etc."
-                    />
-                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                      Separate tags with commas
-                    </p>
+                    <div className="space-y-2">
+                      <input
+                        type="text"
+                        value={tagInput}
+                        onChange={e => setTagInput(e.target.value)}
+                        onKeyDown={e => {
+                          if (e.key === ',' || e.key === 'Enter') {
+                            e.preventDefault();
+                            const trimmed = tagInput.trim();
+                            const currentTags = watch('tags');
+                            if (trimmed && trimmed.length > 0 && !currentTags.includes(trimmed)) {
+                              setValue('tags', [...currentTags, trimmed], { shouldValidate: true });
+                              setTagInput('');
+                            }
+                          }
+                        }}
+                        className="block w-full px-3 py-2 border rounded-lg shadow-sm placeholder-gray-400 dark:placeholder-[#777777] focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent text-sm md:text-base bg-white dark:bg-[#242424] text-gray-900 dark:text-gray-100 border-gray-300 dark:border-[#3a3a3a]"
+                        placeholder="Type tag and press comma or Enter"
+                      />
+                      {watch('tags').length > 0 && (
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {watch('tags').map((tag, index) => (
+                            <span
+                              key={index}
+                              className="inline-flex items-center gap-1.5 px-3 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-800 dark:text-primary-300 rounded-full text-sm font-medium"
+                            >
+                              {tag}
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const currentTags = watch('tags');
+                                  setValue('tags', currentTags.filter((_, i) => i !== index), { shouldValidate: true });
+                                }}
+                                className="hover:bg-primary-200 dark:hover:bg-primary-900/50 rounded-full p-0.5 transition-colors"
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Type tag and press comma or Enter to add
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -836,22 +834,22 @@ export default function EditProductPage() {
                         type="file"
                         multiple
                         accept="image/*"
-                        onChange={e => handleFileSelect(e, 'images')}
+                        onChange={handleFileSelect}
                         className="hidden"
                       />
                     </label>
                   </div>
 
-                  {validationErrors.images && (
+                  {errors.images && (
                     <p className="text-sm text-red-600 dark:text-red-400">
-                      {validationErrors.images}
+                      {errors.images.message}
                     </p>
                   )}
 
-                  {formData.images.length > 0 && (
+                  {watch('images').length > 0 && (
                     <>
                       <div className="grid grid-cols-2 gap-3">
-                        {formData.images.map((url, index) => (
+                        {watch('images').map((url, index) => (
                           <div key={index} className="relative group">
                             <Image
                               src={url}
@@ -862,7 +860,7 @@ export default function EditProductPage() {
                             />
                             <button
                               type="button"
-                              onClick={() => removeFile(index, 'images')}
+                              onClick={() => removeFile(index)}
                               className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
                             >
                               <X className="h-3 w-3" />
@@ -871,7 +869,7 @@ export default function EditProductPage() {
                         ))}
                       </div>
                       <div className="space-y-1">
-                        {formData.images.map((url, idx) => (
+                        {watch('images').map((url, idx) => (
                           <p
                             key={idx}
                             className="text-xs text-gray-600 dark:text-gray-400 break-all"
@@ -914,11 +912,11 @@ export default function EditProductPage() {
                     </label>
                   </div>
 
-                  {formData.thumbnail && (
+                  {watch('thumbnail') && (
                     <>
                       <div className="relative group w-32 h-32 mx-auto">
                         <Image
-                          src={formData.thumbnail}
+                          src={watch('thumbnail')!}
                           alt="Thumbnail"
                           fill
                           className="object-cover rounded-lg border border-gray-200 dark:border-[#2a2a2a]"
@@ -926,7 +924,7 @@ export default function EditProductPage() {
                         <button
                           type="button"
                           onClick={() =>
-                            handleInputChange('thumbnail', undefined)
+                            setValue('thumbnail', undefined, { shouldValidate: true })
                           }
                           className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
                         >
@@ -934,81 +932,8 @@ export default function EditProductPage() {
                         </button>
                       </div>
                       <p className="text-xs text-gray-600 dark:text-gray-400 break-all text-center">
-                        {formData.thumbnail}
+                        {watch('thumbnail')}
                       </p>
-                    </>
-                  )}
-                </div>
-              </div>
-
-              {/* Wallpaper Images */}
-              <div className="bg-white dark:bg-[#191919] shadow-sm rounded-xl border border-gray-200 dark:border-[#3a3a3a] overflow-hidden">
-                <div className="px-6 py-4 border-b border-gray-200 dark:border-[#2a2a2a] bg-gray-50 dark:bg-[#1f1f1f]">
-                  <div className="flex items-center">
-                    <Palette className="h-5 w-5 text-gray-600 dark:text-gray-400 mr-2" />
-                    <h2 className="md:text-lg font-semibold text-gray-900 dark:text-white">
-                      Wallpaper Images
-                    </h2>
-                  </div>
-                </div>
-                <div className="p-6 space-y-4">
-                  <div className="border-2 border-dashed border-gray-300 dark:border-[#2a2a2a] rounded-lg p-6 text-center hover:border-gray-400 dark:hover:border-[#3a3a3a] transition-colors">
-                    <Upload className="mx-auto h-8 w-8 text-gray-400 dark:text-gray-500 mb-2" />
-                    <label className="cursor-pointer">
-                      <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                        Upload wallpapers
-                      </span>
-                      <span className="text-sm text-gray-500 dark:text-gray-400 block">
-                        PNG, JPG up to 5MB each
-                      </span>
-                      <input
-                        type="file"
-                        multiple
-                        accept="image/*"
-                        onChange={e => handleFileSelect(e, 'wallpaper')}
-                        className="hidden"
-                      />
-                    </label>
-                  </div>
-
-                  {validationErrors.wallpaper && (
-                    <p className="text-sm text-red-600 dark:text-red-400">
-                      {validationErrors.wallpaper}
-                    </p>
-                  )}
-
-                  {formData.wallpaper.length > 0 && (
-                    <>
-                      <div className="grid grid-cols-2 gap-3">
-                        {formData.wallpaper.map((url, index) => (
-                          <div key={index} className="relative group">
-                            <Image
-                              src={url}
-                              alt={`Wallpaper ${index + 1}`}
-                              width={100}
-                              height={100}
-                              className="w-full h-24 object-cover rounded-lg border border-gray-200 dark:border-[#2a2a2a]"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => removeFile(index, 'wallpaper')}
-                              className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
-                            >
-                              <X className="h-3 w-3" />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                      <div className="space-y-1">
-                        {formData.wallpaper.map((url, idx) => (
-                          <p
-                            key={idx}
-                            className="text-xs text-gray-600 dark:text-gray-400 break-all"
-                          >
-                            {url}
-                          </p>
-                        ))}
-                      </div>
                     </>
                   )}
                 </div>
@@ -1027,8 +952,7 @@ export default function EditProductPage() {
                 <div className="p-6">
                     <input
                     type="url"
-                    value={formData.video}
-                    onChange={e => handleInputChange('video', e.target.value)}
+                    {...register('video')}
                       className="block w-full px-3 py-2 border rounded-lg shadow-sm placeholder-gray-400 dark:placeholder-[#777777] focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-[#242424] text-gray-900 dark:text-gray-100 border-gray-300 dark:border-[#3a3a3a]"
                     placeholder="https://www.youtube.com/watch?v=YOUR_VIDEO_ID"
                   />
@@ -1049,30 +973,30 @@ export default function EditProductPage() {
                   <div className="flex justify-between">
                     <span className="text-gray-600 dark:text-gray-400">Product Name:</span>
                     <span className="font-medium text-gray-900 dark:text-gray-200">
-                      {formData.name || 'Not set'}
+                      {watch('name') || 'Not set'}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600 dark:text-gray-400">Price:</span>
                     <span className="font-medium text-gray-900 dark:text-gray-200">
-                      {formData.price ? `₹${formData.price}` : 'Not set'}
+                      {watch('price') ? `₹${watch('price')}` : 'Not set'}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600 dark:text-gray-400">Categories:</span>
                     <span className="font-medium text-gray-900 dark:text-gray-200">
-                      {formData.categories.length || 0} selected
+                      {watch('categories').length || 0} selected
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600 dark:text-gray-400">Images:</span>
                     <span className="font-medium text-gray-900 dark:text-gray-200">
-                      {formData.images.length} uploaded
+                      {watch('images').length} uploaded
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600 dark:text-gray-400">Status:</span>
-                    <span>{getStatusBadge(formData.status)}</span>
+                    <span>{getStatusBadge(watch('status'))}</span>
                   </div>
                 </div>
               </div>

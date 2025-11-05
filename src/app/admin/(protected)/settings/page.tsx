@@ -170,7 +170,7 @@ export default function SettingsPage() {
       <div className="flex md:items-center gap-4 flex-col md:flex-row justify-between">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Settings</h1>
-          <p className="text-sm sm:text-base text-gray-600 dark:text-[#696969] mt-1">
+          <p className="text-sm sm:text-base text-gray-600 dark:text-[#bdbdbd] mt-1">
             Manage store settings and your admin account
           </p>
         </div>
@@ -209,7 +209,7 @@ export default function SettingsPage() {
               className={`px-4 sm:px-6 py-3 sm:py-4 border-b-2 font-medium text-sm transition-colors whitespace-nowrap ${
                 activeSection === 'general'
                   ? 'border-primary-600 dark:border-primary-500 text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20'
-                  : 'border-transparent text-gray-500 dark:text-[#696969] hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-[#525252]'
+                  : 'border-transparent text-gray-500 dark:text-[#bdbdbd] hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-[#525252]'
               }`}
             >
               <div className="flex items-center gap-2">
@@ -222,7 +222,7 @@ export default function SettingsPage() {
               className={`px-4 sm:px-6 py-3 sm:py-4 border-b-2 font-medium text-sm transition-colors whitespace-nowrap ${
                 activeSection === 'admin'
                   ? 'border-primary-600 dark:border-primary-500 text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20'
-                  : 'border-transparent text-gray-500 dark:text-[#696969] hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-[#525252]'
+                  : 'border-transparent text-gray-500 dark:text-[#bdbdbd] hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-[#525252]'
               }`}
             >
               <div className="flex items-center gap-2">
@@ -235,7 +235,7 @@ export default function SettingsPage() {
               className={`px-4 sm:px-6 py-3 sm:py-4 border-b-2 font-medium text-sm transition-colors whitespace-nowrap ${
                 activeSection === 'footer'
                   ? 'border-primary-600 dark:border-primary-500 text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20'
-                  : 'border-transparent text-gray-500 dark:text-[#696969] hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-[#525252]'
+                  : 'border-transparent text-gray-500 dark:text-[#bdbdbd] hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-[#525252]'
               }`}
             >
               <div className="flex items-center gap-2">
@@ -260,12 +260,12 @@ export default function SettingsPage() {
                     Phone Number
                   </label>
                   <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-[#696969]" />
+                    <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-[#bdbdbd]" />
                     <input
                       type="tel"
                       value={settings.footer.phone}
                       onChange={e => handleFooterChange('phone', e.target.value)}
-                      className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-[#525252] rounded-md shadow-sm bg-white dark:bg-[#242424] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#696969] focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-600 dark:focus:border-primary-600 sm:text-sm"
+                      className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-[#525252] rounded-md shadow-sm bg-white dark:bg-[#242424] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#bdbdbd] focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-600 dark:focus:border-primary-600 sm:text-sm"
                     />
                   </div>
                 </div>
@@ -275,12 +275,12 @@ export default function SettingsPage() {
                     Email Address
                   </label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-[#696969]" />
+                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-[#bdbdbd]" />
                     <input
                       type="email"
                       value={settings.footer.email}
                       onChange={e => handleFooterChange('email', e.target.value)}
-                      className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-[#525252] rounded-md shadow-sm bg-white dark:bg-[#242424] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#696969] focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-600 dark:focus:border-primary-600 sm:text-sm"
+                      className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-[#525252] rounded-md shadow-sm bg-white dark:bg-[#242424] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#bdbdbd] focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-600 dark:focus:border-primary-600 sm:text-sm"
                     />
                   </div>
                 </div>
@@ -290,12 +290,12 @@ export default function SettingsPage() {
                     Location
                   </label>
                   <div className="relative">
-                    <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-[#696969]" />
+                    <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-[#bdbdbd]" />
                     <input
                       type="text"
                       value={settings.footer.location}
                       onChange={e => handleFooterChange('location', e.target.value)}
-                      className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-[#525252] rounded-md shadow-sm bg-white dark:bg-[#242424] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#696969] focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-600 dark:focus:border-primary-600 sm:text-sm"
+                      className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-[#525252] rounded-md shadow-sm bg-white dark:bg-[#242424] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#bdbdbd] focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-600 dark:focus:border-primary-600 sm:text-sm"
                     />
                   </div>
                 </div>
@@ -311,7 +311,7 @@ export default function SettingsPage() {
                 rows={3}
                 value={settings.footer.tagline}
                 onChange={e => handleFooterChange('tagline', e.target.value)}
-                className="block w-full px-3 py-2 border border-gray-300 dark:border-[#525252] rounded-md shadow-sm bg-white dark:bg-[#242424] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#696969] focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-600 dark:focus:border-primary-600 sm:text-sm"
+                className="block w-full px-3 py-2 border border-gray-300 dark:border-[#525252] rounded-md shadow-sm bg-white dark:bg-[#242424] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#bdbdbd] focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-600 dark:focus:border-primary-600 sm:text-sm"
                 placeholder="Enter tagline..."
               />
             </div>
@@ -330,12 +330,12 @@ export default function SettingsPage() {
                     </div>
                   </label>
                   <div className="relative">
-                    <LinkIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-[#696969]" />
+                    <LinkIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-[#bdbdbd]" />
                     <input
                       type="url"
                       value={settings.footer.socialLinks.instagram}
                       onChange={e => handleSocialLinkChange('instagram', e.target.value)}
-                      className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-[#525252] rounded-md shadow-sm bg-white dark:bg-[#242424] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#696969] focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-600 dark:focus:border-primary-600 sm:text-sm"
+                      className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-[#525252] rounded-md shadow-sm bg-white dark:bg-[#242424] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#bdbdbd] focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-600 dark:focus:border-primary-600 sm:text-sm"
                       placeholder="https://instagram.com/..."
                     />
                   </div>
@@ -349,12 +349,12 @@ export default function SettingsPage() {
                     </div>
                   </label>
                   <div className="relative">
-                    <LinkIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-[#696969]" />
+                    <LinkIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-[#bdbdbd]" />
                     <input
                       type="url"
                       value={settings.footer.socialLinks.twitter}
                       onChange={e => handleSocialLinkChange('twitter', e.target.value)}
-                      className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-[#525252] rounded-md shadow-sm bg-white dark:bg-[#242424] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#696969] focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-600 dark:focus:border-primary-600 sm:text-sm"
+                      className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-[#525252] rounded-md shadow-sm bg-white dark:bg-[#242424] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#bdbdbd] focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-600 dark:focus:border-primary-600 sm:text-sm"
                       placeholder="https://twitter.com/..."
                     />
                   </div>
@@ -368,12 +368,12 @@ export default function SettingsPage() {
                     </div>
                   </label>
                   <div className="relative">
-                    <LinkIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-[#696969]" />
+                    <LinkIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-[#bdbdbd]" />
                     <input
                       type="url"
                       value={settings.footer.socialLinks.facebook}
                       onChange={e => handleSocialLinkChange('facebook', e.target.value)}
-                      className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-[#525252] rounded-md shadow-sm bg-white dark:bg-[#242424] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#696969] focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-600 dark:focus:border-primary-600 sm:text-sm"
+                      className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-[#525252] rounded-md shadow-sm bg-white dark:bg-[#242424] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#bdbdbd] focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-600 dark:focus:border-primary-600 sm:text-sm"
                       placeholder="https://facebook.com/..."
                     />
                   </div>
@@ -387,12 +387,12 @@ export default function SettingsPage() {
                     </div>
                   </label>
                   <div className="relative">
-                    <LinkIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-[#696969]" />
+                    <LinkIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-[#bdbdbd]" />
                     <input
                       type="url"
                       value={settings.footer.socialLinks.youtube}
                       onChange={e => handleSocialLinkChange('youtube', e.target.value)}
-                      className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-[#525252] rounded-md shadow-sm bg-white dark:bg-[#242424] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#696969] focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-600 dark:focus:border-primary-600 sm:text-sm"
+                      className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-[#525252] rounded-md shadow-sm bg-white dark:bg-[#242424] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#bdbdbd] focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-600 dark:focus:border-primary-600 sm:text-sm"
                       placeholder="https://youtube.com/..."
                     />
                   </div>
@@ -416,12 +416,12 @@ export default function SettingsPage() {
                     Full Name
                   </label>
                   <div className="relative">
-                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-[#696969]" />
+                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-[#bdbdbd]" />
                     <input
                       type="text"
                       value={settings.adminAccount.name}
                       onChange={e => handleAdminChange('name', e.target.value)}
-                      className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-[#525252] rounded-md shadow-sm bg-white dark:bg-[#242424] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#696969] focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-600 dark:focus:border-primary-600 sm:text-sm"
+                      className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-[#525252] rounded-md shadow-sm bg-white dark:bg-[#242424] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#bdbdbd] focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-600 dark:focus:border-primary-600 sm:text-sm"
                     />
                   </div>
                 </div>
@@ -431,16 +431,16 @@ export default function SettingsPage() {
                     Email Address
                   </label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-[#696969]" />
+                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-[#bdbdbd]" />
                     <input
                       type="email"
                       value={settings.adminAccount.email}
                       onChange={e => handleAdminChange('email', e.target.value)}
-                      className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-[#525252] rounded-md shadow-sm bg-white dark:bg-[#242424] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#696969] focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-600 dark:focus:border-primary-600 sm:text-sm"
+                      className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-[#525252] rounded-md shadow-sm bg-white dark:bg-[#242424] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#bdbdbd] focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-600 dark:focus:border-primary-600 sm:text-sm"
                       disabled
                     />
                   </div>
-                  <p className="mt-1 text-xs text-gray-500 dark:text-[#696969]">
+                  <p className="mt-1 text-xs text-gray-500 dark:text-[#bdbdbd]">
                     Email cannot be changed
                   </p>
                 </div>
@@ -466,7 +466,7 @@ export default function SettingsPage() {
                     type="text"
                     value={settings.general.storeName}
                     onChange={e => handleGeneralChange('storeName', e.target.value)}
-                    className="block w-full px-3 py-2 border border-gray-300 dark:border-[#525252] rounded-md shadow-sm bg-white dark:bg-[#242424] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#696969] focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-600 dark:focus:border-primary-600 sm:text-sm"
+                    className="block w-full px-3 py-2 border border-gray-300 dark:border-[#525252] rounded-md shadow-sm bg-white dark:bg-[#242424] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#bdbdbd] focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-600 dark:focus:border-primary-600 sm:text-sm"
                   />
                 </div>
 

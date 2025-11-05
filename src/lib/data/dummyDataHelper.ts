@@ -1,19 +1,9 @@
 /**
  * Helper functions to load dummy data into stores
  * 
+ * Note: Products now use API integration instead of dummy data.
+ * 
  * Usage in admin pages:
- * 
- * Method 1: Direct import and use in component
- * ```tsx
- * import { dummyProducts } from '@/lib/data/dummyProducts';
- * import { useProductStore } from '@/lib/data/store/productStore';
- * 
- * useEffect(() => {
- *   useProductStore.setState({ products: dummyProducts, status: 'success' });
- * }, []);
- * ```
- * 
- * Method 2: Use helper functions
  * ```tsx
  * import { setAllDummyDataInStores } from '@/lib/data/dummyDataHelper';
  * 
@@ -23,27 +13,14 @@
  * ```
  */
 
-import { dummyProducts } from './dummyProducts';
 import { dummyCategories } from './dummyCategories';
 import { dummyCollections } from './dummyCollections';
 import { dummyOrders } from './dummyOrders';
 import { dummyCustomers } from './dummyCustomers';
-import { useProductStore } from '@/lib/data/store/productStore';
 import { useCategoryStore } from '@/lib/data/store/categoryStore';
 import { useCollectionStore } from '@/lib/data/store/collectionStore';
 import { useOrderStore } from '@/lib/data/store/orderStore';
 import { useCustomerStore } from '@/lib/data/store/customerStore';
-
-/**
- * Set dummy products in the product store
- */
-export const setDummyProductsInStore = () => {
-  useProductStore.setState({ 
-    products: dummyProducts,
-    status: 'success',
-    error: null 
-  });
-};
 
 /**
  * Set dummy categories in the category store
@@ -109,7 +86,6 @@ export const setDummyCustomersInStore = () => {
  * Set all dummy data in all stores at once
  */
 export const setAllDummyDataInStores = () => {
-  setDummyProductsInStore();
   setDummyCategoriesInStore();
   setDummyCollectionsInStore();
   setDummyOrdersInStore();

@@ -13,8 +13,6 @@ import {
 import Link from 'next/link';
 import Image from 'next/image';
 import { useProductStore } from '@/lib/data/store/productStore';
-import { setDummyProductsInStore } from '@/lib/data/dummyDataHelper';
-import { dummyProducts } from '@/lib/data/dummyProducts';
 import Modal from '@/app/admin/components/Modal';
 
 export default function ProductDetailPage() {
@@ -24,9 +22,9 @@ export default function ProductDetailPage() {
 
   const {
     currentProduct,
-    // fetchProduct,
+    fetchProduct,
     deleteProduct,
-    // status,
+    status,
     error,
     clearError,
   } = useProductStore();
@@ -34,17 +32,11 @@ export default function ProductDetailPage() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   useEffect(() => {
-    // Load dummy data and find the product
+    // Fetch product from API
     if (productId) {
-      setDummyProductsInStore();
-      const product = dummyProducts.find((p) => p._id === productId);
-      if (product) {
-        useProductStore.setState({ currentProduct: product, status: 'success', error: null });
-      } else {
-        useProductStore.setState({ currentProduct: null, status: 'error', error: 'Product not found' });
-      }
+      fetchProduct(productId);
     }
-  }, [productId]);
+  }, [productId, fetchProduct]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-IN', {
@@ -82,7 +74,7 @@ export default function ProductDetailPage() {
           <h3 className="text-lg font-medium text-gray-900 dark:text-white">
             Product not found
           </h3>
-          <p className="mt-1 text-sm text-gray-500 dark:text-[#696969]">
+          <p className="mt-1 text-sm text-gray-500 dark:text-[#bdbdbd]">
             The product you&apos;re looking for doesn&apos;t exist.
           </p>
           <Link
@@ -218,8 +210,8 @@ export default function ProductDetailPage() {
                   </div>
                 ) : (
                   <div className="text-center py-8">
-                    <Package className="mx-auto h-12 w-12 text-gray-400 dark:text-[#696969]" />
-                    <p className="mt-2 text-sm text-gray-500 dark:text-[#696969]">
+                    <Package className="mx-auto h-12 w-12 text-gray-400 dark:text-[#bdbdbd]" />
+                    <p className="mt-2 text-sm text-gray-500 dark:text-[#bdbdbd]">
                       No images available
                     </p>
                   </div>
@@ -251,7 +243,7 @@ export default function ProductDetailPage() {
               <div className="p-6">
                 <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
-                    <dt className="text-sm font-medium text-gray-500 dark:text-[#696969]">
+                    <dt className="text-sm font-medium text-gray-500 dark:text-[#bdbdbd]">
                       Material
                     </dt>
                     <dd className="mt-1 text-sm text-gray-900 dark:text-white">
@@ -259,7 +251,7 @@ export default function ProductDetailPage() {
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-sm font-medium text-gray-500 dark:text-[#696969]">
+                    <dt className="text-sm font-medium text-gray-500 dark:text-[#bdbdbd]">
                       Weight
                     </dt>
                     <dd className="mt-1 text-sm text-gray-900 dark:text-white">
@@ -267,7 +259,7 @@ export default function ProductDetailPage() {
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-sm font-medium text-gray-500 dark:text-[#696969]">
+                    <dt className="text-sm font-medium text-gray-500 dark:text-[#bdbdbd]">
                       Available Sizes
                     </dt>
                     <dd className="mt-1 text-sm text-gray-900 dark:text-white">
@@ -277,7 +269,7 @@ export default function ProductDetailPage() {
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-sm font-medium text-gray-500 dark:text-[#696969]">
+                    <dt className="text-sm font-medium text-gray-500 dark:text-[#bdbdbd]">
                       Available Colors
                     </dt>
                     <dd className="mt-1 text-sm text-gray-900 dark:text-white">
@@ -302,7 +294,7 @@ export default function ProductDetailPage() {
                   <dl className="space-y-4">
                     {currentProduct.metaTitle && (
                       <div>
-                        <dt className="text-sm font-medium text-gray-500 dark:text-[#696969]">
+                        <dt className="text-sm font-medium text-gray-500 dark:text-[#bdbdbd]">
                           Meta Title
                         </dt>
                         <dd className="mt-1 text-sm text-gray-900 dark:text-white">
@@ -312,7 +304,7 @@ export default function ProductDetailPage() {
                     )}
                     {currentProduct.metaDescription && (
                       <div>
-                        <dt className="text-sm font-medium text-gray-500 dark:text-[#696969]">
+                        <dt className="text-sm font-medium text-gray-500 dark:text-[#bdbdbd]">
                           Meta Description
                         </dt>
                         <dd className="mt-1 text-sm text-gray-900 dark:text-white">
@@ -339,7 +331,7 @@ export default function ProductDetailPage() {
               <div className="p-6">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-500 dark:text-[#696969]">
+                    <span className="text-sm font-medium text-gray-500 dark:text-[#bdbdbd]">
                       Status
                     </span>
                     <span
@@ -359,7 +351,7 @@ export default function ProductDetailPage() {
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-500 dark:text-[#696969]">
+                    <span className="text-sm font-medium text-gray-500 dark:text-[#bdbdbd]">
                       Stock Quantity
                     </span>
                     <span className="text-sm text-gray-900 dark:text-white">
@@ -380,7 +372,7 @@ export default function ProductDetailPage() {
               <div className="p-6">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-500 dark:text-[#696969]">
+                    <span className="text-sm font-medium text-gray-500 dark:text-[#bdbdbd]">
                       Price
                     </span>
                     <span className="text-sm font-medium text-gray-900 dark:text-white">
@@ -389,7 +381,7 @@ export default function ProductDetailPage() {
                   </div>
                   {currentProduct.discountPrice && (
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-gray-500 dark:text-[#696969]">
+                      <span className="text-sm font-medium text-gray-500 dark:text-[#bdbdbd]">
                         Discount Price
                       </span>
                       <span className="text-sm font-medium text-gray-900 dark:text-white">
@@ -411,7 +403,7 @@ export default function ProductDetailPage() {
               <div className="p-6">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-500 dark:text-[#696969]">
+                    <span className="text-sm font-medium text-gray-500 dark:text-[#bdbdbd]">
                       SKU
                     </span>
                     <span className="text-sm text-gray-900 dark:text-white">
@@ -419,7 +411,7 @@ export default function ProductDetailPage() {
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-500 dark:text-[#696969]">
+                    <span className="text-sm font-medium text-gray-500 dark:text-[#bdbdbd]">
                       Slug
                     </span>
                     <span className="text-sm text-gray-900 dark:text-white font-mono">
@@ -427,7 +419,7 @@ export default function ProductDetailPage() {
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-500 dark:text-[#696969]">
+                    <span className="text-sm font-medium text-gray-500 dark:text-[#bdbdbd]">
                       Created
                     </span>
                     <span className="text-sm text-gray-900 dark:text-white">
@@ -435,7 +427,7 @@ export default function ProductDetailPage() {
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-500 dark:text-[#696969]">
+                    <span className="text-sm font-medium text-gray-500 dark:text-[#bdbdbd]">
                       Updated
                     </span>
                     <span className="text-sm text-gray-900 dark:text-white">
@@ -459,7 +451,7 @@ export default function ProductDetailPage() {
                   <div className="space-y-2">
                     {currentProduct.categories.map(category => (
                       <div key={category._id} className="flex items-center">
-                        <Tag className="h-4 w-4 text-gray-400 dark:text-[#696969] mr-2" />
+                        <Tag className="h-4 w-4 text-gray-400 dark:text-[#bdbdbd] mr-2" />
                         <span className="text-sm text-gray-900 dark:text-white">
                           {category.name}
                         </span>
@@ -467,7 +459,7 @@ export default function ProductDetailPage() {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm text-gray-500 dark:text-[#696969]">
+                  <p className="text-sm text-gray-500 dark:text-[#bdbdbd]">
                     No categories assigned
                   </p>
                 )}
@@ -487,7 +479,7 @@ export default function ProductDetailPage() {
                     <div className="space-y-2">
                       {currentProduct.collections.map(collection => (
                         <div key={collection._id} className="flex items-center">
-                          <Package className="h-4 w-4 text-gray-400 dark:text-[#696969] mr-2" />
+                          <Package className="h-4 w-4 text-gray-400 dark:text-[#bdbdbd] mr-2" />
                           <span className="text-sm text-gray-900 dark:text-white">
                             {collection.name}
                           </span>

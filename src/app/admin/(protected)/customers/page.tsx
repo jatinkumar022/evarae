@@ -9,106 +9,28 @@ import {
 } from 'lucide-react';
 import { useCustomerStore, Customer } from '@/lib/data/store/customerStore';
 import { CustomSelect } from '@/app/admin/components/CustomSelect';
-import { setDummyCustomersInStore } from '@/lib/data/dummyDataHelper';
 
 export default function CustomersPage() {
   const {
     customers,
     filters,
     pagination,
-    // status,
+    status,
     setFilters,
+    fetchCustomers,
   } = useCustomerStore();
 
-  // Use dummy data instead of API calls
+  // Fetch customers from API
   useEffect(() => {
-    setDummyCustomersInStore();
-    // Set limit to 10 customers per page
     setFilters({ limit: 10 });
-  }, []);
+  }, [setFilters]);
 
-  // Filter and paginate customers locally
-  const filteredAndPaginatedCustomers = useMemo(() => {
-    let result = [...customers];
+  // Fetch customers whenever filters change
+  useEffect(() => {
+    fetchCustomers();
+  }, [filters, fetchCustomers]);
 
-    // Search filter
-    if (filters.search) {
-      const searchLower = filters.search.toLowerCase();
-      result = result.filter(customer =>
-        customer.name.toLowerCase().includes(searchLower) ||
-        customer.email.toLowerCase().includes(searchLower) ||
-        customer.phone.includes(searchLower) ||
-        customer.profile?.addresses.some(addr => 
-          addr.city.toLowerCase().includes(searchLower) ||
-          addr.state.toLowerCase().includes(searchLower)
-        )
-      );
-    }
-
-    // Role filter
-    if (filters.role) {
-      result = result.filter(customer => customer.role === filters.role);
-    }
-
-    // Sort
-    result.sort((a, b) => {
-      let aVal: string | number, bVal: string | number;
-      switch (filters.sortBy) {
-        case 'createdAt':
-          aVal = new Date(a.createdAt).getTime();
-          bVal = new Date(b.createdAt).getTime();
-          break;
-        case 'name':
-          aVal = a.name.toLowerCase();
-          bVal = b.name.toLowerCase();
-          break;
-        case 'totalSpent':
-          aVal = a.totalSpent || 0;
-          bVal = b.totalSpent || 0;
-          break;
-        case 'totalOrders':
-          aVal = a.totalOrders || 0;
-          bVal = b.totalOrders || 0;
-          break;
-        case 'lastOrder':
-          aVal = a.lastOrderDate ? new Date(a.lastOrderDate).getTime() : 0;
-          bVal = b.lastOrderDate ? new Date(b.lastOrderDate).getTime() : 0;
-          break;
-        default:
-          aVal = new Date(a.createdAt).getTime();
-          bVal = new Date(b.createdAt).getTime();
-      }
-      if (typeof aVal === 'string' && typeof bVal === 'string') {
-        return filters.sortOrder === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
-      }
-      const aNum = typeof aVal === 'number' ? aVal : Number(aVal) || 0;
-      const bNum = typeof bVal === 'number' ? bVal : Number(bVal) || 0;
-      return filters.sortOrder === 'asc' ? aNum - bNum : bNum - aNum;
-    });
-
-    // Pagination
-    const total = result.length;
-    const limit = filters.limit || 10;
-    const page = filters.page || 1;
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const paginatedResult = result.slice(startIndex, endIndex);
-
-    // Update pagination info
-    const totalPages = Math.ceil(total / limit);
-    useCustomerStore.setState({
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages,
-        hasNext: page < totalPages,
-        hasPrev: page > 1,
-      },
-    });
-
-    return paginatedResult;
-  }, [customers, filters]);
+  // Customers are filtered and paginated by the API, so we just use them directly
 
   const formatCurrency = (amount: number) =>
     new Intl.NumberFormat('en-IN', {
@@ -144,7 +66,7 @@ export default function CustomersPage() {
       <div className="flex md:items-center gap-4 flex-col md:flex-row justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Customers</h1>
-          <p className="text-gray-600 dark:text-[#696969]">Manage customer database and view customer details</p>
+          <p className="text-gray-600 dark:text-[#bdbdbd]">Manage customer database and view customer details</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <button
@@ -163,13 +85,13 @@ export default function CustomersPage() {
               Search
             </label>
             <div className="mt-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-[#696969]" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-[#bdbdbd]" />
               <input
                 type="text"
                 value={filters.search}
                 onChange={e => setFilters({ search: e.target.value, page: 1 })}
                 placeholder="Search by name, email, phone, city..."
-                className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-[#525252] rounded-md sm:text-sm bg-white dark:bg-[#242424] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#696969] focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-600 dark:focus:border-primary-600"
+                className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-[#525252] rounded-md sm:text-sm bg-white dark:bg-[#242424] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#bdbdbd] focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-600 dark:focus:border-primary-600"
               />
             </div>
           </div>
@@ -231,20 +153,27 @@ export default function CustomersPage() {
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-[#1d1d1d] divide-y divide-gray-200 dark:divide-[#525252]">
-              {filteredAndPaginatedCustomers.length === 0 ? (
+              {status === 'loading' ? (
+                <tr>
+                  <td colSpan={6} className="px-4 py-12 text-center">
+                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
+                    <p className="mt-2 text-sm text-gray-500 dark:text-[#bdbdbd]">Loading customers...</p>
+                  </td>
+                </tr>
+              ) : customers.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-3 sm:px-4 py-12 text-center">
-                    <User className="mx-auto h-12 w-12 text-gray-400 dark:text-[#696969]" />
+                    <User className="mx-auto h-12 w-12 text-gray-400 dark:text-[#bdbdbd]" />
                     <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">
                       No customers found
                     </h3>
-                    <p className="mt-1 text-sm text-gray-500 dark:text-[#696969]">
+                    <p className="mt-1 text-sm text-gray-500 dark:text-[#bdbdbd]">
                       Try adjusting your search or filter criteria.
                     </p>
                   </td>
                 </tr>
               ) : (
-                filteredAndPaginatedCustomers.map((customer) => {
+                customers.map((customer) => {
                   const defaultAddress = getDefaultAddress(customer);
                   const tier = getCustomerTier(customer.totalSpent);
                   return (
@@ -273,7 +202,7 @@ export default function CustomersPage() {
                         <div className="text-sm font-medium text-gray-900 dark:text-white">
                           {customer.email}
                         </div>
-                        <div className="text-sm text-gray-500 dark:text-[#696969] flex items-center gap-1 mt-1">
+                        <div className="text-sm text-gray-500 dark:text-[#bdbdbd] flex items-center gap-1 mt-1">
                           <Phone className="h-3 w-3" />
                           {customer.phone}
                         </div>
@@ -287,12 +216,12 @@ export default function CustomersPage() {
                               <MapPin className="h-3 w-3 text-gray-400" />
                               <span>{defaultAddress.city}</span>
                             </div>
-                            <div className="text-xs text-gray-500 dark:text-[#696969] mt-1">
+                            <div className="text-xs text-gray-500 dark:text-[#bdbdbd] mt-1">
                               {defaultAddress.state}
                             </div>
                           </div>
                         ) : (
-                          <span className="text-sm text-gray-500 dark:text-[#696969]">—</span>
+                          <span className="text-sm text-gray-500 dark:text-[#bdbdbd]">—</span>
                         )}
                       </td>
 
@@ -302,7 +231,7 @@ export default function CustomersPage() {
                           {customer.totalOrders || 0}
                         </div>
                         {customer.lastOrderDate && (
-                          <div className="text-xs text-gray-500 dark:text-[#696969] mt-1">
+                          <div className="text-xs text-gray-500 dark:text-[#bdbdbd] mt-1">
                             Last: {formatDate(customer.lastOrderDate)}
                           </div>
                         )}

@@ -16,27 +16,30 @@ import {
 } from 'lucide-react';
 import { useOrderStore, Order } from '@/lib/data/store/orderStore';
 import { CustomSelect } from '@/app/admin/components/CustomSelect';
-import { setDummyOrdersInStore } from '@/lib/data/dummyDataHelper';
 
 export default function OrdersPage() {
   const {
     orders,
     filters,
     pagination,
-    // status,
+    status,
     setFilters,
+    fetchOrders,
   } = useOrderStore();
 
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
   const [dropdownPosition, setDropdownPosition] = useState<{ top: number; right: number } | null>(null);
   const buttonRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
 
-  // Use dummy data instead of API calls
+  // Fetch orders from API
   useEffect(() => {
-    setDummyOrdersInStore();
-    // Set limit to 10 orders per page
     setFilters({ limit: 10 });
-  }, []);
+  }, [setFilters]);
+
+  // Fetch orders whenever filters change
+  useEffect(() => {
+    fetchOrders();
+  }, [filters, fetchOrders]);
 
   // Calculate dropdown position based on button position
   const calculateDropdownPosition = (buttonElement: HTMLButtonElement) => {
@@ -66,87 +69,7 @@ export default function OrdersPage() {
     }
   }, [openDropdownId]);
 
-  // Filter and paginate orders locally
-  const filteredAndPaginatedOrders = useMemo(() => {
-    let result = [...orders];
-
-    // Search filter
-    if (filters.search) {
-      const searchLower = filters.search.toLowerCase();
-      result = result.filter(order =>
-        order.orderNumber.toLowerCase().includes(searchLower) ||
-        order.shippingAddress.fullName.toLowerCase().includes(searchLower) ||
-        order.shippingAddress.phone.includes(searchLower) ||
-        order.shippingAddress.city.toLowerCase().includes(searchLower)
-      );
-    }
-
-    // Order status filter
-    if (filters.orderStatus) {
-      result = result.filter(order => order.orderStatus === filters.orderStatus);
-    }
-
-    // Payment status filter
-    if (filters.paymentStatus) {
-      result = result.filter(order => order.paymentStatus === filters.paymentStatus);
-    }
-
-    // Payment method filter
-    if (filters.paymentMethod) {
-      result = result.filter(order => order.paymentMethod === filters.paymentMethod);
-    }
-
-    // Sort
-    result.sort((a, b) => {
-      let aVal: string | number, bVal: string | number;
-      switch (filters.sortBy) {
-        case 'createdAt':
-          aVal = new Date(a.createdAt).getTime();
-          bVal = new Date(b.createdAt).getTime();
-          break;
-        case 'totalAmount':
-          aVal = a.totalAmount;
-          bVal = b.totalAmount;
-          break;
-        case 'orderNumber':
-          aVal = a.orderNumber;
-          bVal = b.orderNumber;
-          break;
-        default:
-          aVal = new Date(a.createdAt).getTime();
-          bVal = new Date(b.createdAt).getTime();
-      }
-      if (typeof aVal === 'string' && typeof bVal === 'string') {
-        return filters.sortOrder === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
-      }
-      const aNum = typeof aVal === 'number' ? aVal : Number(aVal) || 0;
-      const bNum = typeof bVal === 'number' ? bVal : Number(bVal) || 0;
-      return filters.sortOrder === 'asc' ? aNum - bNum : bNum - aNum;
-    });
-
-    // Pagination
-    const total = result.length;
-    const limit = filters.limit || 10;
-    const page = filters.page || 1;
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const paginatedResult = result.slice(startIndex, endIndex);
-
-    // Update pagination info
-    const totalPages = Math.ceil(total / limit);
-    useOrderStore.setState({
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages,
-        hasNext: page < totalPages,
-        hasPrev: page > 1,
-      },
-    });
-
-    return paginatedResult;
-  }, [orders, filters]);
+  // Orders are filtered and paginated by the API, so we just use them directly
 
   const formatCurrency = (amount: number) =>
     new Intl.NumberFormat('en-IN', {
@@ -211,7 +134,7 @@ export default function OrdersPage() {
       <div className="flex md:items-center gap-4 flex-col md:flex-row justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Orders</h1>
-          <p className="text-gray-600 dark:text-[#696969]">Manage customer orders and track shipments</p>
+          <p className="text-gray-600 dark:text-[#bdbdbd]">Manage customer orders and track shipments</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <button
@@ -230,13 +153,13 @@ export default function OrdersPage() {
               Search
             </label>
             <div className="mt-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-[#696969]" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-[#bdbdbd]" />
               <input
                 type="text"
                 value={filters.search}
                 onChange={e => setFilters({ search: e.target.value, page: 1 })}
                 placeholder="Search by order number, customer name, phone..."
-                className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-[#525252] rounded-md sm:text-sm bg-white dark:bg-[#242424] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#696969] focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-600 dark:focus:border-primary-600"
+                className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-[#525252] rounded-md sm:text-sm bg-white dark:bg-[#242424] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#bdbdbd] focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-600 dark:focus:border-primary-600"
               />
             </div>
           </div>
@@ -323,20 +246,27 @@ export default function OrdersPage() {
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-[#1d1d1d] divide-y divide-gray-200 dark:divide-[#525252]">
-              {filteredAndPaginatedOrders.length === 0 ? (
+              {status === 'loading' ? (
                 <tr>
                   <td colSpan={8} className="px-3 sm:px-4 py-12 text-center">
-                    <Package className="mx-auto h-12 w-12 text-gray-400 dark:text-[#696969]" />
+                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
+                    <p className="mt-2 text-sm text-gray-500 dark:text-[#bdbdbd]">Loading orders...</p>
+                  </td>
+                </tr>
+              ) : orders.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="px-3 sm:px-4 py-12 text-center">
+                    <Package className="mx-auto h-12 w-12 text-gray-400 dark:text-[#bdbdbd]" />
                     <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">
                       No orders found
                     </h3>
-                    <p className="mt-1 text-sm text-gray-500 dark:text-[#696969]">
+                    <p className="mt-1 text-sm text-gray-500 dark:text-[#bdbdbd]">
                       Try adjusting your search or filter criteria.
                     </p>
                   </td>
                 </tr>
               ) : (
-                filteredAndPaginatedOrders.map((order) => {
+                orders.map((order) => {
                   const isDropdownOpen = openDropdownId === order._id;
                   return (
                     <tr key={order._id} className="transition-colors">
@@ -345,13 +275,13 @@ export default function OrdersPage() {
                         <div className="text-sm font-semibold text-gray-900 dark:text-white">
                           {order.orderNumber}
                         </div>
-                        <div className="text-xs text-gray-500 dark:text-[#696969] mt-1 sm:hidden">
+                        <div className="text-xs text-gray-500 dark:text-[#bdbdbd] mt-1 sm:hidden">
                           {order.shippingAddress.fullName}
                         </div>
-                        <div className="text-xs text-gray-500 dark:text-[#696969] mt-1 sm:hidden">
+                        <div className="text-xs text-gray-500 dark:text-[#bdbdbd] mt-1 sm:hidden">
                           {order.shippingAddress.phone}
                         </div>
-                        <div className="text-xs text-gray-500 dark:text-[#696969] mt-1 xl:hidden">
+                        <div className="text-xs text-gray-500 dark:text-[#bdbdbd] mt-1 xl:hidden">
                           {formatDate(order.createdAt)}
                         </div>
                         <div className="mt-2 sm:hidden">
@@ -361,7 +291,7 @@ export default function OrdersPage() {
                           {getPaymentStatusBadge(order.paymentStatus)}
                         </div>
                         {order.trackingNumber && (
-                          <div className="mt-2 flex items-center gap-1 text-xs text-gray-500 dark:text-[#696969]">
+                          <div className="mt-2 flex items-center gap-1 text-xs text-gray-500 dark:text-[#bdbdbd]">
                             <Truck className="h-3 w-3" />
                             <span className="truncate max-w-[150px]">{order.trackingNumber}</span>
                           </div>
@@ -373,10 +303,10 @@ export default function OrdersPage() {
                         <div className="text-sm font-medium text-gray-900 dark:text-white">
                           {order.shippingAddress.fullName}
                         </div>
-                        <div className="text-sm text-gray-500 dark:text-[#696969]">
+                        <div className="text-sm text-gray-500 dark:text-[#bdbdbd]">
                           {order.shippingAddress.phone}
                         </div>
-                        <div className="text-xs text-gray-500 dark:text-[#696969]">
+                        <div className="text-xs text-gray-500 dark:text-[#bdbdbd]">
                           {order.shippingAddress.city}, {order.shippingAddress.state}
                         </div>
                       </td>
@@ -400,13 +330,13 @@ export default function OrdersPage() {
                             )}
                             <div className="flex-1 min-w-0">
                               <div className="text-sm font-medium truncate">{order.items[0].name}</div>
-                              <div className="text-xs text-gray-500 dark:text-[#696969]">
+                              <div className="text-xs text-gray-500 dark:text-[#bdbdbd]">
                                 Qty: {order.items[0].quantity}
                               </div>
                             </div>
                           </div>
                           {order.items.length > 1 && (
-                            <div className="text-xs text-gray-500 dark:text-[#696969]">
+                            <div className="text-xs text-gray-500 dark:text-[#bdbdbd]">
                               +{order.items.length - 1} more item{order.items.length - 1 !== 1 ? 's' : ''}
                             </div>
                           )}
@@ -429,7 +359,7 @@ export default function OrdersPage() {
                       <td className="px-3 sm:px-4 py-4 whitespace-nowrap hidden lg:table-cell hover:bg-gray-50 dark:hover:bg-[#242424] transition-colors">
                         {getStatusBadge(order.orderStatus)}
                         {order.trackingNumber && (
-                          <div className="mt-2 flex items-center gap-1 text-xs text-gray-500 dark:text-[#696969]">
+                          <div className="mt-2 flex items-center gap-1 text-xs text-gray-500 dark:text-[#bdbdbd]">
                             <Truck className="h-3 w-3" />
                             <span className="truncate max-w-[120px]">{order.trackingNumber}</span>
                           </div>
@@ -439,7 +369,7 @@ export default function OrdersPage() {
                       {/* Payment Status - Desktop */}
                       <td className="px-3 sm:px-4 py-4 whitespace-nowrap hidden lg:table-cell hover:bg-gray-50 dark:hover:bg-[#242424] transition-colors">
                         {getPaymentStatusBadge(order.paymentStatus)}
-                        <div className="text-xs text-gray-500 dark:text-[#696969] mt-1">
+                        <div className="text-xs text-gray-500 dark:text-[#bdbdbd] mt-1">
                           {order.paymentMethod.toUpperCase()}
                         </div>
                       </td>

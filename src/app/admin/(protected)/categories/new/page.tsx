@@ -178,7 +178,7 @@ export default function NewCategoryPage() {
             <div className="flex items-center space-x-4">
               <Link
                 href="/admin/categories"
-                className="inline-flex items-center text-sm text-gray-500 dark:text-[#696969] hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+                className="inline-flex items-center text-sm text-gray-500 dark:text-[#bdbdbd] hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back
@@ -203,7 +203,7 @@ export default function NewCategoryPage() {
             <h1 className=" text-xl md:text-3xl font-bold text-gray-900 dark:text-white">
               Add New Category
             </h1>
-            <p className="mt-2 text-gray-600 dark:text-[#696969] text-sm md:text-base">
+            <p className="mt-2 text-gray-600 dark:text-[#bdbdbd] text-sm md:text-base">
               Create a new category for your jewelry catalog
             </p>
           </div>
@@ -258,7 +258,7 @@ export default function NewCategoryPage() {
                       required
                       value={formData.name}
                       onChange={e => handleInputChange('name', e.target.value)}
-                      className={`block w-full px-3 py-2 border rounded-lg shadow-sm placeholder-gray-400 dark:placeholder-[#696969] focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-[#242424] text-gray-900 dark:text-white border-gray-300 dark:border-[#525252] text-sm md:text-base ${
+                      className={`block w-full px-3 py-2 border rounded-lg shadow-sm placeholder-gray-400 dark:placeholder-[#bdbdbd] focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-[#242424] text-gray-900 dark:text-white border-gray-300 dark:border-[#525252] text-sm md:text-base ${
                         validationErrors.name
                           ? 'border-red-300 dark:border-red-800'
                           : 'border-gray-300 dark:border-[#525252]'
@@ -282,7 +282,7 @@ export default function NewCategoryPage() {
                       onChange={e =>
                         handleInputChange('description', e.target.value)
                       }
-                      className={`block w-full px-3 py-2 border rounded-lg shadow-sm placeholder-gray-400 dark:placeholder-[#696969] focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-[#242424] text-gray-900 dark:text-white border-gray-300 dark:border-[#525252] resize-none text-sm md:text-base`}
+                      className={`block w-full px-3 py-2 border rounded-lg shadow-sm placeholder-gray-400 dark:placeholder-[#bdbdbd] focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-[#242424] text-gray-900 dark:text-white border-gray-300 dark:border-[#525252] resize-none text-sm md:text-base`}
                       placeholder="Describe this category"
                     />
                   </div>
@@ -301,7 +301,7 @@ export default function NewCategoryPage() {
                             parseInt(e.target.value) || 0
                           )
                         }
-                        className="block w-full px-3 py-2 border border-gray-300 dark:border-[#525252] rounded-lg shadow-sm placeholder-gray-400 dark:placeholder-[#696969] focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-[#242424] text-gray-900 dark:text-white text-sm md:text-base"
+                        className="block w-full px-3 py-2 border border-gray-300 dark:border-[#525252] rounded-lg shadow-sm placeholder-gray-400 dark:placeholder-[#bdbdbd] focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-[#242424] text-gray-900 dark:text-white text-sm md:text-base"
                         placeholder="0"
                       />
                     </div>
@@ -342,7 +342,7 @@ export default function NewCategoryPage() {
                 </div>
                 <div className="p-6 space-y-4">
                   <div className="border-2 border-dashed border-gray-300 dark:border-[#3a3a3a] rounded-lg p-6 text-center hover:border-gray-400 dark:hover:border-[#4a4a4a] hover:bg-gray-50 dark:hover:bg-[#1e1e1e] transition-colors">
-                    <Upload className="mx-auto h-8 w-8 text-gray-400 dark:text-[#696969] mb-2" />
+                    <Upload className="mx-auto h-8 w-8 text-gray-400 dark:text-[#bdbdbd] mb-2" />
                     <label className="cursor-pointer">
                       <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                         Upload image
@@ -402,7 +402,7 @@ export default function NewCategoryPage() {
                 </div>
                 <div className="p-6 space-y-4">
                   <div className="border-2 border-dashed border-gray-300 dark:border-[#3a3a3a] rounded-lg p-6 text-center hover:border-gray-400 dark:hover:border-[#4a4a4a] hover:bg-gray-50 dark:hover:bg-[#1e1e1e] transition-colors">
-                    <Upload className="mx-auto h-8 w-8 text-gray-400 dark:text-[#696969] mb-2" />
+                    <Upload className="mx-auto h-8 w-8 text-gray-400 dark:text-[#bdbdbd] mb-2" />
                     <label className="cursor-pointer">
                       <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                         Upload banner
@@ -458,7 +458,7 @@ export default function NewCategoryPage() {
                 </div>
                 <div className="p-6 space-y-4">
                   <div className="border-2 border-dashed border-gray-300 dark:border-[#3a3a3a] rounded-lg p-6 text-center hover:border-gray-400 dark:hover:border-[#4a4a4a] hover:bg-gray-50 dark:hover:bg-[#1e1e1e] transition-colors">
-                    <Upload className="mx-auto h-8 w-8 text-gray-400 dark:text-[#696969] mb-2" />
+                    <Upload className="mx-auto h-8 w-8 text-gray-400 dark:text-[#bdbdbd] mb-2" />
                     <label className="cursor-pointer">
                       <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                         Upload mobile banner

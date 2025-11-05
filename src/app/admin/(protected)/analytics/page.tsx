@@ -119,7 +119,7 @@ export default function AnalyticsPage() {
       <div className="flex md:items-center gap-3 sm:gap-4 flex-col md:flex-row justify-between">
         <div className="w-full md:w-auto">
           <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Analytics</h1>
-          <p className="text-sm sm:text-base text-gray-600 dark:text-[#696969] mt-1">
+          <p className="text-sm sm:text-base text-gray-600 dark:text-[#bdbdbd] mt-1">
             Track your business performance and insights
           </p>
         </div>
@@ -156,7 +156,7 @@ export default function AnalyticsPage() {
               </div>
               <div className="ml-3 sm:ml-4 md:ml-5 w-0 flex-1 min-w-0">
                 <dl>
-                  <dt className="text-xs sm:text-sm font-medium text-gray-500 dark:text-[#696969] truncate">
+                  <dt className="text-xs sm:text-sm font-medium text-gray-500 dark:text-[#bdbdbd] truncate">
                     Total Revenue
                   </dt>
                   <dd className="text-base sm:text-lg font-medium text-gray-900 dark:text-white truncate">
@@ -173,7 +173,7 @@ export default function AnalyticsPage() {
                 <span className="font-medium text-green-600 dark:text-green-400">
                   {analytics.revenueGrowth}%
                 </span>
-                <span className="text-gray-500 dark:text-[#696969] text-xs">from last period</span>
+                <span className="text-gray-500 dark:text-[#bdbdbd] text-xs">from last period</span>
               </div>
             </div>
           </div>
@@ -187,7 +187,7 @@ export default function AnalyticsPage() {
               </div>
               <div className="ml-3 sm:ml-4 md:ml-5 w-0 flex-1 min-w-0">
                 <dl>
-                  <dt className="text-xs sm:text-sm font-medium text-gray-500 dark:text-[#696969] truncate">
+                  <dt className="text-xs sm:text-sm font-medium text-gray-500 dark:text-[#bdbdbd] truncate">
                     Total Orders
                   </dt>
                   <dd className="text-base sm:text-lg font-medium text-gray-900 dark:text-white truncate">
@@ -204,7 +204,7 @@ export default function AnalyticsPage() {
                 <span className="font-medium text-green-600 dark:text-green-400">
                   {analytics.ordersGrowth}%
                 </span>
-                <span className="text-gray-500 dark:text-[#696969] text-xs">from last period</span>
+                <span className="text-gray-500 dark:text-[#bdbdbd] text-xs">from last period</span>
               </div>
             </div>
           </div>
@@ -218,7 +218,7 @@ export default function AnalyticsPage() {
               </div>
               <div className="ml-3 sm:ml-4 md:ml-5 w-0 flex-1 min-w-0">
                 <dl>
-                  <dt className="text-xs sm:text-sm font-medium text-gray-500 dark:text-[#696969] truncate">
+                  <dt className="text-xs sm:text-sm font-medium text-gray-500 dark:text-[#bdbdbd] truncate">
                     Total Customers
                   </dt>
                   <dd className="text-base sm:text-lg font-medium text-gray-900 dark:text-white truncate">
@@ -235,7 +235,7 @@ export default function AnalyticsPage() {
                 <span className="font-medium text-green-600 dark:text-green-400">
                   {analytics.customersGrowth}%
                 </span>
-                <span className="text-gray-500 dark:text-[#696969] text-xs">from last period</span>
+                <span className="text-gray-500 dark:text-[#bdbdbd] text-xs">from last period</span>
               </div>
             </div>
           </div>
@@ -249,7 +249,7 @@ export default function AnalyticsPage() {
               </div>
               <div className="ml-3 sm:ml-4 md:ml-5 w-0 flex-1 min-w-0">
                 <dl>
-                  <dt className="text-xs sm:text-sm font-medium text-gray-500 dark:text-[#696969] truncate">
+                  <dt className="text-xs sm:text-sm font-medium text-gray-500 dark:text-[#bdbdbd] truncate">
                     Total Products
                   </dt>
                   <dd className="text-base sm:text-lg font-medium text-gray-900 dark:text-white truncate">
@@ -266,7 +266,7 @@ export default function AnalyticsPage() {
                 <span className="font-medium text-green-600 dark:text-green-400">
                   {analytics.productsGrowth}%
                 </span>
-                <span className="text-gray-500 dark:text-[#696969] text-xs">from last period</span>
+                <span className="text-gray-500 dark:text-[#bdbdbd] text-xs">from last period</span>
               </div>
             </div>
           </div>
@@ -292,14 +292,14 @@ export default function AnalyticsPage() {
                     key={item.month}
                     className="flex-1 min-w-[28px] sm:min-w-[32px] md:min-w-[36px] flex flex-col items-center"
                   >
-                    <div className="text-[10px] xs:text-xs text-gray-500 dark:text-[#696969] mb-1 sm:mb-2 text-center leading-tight">
+                    <div className="text-[10px] xs:text-xs text-gray-500 dark:text-[#bdbdbd] mb-1 sm:mb-2 text-center leading-tight">
                       {formatCompactCurrency(item.revenue)}
                     </div>
                     <div
                       className="w-full bg-gradient-to-t from-primary-600 to-primary-400 rounded-t dark:from-primary-500 dark:to-primary-300 min-h-[4px]"
                       style={{ height: `${height}%` }}
                     ></div>
-                    <div className="text-[10px] xs:text-xs text-gray-500 dark:text-[#696969] mt-1 sm:mt-2">
+                    <div className="text-[10px] xs:text-xs text-gray-500 dark:text-[#bdbdbd] mt-1 sm:mt-2">
                       {item.month}
                     </div>
                   </div>
@@ -334,7 +334,7 @@ export default function AnalyticsPage() {
                         style={{ width: `${category.percentage}%` }}
                       ></div>
                     </div>
-                    <span className="text-xs sm:text-sm text-gray-500 dark:text-[#696969] w-12 sm:w-14 text-right whitespace-nowrap">
+                    <span className="text-xs sm:text-sm text-gray-500 dark:text-[#bdbdbd] w-12 sm:w-14 text-right whitespace-nowrap">
                       {category.sales} sales
                     </span>
                   </div>
@@ -366,7 +366,7 @@ export default function AnalyticsPage() {
                       <div className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white truncate">
                         {product.name}
                       </div>
-                      <div className="text-xs sm:text-sm text-gray-500 dark:text-[#696969]">
+                      <div className="text-xs sm:text-sm text-gray-500 dark:text-[#bdbdbd]">
                         {product.sales} sales
                       </div>
                     </div>
@@ -406,7 +406,7 @@ export default function AnalyticsPage() {
                     <p className="text-xs sm:text-sm text-gray-900 dark:text-white break-words">
                       {activity.description}
                     </p>
-                    <p className="text-xs sm:text-sm text-gray-500 dark:text-[#696969] mt-0.5">{activity.time}</p>
+                    <p className="text-xs sm:text-sm text-gray-500 dark:text-[#bdbdbd] mt-0.5">{activity.time}</p>
                   </div>
                   {activity.amount && (
                     <div className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white flex-shrink-0 ml-2">
@@ -434,7 +434,7 @@ export default function AnalyticsPage() {
                   analytics.totalRevenue / analytics.totalOrders
                 ).toLocaleString()}
               </div>
-              <div className="text-xs sm:text-sm text-gray-500 dark:text-[#696969] mt-1">Average Order Value</div>
+              <div className="text-xs sm:text-sm text-gray-500 dark:text-[#bdbdbd] mt-1">Average Order Value</div>
             </div>
             <div className="text-center">
               <div className="text-xl sm:text-2xl font-bold text-blue-600 dark:text-blue-400">
@@ -442,7 +442,7 @@ export default function AnalyticsPage() {
                   (analytics.totalOrders / analytics.totalCustomers) * 100
                 ) / 100}
               </div>
-              <div className="text-xs sm:text-sm text-gray-500 dark:text-[#696969] mt-1">Orders per Customer</div>
+              <div className="text-xs sm:text-sm text-gray-500 dark:text-[#bdbdbd] mt-1">Orders per Customer</div>
             </div>
             <div className="text-center">
               <div className="text-xl sm:text-2xl font-bold text-purple-600 dark:text-purple-400">
@@ -451,7 +451,7 @@ export default function AnalyticsPage() {
                 )}
                 K
               </div>
-              <div className="text-xs sm:text-sm text-gray-500 dark:text-[#696969] mt-1">Revenue per Product</div>
+              <div className="text-xs sm:text-sm text-gray-500 dark:text-[#bdbdbd] mt-1">Revenue per Product</div>
             </div>
           </div>
         </div>

@@ -4,9 +4,10 @@
  * This file exports all dummy data for testing the admin panel
  * without making API calls. Use these exports to populate stores
  * during development and testing.
+ * 
+ * Note: Products now use API integration instead of dummy data.
  */
 
-export { dummyProducts } from './dummyProducts';
 export { dummyCategories } from './dummyCategories';
 export { dummyCollections } from './dummyCollections';
 

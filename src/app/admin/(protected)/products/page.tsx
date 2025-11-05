@@ -16,115 +16,36 @@ import { useProductStore, Product } from '@/lib/data/store/productStore';
 import { useCategoryStore } from '@/lib/data/store/categoryStore';
 import { CustomSelect } from '@/app/admin/components/CustomSelect';
 import Modal from '@/app/admin/components/Modal';
-import { setDummyProductsInStore, setDummyCategoriesInStore } from '@/lib/data/dummyDataHelper';
 
 export default function ProductsPage() {
   const {
     products,
     filters,
     pagination,
-    // status,
-
+    status,
     setFilters,
-    // fetchProducts,
+    fetchProducts,
     deleteProduct,
   } = useProductStore();
 
-  const { categories, // fetchCategories
-    } = useCategoryStore();
+  const { categories, fetchCategories } = useCategoryStore();
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
-  // Removed grouped/flat toggle; always show flat grid
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
 
-  // Use dummy data instead of API calls
+  // Fetch categories on mount
   useEffect(() => {
-    setDummyProductsInStore();
-    setDummyCategoriesInStore();
-    // Set limit to 9 products per page
+    fetchCategories();
     setFilters({ limit: 9 });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Filter and paginate products locally
-  const filteredAndPaginatedProducts = useMemo(() => {
-    let result = [...products];
-
-    // Search filter
-    if (filters.search) {
-      const searchLower = filters.search.toLowerCase();
-      result = result.filter(p =>
-        p.name.toLowerCase().includes(searchLower) ||
-        p.sku?.toLowerCase().includes(searchLower) ||
-        p.description?.toLowerCase().includes(searchLower)
-      );
-    }
-
-    // Category filter
-    if (filters.category) {
-      result = result.filter(p =>
-        p.categories.some(cat => cat._id === filters.category)
-      );
-    }
-
-    // Status filter
-    if (filters.status) {
-      result = result.filter(p => p.status === filters.status);
-    }
-
-    // Sort
-    result.sort((a, b) => {
-      let aVal: string | number, bVal: string | number;
-      switch (filters.sortBy) {
-        case 'name':
-          aVal = a.name.toLowerCase();
-          bVal = b.name.toLowerCase();
-          break;
-        case 'price':
-          aVal = a.price;
-          bVal = b.price;
-          break;
-        case 'stockQuantity':
-          aVal = a.stockQuantity;
-          bVal = b.stockQuantity;
-          break;
-        case 'createdAt':
-        default:
-          aVal = new Date(a.createdAt).getTime();
-          bVal = new Date(b.createdAt).getTime();
-          break;
-      }
-      if (typeof aVal === 'string' && typeof bVal === 'string') {
-        return filters.sortOrder === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
-      }
-      const aNum = typeof aVal === 'number' ? aVal : Number(aVal) || 0;
-      const bNum = typeof bVal === 'number' ? bVal : Number(bVal) || 0;
-      return filters.sortOrder === 'asc' ? aNum - bNum : bNum - aNum;
-    });
-
-    // Pagination
-    const total = result.length;
-    const limit = filters.limit || 9;
-    const page = filters.page || 1;
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const paginatedResult = result.slice(startIndex, endIndex);
-
-    // Update pagination info
-    const totalPages = Math.ceil(total / limit);
-    useProductStore.setState({
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages,
-        hasNext: page < totalPages,
-        hasPrev: page > 1,
-      },
-    });
-
-    return paginatedResult;
-  }, [products, filters]);
+  // Fetch products whenever filters change
+  useEffect(() => {
+    fetchProducts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters]);
 
   const formatCurrency = (amount: number) =>
     new Intl.NumberFormat('en-IN', {
@@ -132,6 +53,16 @@ export default function ProductsPage() {
       currency: 'INR',
       maximumFractionDigits: 0,
     }).format(amount);
+
+
+  const handleSearch = (search: string) => setFilters({ search, page: 1 });
+  const handleCategoryFilter = (category: string) => setFilters({ category, page: 1 });
+  const handleSort = (sortBy: string) => {
+    const currentSortOrder = filters.sortBy === sortBy && filters.sortOrder === 'asc' ? 'desc' : 'asc';
+    setFilters({ sortBy, sortOrder: currentSortOrder, page: 1 });
+  };
+  const handlePageChange = (page: number) => setFilters({ page });
+  const handleStatusFilter = (status: string) => setFilters({ status, page: 1 });
 
   const handleDelete = (product: Product) => {
     setProductToDelete(product);
@@ -144,17 +75,13 @@ export default function ProductsPage() {
         await deleteProduct(productToDelete._id);
         setIsDeleteModalOpen(false);
         setProductToDelete(null);
+        // Refresh products after deletion
+        fetchProducts();
       } catch (error) {
         console.error('Delete failed:', error);
       }
     }
   };
-
-  const handleSearch = (search: string) => setFilters({ search, page: 1 });
-  const handleCategoryFilter = (category: string) => setFilters({ category, page: 1 });
-  const handleSort = (sortBy: string) => setFilters({ sortBy, page: 1 });
-  const handlePageChange = (page: number) => setFilters({ page });
-  const handleStatusFilter = (status: string) => setFilters({ status, page: 1 });
 
   const renderProductCard = (product: Product) => {
     const isDropdownOpen = openDropdownId === product._id;
@@ -213,14 +140,20 @@ export default function ProductsPage() {
       </div>
 
       {/* Product Image */}
-      <div className="aspect-square w-full overflow-hidden rounded-t-lg bg-gray-200 dark:bg-[#525252]">
-        <Image
-          src={product.thumbnail || product.thumbnail || '/placeholder.jpg'}
-          alt={product.name}
-          width={300}
-          height={300}
-          className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
-        />
+      <div className="aspect-square w-full overflow-hidden rounded-t-lg bg-gray-200 dark:bg-[#525252] relative">
+        {(product.thumbnail || product.images?.[0]) ? (
+          <Image
+            src={product.thumbnail || product.images[0]}
+            alt={product.name}
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+            className="object-cover group-hover:scale-105 transition-transform duration-300"
+          />
+        ) : (
+          <div className="h-full w-full flex items-center justify-center">
+            <Package className="h-12 w-12 text-gray-400 dark:text-[#bdbdbd]" />
+          </div>
+        )}
       </div>
 
       {/* Product Info */}
@@ -230,7 +163,7 @@ export default function ProductsPage() {
             <h3 className="text-sm font-medium text-gray-900 dark:text-white truncate">
               {product.name}
             </h3>
-            <p className="text-sm text-gray-500 dark:text-[#696969] truncate">
+            <p className="text-sm text-gray-500 dark:text-[#bdbdbd] truncate">
               {product.categories.map(cat => cat.name).join(', ')}
             </p>
           </div>
@@ -241,7 +174,7 @@ export default function ProductsPage() {
             {product.discountPrice ? (
               <>
                 {formatCurrency(product.discountPrice)}
-                <span className="ml-2 text-xs text-gray-500 dark:text-[#696969] line-through">
+                <span className="ml-2 text-xs text-gray-500 dark:text-[#bdbdbd] line-through">
                   {formatCurrency(product.price)}
                 </span>
               </>
@@ -266,7 +199,7 @@ export default function ProductsPage() {
           </span>
         </div>
 
-        <div className="mt-2 flex items-center justify-between text-sm text-gray-500 dark:text-[#696969] flex-wrap gap-1">
+        <div className="mt-2 flex items-center justify-between text-sm text-gray-500 dark:text-[#bdbdbd] flex-wrap gap-1">
           <span>SKU: {product.sku || 'N/A'}</span>
           <span>Stock: {product.stockQuantity}</span>
         </div>
@@ -291,12 +224,12 @@ export default function ProductsPage() {
   };
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
+    <div className="space-y-6  mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
       {/* Header */}
       <div className="flex md:items-center gap-4 flex-col md:flex-row justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Products</h1>
-          <p className="text-gray-600 dark:text-[#696969]">Manage your product catalog</p>
+          <p className="text-gray-600 dark:text-[#bdbdbd]">Manage your product catalog</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <Link
@@ -316,13 +249,13 @@ export default function ProductsPage() {
               Search
             </label>
             <div className="mt-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-[#696969]" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-[#bdbdbd]" />
               <input
                 type="text"
                 value={filters.search}
                 onChange={e => handleSearch(e.target.value)}
                 placeholder="Search products..."
-                className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-[#525252] rounded-md sm:text-sm bg-white dark:bg-[#242424] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#696969] focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-600 dark:focus:border-primary-600"
+                className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-[#525252] rounded-md sm:text-sm bg-white dark:bg-[#242424] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#bdbdbd] focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-600 dark:focus:border-primary-600"
               />
             </div>
           </div>
@@ -369,25 +302,29 @@ export default function ProductsPage() {
       {/* Products Grid */}
       <div className="bg-white dark:bg-[#191919] shadow rounded-lg border border-gray-200 dark:border-[#525252]">
         <div className="px-4 py-5 sm:p-6">
-          {/* Global loader will handle loading state */}
-          {filteredAndPaginatedProducts.length === 0 ? (
+          {status === 'loading' ? (
             <div className="text-center py-12">
-              <Package className="mx-auto h-12 w-12 text-gray-400 dark:text-[#696969]" />
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
+              <p className="mt-2 text-sm text-gray-500 dark:text-[#bdbdbd]">Loading products...</p>
+            </div>
+          ) : products.length === 0 ? (
+            <div className="text-center py-12">
+              <Package className="mx-auto h-12 w-12 text-gray-400 dark:text-[#bdbdbd]" />
               <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">
                 No products found
               </h3>
-              <p className="mt-1 text-sm text-gray-500 dark:text-[#696969]">
+              <p className="mt-1 text-sm text-gray-500 dark:text-[#bdbdbd]">
                 Try adjusting your search or filter criteria.
               </p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-              {filteredAndPaginatedProducts.map(renderProductCard)}
+              {products.map(renderProductCard)}
             </div>
           )}
 
           {/* Pagination */}
-          {pagination && pagination.totalPages > 1 && (
+          {status !== 'loading' && pagination && pagination.totalPages > 1 && (
             <div className="mt-6 flex items-center justify-between">
               <div className="text-sm text-gray-700 dark:text-gray-300">
                 Showing {(pagination.page - 1) * pagination.limit + 1} to{' '}

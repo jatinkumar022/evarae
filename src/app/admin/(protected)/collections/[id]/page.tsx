@@ -15,8 +15,6 @@ import {
 } from 'lucide-react';
 import { useCollectionStore } from '@/lib/data/store/collectionStore';
 import ProductSelectionModal from '@/app/admin/components/ProductSelectionModal';
-import { setDummyCollectionsInStore, setDummyProductsInStore } from '@/lib/data/dummyDataHelper';
-import { dummyCollections } from '@/lib/data/dummyCollections';
 import Modal from '@/app/admin/components/Modal';
 
 export default function CollectionViewPage() {
@@ -27,10 +25,10 @@ export default function CollectionViewPage() {
   const {
     currentCollection,
     allProducts,
-    // status,
+    status,
     error,
-    // fetchCollection,
-    // fetchProducts,
+    fetchCollection,
+    fetchProducts,
     updateCollectionProducts,
     deleteCollection,
     clearError,
@@ -41,28 +39,12 @@ export default function CollectionViewPage() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   useEffect(() => {
-    // Load dummy data instead of API calls
-    setDummyCollectionsInStore();
-    setDummyProductsInStore();
-    
+    // Fetch collection and products from API
     if (id && typeof id === 'string') {
-      // Find collection from dummy data
-      const collection = dummyCollections.find(c => c._id === id);
-      if (collection) {
-        useCollectionStore.setState({ 
-          currentCollection: collection, 
-          status: 'success', 
-          error: null 
-        });
-      } else {
-        useCollectionStore.setState({ 
-          currentCollection: null, 
-          status: 'error', 
-          error: 'Collection not found' 
-        });
-      }
+      fetchCollection(id);
+      fetchProducts();
     }
-  }, [id]);
+  }, [id, fetchCollection, fetchProducts]);
 
   useEffect(() => {
     if (currentCollection?.products) {
@@ -111,7 +93,7 @@ export default function CollectionViewPage() {
           <h3 className="text-lg font-medium text-gray-900 dark:text-white">
             Collection not found
           </h3>
-          <p className="mt-1 text-sm text-gray-500 dark:text-[#696969]">
+          <p className="mt-1 text-sm text-gray-500 dark:text-[#bdbdbd]">
             The collection you&apos;re looking for doesn&apos;t exist.
           </p>
           <Link
@@ -228,8 +210,8 @@ export default function CollectionViewPage() {
                   </div>
                 ) : (
                   <div className="text-center py-8">
-                      <Layers className="mx-auto h-12 w-12 text-gray-400 dark:text-[#696969]" />
-                      <p className="mt-2 text-sm text-gray-500 dark:text-[#696969]">
+                      <Layers className="mx-auto h-12 w-12 text-gray-400 dark:text-[#bdbdbd]" />
+                      <p className="mt-2 text-sm text-gray-500 dark:text-[#bdbdbd]">
                       No image available
                     </p>
                   </div>
@@ -298,7 +280,7 @@ export default function CollectionViewPage() {
                             />
                           ) : (
                             <div className="h-full w-full flex items-center justify-center">
-                                <Package className="h-8 w-8 text-gray-400 dark:text-[#696969]" />
+                                <Package className="h-8 w-8 text-gray-400 dark:text-[#bdbdbd]" />
                             </div>
                           )}
                         </div>
@@ -307,8 +289,8 @@ export default function CollectionViewPage() {
                   </div>
                 ) : (
                   <div className="text-center py-8">
-                      <Package className="mx-auto h-12 w-12 text-gray-400 dark:text-[#696969]" />
-                      <p className="mt-2 text-sm text-gray-500 dark:text-[#696969]">
+                      <Package className="mx-auto h-12 w-12 text-gray-400 dark:text-[#bdbdbd]" />
+                      <p className="mt-2 text-sm text-gray-500 dark:text-[#bdbdbd]">
                       No products in this collection
                     </p>
                     <button
@@ -337,7 +319,7 @@ export default function CollectionViewPage() {
               <div className="p-6">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-gray-500 dark:text-[#696969]">
+                        <span className="text-sm font-medium text-gray-500 dark:text-[#bdbdbd]">
                       Status
                     </span>
                     <span
@@ -351,7 +333,7 @@ export default function CollectionViewPage() {
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-gray-500 dark:text-[#696969]">
+                        <span className="text-sm font-medium text-gray-500 dark:text-[#bdbdbd]">
                       Products Count
                     </span>
                         <span className="text-sm text-gray-900 dark:text-white">
@@ -372,7 +354,7 @@ export default function CollectionViewPage() {
               <div className="p-6">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-gray-500 dark:text-[#696969]">
+                        <span className="text-sm font-medium text-gray-500 dark:text-[#bdbdbd]">
                       Collection ID
                     </span>
                         <span className="md:text-sm text-gray-900 dark:text-white font-mono text-xs">
@@ -380,7 +362,7 @@ export default function CollectionViewPage() {
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-gray-500 dark:text-[#696969]">
+                        <span className="text-sm font-medium text-gray-500 dark:text-[#bdbdbd]">
                       Slug
                     </span>
                         <span className="text-sm text-gray-900 dark:text-white font-mono">
@@ -388,7 +370,7 @@ export default function CollectionViewPage() {
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-gray-500 dark:text-[#696969]">
+                        <span className="text-sm font-medium text-gray-500 dark:text-[#bdbdbd]">
                       Sort Order
                     </span>
                         <span className="text-sm text-gray-900 dark:text-white">
@@ -396,7 +378,7 @@ export default function CollectionViewPage() {
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-gray-500 dark:text-[#696969]">
+                        <span className="text-sm font-medium text-gray-500 dark:text-[#bdbdbd]">
                       Created
                     </span>
                         <span className="text-sm text-gray-900 dark:text-white">
@@ -404,7 +386,7 @@ export default function CollectionViewPage() {
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-gray-500 dark:text-[#696969]">
+                        <span className="text-sm font-medium text-gray-500 dark:text-[#bdbdbd]">
                       Updated
                     </span>
                         <span className="text-sm text-gray-900 dark:text-white">

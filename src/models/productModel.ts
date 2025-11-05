@@ -56,7 +56,6 @@ const productSchema = new mongoose.Schema(
     metaTitle: { type: String, default: '' },
     metaDescription: { type: String, default: '' },
 
-    wallpaper: [String], // multiple wallpaper images
     video: String, // product video
   },
   { timestamps: true }

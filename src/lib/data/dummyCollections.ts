@@ -1,7 +1,7 @@
 import type { Collection } from '@/lib/data/store/collectionStore';
-import { dummyProducts } from './dummyProducts';
 
 // Dummy collections data for admin testing
+// Note: Products are now managed through API integration
 export const dummyCollections: Collection[] = [
   {
     _id: 'coll001',
@@ -11,10 +11,7 @@ export const dummyCollections: Collection[] = [
     image: 'https://res.cloudinary.com/demo/image/upload/w_400,h_400,c_fill,q_auto/v1/collections/wedding-collection',
     isActive: true,
     sortOrder: 1,
-    products: [
-      dummyProducts[0], // Traditional Gold Mangalsutra
-      dummyProducts[5]  // Diamond Ring for Engagement
-    ],
+    products: [],
     createdAt: '2024-01-01T08:00:00.000Z',
     updatedAt: '2024-02-20T12:00:00.000Z'
   },
@@ -26,10 +23,7 @@ export const dummyCollections: Collection[] = [
     image: 'https://res.cloudinary.com/demo/image/upload/w_400,h_400,c_fill,q_auto/v1/collections/diamond-collection',
     isActive: true,
     sortOrder: 2,
-    products: [
-      dummyProducts[1], // Diamond Stud Earrings
-      dummyProducts[5]  // Diamond Ring for Engagement
-    ],
+    products: [],
     createdAt: '2024-01-05T09:00:00.000Z',
     updatedAt: '2024-02-25T14:00:00.000Z'
   },
@@ -41,10 +35,7 @@ export const dummyCollections: Collection[] = [
     image: 'https://res.cloudinary.com/demo/image/upload/w_400,h_400,c_fill,q_auto/v1/collections/daily-wear-collection',
     isActive: true,
     sortOrder: 3,
-    products: [
-      dummyProducts[2], // Rose Gold Chain Bracelet
-      dummyProducts[8]  // Minimalist Gold Ring
-    ],
+    products: [],
     createdAt: '2024-01-10T10:00:00.000Z',
     updatedAt: '2024-02-18T11:00:00.000Z'
   },
@@ -56,10 +47,7 @@ export const dummyCollections: Collection[] = [
     image: 'https://res.cloudinary.com/demo/image/upload/w_400,h_400,c_fill,q_auto/v1/collections/festival-collection',
     isActive: true,
     sortOrder: 4,
-    products: [
-      dummyProducts[3], // Kundan Pendant Necklace
-      dummyProducts[7]  // Temple Gold Chain
-    ],
+    products: [],
     createdAt: '2024-01-08T07:00:00.000Z',
     updatedAt: '2024-02-22T15:00:00.000Z'
   },
@@ -71,9 +59,7 @@ export const dummyCollections: Collection[] = [
     image: 'https://res.cloudinary.com/demo/image/upload/w_400,h_400,c_fill,q_auto/v1/collections/wedding-collection',
     isActive: true,
     sortOrder: 5,
-    products: [
-      dummyProducts[4]  // Silver Bangles Set
-    ],
+    products: [],
     createdAt: '2024-01-12T11:00:00.000Z',
     updatedAt: '2024-02-12T10:00:00.000Z'
   },
@@ -85,10 +71,7 @@ export const dummyCollections: Collection[] = [
     image: 'https://res.cloudinary.com/demo/image/upload/w_400,h_400,c_fill,q_auto/v1/collections/classic-collection',
     isActive: true,
     sortOrder: 6,
-    products: [
-      dummyProducts[6], // Pearl Choker Necklace
-      dummyProducts[9]  // Antique Silver Earrings
-    ],
+    products: [],
     createdAt: '2024-01-15T12:00:00.000Z',
     updatedAt: '2024-02-20T09:00:00.000Z'
   },
@@ -100,11 +83,7 @@ export const dummyCollections: Collection[] = [
     image: 'https://res.cloudinary.com/demo/image/upload/w_400,h_400,c_fill,q_auto/v1/collections/new-arrivals',
     isActive: true,
     sortOrder: 7,
-    products: [
-      dummyProducts[2], // Rose Gold Chain Bracelet
-      dummyProducts[8], // Minimalist Gold Ring
-      dummyProducts[7]  // Temple Gold Chain
-    ],
+    products: [],
     createdAt: '2024-02-01T08:00:00.000Z',
     updatedAt: '2024-02-22T13:00:00.000Z'
   },
@@ -116,9 +95,7 @@ export const dummyCollections: Collection[] = [
     image: 'https://res.cloudinary.com/demo/image/upload/w_400,h_400,c_fill,q_auto/v1/collections/diamond-collection',
     isActive: false,
     sortOrder: 8,
-    products: [
-      dummyProducts[5]  // Diamond Ring for Engagement
-    ],
+    products: [],
     createdAt: '2024-01-20T09:00:00.000Z',
     updatedAt: '2024-02-10T10:00:00.000Z'
   }

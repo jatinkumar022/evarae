@@ -15,14 +15,13 @@ import {
 import { useCategoryStore, Category } from '@/lib/data/store/categoryStore';
 import { CustomSelect } from '@/app/admin/components/CustomSelect';
 import Modal from '@/app/admin/components/Modal';
-import { setDummyCategoriesInStore } from '@/lib/data/dummyDataHelper';
 
 export default function CategoriesPage() {
   const {
     categories,
-    // status,
+    status,
     error,
-    // fetchCategories,
+    fetchCategories,
     deleteCategory,
     updateCategory,
     clearError,
@@ -41,9 +40,9 @@ export default function CategoriesPage() {
   const itemsPerPage = 9;
 
   useEffect(() => {
-    // Load dummy categories
-    setDummyCategoriesInStore();
-  }, []);
+    // Fetch categories from API
+    fetchCategories();
+  }, [fetchCategories]);
 
   const handleDeleteCategory = (category: Category) => {
     setCategoryToDelete(category);
@@ -56,6 +55,8 @@ export default function CategoriesPage() {
         await deleteCategory(categoryToDelete._id);
         setIsDeleteModalOpen(false);
         setCategoryToDelete(null);
+        // Refresh categories after deletion
+        fetchCategories();
       } catch (error) {
         console.error('Failed to delete category:', error);
       }
@@ -97,18 +98,18 @@ export default function CategoriesPage() {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
             Categories
           </h1>
-          <p className="text-gray-600 dark:text-[#696969]">
+          <p className="text-gray-600 dark:text-[#bdbdbd]">
             Manage your product categories and organize your inventory
           </p>
           <div className="flex flex-wrap items-center gap-4 mt-2">
-            <span className="text-sm text-gray-600 dark:text-[#696969]">
+            <span className="text-sm text-gray-600 dark:text-[#bdbdbd]">
               Total: <span className="font-medium">{categories.length}</span>
             </span>
-            <span className="text-sm text-gray-600 dark:text-[#696969]">
+            <span className="text-sm text-gray-600 dark:text-[#bdbdbd]">
               Active: <span className="font-medium text-green-600 dark:text-green-400">{activeCount}</span>
             </span>
-            <span className="text-sm text-gray-600 dark:text-[#696969]">
-              Inactive: <span className="font-medium text-gray-500 dark:text-[#696969]">{inactiveCount}</span>
+            <span className="text-sm text-gray-600 dark:text-[#bdbdbd]">
+              Inactive: <span className="font-medium text-gray-500 dark:text-[#bdbdbd]">{inactiveCount}</span>
             </span>
           </div>
         </div>
@@ -130,13 +131,13 @@ export default function CategoriesPage() {
               Search
             </label>
             <div className="mt-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-[#696969]" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-[#bdbdbd]" />
               <input
                 type="text"
                 placeholder="Search categories..."
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
-                className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-[#525252] rounded-md sm:text-sm bg-white dark:bg-[#242424] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#696969] focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-600 dark:focus:border-primary-600"
+                className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-[#525252] rounded-md sm:text-sm bg-white dark:bg-[#242424] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#bdbdbd] focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-600 dark:focus:border-primary-600"
               />
             </div>
           </div>
@@ -171,7 +172,12 @@ export default function CategoriesPage() {
             </div>
           )}
 
-          {paginatedCategories.length > 0 ? (
+          {status === 'loading' ? (
+            <div className="text-center py-12">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
+              <p className="mt-2 text-sm text-gray-500 dark:text-[#bdbdbd]">Loading categories...</p>
+            </div>
+          ) : paginatedCategories.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
               {paginatedCategories.map(category => {
                 const isDropdownOpen = activeDropdown === category._id;
@@ -268,7 +274,7 @@ export default function CategoriesPage() {
                         />
                       ) : (
                         <div className="h-full w-full flex items-center justify-center">
-                          <Layers className="h-12 w-12 text-gray-400 dark:text-[#696969]" />
+                          <Layers className="h-12 w-12 text-gray-400 dark:text-[#bdbdbd]" />
                         </div>
                       )}
                     </div>
@@ -278,7 +284,7 @@ export default function CategoriesPage() {
                       <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-1">
                         {category.name}
                       </h3>
-                      <p className="text-sm text-gray-500 dark:text-[#696969] line-clamp-2">
+                      <p className="text-sm text-gray-500 dark:text-[#bdbdbd] line-clamp-2">
                         {category.description || 'No description available'}
                       </p>
                     </div>
@@ -288,13 +294,13 @@ export default function CategoriesPage() {
             </div>
           ) : (
             <div className="text-center py-12">
-              <Tag className="mx-auto h-12 w-12 text-gray-400 dark:text-[#696969]" />
+              <Tag className="mx-auto h-12 w-12 text-gray-400 dark:text-[#bdbdbd]" />
               <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">
                 {searchTerm || filterActive !== 'all'
                   ? 'No categories found'
                   : 'No categories yet'}
               </h3>
-              <p className="mt-1 text-sm text-gray-500 dark:text-[#696969]">
+              <p className="mt-1 text-sm text-gray-500 dark:text-[#bdbdbd]">
                 {searchTerm || filterActive !== 'all'
                   ? 'Try adjusting your search or filter criteria.'
                   : 'Get started by creating your first category.'}

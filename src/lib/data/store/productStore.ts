@@ -17,7 +17,6 @@ export interface Product {
   colors: string[];
   images: string[];
   thumbnail?: string;
-  wallpaper: string[];
   tags: string[];
   video?: string;
   status: 'active' | 'out_of_stock' | 'hidden';
