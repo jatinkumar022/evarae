@@ -37,14 +37,10 @@ export async function GET(request: Request) {
     const sort: Record<string, 1 | -1> = {};
     sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
 
-    const products = await Product.find(filter)
-      .populate('categories', 'name slug')
-      .sort(sort)
-      .skip(skip)
-      .limit(limit)
-      .lean();
-
-    const total = await Product.countDocuments(filter);
+    const [products, total] = await Promise.all([
+      Product.find(filter).select('-description -metaTitle -metaDescription -banner -mobileBanner -__v').populate('categories', 'name slug').sort(sort).skip(skip).limit(limit).lean(),
+      Product.countDocuments(filter)
+    ]);
     const totalPages = Math.ceil(total / limit);
 
     return NextResponse.json({
@@ -93,8 +89,12 @@ export async function POST(request: Request) {
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/(^-|-$)/g, '');
 
-    // Check duplicate slug
-    const existingProduct = await Product.findOne({ slug });
+    // Parallelize validation checks (much faster with select)
+    const [existingProduct, categories] = await Promise.all([
+      Product.findOne({ slug }).select('_id').lean(),
+      body.categories?.length > 0 ? Category.find({ _id: { $in: body.categories } }).select('_id').lean() : Promise.resolve([]),
+    ]);
+    
     if (existingProduct) {
       return NextResponse.json(
         { error: 'A product with this name already exists' },
@@ -103,14 +103,11 @@ export async function POST(request: Request) {
     }
 
     // Validate categories
-    if (body.categories?.length > 0) {
-      const categories = await Category.find({ _id: { $in: body.categories } });
-      if (categories.length !== body.categories.length) {
-        return NextResponse.json(
-          { error: 'One or more categories are invalid' },
-          { status: 400 }
-        );
-      }
+    if (body.categories?.length > 0 && categories.length !== body.categories.length) {
+      return NextResponse.json(
+        { error: 'One or more categories are invalid' },
+        { status: 400 }
+      );
     }
 
     const product = new Product({
@@ -123,9 +120,15 @@ export async function POST(request: Request) {
 
     await product.save();
     await product.populate('categories', 'name slug');
+    
+    // Return lean version for faster response
+    const productResponse = product.toObject();
+    if ('__v' in productResponse) {
+      delete (productResponse as { __v?: number }).__v;
+    }
 
     return NextResponse.json(
-      { message: 'Product created successfully', product },
+      { message: 'Product created successfully', product: productResponse },
       { status: 201 }
     );
   } catch (error) {

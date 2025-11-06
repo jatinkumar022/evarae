@@ -13,8 +13,12 @@ import {
   Layers,
 } from 'lucide-react';
 import { useCategoryStore, Category } from '@/lib/data/store/categoryStore';
-import { CustomSelect } from '@/app/admin/components/CustomSelect';
-import Modal from '@/app/admin/components/Modal';
+import { CustomSelect } from '@/app/admin/components/LazyCustomSelect';
+import dynamic from 'next/dynamic';
+
+const Modal = dynamic(() => import('@/app/admin/components/Modal'), {
+  ssr: false,
+});
 import { toastApi } from '@/lib/toast';
 import InlineSpinner from '@/app/admin/components/InlineSpinner';
 
@@ -45,9 +49,8 @@ export default function CategoriesPage() {
   const itemsPerPage = 9;
 
   useEffect(() => {
-    // Fetch categories from API
-    fetchCategories();
-  }, [fetchCategories]);
+    if (categories.length === 0) fetchCategories();
+  }, []);
 
   const handleDeleteCategory = (category: Category) => {
     setCategoryToDelete(category);
@@ -126,6 +129,7 @@ export default function CategoriesPage() {
         <div className="flex items-center gap-2 flex-wrap">
           <Link
             href="/admin/categories/new"
+            prefetch={true}
             className="inline-flex items-center text-xs md:text-sm px-4 py-2 border border-transparent font-medium rounded-md shadow-sm text-white bg-primary-500 hover:bg-primary-600 dark:bg-primary-600 dark:hover:bg-primary-700 transition-colors"
           >
             <Plus className="h-4 w-4 mr-2" /> Add Category
@@ -302,6 +306,9 @@ export default function CategoriesPage() {
                           width={400}
                           height={400}
                           className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          loading="lazy"
+                          placeholder="blur"
+                          blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWEREiMxUf/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
                         />
                       ) : (
                         <div className="h-full w-full flex items-center justify-center">
@@ -339,6 +346,7 @@ export default function CategoriesPage() {
               {!searchTerm && filterActive === 'all' && (
                 <Link
                   href="/admin/categories/new"
+            prefetch={true}
                   className="mt-4 inline-flex items-center px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-md transition-colors"
                 >
                   <Plus className="h-4 w-4 mr-2" />

@@ -1,3 +1,2 @@
-import wishlist from './wishlist.png';
-
-export { wishlist };
+// No assets currently in use
+export {};

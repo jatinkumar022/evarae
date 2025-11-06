@@ -17,7 +17,7 @@ import {
 import Link from 'next/link';
 import Image from 'next/image';
 import { useOrderStore, Order } from '@/lib/data/store/orderStore';
-import { CustomSelect } from '@/app/admin/components/CustomSelect';
+import { CustomSelect } from '@/app/admin/components/LazyCustomSelect';
 import { toastApi } from '@/lib/toast';
 import InlineSpinner from '@/app/admin/components/InlineSpinner';
 
@@ -278,7 +278,7 @@ export default function OrderDetailPage() {
             <div className="min-w-0">
               <div className="flex items-center justify-between gap-4 mb-4">
                 <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-[#777777]">
-                  <Link href="/admin/orders" className="inline-flex items-center hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
+                  <Link href="/admin/orders" prefetch={true} className="inline-flex items-center hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
                     <ArrowLeft className="h-4 w-4 mr-1" /> Back
                   </Link>
                   <span>•</span>

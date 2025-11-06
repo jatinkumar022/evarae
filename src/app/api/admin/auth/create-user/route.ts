@@ -15,7 +15,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const existing = await User.findOne({ email: email.toLowerCase() });
+    const existing = await User.findOne({ email: email.toLowerCase() }).select('_id').lean();
     if (existing) {
       return NextResponse.json(
         { error: 'Admin user already exists' },

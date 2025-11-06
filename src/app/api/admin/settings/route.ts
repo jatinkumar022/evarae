@@ -78,11 +78,8 @@ export async function PATCH(request: Request) {
     const body = await request.json();
     const { general, footer } = body;
 
-    // Get or create settings document
-    let settings = await Settings.findOne();
-    if (!settings) {
-      settings = new Settings({});
-    }
+    // Get or create settings document (use getSettings for efficiency)
+    const settings = await Settings.getSettings();
 
     // Update general settings if provided
     if (general) {

@@ -6,7 +6,11 @@ import { useSidebar } from "../context/SidebarContext";
 import { ThemeToggleButton } from "./ThemeToggleButton";
 import { useTheme } from "../context/ThemeContext";
 import { Menu, X, Search, Bell, Settings, LogOut, Package, ShoppingBag, Users, AlertCircle } from "lucide-react";
-import Modal from "./Modal";
+import dynamic from 'next/dynamic';
+
+const Modal = dynamic(() => import('./Modal'), {
+  ssr: false,
+});
 import { useAdminAuth } from "@/lib/data/store/adminAuth";
 
 // Search Component

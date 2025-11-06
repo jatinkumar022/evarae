@@ -12,6 +12,7 @@ export async function GET(request: Request) {
     const filter = activeOnly ? { isActive: true } : {};
 
     const categories = await Category.find(filter)
+      .select('-__v')
       .sort({ sortOrder: 1, name: 1 })
       .lean();
 
@@ -62,7 +63,7 @@ export async function POST(request: Request) {
       .replace(/(^-|-$)/g, '');
 
     // Check if slug already exists
-    const existingCategory = await Category.findOne({ slug });
+    const existingCategory = await Category.findOne({ slug }).select('_id').lean();
     if (existingCategory) {
       return NextResponse.json(
         { error: 'A category with this name already exists' },
@@ -81,11 +82,17 @@ export async function POST(request: Request) {
     });
 
     await category.save();
+    
+    // Return lean version for faster response
+    const categoryResponse = category.toObject();
+    if ('__v' in categoryResponse) {
+      delete (categoryResponse as { __v?: number }).__v;
+    }
 
     return NextResponse.json(
       {
         message: 'Category created successfully',
-        category,
+        category: categoryResponse,
       },
       { status: 201 }
     );

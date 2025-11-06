@@ -13,13 +13,9 @@ export async function GET(request: Request) {
 
     const filter = activeOnly ? { isActive: true } : {};
 
-    let query = Collection.find(filter).sort({ sortOrder: 1, name: 1 }).lean();
-
-    if (includeProducts) {
-      query = query.populate('products');
-    }
-
-    const collections = await query;
+    const collections = includeProducts
+      ? await Collection.find(filter).select('-__v').populate('products', 'name slug thumbnail price').sort({ sortOrder: 1, name: 1 }).lean()
+      : await Collection.find(filter).select('-__v').sort({ sortOrder: 1, name: 1 }).lean();
 
     return NextResponse.json({ collections });
   } catch (error) {
@@ -57,7 +53,7 @@ export async function POST(request: Request) {
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/(^-|-$)/g, '');
 
-    const existingCollection = await Collection.findOne({ slug });
+    const existingCollection = await Collection.findOne({ slug }).select('_id').lean();
     if (existingCollection) {
       return NextResponse.json(
         { error: 'A collection with this name already exists' },
@@ -76,9 +72,15 @@ export async function POST(request: Request) {
     });
 
     await collection.save();
+    
+    // Return lean version for faster response
+    const collectionResponse = collection.toObject();
+    if ('__v' in collectionResponse) {
+      delete (collectionResponse as { __v?: number }).__v;
+    }
 
     return NextResponse.json(
-      { message: 'Collection created successfully', collection },
+      { message: 'Collection created successfully', collection: collectionResponse },
       { status: 201 }
     );
   } catch (error) {

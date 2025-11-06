@@ -46,10 +46,11 @@ interface LeanUser {
   profile?: UserProfile | mongoose.Types.ObjectId;
 }
 
-interface LeanOrder {
+interface OrderStat {
   _id: mongoose.Types.ObjectId;
-  totalAmount?: number;
-  createdAt?: Date;
+  totalOrders?: number;
+  totalSpent?: number;
+  lastOrderDate?: Date | null;
 }
 
 // GET: List customers with filters, search, pagination
@@ -87,34 +88,43 @@ export async function GET(request: Request) {
     const sort: Record<string, 1 | -1> = {};
     sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
 
-    const users = await User.find(filter)
-      .populate({
-        path: 'profile',
-        model: 'UserProfile',
-      })
-      .sort(sort)
-      .skip(skip)
-      .limit(limit)
-      .lean();
+    // Parallelize user fetch and count
+    const [users, total] = await Promise.all([
+      User.find(filter)
+        .select('-__v')
+        .populate({
+          path: 'profile',
+          model: 'UserProfile',
+        })
+        .sort(sort)
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      User.countDocuments(filter)
+    ]);
 
-    // Enrich with order statistics
-    const customers = await Promise.all(
-      (users as unknown as LeanUser[]).map(async (user: LeanUser) => {
-        const orders = (await Order.find({ user: user._id }).lean()) as unknown as LeanOrder[];
-        const totalOrders = orders.length;
-        const totalSpent = orders.reduce((sum: number, order: LeanOrder) => sum + (order.totalAmount || 0), 0);
-        const lastOrder = orders.length > 0 
-          ? orders.sort((a: LeanOrder, b: LeanOrder) => {
-              const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-              const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-              return bTime - aTime;
-            })[0]
-          : null;
-        const averageOrderValue = totalOrders > 0 ? totalSpent / totalOrders : 0;
-
-        const profile = user.profile && typeof user.profile === 'object' && !(user.profile instanceof mongoose.Types.ObjectId) ? user.profile as UserProfile : null;
-
-        return {
+    // Get all order stats in one aggregation (much faster than per-user queries)
+    const userIds = (users as unknown as LeanUser[]).map(u => u._id);
+    const orderStats = userIds.length > 0 ? await Order.aggregate([
+      { $match: { user: { $in: userIds } } },
+      { $group: {
+        _id: '$user',
+        totalOrders: { $sum: 1 },
+        totalSpent: { $sum: '$totalAmount' },
+        lastOrderDate: { $max: '$createdAt' }
+      }}
+    ]) : [];
+    const statsMap = new Map<string, { totalOrders: number; totalSpent: number; lastOrderDate: Date | null }>();
+    (orderStats as OrderStat[]).forEach((stat) => {
+      const userId = stat._id?.toString();
+      if (userId) statsMap.set(userId, { totalOrders: stat.totalOrders || 0, totalSpent: stat.totalSpent || 0, lastOrderDate: stat.lastOrderDate || null });
+    });
+    
+    const customers = (users as unknown as LeanUser[]).map((user: LeanUser) => {
+      const stats = statsMap.get(user._id.toString()) || { totalOrders: 0, totalSpent: 0, lastOrderDate: null };
+      const averageOrderValue = stats.totalOrders > 0 ? stats.totalSpent / stats.totalOrders : 0;
+      const profile = user.profile && typeof user.profile === 'object' && !(user.profile instanceof mongoose.Types.ObjectId) ? user.profile as UserProfile : null;
+      return {
           _id: user._id.toString(),
           name: user.name,
           email: user.email,
@@ -150,15 +160,13 @@ export async function GET(request: Request) {
               isDefaultBilling: addr.isDefaultBilling || false,
             })),
           } : undefined,
-          totalOrders,
-          totalSpent,
-          lastOrderDate: lastOrder ? lastOrder.createdAt : null,
+          totalOrders: stats.totalOrders,
+          totalSpent: stats.totalSpent,
+          lastOrderDate: stats.lastOrderDate,
           averageOrderValue,
         };
-      })
-    );
+    });
 
-    const total = await User.countDocuments(filter);
     const totalPages = Math.ceil(total / limit);
 
     return NextResponse.json({

@@ -10,7 +10,8 @@ export async function GET(request: Request, { params }: RouteContext) {
     await connect();
     const { id } = await params;
     const collection = await Collection.findById(id)
-      .populate('products')
+      .select('-__v')
+      .populate('products', 'name slug thumbnail price stockQuantity status')
       .lean();
 
     if (!collection) {
@@ -63,8 +64,8 @@ export async function PUT(request: Request, { params }: RouteContext) {
     const updatedCollection = await Collection.findByIdAndUpdate(
       id,
       updateData,
-      { new: true }
-    ).populate('products');
+      { new: true, runValidators: true }
+    ).select('-__v').populate('products', 'name slug thumbnail price stockQuantity status').lean();
 
     if (!updatedCollection) {
       return NextResponse.json(
@@ -92,8 +93,7 @@ export async function DELETE(request: Request, { params }: RouteContext) {
     await connect();
 
     const { id } = await params;
-    const deleted = await Collection.findByIdAndDelete(id);
-
+    const deleted = await Collection.findByIdAndDelete(id).select('_id').lean();
     if (!deleted) {
       return NextResponse.json(
         { error: 'Collection not found' },

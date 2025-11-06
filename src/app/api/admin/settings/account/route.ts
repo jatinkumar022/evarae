@@ -49,28 +49,60 @@ export async function PATCH(request: Request) {
     const body = await request.json();
     const { name } = body;
 
-    // Find admin user
-    const admin = await User.findById(adminId);
-    if (!admin || admin.role !== 'admin') {
-      return NextResponse.json(
-        { error: 'Admin user not found' },
-        { status: 404 }
-      );
-    }
-
-    // Update name only (email cannot be changed)
+    // Update name only (email cannot be changed) - use findByIdAndUpdate for efficiency
     if (name !== undefined && name.trim()) {
-      admin.name = name.trim();
-      await admin.save();
+      const admin = await User.findByIdAndUpdate(
+        adminId,
+        { $set: { name: name.trim() } },
+        { new: true, runValidators: true }
+      ).select('name email role').lean();
+      
+      if (!admin || Array.isArray(admin)) {
+        return NextResponse.json(
+          { error: 'Admin user not found' },
+          { status: 404 }
+        );
+      }
+      
+      const adminUser = admin as unknown as { name: string; email: string; role: string };
+      if (adminUser.role !== 'admin') {
+        return NextResponse.json(
+          { error: 'Admin user not found' },
+          { status: 404 }
+        );
+      }
+      
+      return NextResponse.json({
+        admin: {
+          id: adminId,
+          name: adminUser.name,
+          email: adminUser.email,
+        },
+      });
+    } else {
+      // Just fetch if no update needed
+      const admin = await User.findById(adminId).select('name email role').lean();
+      if (!admin || Array.isArray(admin)) {
+        return NextResponse.json(
+          { error: 'Admin user not found' },
+          { status: 404 }
+        );
+      }
+      const adminUser = admin as unknown as { name: string; email: string; role: string };
+      if (adminUser.role !== 'admin') {
+        return NextResponse.json(
+          { error: 'Admin user not found' },
+          { status: 404 }
+        );
+      }
+      return NextResponse.json({
+        admin: {
+          id: adminId,
+          name: adminUser.name,
+          email: adminUser.email,
+        },
+      });
     }
-
-    return NextResponse.json({
-      admin: {
-        id: admin._id.toString(),
-        name: admin.name,
-        email: admin.email,
-      },
-    });
   } catch (error) {
     console.error('Admin account update error:', error);
     return NextResponse.json(

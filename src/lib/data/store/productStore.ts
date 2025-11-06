@@ -92,10 +92,14 @@ export const useProductStore = create<ProductState>((set, get) => ({
   error: null,
   productsByCategory: {},
 
-  setFilters: newFilters =>
-    set(state => ({
-      filters: { ...state.filters, ...newFilters, page: 1 },
-    })),
+  setFilters: newFilters => {
+    const current = get().filters;
+    const merged = { ...current, ...newFilters };
+    // Only update if actually changed
+    if (JSON.stringify(merged) !== JSON.stringify(current)) {
+      set({ filters: { ...merged, page: newFilters.page !== undefined ? newFilters.page : (Object.keys(newFilters).some(k => k !== 'page') ? 1 : current.page) } });
+    }
+  },
 
   fetchProducts: async () => {
     const { filters } = get();

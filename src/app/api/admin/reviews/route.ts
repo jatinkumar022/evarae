@@ -32,15 +32,17 @@ export async function GET(request: Request) {
     const sort: Record<string, 1 | -1> = {};
     sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
 
-    const reviews = await Review.find(filter)
-      .populate('product', 'name slug')
-      .populate('user', 'name email')
-      .sort(sort)
-      .skip(skip)
-      .limit(limit)
-      .lean();
-
-    const total = await Review.countDocuments(filter);
+    const [reviews, total] = await Promise.all([
+      Review.find(filter)
+        .select('-__v')
+        .populate('product', 'name slug')
+        .populate('user', 'name email')
+        .sort(sort)
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      Review.countDocuments(filter)
+    ]);
     const totalPages = Math.ceil(total / limit);
 
     return NextResponse.json({
@@ -91,7 +93,7 @@ export async function POST(request: Request) {
     const existingReview = await Review.findOne({
       product,
       user,
-    });
+    }).select('_id').lean();
 
     if (existingReview) {
       return NextResponse.json(
@@ -112,13 +114,21 @@ export async function POST(request: Request) {
     });
 
     await review.save();
-    await review.populate('product', 'name slug');
-    await review.populate('user', 'name email');
+    await Promise.all([
+      review.populate('product', 'name slug'),
+      review.populate('user', 'name email')
+    ]);
+    
+    // Return lean version for faster response
+    const reviewResponse = review.toObject();
+    if ('__v' in reviewResponse) {
+      delete (reviewResponse as { __v?: number }).__v;
+    }
 
     return NextResponse.json(
       {
         message: 'Review created successfully',
-        review,
+        review: reviewResponse,
       },
       { status: 201 }
     );

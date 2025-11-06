@@ -46,10 +46,11 @@ interface LeanUser {
   profile?: UserProfile | mongoose.Types.ObjectId;
 }
 
-interface LeanOrder {
-  _id: mongoose.Types.ObjectId;
-  totalAmount?: number;
-  createdAt?: Date;
+interface OrderStat {
+  _id: unknown;
+  totalOrders?: number;
+  totalSpent?: number;
+  lastOrderDate?: Date | null;
 }
 
 // GET: Get single customer by ID
@@ -61,31 +62,36 @@ export async function GET(
     await connect();
     const { id } = await ctx.params;
 
-    const user = await User.findById(id)
-      .populate({
-        path: 'profile',
-        model: 'UserProfile',
-      })
-      .lean();
-
+    // Parallelize user fetch and order stats
+    const [user, orderStats] = await Promise.all([
+      User.findById(id)
+        .select('-__v')
+        .populate({
+          path: 'profile',
+          model: 'UserProfile',
+        })
+        .lean(),
+      Order.aggregate([
+        { $match: { user: id } },
+        { $group: {
+          _id: null,
+          totalOrders: { $sum: 1 },
+          totalSpent: { $sum: '$totalAmount' },
+          lastOrderDate: { $max: '$createdAt' }
+        }}
+      ])
+    ]);
+    
     if (!user) {
       return NextResponse.json(
         { error: 'Customer not found' },
         { status: 404 }
       );
     }
-
-    // Get order statistics
-    const orders = (await Order.find({ user: id }).lean()) as unknown as LeanOrder[];
-    const totalOrders = orders.length;
-    const totalSpent = orders.reduce((sum: number, order: LeanOrder) => sum + (order.totalAmount || 0), 0);
-    const lastOrder = orders.length > 0 
-      ? orders.sort((a: LeanOrder, b: LeanOrder) => {
-          const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-          const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-          return bTime - aTime;
-        })[0]
-      : null;
+    
+    const stats = (orderStats as OrderStat[])[0] || { totalOrders: 0, totalSpent: 0, lastOrderDate: null };
+    const totalOrders = stats.totalOrders || 0;
+    const totalSpent = stats.totalSpent || 0;
     const averageOrderValue = totalOrders > 0 ? totalSpent / totalOrders : 0;
 
     const leanUser = user as unknown as LeanUser;
@@ -129,7 +135,7 @@ export async function GET(
       } : undefined,
       totalOrders,
       totalSpent,
-      lastOrderDate: lastOrder ? lastOrder.createdAt : null,
+      lastOrderDate: stats.lastOrderDate || null,
       averageOrderValue,
     };
 
@@ -162,35 +168,40 @@ export async function PATCH(
       }
     });
 
-    const user = await User.findByIdAndUpdate(
-      id,
-      { $set: updates },
-      { new: true, runValidators: true }
-    )
-      .populate({
-        path: 'profile',
-        model: 'UserProfile',
-      })
-      .lean();
-
+    // Parallelize user update and order stats
+    const [user, orderStats] = await Promise.all([
+      User.findByIdAndUpdate(
+        id,
+        { $set: updates },
+        { new: true, runValidators: true }
+      )
+        .select('-__v')
+        .populate({
+          path: 'profile',
+          model: 'UserProfile',
+        })
+        .lean(),
+      Order.aggregate([
+        { $match: { user: id } },
+        { $group: {
+          _id: null,
+          totalOrders: { $sum: 1 },
+          totalSpent: { $sum: '$totalAmount' },
+          lastOrderDate: { $max: '$createdAt' }
+        }}
+      ])
+    ]);
+    
     if (!user) {
       return NextResponse.json(
         { error: 'Customer not found' },
         { status: 404 }
       );
     }
-
-    // Get order statistics
-    const orders = (await Order.find({ user: id }).lean()) as unknown as LeanOrder[];
-    const totalOrders = orders.length;
-    const totalSpent = orders.reduce((sum: number, order: LeanOrder) => sum + (order.totalAmount || 0), 0);
-    const lastOrder = orders.length > 0 
-      ? orders.sort((a: LeanOrder, b: LeanOrder) => {
-          const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-          const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-          return bTime - aTime;
-        })[0]
-      : null;
+    
+    const stats = (orderStats as OrderStat[])[0] || { totalOrders: 0, totalSpent: 0, lastOrderDate: null };
+    const totalOrders = stats.totalOrders || 0;
+    const totalSpent = stats.totalSpent || 0;
     const averageOrderValue = totalOrders > 0 ? totalSpent / totalOrders : 0;
 
     const leanUser = user as unknown as LeanUser;
@@ -234,7 +245,7 @@ export async function PATCH(
       } : undefined,
       totalOrders,
       totalSpent,
-      lastOrderDate: lastOrder ? lastOrder.createdAt : null,
+      lastOrderDate: stats.lastOrderDate || null,
       averageOrderValue,
     };
 
@@ -257,9 +268,9 @@ export async function DELETE(
     await connect();
     const { id } = await ctx.params;
 
-    const user = await User.findByIdAndDelete(id);
+    const deleted = await User.findByIdAndDelete(id).select('_id').lean();
 
-    if (!user) {
+    if (!deleted) {
       return NextResponse.json(
         { error: 'Customer not found' },
         { status: 404 }

@@ -90,6 +90,7 @@ const AppSidebar: React.FC = () => {
           <li key={nav.path}>
             <Link
               href={nav.path}
+              prefetch={true}
               className={`menu-item group ${
                 active ? "menu-item-active" : "menu-item-inactive"
               } ${

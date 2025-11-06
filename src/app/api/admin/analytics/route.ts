@@ -57,71 +57,38 @@ export async function GET(request: Request) {
     const previousPeriodStart = previousStart;
     const previousPeriodEnd = start;
 
-    // Total Revenue - Current Period
-    const currentRevenueResult = await Order.aggregate([
-      {
-        $match: {
-          createdAt: { $gte: currentPeriodStart, $lte: currentPeriodEnd },
-          paymentStatus: { $in: ['paid', 'completed'] },
-        },
-      },
-      {
-        $group: {
-          _id: null,
-          total: { $sum: '$totalAmount' },
-        },
-      },
+    // Parallelize ALL period queries
+    const [
+      currentRevenueResult,
+      previousRevenueResult,
+      currentOrdersCount,
+      previousOrdersCount,
+      currentCustomersResult,
+      previousCustomersResult,
+      currentProductsCount,
+      previousProductsCount,
+    ] = await Promise.all([
+      Order.aggregate([{ $match: { createdAt: { $gte: currentPeriodStart, $lte: currentPeriodEnd }, paymentStatus: { $in: ['paid', 'completed'] } } }, { $group: { _id: null, total: { $sum: '$totalAmount' } } }]),
+      Order.aggregate([{ $match: { createdAt: { $gte: previousPeriodStart, $lte: previousPeriodEnd }, paymentStatus: { $in: ['paid', 'completed'] } } }, { $group: { _id: null, total: { $sum: '$totalAmount' } } }]),
+      Order.countDocuments({ createdAt: { $gte: currentPeriodStart, $lte: currentPeriodEnd } }),
+      Order.countDocuments({ createdAt: { $gte: previousPeriodStart, $lte: previousPeriodEnd } }),
+      Order.distinct('user', { createdAt: { $gte: currentPeriodStart, $lte: currentPeriodEnd } }),
+      Order.distinct('user', { createdAt: { $gte: previousPeriodStart, $lte: previousPeriodEnd } }),
+      Product.countDocuments({ createdAt: { $gte: currentPeriodStart, $lte: currentPeriodEnd } }),
+      Product.countDocuments({ createdAt: { $gte: previousPeriodStart, $lte: previousPeriodEnd } }),
     ]);
-    const currentRevenue = currentRevenueResult[0]?.total || 0;
+    interface RevenueResult {
+      total?: number;
+    }
+    interface CustomerResult {
+      _id?: unknown;
+    }
+    
+    const currentRevenue = (currentRevenueResult as RevenueResult[])[0]?.total || 0;
+    const previousRevenue = (previousRevenueResult as RevenueResult[])[0]?.total || 0;
+    const currentCustomersCount = (currentCustomersResult as CustomerResult[]).length;
+    const previousCustomersCount = (previousCustomersResult as CustomerResult[]).length;
 
-    // Total Revenue - Previous Period
-    const previousRevenueResult = await Order.aggregate([
-      {
-        $match: {
-          createdAt: { $gte: previousPeriodStart, $lte: previousPeriodEnd },
-          paymentStatus: { $in: ['paid', 'completed'] },
-        },
-      },
-      {
-        $group: {
-          _id: null,
-          total: { $sum: '$totalAmount' },
-        },
-      },
-    ]);
-    const previousRevenue = previousRevenueResult[0]?.total || 0;
-
-    // Total Orders - Current Period
-    const currentOrdersCount = await Order.countDocuments({
-      createdAt: { $gte: currentPeriodStart, $lte: currentPeriodEnd },
-    });
-
-    // Total Orders - Previous Period
-    const previousOrdersCount = await Order.countDocuments({
-      createdAt: { $gte: previousPeriodStart, $lte: previousPeriodEnd },
-    });
-
-    // Total Customers - Current Period (customers who placed orders)
-    const currentCustomersResult = await Order.distinct('user', {
-      createdAt: { $gte: currentPeriodStart, $lte: currentPeriodEnd },
-    });
-    const currentCustomersCount = currentCustomersResult.length;
-
-    // Total Customers - Previous Period
-    const previousCustomersResult = await Order.distinct('user', {
-      createdAt: { $gte: previousPeriodStart, $lte: previousPeriodEnd },
-    });
-    const previousCustomersCount = previousCustomersResult.length;
-
-    // Total Products - Current Period (products created)
-    const currentProductsCount = await Product.countDocuments({
-      createdAt: { $gte: currentPeriodStart, $lte: currentPeriodEnd },
-    });
-
-    // Total Products - Previous Period
-    const previousProductsCount = await Product.countDocuments({
-      createdAt: { $gte: previousPeriodStart, $lte: previousPeriodEnd },
-    });
 
     // Calculate growth percentages
     const revenueGrowth = calculateGrowth(currentRevenue, previousRevenue);
@@ -129,138 +96,39 @@ export async function GET(request: Request) {
     const customersGrowth = calculateGrowth(currentCustomersCount, previousCustomersCount);
     const productsGrowth = calculateGrowth(currentProductsCount, previousProductsCount);
 
-    // Monthly Revenue Breakdown
-    const monthlyRevenueData = await Order.aggregate([
-      {
-        $match: {
-          createdAt: { $gte: currentPeriodStart, $lte: currentPeriodEnd },
-          paymentStatus: { $in: ['paid', 'completed'] },
-        },
-      },
-      {
-        $group: {
-          _id: {
-            year: { $year: '$createdAt' },
-            month: { $month: '$createdAt' },
-          },
-          revenue: { $sum: '$totalAmount' },
-        },
-      },
-      {
-        $sort: { '_id.year': 1, '_id.month': 1 },
-      },
+    // Parallelize all remaining queries
+    const [monthlyRevenueData, topCategoriesData, topProductsData, recentOrders, recentCustomers, recentProducts, totalCustomers, totalProducts] = await Promise.all([
+      Order.aggregate([{ $match: { createdAt: { $gte: currentPeriodStart, $lte: currentPeriodEnd }, paymentStatus: { $in: ['paid', 'completed'] } } }, { $group: { _id: { year: { $year: '$createdAt' }, month: { $month: '$createdAt' } }, revenue: { $sum: '$totalAmount' } } }, { $sort: { '_id.year': 1, '_id.month': 1 } }]),
+      Order.aggregate([{ $match: { createdAt: { $gte: currentPeriodStart, $lte: currentPeriodEnd }, paymentStatus: { $in: ['paid', 'completed'] } } }, { $unwind: '$items' }, { $lookup: { from: 'products', localField: 'items.product', foreignField: '_id', as: 'productData' } }, { $unwind: '$productData' }, { $unwind: '$productData.categories' }, { $lookup: { from: 'categories', localField: 'productData.categories', foreignField: '_id', as: 'categoryData' } }, { $unwind: '$categoryData' }, { $group: { _id: '$categoryData._id', name: { $first: '$categoryData.name' }, sales: { $sum: '$items.quantity' } } }, { $sort: { sales: -1 } }, { $limit: 5 }]),
+      Order.aggregate([{ $match: { createdAt: { $gte: currentPeriodStart, $lte: currentPeriodEnd }, paymentStatus: { $in: ['paid', 'completed'] } } }, { $unwind: '$items' }, { $lookup: { from: 'products', localField: 'items.product', foreignField: '_id', as: 'productData' } }, { $unwind: '$productData' }, { $group: { _id: '$items.product', name: { $first: '$productData.name' }, sales: { $sum: '$items.quantity' }, revenue: { $sum: { $multiply: ['$items.price', '$items.quantity'] } } } }, { $sort: { sales: -1 } }, { $limit: 5 }]),
+      Order.find({ createdAt: { $gte: currentPeriodStart, $lte: currentPeriodEnd } }).select('orderNumber totalAmount createdAt').sort({ createdAt: -1 }).limit(5).lean(),
+      User.find({ role: 'user', createdAt: { $gte: currentPeriodStart, $lte: currentPeriodEnd } }).select('_id createdAt').sort({ createdAt: -1 }).limit(3).lean(),
+      Product.find({ createdAt: { $gte: currentPeriodStart, $lte: currentPeriodEnd } }).select('_id name createdAt').sort({ createdAt: -1 }).limit(2).lean(),
+      User.countDocuments({ role: 'user' }),
+      Product.countDocuments(),
     ]);
-
+    
+    interface MonthlyRevenueItem {
+      _id: { year: number; month: number };
+      revenue: number;
+    }
+    interface CategoryData {
+      _id: unknown;
+      name: string;
+      sales: number;
+    }
+    interface ProductData {
+      _id: unknown;
+      name: string;
+      sales: number;
+      revenue: number;
+    }
+    
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const monthlyRevenue = monthlyRevenueData.map((item) => ({
-      month: monthNames[item._id.month - 1],
-      revenue: item.revenue,
-    }));
-
-    // Top Categories by Sales
-    const topCategoriesData = await Order.aggregate([
-      {
-        $match: {
-          createdAt: { $gte: currentPeriodStart, $lte: currentPeriodEnd },
-          paymentStatus: { $in: ['paid', 'completed'] },
-        },
-      },
-      { $unwind: '$items' },
-      {
-        $lookup: {
-          from: 'products',
-          localField: 'items.product',
-          foreignField: '_id',
-          as: 'productData',
-        },
-      },
-      { $unwind: '$productData' },
-      { $unwind: '$productData.categories' },
-      {
-        $lookup: {
-          from: 'categories',
-          localField: 'productData.categories',
-          foreignField: '_id',
-          as: 'categoryData',
-        },
-      },
-      { $unwind: '$categoryData' },
-      {
-        $group: {
-          _id: '$categoryData._id',
-          name: { $first: '$categoryData.name' },
-          sales: { $sum: '$items.quantity' },
-        },
-      },
-      { $sort: { sales: -1 } },
-      { $limit: 5 },
-    ]);
-
-    const totalCategorySales = topCategoriesData.reduce((sum, cat) => sum + cat.sales, 0);
-    const topCategories = topCategoriesData.map((cat) => ({
-      name: cat.name,
-      sales: cat.sales,
-      percentage: totalCategorySales > 0 ? Math.round((cat.sales / totalCategorySales) * 100) : 0,
-    }));
-
-    // Top Products by Sales and Revenue
-    const topProductsData = await Order.aggregate([
-      {
-        $match: {
-          createdAt: { $gte: currentPeriodStart, $lte: currentPeriodEnd },
-          paymentStatus: { $in: ['paid', 'completed'] },
-        },
-      },
-      { $unwind: '$items' },
-      {
-        $lookup: {
-          from: 'products',
-          localField: 'items.product',
-          foreignField: '_id',
-          as: 'productData',
-        },
-      },
-      { $unwind: '$productData' },
-      {
-        $group: {
-          _id: '$items.product',
-          name: { $first: '$productData.name' },
-          sales: { $sum: '$items.quantity' },
-          revenue: { $sum: { $multiply: ['$items.price', '$items.quantity'] } },
-        },
-      },
-      { $sort: { sales: -1 } },
-      { $limit: 5 },
-    ]);
-
-    const topProducts = topProductsData.map((product) => ({
-      name: product.name,
-      sales: product.sales,
-      revenue: product.revenue,
-    }));
-
-    // Recent Activity
-    const recentOrders = await Order.find({
-      createdAt: { $gte: currentPeriodStart, $lte: currentPeriodEnd },
-    })
-      .sort({ createdAt: -1 })
-      .limit(5)
-      .lean();
-
-    const recentCustomers = await User.find({
-      role: 'user',
-      createdAt: { $gte: currentPeriodStart, $lte: currentPeriodEnd },
-    })
-      .sort({ createdAt: -1 })
-      .limit(3)
-      .lean();
-
-    const recentProducts = await Product.find({
-      createdAt: { $gte: currentPeriodStart, $lte: currentPeriodEnd },
-    })
-      .sort({ createdAt: -1 })
-      .limit(2)
-      .lean();
+    const monthlyRevenue = (monthlyRevenueData as MonthlyRevenueItem[]).map((item) => ({ month: monthNames[item._id.month - 1], revenue: item.revenue }));
+    const totalCategorySales = (topCategoriesData as CategoryData[]).reduce((sum: number, cat) => sum + cat.sales, 0);
+    const topCategories = (topCategoriesData as CategoryData[]).map((cat) => ({ name: cat.name, sales: cat.sales, percentage: totalCategorySales > 0 ? Math.round((cat.sales / totalCategorySales) * 100) : 0 }));
+    const topProducts = (topProductsData as ProductData[]).map((product) => ({ name: product.name, sales: product.sales, revenue: product.revenue }));
 
     // Format recent activity
     const formatTimeAgo = (date: Date) => {
@@ -319,15 +187,11 @@ export async function GET(request: Request) {
     });
 
     // Remove createdAt before returning
-    const formattedActivity = recentActivity.slice(0, 5).map(({ createdAt, ...rest }) => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      void createdAt; // Explicitly mark as intentionally unused
+    const formattedActivity = recentActivity.slice(0, 5).map(({ createdAt: _createdAt, ...rest }) => {
+      void _createdAt; // Explicitly mark as intentionally unused
       return rest;
     });
 
-    // Get total counts (all time, not just period)
-    const totalCustomers = await User.countDocuments({ role: 'user' });
-    const totalProducts = await Product.countDocuments();
 
     return NextResponse.json({
       totalRevenue: currentRevenue,

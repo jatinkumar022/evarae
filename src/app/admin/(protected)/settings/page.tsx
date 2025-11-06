@@ -14,7 +14,7 @@ import {
   Youtube,
   Twitter,
 } from 'lucide-react';
-import { CustomSelect } from '@/app/admin/components/CustomSelect';
+import { CustomSelect } from '@/app/admin/components/LazyCustomSelect';
 import { useAdminAuth } from '@/lib/data/store/adminAuth';
 import { toastApi } from '@/lib/toast';
 import InlineSpinner from '@/app/admin/components/InlineSpinner';

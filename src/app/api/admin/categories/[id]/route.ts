@@ -9,7 +9,7 @@ export async function GET(request: Request, { params }: RouteContext) {
   try {
     await connect();
     const { id } = await params;
-    const category = await Category.findById(id);
+    const category = await Category.findById(id).select('-__v').lean();
 
     if (!category) {
       return NextResponse.json(
@@ -43,8 +43,9 @@ export async function PUT(request: Request, { params }: RouteContext) {
       isActive: body.isActive,
       sortOrder: body.sortOrder,
     });
-    const category = await Category.findById(id);
-
+    
+    // Check if category exists first
+    const category = await Category.findById(id).select('name').lean();
     if (!category) {
       return NextResponse.json(
         { error: 'Category not found' },
@@ -64,11 +65,24 @@ export async function PUT(request: Request, { params }: RouteContext) {
     }> = {};
 
     // Validate duplicate name (case insensitive)
-    if (body.name && body.name !== category.name) {
-      const existingCategoryByName = await Category.findOne({
-        name: { $regex: new RegExp(`^${body.name}$`, 'i') },
-        _id: { $ne: id },
-      });
+    if (body.name && body.name !== (category as { name?: string }).name) {
+      // Generate new slug
+      const slug = body.name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '');
+
+      // Parallelize duplicate checks
+      const [existingCategoryByName, existingCategoryBySlug] = await Promise.all([
+        Category.findOne({
+          name: { $regex: new RegExp(`^${body.name}$`, 'i') },
+          _id: { $ne: id },
+        }).select('_id').lean(),
+        Category.findOne({
+          slug,
+          _id: { $ne: id },
+        }).select('_id').lean(),
+      ]);
 
       if (existingCategoryByName) {
         return NextResponse.json(
@@ -76,17 +90,6 @@ export async function PUT(request: Request, { params }: RouteContext) {
           { status: 400 }
         );
       }
-
-      // Generate new slug
-      const slug = body.name
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/(^-|-$)/g, '');
-
-      const existingCategoryBySlug = await Category.findOne({
-        slug,
-        _id: { $ne: id },
-      });
 
       if (existingCategoryBySlug) {
         return NextResponse.json(
@@ -109,9 +112,11 @@ export async function PUT(request: Request, { params }: RouteContext) {
     if (body.isActive !== undefined) updateData.isActive = body.isActive;
     if (body.sortOrder !== undefined) updateData.sortOrder = body.sortOrder;
 
-    // Use document.set + save to ensure full persistence
-    category.set(updateData);
-    const updatedCategory = await category.save();
+    const updatedCategory = await Category.findByIdAndUpdate(
+      id,
+      { $set: updateData },
+      { new: true, runValidators: true }
+    ).select('-__v').lean();
 
     return NextResponse.json({
       message: 'Category updated successfully',
@@ -131,16 +136,13 @@ export async function DELETE(request: Request, { params }: RouteContext) {
   try {
     await connect();
     const { id } = await params;
-    const category = await Category.findById(id);
-
-    if (!category) {
+    const deleted = await Category.findByIdAndDelete(id).select('_id').lean();
+    if (!deleted) {
       return NextResponse.json(
         { error: 'Category not found' },
         { status: 404 }
       );
     }
-
-    await Category.findByIdAndDelete(id);
 
     return NextResponse.json({
       message: 'Category deleted successfully',

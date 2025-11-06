@@ -215,7 +215,7 @@ export async function GET(
       key.startsWith('ORD-')
         ? { orderNumber: key }
         : { _id: key }
-    ).lean()) as unknown as HtmlOrder | null;
+    ).select('orderNumber items subtotalAmount discountAmount taxAmount shippingAmount paymentChargesAmount totalAmount shippingAddress trackingNumber paidAt').lean()) as unknown as HtmlOrder | null;
 
     if (!order) {
       return NextResponse.json({ error: 'Order not found' }, { status: 404 });
@@ -237,7 +237,7 @@ export async function GET(
     await browser.close();
 
     const fileName = `invoice-${order.orderNumber || order._id}.pdf`;
-    return new NextResponse(pdfBuffer, {
+    return new Response(pdfBuffer as unknown as BodyInit, {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',

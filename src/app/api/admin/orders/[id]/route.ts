@@ -45,6 +45,7 @@ export async function GET(
     const { id } = await ctx.params;
 
     const order = await Order.findById(id)
+      .select('-__v')
       .populate('user', 'name email')
       .populate('items.product', 'name slug images thumbnail')
       .lean();
@@ -108,6 +109,7 @@ export async function PATCH(
       { $set: updates },
       { new: true, runValidators: true }
     )
+      .select('-__v')
       .populate('user', 'name email')
       .populate('items.product', 'name slug images thumbnail')
       .lean();
@@ -150,9 +152,8 @@ export async function DELETE(
     await connect();
     const { id } = await ctx.params;
 
-    const order = await Order.findByIdAndDelete(id);
-
-    if (!order) {
+    const deleted = await Order.findByIdAndDelete(id).select('_id').lean();
+    if (!deleted) {
       return NextResponse.json(
         { error: 'Order not found' },
         { status: 404 }

@@ -13,7 +13,11 @@ import {
 import Link from 'next/link';
 import Image from 'next/image';
 import { useProductStore } from '@/lib/data/store/productStore';
-import Modal from '@/app/admin/components/Modal';
+import dynamic from 'next/dynamic';
+
+const Modal = dynamic(() => import('@/app/admin/components/Modal'), {
+  ssr: false,
+});
 import { toastApi } from '@/lib/toast';
 import InlineSpinner from '@/app/admin/components/InlineSpinner';
 
@@ -115,7 +119,7 @@ export default function ProductDetailPage() {
           <div>
             <div className="min-w-0">
               <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-[#777777]">
-                <Link href="/admin/products" className="inline-flex items-center hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
+                <Link href="/admin/products" prefetch={true} className="inline-flex items-center hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
                   <ArrowLeft className="h-4 w-4 mr-1" /> Back
                 </Link>
                 <span>•</span>
@@ -223,6 +227,10 @@ export default function ProductDetailPage() {
                           width={200}
                           height={200}
                           className="h-full w-full object-cover hover:scale-105 transition-transform duration-300"
+                          loading={index === 0 ? "eager" : "lazy"}
+                          priority={index === 0}
+                          placeholder="blur"
+                          blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWEREiMxUf/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
                         />
                       </div>
                     ))}

@@ -115,10 +115,13 @@ export const useOrderStore = create<OrderState>((set, get) => ({
   status: 'idle',
   error: null,
 
-  setFilters: newFilters =>
-    set(state => ({
-      filters: { ...state.filters, ...newFilters, page: 1 },
-    })),
+  setFilters: newFilters => {
+    const current = get().filters;
+    const merged = { ...current, ...newFilters };
+    if (JSON.stringify(merged) !== JSON.stringify(current)) {
+      set({ filters: { ...merged, page: newFilters.page !== undefined ? newFilters.page : (Object.keys(newFilters).some(k => k !== 'page') ? 1 : current.page) } });
+    }
+  },
 
   fetchOrders: async () => {
     const { filters } = get();

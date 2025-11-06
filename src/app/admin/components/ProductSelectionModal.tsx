@@ -3,7 +3,11 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { type Product } from '@/lib/data/store/productStore';
 import { Package } from 'lucide-react';
-import Modal from './Modal';
+import dynamic from 'next/dynamic';
+
+const Modal = dynamic(() => import('./Modal'), {
+  ssr: false,
+});
 import InlineSpinner from './InlineSpinner';
 
 interface Props {

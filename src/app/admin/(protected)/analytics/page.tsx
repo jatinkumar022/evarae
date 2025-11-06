@@ -8,7 +8,7 @@ import {
   Package,
   Download,
 } from 'lucide-react';
-import { CustomSelect } from '@/app/admin/components/CustomSelect';
+import { CustomSelect } from '@/app/admin/components/LazyCustomSelect';
 import InlineSpinner from '@/app/admin/components/InlineSpinner';
 
 interface AnalyticsData {
@@ -39,25 +39,22 @@ export default function AnalyticsPage() {
 
   // Fetch analytics data
   useEffect(() => {
-    const fetchAnalytics = async () => {
+    let cancelled = false;
+    (async () => {
       setLoading(true);
       setError(null);
       try {
         const response = await fetch(`/api/admin/analytics?timeRange=${timeRange}`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch analytics');
-        }
+        if (!response.ok) throw new Error('Failed to fetch analytics');
         const data = await response.json();
-        setAnalytics(data);
+        if (!cancelled) setAnalytics(data);
       } catch (err) {
-        console.error('Error fetching analytics:', err);
-        setError(err instanceof Error ? err.message : 'Failed to load analytics');
+        if (!cancelled) setError(err instanceof Error ? err.message : 'Failed to load analytics');
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
-    };
-
-    fetchAnalytics();
+    })();
+    return () => { cancelled = true; };
   }, [timeRange]);
 
   const formatCurrency = (amount: number) => {
@@ -267,32 +264,48 @@ export default function AnalyticsPage() {
               Monthly Revenue
             </h3>
             <div className="h-48 sm:h-56 md:h-64 flex items-end justify-between gap-0.5 sm:gap-1 md:gap-2 overflow-x-auto">
-              {analytics.monthlyRevenue.length > 0 ? (
-                analytics.monthlyRevenue.map(item => {
-                  const maxRevenue = Math.max(
-                    ...analytics.monthlyRevenue.map(m => m.revenue),
-                    1
-                  );
-                  const height = maxRevenue > 0 ? (item.revenue / maxRevenue) * 100 : 0;
-                return (
-                  <div
-                    key={item.month}
-                    className="flex-1 min-w-[28px] sm:min-w-[32px] md:min-w-[36px] flex flex-col items-center"
-                  >
-                    <div className="text-[10px] xs:text-xs text-gray-500 dark:text-[#bdbdbd] mb-1 sm:mb-2 text-center leading-tight">
-                      {formatCompactCurrency(item.revenue)}
-                    </div>
+              {analytics.monthlyRevenue.length > 0 ? (() => {
+                // Calculate max revenue once outside the map
+                const revenues = analytics.monthlyRevenue.map(m => m.revenue);
+                const maxRevenue = Math.max(...revenues, 1);
+                const minRevenue = Math.min(...revenues, 0);
+                const range = maxRevenue - minRevenue;
+                
+                // If all values are the same or very close, use a fixed height
+                const isUniform = range < maxRevenue * 0.01; // Less than 1% difference
+                
+                return analytics.monthlyRevenue.map(item => {
+                  let height: number;
+                  
+                  if (isUniform || range === 0) {
+                    // If all values are similar, show at 50% height for visibility
+                    height = 50;
+                  } else {
+                    // Normalize value to 0-1 range, then scale to 20-100% for better visibility
+                    const normalizedValue = (item.revenue - minRevenue) / range;
+                    // Scale from 20% to 100% to ensure bars are always visible
+                    height = 20 + (normalizedValue * 80);
+                  }
+                  
+                  return (
                     <div
-                      className="w-full bg-gradient-to-t from-primary-600 to-primary-400 rounded-t dark:from-primary-500 dark:to-primary-300 min-h-[4px]"
-                      style={{ height: `${height}%` }}
-                    ></div>
-                    <div className="text-[10px] xs:text-xs text-gray-500 dark:text-[#bdbdbd] mt-1 sm:mt-2">
-                      {item.month}
+                      key={item.month}
+                      className="flex-1 min-w-[28px] sm:min-w-[32px] md:min-w-[36px] flex flex-col items-center"
+                    >
+                      <div className="text-[10px] xs:text-xs text-gray-500 dark:text-[#bdbdbd] mb-1 sm:mb-2 text-center leading-tight">
+                        {formatCompactCurrency(item.revenue)}
+                      </div>
+                      <div
+                        className="w-full bg-gradient-to-t from-primary-600 to-primary-400 rounded-t dark:from-primary-500 dark:to-primary-300 min-h-[4px]"
+                        style={{ height: `${height}%` }}
+                      ></div>
+                      <div className="text-[10px] xs:text-xs text-gray-500 dark:text-[#bdbdbd] mt-1 sm:mt-2">
+                        {item.month}
+                      </div>
                     </div>
-                  </div>
-                );
-              })
-              ) : (
+                  );
+                });
+              })() : (
                 <div className="w-full flex items-center justify-center h-full">
                   <p className="text-sm text-gray-500 dark:text-[#bdbdbd]">No revenue data available</p>
                 </div>

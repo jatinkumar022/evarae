@@ -73,14 +73,6 @@ export async function GET(request: Request) {
     const sort: Record<string, 1 | -1> = {};
     sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
 
-    const orders = await Order.find(filter)
-      .populate('user', 'name email')
-      .sort(sort)
-      .skip(skip)
-      .limit(limit)
-      .lean();
-
-    // Helper function to convert ObjectId to string
     const convertIdToString = (id: mongoose.Types.ObjectId | string | { _id?: mongoose.Types.ObjectId | string } | undefined): string => {
       if (!id) return '';
       if (typeof id === 'string') return id;
@@ -91,19 +83,18 @@ export async function GET(request: Request) {
       }
       return String(id);
     };
-
-    // Convert MongoDB objects to plain JSON
+    
+    const [orders, total] = await Promise.all([
+      Order.find(filter).select('-__v').populate('user', 'name email').sort(sort).skip(skip).limit(limit).lean(),
+      Order.countDocuments(filter)
+    ]);
+    
     const formattedOrders = (orders as LeanOrder[]).map((order) => ({
       ...order,
       _id: order._id.toString(),
       user: convertIdToString(order.user),
-      items: (order.items || []).map((item) => ({
-        ...item,
-        product: convertIdToString(item.product),
-      })),
+      items: (order.items || []).map((item) => ({ ...item, product: convertIdToString(item.product) })),
     }));
-
-    const total = await Order.countDocuments(filter);
     const totalPages = Math.ceil(total / limit);
 
     return NextResponse.json({

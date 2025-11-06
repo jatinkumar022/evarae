@@ -22,6 +22,7 @@ export async function GET(
     }
 
     const product = await Product.findById(id)
+      .select('-__v')
       .populate('categories', 'name slug')
       .lean();
 
@@ -75,8 +76,13 @@ export async function PUT(
       }
     }
 
-    const product = await Product.findById(id);
-    if (!product) {
+    // Parallelize validation queries
+    const [existingProduct, categories] = await Promise.all([
+      Product.findById(id).select('name slug').lean(),
+      body.categories?.length > 0 ? Category.find({ _id: { $in: body.categories } }).select('_id').lean() : Promise.resolve([]),
+    ]);
+
+    if (!existingProduct || Array.isArray(existingProduct)) {
       return NextResponse.json(
         { error: 'Product not found' },
         { status: 404 }
@@ -84,18 +90,18 @@ export async function PUT(
     }
 
     // Update slug if name changes
-    if (body.name && body.name !== product.name) {
+    if (body.name && body.name !== (existingProduct as { name?: string }).name) {
       const slug = body.name
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/(^-|-$)/g, '');
       
-      const existingProduct = await Product.findOne({
+      const slugCheck = await Product.findOne({
         slug,
         _id: { $ne: id },
-      });
+      }).select('_id').lean();
       
-      if (existingProduct) {
+      if (slugCheck) {
         return NextResponse.json(
           { error: 'A product with this name already exists' },
           { status: 400 }
@@ -105,14 +111,11 @@ export async function PUT(
     }
 
     // Validate categories if provided
-    if (body.categories?.length > 0) {
-      const categories = await Category.find({ _id: { $in: body.categories } });
-      if (categories.length !== body.categories.length) {
-        return NextResponse.json(
-          { error: 'One or more categories are invalid' },
-          { status: 400 }
-        );
-      }
+    if (body.categories?.length > 0 && categories.length !== body.categories.length) {
+      return NextResponse.json(
+        { error: 'One or more categories are invalid' },
+        { status: 400 }
+      );
     }
 
     const updatedProduct = await Product.findByIdAndUpdate(
@@ -127,7 +130,7 @@ export async function PUT(
         new: true,
         runValidators: true,
       }
-    ).populate('categories', 'name slug');
+    ).select('-__v').populate('categories', 'name slug').lean();
 
     return NextResponse.json({
       message: 'Product updated successfully',
@@ -159,15 +162,13 @@ export async function DELETE(
       );
     }
 
-    const product = await Product.findById(id);
-    if (!product) {
+    const deleted = await Product.findByIdAndDelete(id).select('_id').lean();
+    if (!deleted) {
       return NextResponse.json(
         { error: 'Product not found' },
         { status: 404 }
       );
     }
-
-    await Product.findByIdAndDelete(id);
     return NextResponse.json({ message: 'Product deleted successfully' });
   } catch (error) {
     console.error('Product DELETE error:', error);

@@ -9,12 +9,18 @@ const ibmPlexSans = IBM_Plex_Sans({
   variable: '--font-body',
   subsets: ['latin'],
   weight: ['400', '500', '600', '700'],
+  display: 'swap', // Optimize font loading
+  preload: true,
+  fallback: ['system-ui', 'arial'],
 });
 
 const fraunces = Fraunces({
   variable: '--font-heading',
   subsets: ['latin'],
   weight: ['200', '300', '400', '500', '600', '700'],
+  display: 'swap', // Optimize font loading
+  preload: true,
+  fallback: ['Georgia', 'serif'],
 });
 
 export const viewport: Viewport = {
@@ -52,6 +58,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        {/* Preconnect to external domains for faster resource loading */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://res.cloudinary.com" />
+        <link rel="dns-prefetch" href="https://checkout.razorpay.com" />
+        
         {/* Favicon */}
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link
@@ -83,6 +95,7 @@ export default function RootLayout({
         <script
           src="https://checkout.razorpay.com/v1/checkout.js"
           async
+          defer
         ></script>
       </head>
       <body

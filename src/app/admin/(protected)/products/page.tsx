@@ -14,10 +14,15 @@ import {
 } from 'lucide-react';
 import { useProductStore, Product } from '@/lib/data/store/productStore';
 import { useCategoryStore } from '@/lib/data/store/categoryStore';
-import { CustomSelect } from '@/app/admin/components/CustomSelect';
-import Modal from '@/app/admin/components/Modal';
+import { CustomSelect } from '@/app/admin/components/LazyCustomSelect';
+import dynamic from 'next/dynamic';
 import { toastApi } from '@/lib/toast';
 import InlineSpinner from '@/app/admin/components/InlineSpinner';
+
+// Lazy load Modal - only loads when delete modal opens
+const Modal = dynamic(() => import('@/app/admin/components/Modal'), {
+  ssr: false,
+});
 
 export default function ProductsPage() {
   const {
@@ -37,18 +42,17 @@ export default function ProductsPage() {
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Fetch categories on mount
+  // Fetch categories on mount only
   useEffect(() => {
-    fetchCategories();
-    setFilters({ limit: 9 });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (categories.length === 0) fetchCategories();
+    if (filters.limit !== 9) setFilters({ limit: 9 });
   }, []);
 
-  // Fetch products whenever filters change
+  // Debounced fetch products
   useEffect(() => {
-    fetchProducts();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters]);
+    const timer = setTimeout(() => fetchProducts(), 150);
+    return () => clearTimeout(timer);
+  }, [filters.search, filters.category, filters.status, filters.sortBy, filters.sortOrder, filters.page]);
 
   const formatCurrency = (amount: number) =>
     new Intl.NumberFormat('en-IN', {
@@ -91,7 +95,7 @@ export default function ProductsPage() {
     }
   };
 
-  const renderProductCard = (product: Product) => {
+  const renderProductCard = (product: Product, isPriority = false) => {
     const isDropdownOpen = openDropdownId === product._id;
     
     return (
@@ -149,13 +153,17 @@ export default function ProductsPage() {
 
       {/* Product Image */}
       <div className="aspect-square w-full overflow-hidden rounded-t-lg bg-gray-200 dark:bg-[#525252] relative">
-        {(product.thumbnail || product.images?.[0]) ? (
+        {(product.thumbnail || (product.images && product.images[0])) ? (
           <Image
-            src={product.thumbnail || product.images[0]}
+            src={product.thumbnail || (product.images && product.images[0]) || ''}
             alt={product.name}
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
             className="object-cover group-hover:scale-105 transition-transform duration-300"
+            loading={isPriority ? "eager" : "lazy"}
+            priority={isPriority}
+            placeholder="blur"
+            blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWEREiMxUf/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
           />
         ) : (
           <div className="h-full w-full flex items-center justify-center">
@@ -172,7 +180,7 @@ export default function ProductsPage() {
               {product.name}
             </h3>
             <p className="text-sm text-gray-500 dark:text-[#bdbdbd] truncate">
-              {product.categories.map(cat => cat.name).join(', ')}
+              {product.categories && product.categories.length > 0 ? product.categories.map(cat => cat.name).join(', ') : 'Uncategorized'}
             </p>
           </div>
         </div>
@@ -213,7 +221,7 @@ export default function ProductsPage() {
         </div>
 
         {/* Tags */}
-        {product.tags.length > 0 && (
+        {product.tags && product.tags.length > 0 && (
           <div className="mt-2 flex flex-wrap gap-1">
             {product.tags.map(tag => (
               <span
@@ -242,6 +250,7 @@ export default function ProductsPage() {
         <div className="flex items-center gap-2 flex-wrap">
           <Link
             href="/admin/products/new"
+            prefetch={true}
             className="inline-flex items-center text-xs md:text-sm px-4 py-2 border border-transparent font-medium rounded-md shadow-sm text-white bg-primary-500 hover:bg-primary-600 dark:bg-primary-600 dark:hover:bg-primary-700 transition-colors"
           >
             <Plus className="h-4 w-4 mr-2" /> Add Product
@@ -327,7 +336,11 @@ export default function ProductsPage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-              {products.map(renderProductCard)}
+              {products.map((product, index) => (
+                <div key={product._id}>
+                  {renderProductCard(product, index < 4)}
+                </div>
+              ))}
             </div>
           )}
 

@@ -1,14 +1,25 @@
 "use client";
 
+import dynamic from 'next/dynamic';
 import GlobalLoaderProvider from '@/app/(main)/components/layouts/GlobalLoaderProvider';
 import { ThemeProvider } from './context/ThemeContext';
 import { SidebarProvider, useSidebar } from './context/SidebarContext';
-import AppHeader from './components/AppHeader';
-import AppSidebar from './components/AppSidebar';
-import Backdrop from './components/Backdrop';
 import React from 'react';
 import { usePathname } from 'next/navigation';
 import './styles/theme.css';
+
+// Lazy load heavy components - only load when needed
+const AppHeader = dynamic(() => import('./components/AppHeader'), {
+  ssr: true, // Header should be SSR for SEO
+});
+
+const AppSidebar = dynamic(() => import('./components/AppSidebar'), {
+  ssr: true, // Sidebar should be SSR for initial render
+});
+
+const Backdrop = dynamic(() => import('./components/Backdrop'), {
+  ssr: false, // Backdrop only needed on client
+});
 
 function AdminLayoutContent({ children }: { children: React.ReactNode }) {
   const { isExpanded, isHovered, isMobileOpen } = useSidebar();

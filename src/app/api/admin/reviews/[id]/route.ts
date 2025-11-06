@@ -10,6 +10,7 @@ export async function GET(request: Request, { params }: RouteContext) {
 
     const { id } = await params;
     const review = await Review.findById(id)
+      .select('-__v')
       .populate('product', 'name slug')
       .populate('user', 'name email')
       .lean();
@@ -65,8 +66,10 @@ export async function PUT(request: Request, { params }: RouteContext) {
       new: true,
       runValidators: true,
     })
+      .select('-__v')
       .populate('product', 'name slug')
-      .populate('user', 'name email');
+      .populate('user', 'name email')
+      .lean();
 
     if (!updatedReview) {
       return NextResponse.json({ error: 'Review not found' }, { status: 404 });
@@ -90,7 +93,7 @@ export async function DELETE(request: Request, { params }: RouteContext) {
     await connect();
 
     const { id } = await params;
-    const deletedReview = await Review.findByIdAndDelete(id);
+    const deletedReview = await Review.findByIdAndDelete(id).select('_id').lean();
 
     if (!deletedReview) {
       return NextResponse.json({ error: 'Review not found' }, { status: 404 });

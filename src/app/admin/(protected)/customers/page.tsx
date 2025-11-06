@@ -8,7 +8,7 @@ import {
   Download,
 } from 'lucide-react';
 import { useCustomerStore, Customer } from '@/lib/data/store/customerStore';
-import { CustomSelect } from '@/app/admin/components/CustomSelect';
+import { CustomSelect } from '@/app/admin/components/LazyCustomSelect';
 import InlineSpinner from '@/app/admin/components/InlineSpinner';
 
 export default function CustomersPage() {
@@ -21,15 +21,16 @@ export default function CustomersPage() {
     fetchCustomers,
   } = useCustomerStore();
 
-  // Fetch customers from API
+  // Initialize filters once
   useEffect(() => {
-    setFilters({ limit: 10 });
-  }, [setFilters]);
+    if (filters.limit !== 10) setFilters({ limit: 10 });
+  }, []);
 
-  // Fetch customers whenever filters change
+  // Debounced fetch customers
   useEffect(() => {
-    fetchCustomers();
-  }, [filters, fetchCustomers]);
+    const timer = setTimeout(() => fetchCustomers(), 150);
+    return () => clearTimeout(timer);
+  }, [filters.search, filters.status, filters.role, filters.sortBy, filters.sortOrder, filters.page]);
 
   // Customers are filtered and paginated by the API, so we just use them directly
 

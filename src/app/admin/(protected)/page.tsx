@@ -72,23 +72,24 @@ export default function AdminDashboard() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchDashboardData();
+    let cancelled = false;
+    (async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await apiFetch<DashboardData>('/api/admin/dashboard');
+        if (!cancelled) setData(response);
+      } catch (err) {
+        if (!cancelled) {
+          const message = err instanceof Error ? err.message : 'Failed to load dashboard data';
+          setError(message);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
   }, []);
-
-  const fetchDashboardData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await apiFetch<DashboardData>('/api/admin/dashboard');
-      setData(response);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to load dashboard data';
-      setError(message);
-      console.error('Dashboard fetch error:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-IN', {
@@ -170,7 +171,7 @@ export default function AdminDashboard() {
               <h3 className="text-sm font-medium text-red-800 dark:text-red-400">Error loading dashboard</h3>
               <p className="mt-1 text-sm text-red-700 dark:text-red-300">{error}</p>
               <button
-                onClick={fetchDashboardData}
+                onClick={() => window.location.reload()}
                 className="mt-3 text-sm font-medium text-red-600 dark:text-red-400 hover:text-red-500 underline"
               >
                 Try again
@@ -349,6 +350,7 @@ export default function AdminDashboard() {
               </p>
               <Link
                 href="/admin/products"
+                prefetch={true}
                 className="mt-2 inline-block text-sm font-medium text-yellow-600 dark:text-yellow-400 hover:text-yellow-500 underline"
               >
                 View products
@@ -369,6 +371,7 @@ export default function AdminDashboard() {
               </h3>
               <Link
                 href="/admin/orders"
+                prefetch={true}
                 className="text-xs sm:text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300"
               >
                 View all
@@ -386,6 +389,7 @@ export default function AdminDashboard() {
                     <Link
                       key={order._id}
                       href={`/admin/orders/${order._id}`}
+                      prefetch={false}
                       className="block py-3 sm:py-4 hover:bg-gray-50 dark:hover:bg-[#1d1d1d] transition-colors"
                     >
                       <div className="flex items-center justify-between gap-2 sm:gap-4">
@@ -437,6 +441,7 @@ export default function AdminDashboard() {
               </h3>
               <Link
                 href="/admin/products"
+                prefetch={true}
                 className="text-xs sm:text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300"
               >
                 View all
@@ -495,6 +500,7 @@ export default function AdminDashboard() {
               </h3>
               <Link
                 href="/admin/products"
+                prefetch={true}
                 className="text-xs sm:text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300"
               >
                 View all
@@ -506,6 +512,7 @@ export default function AdminDashboard() {
                   <Link
                     key={product._id}
                     href={`/admin/products/${product._id}`}
+                    prefetch={false}
                     className="block py-3 sm:py-4 hover:bg-gray-50 dark:hover:bg-[#1d1d1d] transition-colors"
                   >
                     <div className="flex items-center justify-between gap-2 sm:gap-4">

@@ -31,7 +31,7 @@ export async function POST(request: Request) {
     const user = await User.findOne({
       email: email.toLowerCase(),
       role: 'admin',
-    });
+    }).select('adminOtpHash adminOtpExpiry adminOtpAttempts name email _id');
     if (!user || !user.adminOtpHash || !user.adminOtpExpiry) {
       return NextResponse.json({ error: 'Invalid OTP' }, { status: 400 });
     }

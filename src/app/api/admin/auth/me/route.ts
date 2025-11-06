@@ -27,12 +27,16 @@ export async function GET(request: Request) {
     if (!payload || payload.role !== 'admin')
       return NextResponse.json({ admin: null });
 
-    const user = await User.findById(payload.uid).select('name email role');
-    if (!user || user.role !== 'admin')
+    const user = await User.findById(payload.uid).select('name email role').lean();
+    if (!user || Array.isArray(user))
+      return NextResponse.json({ admin: null });
+
+    const adminUser = user as unknown as { name: string; email: string; role: string };
+    if (adminUser.role !== 'admin')
       return NextResponse.json({ admin: null });
 
     return NextResponse.json({
-      admin: { id: user._id, name: user.name, email: user.email },
+      admin: { id: payload.uid, name: adminUser.name, email: adminUser.email },
     });
   } catch {
     return NextResponse.json({ admin: null });

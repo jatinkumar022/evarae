@@ -23,7 +23,7 @@ export async function POST(request: Request) {
     const user = await User.findOne({
       email: email.toLowerCase(),
       role: 'admin',
-    });
+    }).select('adminOtpLastSentAt name email');
 
     // Always respond same way to avoid email enumeration
     if (!user) {

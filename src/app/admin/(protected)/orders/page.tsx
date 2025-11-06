@@ -15,7 +15,7 @@ import {
   Download,
 } from 'lucide-react';
 import { useOrderStore, Order } from '@/lib/data/store/orderStore';
-import { CustomSelect } from '@/app/admin/components/CustomSelect';
+import { CustomSelect } from '@/app/admin/components/LazyCustomSelect';
 import { toastApi } from '@/lib/toast';
 import InlineSpinner from '@/app/admin/components/InlineSpinner';
 
@@ -36,15 +36,16 @@ export default function OrdersPage() {
   const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null);
   const buttonRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
 
-  // Fetch orders from API
+  // Initialize filters once
   useEffect(() => {
-    setFilters({ limit: 10 });
-  }, [setFilters]);
+    if (filters.limit !== 10) setFilters({ limit: 10 });
+  }, []);
 
-  // Fetch orders whenever filters change
+  // Debounced fetch orders
   useEffect(() => {
-    fetchOrders();
-  }, [filters, fetchOrders]);
+    const timer = setTimeout(() => fetchOrders(), 150);
+    return () => clearTimeout(timer);
+  }, [filters.search, filters.orderStatus, filters.paymentStatus, filters.paymentMethod, filters.sortBy, filters.sortOrder, filters.page, filters.dateFrom, filters.dateTo]);
 
   // Calculate dropdown position based on button position
   const calculateDropdownPosition = (buttonElement: HTMLButtonElement) => {
