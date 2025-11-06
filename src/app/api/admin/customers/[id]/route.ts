@@ -88,7 +88,7 @@ export async function GET(
       : null;
     const averageOrderValue = totalOrders > 0 ? totalSpent / totalOrders : 0;
 
-    const leanUser = user as LeanUser;
+    const leanUser = user as unknown as LeanUser;
     const profile = leanUser.profile && typeof leanUser.profile === 'object' && !(leanUser.profile instanceof mongoose.Types.ObjectId) ? leanUser.profile as UserProfile : null;
 
     const customer = {
@@ -193,7 +193,7 @@ export async function PATCH(
       : null;
     const averageOrderValue = totalOrders > 0 ? totalSpent / totalOrders : 0;
 
-    const leanUser = user as LeanUser;
+    const leanUser = user as unknown as LeanUser;
     const profile = leanUser.profile && typeof leanUser.profile === 'object' && !(leanUser.profile instanceof mongoose.Types.ObjectId) ? leanUser.profile as UserProfile : null;
 
     const customer = {

@@ -99,7 +99,7 @@ export async function GET(request: Request) {
 
     // Enrich with order statistics
     const customers = await Promise.all(
-      users.map(async (user: LeanUser) => {
+      (users as unknown as LeanUser[]).map(async (user: LeanUser) => {
         const orders = (await Order.find({ user: user._id }).lean()) as unknown as LeanOrder[];
         const totalOrders = orders.length;
         const totalSpent = orders.reduce((sum: number, order: LeanOrder) => sum + (order.totalAmount || 0), 0);
