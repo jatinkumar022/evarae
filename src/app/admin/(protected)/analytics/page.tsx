@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   TrendingUp,
   DollarSign,
@@ -9,6 +9,7 @@ import {
   Download,
 } from 'lucide-react';
 import { CustomSelect } from '@/app/admin/components/CustomSelect';
+import InlineSpinner from '@/app/admin/components/InlineSpinner';
 
 interface AnalyticsData {
   totalRevenue: number;
@@ -30,71 +31,34 @@ interface AnalyticsData {
   }>;
 }
 
-const mockAnalytics: AnalyticsData = {
-  totalRevenue: 12500000,
-  totalOrders: 89,
-  totalCustomers: 234,
-  totalProducts: 156,
-  revenueGrowth: 23.1,
-  ordersGrowth: 8.2,
-  customersGrowth: 15.7,
-  productsGrowth: 12.5,
-  monthlyRevenue: [
-    { month: 'Jan', revenue: 850000 },
-    { month: 'Feb', revenue: 920000 },
-    { month: 'Mar', revenue: 780000 },
-    { month: 'Apr', revenue: 1050000 },
-    { month: 'May', revenue: 980000 },
-    { month: 'Jun', revenue: 1250000 },
-  ],
-  topCategories: [
-    { name: 'Rings', sales: 45, percentage: 35 },
-    { name: 'Earrings', sales: 32, percentage: 25 },
-    { name: 'Chains', sales: 28, percentage: 22 },
-    { name: 'Bangles', sales: 18, percentage: 14 },
-    { name: 'Others', sales: 5, percentage: 4 },
-  ],
-  topProducts: [
-    { name: 'Diamond Solitaire Ring', sales: 15, revenue: 2250000 },
-    { name: 'Gold Chain', sales: 12, revenue: 900000 },
-    { name: 'Diamond Earrings', sales: 10, revenue: 950000 },
-    { name: 'Traditional Bangles', sales: 8, revenue: 680000 },
-    { name: 'Platinum Ring', sales: 6, revenue: 900000 },
-  ],
-  recentActivity: [
-    {
-      type: 'order',
-      description: 'New order #ORD-001 placed',
-      time: '2 hours ago',
-      amount: 150000,
-    },
-    {
-      type: 'customer',
-      description: 'New customer registered',
-      time: '3 hours ago',
-    },
-    {
-      type: 'product',
-      description: 'Product stock updated',
-      time: '4 hours ago',
-    },
-    {
-      type: 'order',
-      description: 'Order #ORD-002 delivered',
-      time: '5 hours ago',
-      amount: 75000,
-    },
-    {
-      type: 'customer',
-      description: 'Customer feedback received',
-      time: '6 hours ago',
-    },
-  ],
-};
-
 export default function AnalyticsPage() {
-  const [analytics] = useState<AnalyticsData>(mockAnalytics);
+  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [timeRange, setTimeRange] = useState('6months');
+
+  // Fetch analytics data
+  useEffect(() => {
+    const fetchAnalytics = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await fetch(`/api/admin/analytics?timeRange=${timeRange}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch analytics');
+        }
+        const data = await response.json();
+        setAnalytics(data);
+      } catch (err) {
+        console.error('Error fetching analytics:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load analytics');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAnalytics();
+  }, [timeRange]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-IN', {
@@ -113,8 +77,29 @@ export default function AnalyticsPage() {
     return formatCurrency(amount);
   };
 
+  if (loading) {
+    return (
+      <div className="h-full flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <InlineSpinner size="lg" className="mx-auto mb-4" />
+          <p className="text-sm text-gray-500 dark:text-[#bdbdbd]">Loading analytics...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !analytics) {
+    return (
+      <div className="h-full flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <p className="text-sm text-red-600 dark:text-red-400">{error || 'Failed to load analytics'}</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-4 sm:space-y-6 max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
+    <div className="space-y-4 sm:space-y-6 mx-auto px-2 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
       {/* Header */}
       <div className="flex md:items-center gap-3 sm:gap-4 flex-col md:flex-row justify-between">
         <div className="w-full md:w-auto">
@@ -282,11 +267,13 @@ export default function AnalyticsPage() {
               Monthly Revenue
             </h3>
             <div className="h-48 sm:h-56 md:h-64 flex items-end justify-between gap-0.5 sm:gap-1 md:gap-2 overflow-x-auto">
-              {analytics.monthlyRevenue.map(item => {
-                const maxRevenue = Math.max(
-                  ...analytics.monthlyRevenue.map(m => m.revenue)
-                );
-                const height = (item.revenue / maxRevenue) * 100;
+              {analytics.monthlyRevenue.length > 0 ? (
+                analytics.monthlyRevenue.map(item => {
+                  const maxRevenue = Math.max(
+                    ...analytics.monthlyRevenue.map(m => m.revenue),
+                    1
+                  );
+                  const height = maxRevenue > 0 ? (item.revenue / maxRevenue) * 100 : 0;
                 return (
                   <div
                     key={item.month}
@@ -304,7 +291,12 @@ export default function AnalyticsPage() {
                     </div>
                   </div>
                 );
-              })}
+              })
+              ) : (
+                <div className="w-full flex items-center justify-center h-full">
+                  <p className="text-sm text-gray-500 dark:text-[#bdbdbd]">No revenue data available</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -316,7 +308,8 @@ export default function AnalyticsPage() {
               Top Categories by Sales
             </h3>
             <div className="space-y-3 sm:space-y-4">
-              {analytics.topCategories.map(category => (
+              {analytics.topCategories.length > 0 ? (
+                analytics.topCategories.map(category => (
                 <div
                   key={category.name}
                   className="flex items-center justify-between gap-2"
@@ -339,7 +332,10 @@ export default function AnalyticsPage() {
                     </span>
                   </div>
                 </div>
-              ))}
+              ))
+              ) : (
+                <p className="text-sm text-gray-500 dark:text-[#bdbdbd]">No category data available</p>
+              )}
             </div>
           </div>
         </div>
@@ -351,7 +347,8 @@ export default function AnalyticsPage() {
               Top Performing Products
             </h3>
             <div className="space-y-3 sm:space-y-4">
-              {analytics.topProducts.map((product, index) => (
+              {analytics.topProducts.length > 0 ? (
+                analytics.topProducts.map((product, index) => (
                 <div
                   key={product.name}
                   className="flex items-center justify-between gap-2"
@@ -375,7 +372,10 @@ export default function AnalyticsPage() {
                     {formatCompactCurrency(product.revenue)}
                   </div>
                 </div>
-              ))}
+              ))
+              ) : (
+                <p className="text-sm text-gray-500 dark:text-[#bdbdbd]">No product data available</p>
+              )}
             </div>
           </div>
         </div>
@@ -387,7 +387,8 @@ export default function AnalyticsPage() {
               Recent Activity
             </h3>
             <div className="space-y-3 sm:space-y-4">
-              {analytics.recentActivity.map((activity, index) => (
+              {analytics.recentActivity.length > 0 ? (
+                analytics.recentActivity.map((activity, index) => (
                 <div key={index} className="flex items-start gap-2 sm:gap-3">
                   <div className="flex-shrink-0">
                     <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gray-200 dark:bg-[#525252] rounded-full flex items-center justify-center">
@@ -414,7 +415,10 @@ export default function AnalyticsPage() {
                     </div>
                   )}
                 </div>
-              ))}
+              ))
+              ) : (
+                <p className="text-sm text-gray-500 dark:text-[#bdbdbd]">No recent activity</p>
+              )}
             </div>
           </div>
         </div>
@@ -430,25 +434,25 @@ export default function AnalyticsPage() {
             <div className="text-center">
               <div className="text-xl sm:text-2xl font-bold text-green-600 dark:text-green-400">
                 ₹
-                {Math.round(
-                  analytics.totalRevenue / analytics.totalOrders
-                ).toLocaleString()}
+                {analytics.totalOrders > 0
+                  ? Math.round(analytics.totalRevenue / analytics.totalOrders).toLocaleString()
+                  : '0'}
               </div>
               <div className="text-xs sm:text-sm text-gray-500 dark:text-[#bdbdbd] mt-1">Average Order Value</div>
             </div>
             <div className="text-center">
               <div className="text-xl sm:text-2xl font-bold text-blue-600 dark:text-blue-400">
-                {Math.round(
-                  (analytics.totalOrders / analytics.totalCustomers) * 100
-                ) / 100}
+                {analytics.totalCustomers > 0
+                  ? (Math.round((analytics.totalOrders / analytics.totalCustomers) * 100) / 100).toFixed(2)
+                  : '0'}
               </div>
               <div className="text-xs sm:text-sm text-gray-500 dark:text-[#bdbdbd] mt-1">Orders per Customer</div>
             </div>
             <div className="text-center">
               <div className="text-xl sm:text-2xl font-bold text-purple-600 dark:text-purple-400">
-                {Math.round(
-                  analytics.totalRevenue / analytics.totalProducts / 1000
-                )}
+                {analytics.totalProducts > 0
+                  ? Math.round(analytics.totalRevenue / analytics.totalProducts / 1000)
+                  : '0'}
                 K
               </div>
               <div className="text-xs sm:text-sm text-gray-500 dark:text-[#bdbdbd] mt-1">Revenue per Product</div>

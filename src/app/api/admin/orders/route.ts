@@ -1,6 +1,27 @@
 import { NextResponse } from 'next/server';
 import { connect } from '@/dbConfig/dbConfig';
 import Order from '@/models/orderModel';
+import mongoose from 'mongoose';
+
+// Type definitions
+interface OrderItem {
+  product?: mongoose.Types.ObjectId | string | { _id?: mongoose.Types.ObjectId | string };
+  name?: string;
+  slug?: string;
+  sku?: string;
+  price?: number;
+  quantity?: number;
+  image?: string;
+  selectedColor?: string;
+  selectedSize?: string;
+}
+
+interface LeanOrder {
+  _id: mongoose.Types.ObjectId;
+  user?: mongoose.Types.ObjectId | string | { _id?: mongoose.Types.ObjectId | string; name?: string; email?: string };
+  items?: OrderItem[];
+  [key: string]: unknown;
+}
 
 // GET: List orders with filters, search, pagination
 export async function GET(request: Request) {
@@ -59,14 +80,26 @@ export async function GET(request: Request) {
       .limit(limit)
       .lean();
 
+    // Helper function to convert ObjectId to string
+    const convertIdToString = (id: mongoose.Types.ObjectId | string | { _id?: mongoose.Types.ObjectId | string } | undefined): string => {
+      if (!id) return '';
+      if (typeof id === 'string') return id;
+      if (id instanceof mongoose.Types.ObjectId) return id.toString();
+      if (typeof id === 'object' && id._id) {
+        if (id._id instanceof mongoose.Types.ObjectId) return id._id.toString();
+        if (typeof id._id === 'string') return id._id;
+      }
+      return String(id);
+    };
+
     // Convert MongoDB objects to plain JSON
-    const formattedOrders = orders.map((order: any) => ({
+    const formattedOrders = (orders as LeanOrder[]).map((order) => ({
       ...order,
       _id: order._id.toString(),
-      user: order.user ? (typeof order.user === 'object' && order.user._id ? order.user._id.toString() : (typeof order.user === 'string' ? order.user : order.user.toString())) : order.user?.toString() || '',
-      items: (order.items || []).map((item: any) => ({
+      user: convertIdToString(order.user),
+      items: (order.items || []).map((item) => ({
         ...item,
-        product: item.product ? (typeof item.product === 'object' && item.product._id ? item.product._id.toString() : (typeof item.product === 'string' ? item.product : item.product.toString())) : item.product?.toString() || '',
+        product: convertIdToString(item.product),
       })),
     }));
 

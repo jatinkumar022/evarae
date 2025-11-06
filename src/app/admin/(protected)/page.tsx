@@ -8,10 +8,10 @@ import {
   TrendingDown,
   DollarSign,
   AlertCircle,
-  Loader2,
 } from 'lucide-react';
 import Link from 'next/link';
 import { apiFetch } from '@/lib/utils';
+import InlineSpinner from '@/app/admin/components/InlineSpinner';
 
 interface DashboardStats {
   totalProducts: number;
@@ -151,9 +151,9 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center h-full">
         <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary-500 mx-auto mb-4" />
+          <InlineSpinner size="lg" className="mx-auto mb-4" />
           <p className="text-gray-600 dark:text-[#bdbdbd]">Loading dashboard...</p>
         </div>
       </div>

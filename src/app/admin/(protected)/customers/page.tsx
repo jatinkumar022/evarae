@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 import {
   Search,
   User,
@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { useCustomerStore, Customer } from '@/lib/data/store/customerStore';
 import { CustomSelect } from '@/app/admin/components/CustomSelect';
+import InlineSpinner from '@/app/admin/components/InlineSpinner';
 
 export default function CustomersPage() {
   const {
@@ -60,8 +61,18 @@ export default function CustomersPage() {
            customer.profile?.addresses?.[0];
   };
 
+  const getCustomerPhone = (customer: Customer) => {
+    // Priority: customer.phone > profile.phone > first address phone
+    if (customer.phone) return customer.phone;
+    if (customer.profile?.phone) return customer.profile.phone;
+    const defaultAddress = getDefaultAddress(customer);
+    if (defaultAddress?.phone) return defaultAddress.phone;
+    if (customer.profile?.addresses?.[0]?.phone) return customer.profile.addresses[0].phone;
+    return null;
+  };
+
   return (
-    <div className="space-y-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
+    <div className="space-y-6 mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
       {/* Header */}
       <div className="flex md:items-center gap-4 flex-col md:flex-row justify-between">
         <div>
@@ -156,7 +167,7 @@ export default function CustomersPage() {
               {status === 'loading' ? (
                 <tr>
                   <td colSpan={6} className="px-4 py-12 text-center">
-                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
+                    <InlineSpinner size="lg" className="mx-auto mb-4" />
                     <p className="mt-2 text-sm text-gray-500 dark:text-[#bdbdbd]">Loading customers...</p>
                   </td>
                 </tr>
@@ -202,23 +213,42 @@ export default function CustomersPage() {
                         <div className="text-sm font-medium text-gray-900 dark:text-white">
                           {customer.email}
                         </div>
-                        <div className="text-sm text-gray-500 dark:text-[#bdbdbd] flex items-center gap-1 mt-1">
-                          <Phone className="h-3 w-3" />
-                          {customer.phone}
-                        </div>
+                        {(() => {
+                          const phone = getCustomerPhone(customer);
+                          return phone ? (
+                            <div className="text-sm text-gray-500 dark:text-[#bdbdbd] flex items-center gap-1 mt-1">
+                              <Phone className="h-3 w-3" />
+                              <span>{phone}</span>
+                            </div>
+                          ) : null;
+                        })()}
                       </td>
 
                       {/* Location */}
                       <td className="px-3 sm:px-4 py-4 whitespace-nowrap hover:bg-gray-50 dark:hover:bg-[#242424] transition-colors">
-                        {defaultAddress ? (
+                        {defaultAddress?.city ? (
                           <div className="text-sm text-gray-900 dark:text-white">
                             <div className="flex items-center gap-1">
                               <MapPin className="h-3 w-3 text-gray-400" />
                               <span>{defaultAddress.city}</span>
                             </div>
-                            <div className="text-xs text-gray-500 dark:text-[#bdbdbd] mt-1">
-                              {defaultAddress.state}
+                            {defaultAddress.state && (
+                              <div className="text-xs text-gray-500 dark:text-[#bdbdbd] mt-1">
+                                {defaultAddress.state}
+                              </div>
+                            )}
+                          </div>
+                        ) : customer.profile?.addresses && customer.profile.addresses.length > 0 ? (
+                          <div className="text-sm text-gray-900 dark:text-white">
+                            <div className="flex items-center gap-1">
+                              <MapPin className="h-3 w-3 text-gray-400" />
+                              <span>{customer.profile.addresses[0]?.city || 'N/A'}</span>
                             </div>
+                            {customer.profile.addresses[0]?.state && (
+                              <div className="text-xs text-gray-500 dark:text-[#bdbdbd] mt-1">
+                                {customer.profile.addresses[0].state}
+                              </div>
+                            )}
                           </div>
                         ) : (
                           <span className="text-sm text-gray-500 dark:text-[#bdbdbd]">—</span>

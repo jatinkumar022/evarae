@@ -14,6 +14,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useProductStore } from '@/lib/data/store/productStore';
 import Modal from '@/app/admin/components/Modal';
+import { toastApi } from '@/lib/toast';
+import InlineSpinner from '@/app/admin/components/InlineSpinner';
 
 export default function ProductDetailPage() {
   const params = useParams();
@@ -28,6 +30,8 @@ export default function ProductDetailPage() {
     error,
     clearError,
   } = useProductStore();
+
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
@@ -56,20 +60,35 @@ export default function ProductDetailPage() {
 
   const handleDelete = async () => {
     if (currentProduct) {
+      setIsDeleting(true);
       try {
         await deleteProduct(currentProduct._id);
+        toastApi.success('Product deleted successfully', 'The product has been removed from your catalog');
         router.push('/admin/products');
       } catch (error) {
         console.error('Delete failed:', error);
+        toastApi.error('Failed to delete product', 'Please try again');
+      } finally {
+        setIsDeleting(false);
       }
     }
   };
 
-  // Global loader will handle loading state
+  // Show loading state while fetching
+  if (status === 'loading') {
+    return (
+      <div className="h-full bg-gray-50 dark:bg-[#0d0d0d] flex items-center justify-center">
+        <div className="text-center">
+          <InlineSpinner size="lg" className="mx-auto mb-4" />
+          <p className="text-sm text-gray-500 dark:text-[#bdbdbd]">Loading product...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!currentProduct) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-[#0d0d0d] flex items-center justify-center">
+      <div className="h-full bg-gray-50 dark:bg-[#0d0d0d] flex items-center justify-center">
         <div className="text-center">
           <h3 className="text-lg font-medium text-gray-900 dark:text-white">
             Product not found
@@ -90,7 +109,7 @@ export default function ProductDetailPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#0d0d0d]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8 relative" >
+      <div className=" mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8 relative" >
         {/* Header */}
         <div className="mb-6 pb-6 border-b border-gray-100 dark:border-[#1f1f1f]">
           <div>
@@ -504,12 +523,20 @@ export default function ProductDetailPage() {
               <button
                 type="button"
                 onClick={handleDelete}
-                className="w-full sm:w-auto inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 text-sm font-medium text-white transition-colors"
-                style={{ backgroundColor: '#d92d20' }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#c0231a'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#d92d20'}
+                disabled={isDeleting}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-md border border-transparent shadow-sm px-4 py-2 text-sm font-medium text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{ backgroundColor: isDeleting ? '#c0231a' : '#d92d20' }}
+                onMouseEnter={(e) => !isDeleting && (e.currentTarget.style.backgroundColor = '#c0231a')}
+                onMouseLeave={(e) => !isDeleting && (e.currentTarget.style.backgroundColor = '#d92d20')}
               >
-                Delete
+                {isDeleting ? (
+                  <>
+                    <InlineSpinner size="sm" />
+                    Deleting...
+                  </>
+                ) : (
+                  'Delete'
+                )}
               </button>
               <button
                 type="button"

@@ -67,7 +67,10 @@ export default function GlobalLoaderProvider({
   return (
     <>
       {children}
-      {inFlightCount > 0 && <Loader fullscreen showLogo />}
+      {/* Do not show fullscreen global loader on admin routes. Admin pages will handle inline/content loaders themselves. */}
+      {typeof window !== 'undefined' &&
+        !window.location.pathname.startsWith('/admin') &&
+        inFlightCount > 0 && <Loader fullscreen showLogo />}
     </>
   );
 }

@@ -2,6 +2,55 @@ import { NextResponse } from 'next/server';
 import { connect } from '@/dbConfig/dbConfig';
 import User from '@/models/userModel';
 import Order from '@/models/orderModel';
+import mongoose from 'mongoose';
+
+// Type definitions
+interface Address {
+  _id?: mongoose.Types.ObjectId | string;
+  label?: string;
+  fullName?: string;
+  phone?: string;
+  line1?: string;
+  line2?: string;
+  city?: string;
+  state?: string;
+  postalCode?: string;
+  country?: string;
+  isDefaultShipping?: boolean;
+  isDefaultBilling?: boolean;
+}
+
+interface UserProfile {
+  _id?: mongoose.Types.ObjectId | string;
+  phone?: string;
+  gender?: string;
+  dob?: Date;
+  newsletterOptIn?: boolean;
+  smsNotifications?: boolean;
+  emailNotifications?: boolean;
+  orderUpdates?: boolean;
+  promotionalEmails?: boolean;
+  language?: string;
+  twoFactorEnabled?: boolean;
+  addresses?: Address[];
+}
+
+interface LeanUser {
+  _id: mongoose.Types.ObjectId;
+  name: string;
+  email: string;
+  role: string;
+  isVerified: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  profile?: UserProfile | mongoose.Types.ObjectId;
+}
+
+interface LeanOrder {
+  _id: mongoose.Types.ObjectId;
+  totalAmount?: number;
+  createdAt: Date;
+}
 
 // GET: Get single customer by ID
 export async function GET(
@@ -27,25 +76,26 @@ export async function GET(
     }
 
     // Get order statistics
-    const orders = await Order.find({ user: id }).lean();
+    const orders = await Order.find({ user: id }).lean() as LeanOrder[];
     const totalOrders = orders.length;
-    const totalSpent = orders.reduce((sum: number, order: any) => sum + (order.totalAmount || 0), 0);
+    const totalSpent = orders.reduce((sum: number, order: LeanOrder) => sum + (order.totalAmount || 0), 0);
     const lastOrder = orders.length > 0 
-      ? orders.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0]
+      ? orders.sort((a: LeanOrder, b: LeanOrder) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0]
       : null;
     const averageOrderValue = totalOrders > 0 ? totalSpent / totalOrders : 0;
 
-    const profile = (user as any).profile && typeof (user as any).profile === 'object' ? (user as any).profile : null;
+    const leanUser = user as LeanUser;
+    const profile = leanUser.profile && typeof leanUser.profile === 'object' && !(leanUser.profile instanceof mongoose.Types.ObjectId) ? leanUser.profile as UserProfile : null;
 
     const customer = {
-      _id: (user as any)._id.toString(),
-      name: (user as any).name,
-      email: (user as any).email,
+      _id: leanUser._id.toString(),
+      name: leanUser.name,
+      email: leanUser.email,
       phone: profile?.phone || '',
-      role: (user as any).role,
-      isVerified: (user as any).isVerified,
-      createdAt: (user as any).createdAt,
-      updatedAt: (user as any).updatedAt,
+      role: leanUser.role,
+      isVerified: leanUser.isVerified,
+      createdAt: leanUser.createdAt,
+      updatedAt: leanUser.updatedAt,
       profile: profile ? {
         _id: profile._id?.toString() || '',
         phone: profile.phone || '',
@@ -58,7 +108,7 @@ export async function GET(
         promotionalEmails: profile.promotionalEmails,
         language: profile.language,
         twoFactorEnabled: profile.twoFactorEnabled,
-        addresses: (profile.addresses || []).map((addr: any) => ({
+        addresses: (profile.addresses || []).map((addr: Address) => ({
           _id: addr._id?.toString() || '',
           label: addr.label || '',
           fullName: addr.fullName || '',
@@ -127,25 +177,26 @@ export async function PATCH(
     }
 
     // Get order statistics
-    const orders = await Order.find({ user: id }).lean();
+    const orders = await Order.find({ user: id }).lean() as LeanOrder[];
     const totalOrders = orders.length;
-    const totalSpent = orders.reduce((sum: number, order: any) => sum + (order.totalAmount || 0), 0);
+    const totalSpent = orders.reduce((sum: number, order: LeanOrder) => sum + (order.totalAmount || 0), 0);
     const lastOrder = orders.length > 0 
-      ? orders.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0]
+      ? orders.sort((a: LeanOrder, b: LeanOrder) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0]
       : null;
     const averageOrderValue = totalOrders > 0 ? totalSpent / totalOrders : 0;
 
-    const profile = (user as any).profile && typeof (user as any).profile === 'object' ? (user as any).profile : null;
+    const leanUser = user as LeanUser;
+    const profile = leanUser.profile && typeof leanUser.profile === 'object' && !(leanUser.profile instanceof mongoose.Types.ObjectId) ? leanUser.profile as UserProfile : null;
 
     const customer = {
-      _id: (user as any)._id.toString(),
-      name: (user as any).name,
-      email: (user as any).email,
+      _id: leanUser._id.toString(),
+      name: leanUser.name,
+      email: leanUser.email,
       phone: profile?.phone || '',
-      role: (user as any).role,
-      isVerified: (user as any).isVerified,
-      createdAt: (user as any).createdAt,
-      updatedAt: (user as any).updatedAt,
+      role: leanUser.role,
+      isVerified: leanUser.isVerified,
+      createdAt: leanUser.createdAt,
+      updatedAt: leanUser.updatedAt,
       profile: profile ? {
         _id: profile._id?.toString() || '',
         phone: profile.phone || '',
@@ -158,7 +209,7 @@ export async function PATCH(
         promotionalEmails: profile.promotionalEmails,
         language: profile.language,
         twoFactorEnabled: profile.twoFactorEnabled,
-        addresses: (profile.addresses || []).map((addr: any) => ({
+        addresses: (profile.addresses || []).map((addr: Address) => ({
           _id: addr._id?.toString() || '',
           label: addr.label || '',
           fullName: addr.fullName || '',

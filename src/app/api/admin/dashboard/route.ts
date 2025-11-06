@@ -51,12 +51,11 @@ interface CategorySales {
   totalSales: number;
 }
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
     await connect();
 
     const now = new Date();
-    const startOfToday = new Date(now.setHours(0, 0, 0, 0));
     const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
@@ -98,16 +97,6 @@ export async function GET(request: Request) {
       paymentStatus: { $in: ['paid', 'completed'] },
     }).lean() as unknown as OrderDocument[];
     const lastMonthRevenue = lastMonthOrders.reduce((sum: number, order: OrderDocument) => sum + (order.totalAmount || 0), 0);
-
-    // This week orders
-    const thisWeekOrders = await Order.countDocuments({
-      createdAt: { $gte: startOfThisWeek },
-    });
-
-    // Last week orders
-    const lastWeekOrders = await Order.countDocuments({
-      createdAt: { $gte: startOfLastWeek, $lt: startOfThisWeek },
-    });
 
     // This month orders
     const thisMonthOrdersCount = await Order.countDocuments({

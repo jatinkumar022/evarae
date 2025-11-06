@@ -1,6 +1,39 @@
 import { NextResponse } from 'next/server';
 import { connect } from '@/dbConfig/dbConfig';
 import Order from '@/models/orderModel';
+import mongoose from 'mongoose';
+
+// Type definitions
+interface OrderItem {
+  product?: mongoose.Types.ObjectId | string | { _id?: mongoose.Types.ObjectId | string };
+  name?: string;
+  slug?: string;
+  sku?: string;
+  price?: number;
+  quantity?: number;
+  image?: string;
+  selectedColor?: string;
+  selectedSize?: string;
+}
+
+interface LeanOrder {
+  _id: mongoose.Types.ObjectId;
+  user?: mongoose.Types.ObjectId | string | { _id?: mongoose.Types.ObjectId | string; name?: string; email?: string };
+  items?: OrderItem[];
+  [key: string]: unknown;
+}
+
+// Helper function to convert ObjectId to string
+const convertIdToString = (id: mongoose.Types.ObjectId | string | { _id?: mongoose.Types.ObjectId | string } | undefined): string => {
+  if (!id) return '';
+  if (typeof id === 'string') return id;
+  if (id instanceof mongoose.Types.ObjectId) return id.toString();
+  if (typeof id === 'object' && id._id) {
+    if (id._id instanceof mongoose.Types.ObjectId) return id._id.toString();
+    if (typeof id._id === 'string') return id._id;
+  }
+  return String(id);
+};
 
 // GET: Get single order by ID
 export async function GET(
@@ -24,13 +57,14 @@ export async function GET(
     }
 
     // Convert MongoDB objects to plain JSON
+    const leanOrder = order as LeanOrder;
     const formattedOrder = {
-      ...order,
-      _id: (order as any)._id.toString(),
-      user: (order as any).user ? (typeof (order as any).user === 'object' && (order as any).user._id ? (order as any).user._id.toString() : (typeof (order as any).user === 'string' ? (order as any).user : (order as any).user.toString())) : (order as any).user?.toString() || '',
-      items: ((order as any).items || []).map((item: any) => ({
+      ...leanOrder,
+      _id: leanOrder._id.toString(),
+      user: convertIdToString(leanOrder.user),
+      items: (leanOrder.items || []).map((item) => ({
         ...item,
-        product: item.product ? (typeof item.product === 'object' && item.product._id ? item.product._id.toString() : (typeof item.product === 'string' ? item.product : item.product.toString())) : item.product?.toString() || '',
+        product: convertIdToString(item.product),
       })),
     };
 
@@ -86,13 +120,14 @@ export async function PATCH(
     }
 
     // Convert MongoDB objects to plain JSON
+    const leanOrder = order as LeanOrder;
     const formattedOrder = {
-      ...order,
-      _id: (order as any)._id.toString(),
-      user: (order as any).user ? (typeof (order as any).user === 'object' && (order as any).user._id ? (order as any).user._id.toString() : (typeof (order as any).user === 'string' ? (order as any).user : (order as any).user.toString())) : (order as any).user?.toString() || '',
-      items: ((order as any).items || []).map((item: any) => ({
+      ...leanOrder,
+      _id: leanOrder._id.toString(),
+      user: convertIdToString(leanOrder.user),
+      items: (leanOrder.items || []).map((item) => ({
         ...item,
-        product: item.product ? (typeof item.product === 'object' && item.product._id ? item.product._id.toString() : (typeof item.product === 'string' ? item.product : item.product.toString())) : item.product?.toString() || '',
+        product: convertIdToString(item.product),
       })),
     };
 

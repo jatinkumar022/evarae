@@ -15,6 +15,8 @@ import {
 import { useCategoryStore } from '@/lib/data/store/categoryStore';
 import { useProductStore } from '@/lib/data/store/productStore';
 import Modal from '@/app/admin/components/Modal';
+import { toastApi } from '@/lib/toast';
+import InlineSpinner from '@/app/admin/components/InlineSpinner';
 
 export default function CategoryViewPage() {
   const params = useParams();
@@ -35,6 +37,7 @@ export default function CategoryViewPage() {
   } = useProductStore();
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     // Fetch category and products from API
@@ -56,18 +59,35 @@ export default function CategoryViewPage() {
 
   const handleDelete = async () => {
     if (currentCategory) {
+      setIsDeleting(true);
       try {
         await deleteCategory(currentCategory._id);
+        toastApi.success('Category deleted successfully', 'The category has been removed');
         router.push('/admin/categories');
       } catch (error) {
         console.error('Failed to delete category:', error);
+        toastApi.error('Failed to delete category', 'Please try again');
+      } finally {
+        setIsDeleting(false);
       }
     }
   };
 
+  // Show loading state while fetching
+  if (status === 'loading') {
+    return (
+      <div className="h-full bg-gray-50 dark:bg-[#0d0d0d] flex items-center justify-center">
+        <div className="text-center">
+          <InlineSpinner size="lg" className="mx-auto mb-4" />
+          <p className="text-sm text-gray-500 dark:text-[#bdbdbd]">Loading category...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!currentCategory) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-[#0d0d0d] flex items-center justify-center">
+      <div className="h-full bg-gray-50 dark:bg-[#0d0d0d] flex items-center justify-center">
         <div className="text-center">
           <h3 className="text-lg font-medium text-gray-900 dark:text-white">
             Category not found
@@ -88,7 +108,7 @@ export default function CategoryViewPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#0d0d0d]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8 relative">
+      <div className=" mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8 relative">
         {/* Header */}
         <div className="mb-6 pb-6 border-b border-gray-100 dark:border-[#1f1f1f]">
           <div>
@@ -178,7 +198,7 @@ export default function CategoryViewPage() {
                 </div>
                 <div className="p-6">
                   {currentCategory.image ? (
-                    <div className="aspect-video w-full overflow-hidden rounded-lg bg-gray-200 dark:bg-[#191919]">
+                    <div className="aspect-square w-full max-w-md overflow-hidden rounded-lg bg-gray-200 dark:bg-[#191919]">
                       <Image
                         src={currentCategory.image}
                         alt={currentCategory.name}
@@ -361,12 +381,20 @@ export default function CategoryViewPage() {
               <button
                 type="button"
                 onClick={handleDelete}
-                className="w-full sm:w-auto inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 text-sm font-medium text-white transition-colors"
-                style={{ backgroundColor: '#d92d20' }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#c0231a'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#d92d20'}
+                disabled={isDeleting}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-md border border-transparent shadow-sm px-4 py-2 text-sm font-medium text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{ backgroundColor: isDeleting ? '#c0231a' : '#d92d20' }}
+                onMouseEnter={(e) => !isDeleting && (e.currentTarget.style.backgroundColor = '#c0231a')}
+                onMouseLeave={(e) => !isDeleting && (e.currentTarget.style.backgroundColor = '#d92d20')}
               >
-                Delete
+                {isDeleting ? (
+                  <>
+                    <InlineSpinner size="sm" />
+                    Deleting...
+                  </>
+                ) : (
+                  'Delete'
+                )}
               </button>
               <button
                 type="button"

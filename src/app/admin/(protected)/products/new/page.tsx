@@ -8,14 +8,11 @@ import {
   ArrowLeft,
   Save,
   Trash2,
-  Loader2,
   Upload,
   X,
-  AlertCircle,
   Package,
   DollarSign,
   Tag,
-  Palette,
   Image as ImageIcon,
   Video,
   Search,
@@ -26,6 +23,8 @@ import { useProductStore } from '@/lib/data/store/productStore';
 import { useCategoryStore } from '@/lib/data/store/categoryStore';
 import { CustomSelect } from '@/app/admin/components/CustomSelect';
 import { useUploadStore } from '@/lib/data/store/uploadStore';
+import { toastApi } from '@/lib/toast';
+import InlineSpinner from '@/app/admin/components/InlineSpinner';
 
 // Zod schema for product form validation
 const productFormSchema = z.object({
@@ -149,6 +148,14 @@ export default function NewProductPage() {
   useEffect(() => {
     fetchCategories();
   }, [fetchCategories]);
+
+  // Show error toast when error occurs
+  useEffect(() => {
+    if (error) {
+      toastApi.error('Error creating product', error);
+      clearError();
+    }
+  }, [error, clearError]);
 
   // Auto-generate SKU from name
   useEffect(() => {
@@ -276,9 +283,11 @@ export default function NewProductPage() {
       };
 
       await createProduct(productData as Parameters<typeof createProduct>[0]);
+      toastApi.success('Product created successfully', 'The product has been added to your catalog');
       router.push('/admin/products');
     } catch (err) {
       console.error('Failed to create product', err);
+      toastApi.error('Failed to create product', 'Please try again');
     }
   };
 
@@ -315,7 +324,7 @@ export default function NewProductPage() {
               className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-primary-500 hover:bg-primary-600 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
             >
               {isSubmitting ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                <InlineSpinner size="sm" className="mr-2" />
               ) : (
                 <Save className="h-4 w-4 mr-2" />
               )}
@@ -332,31 +341,6 @@ export default function NewProductPage() {
             </p>
           </div>
         </div>
-
-        {/* Error Alert */}
-        {error && (
-          <div className="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <AlertCircle className="h-5 w-5 text-red-400 dark:text-red-500" />
-              </div>
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-red-800 dark:text-red-400">
-                  Error creating product
-                </h3>
-                <div className="mt-2 text-sm text-red-700 dark:text-red-300">{error}</div>
-                <div className="mt-4">
-                  <button
-                    onClick={clearError}
-                    className="bg-red-100 dark:bg-red-900/30 px-3 py-1 rounded-md text-sm text-red-800 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-900/40 transition-colors"
-                  >
-                    Dismiss
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
 
         <form id="product-form" onSubmit={handleSubmit(onSubmit)} className="space-y-8 md:space-y-10">
           <div className="grid grid-cols-1 gap-8 md:gap-10 lg:grid-cols-3">

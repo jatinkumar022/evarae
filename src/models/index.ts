@@ -7,5 +7,6 @@ import './orderModel';
 import './productModel';
 import './pendingSignupModel';
 import './reviewModel';
+import './settingsModel';
 import './userModel';
 import './userProfile';

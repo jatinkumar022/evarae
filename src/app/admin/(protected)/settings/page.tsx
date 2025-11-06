@@ -2,7 +2,6 @@
 import { useState, useEffect } from 'react';
 import {
   Save,
-  Loader2,
   User,
   Globe,
   Mail,
@@ -17,6 +16,8 @@ import {
 } from 'lucide-react';
 import { CustomSelect } from '@/app/admin/components/CustomSelect';
 import { useAdminAuth } from '@/lib/data/store/adminAuth';
+import { toastApi } from '@/lib/toast';
+import InlineSpinner from '@/app/admin/components/InlineSpinner';
 
 interface FooterSettings {
   tagline: string;
@@ -73,13 +74,48 @@ const defaultSettings: SettingsState = {
 };
 
 export default function SettingsPage() {
-  const { profile } = useAdminAuth();
+  const { profile, loadProfile } = useAdminAuth();
   const [settings, setSettings] = useState<SettingsState>(defaultSettings);
   const [originalSettings, setOriginalSettings] = useState<SettingsState>(defaultSettings);
   const [isSaving, setIsSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [activeSection, setActiveSection] = useState<'footer' | 'admin' | 'general'>('general');
 
-  // Load admin profile when available
+  // Fetch settings from API
+  useEffect(() => {
+    const fetchSettings = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch('/api/admin/settings');
+        if (!response.ok) {
+          throw new Error('Failed to fetch settings');
+        }
+        const data = await response.json();
+        
+        const fetchedSettings: SettingsState = {
+          general: data.general || defaultSettings.general,
+          footer: data.footer || defaultSettings.footer,
+          adminAccount: {
+            name: profile?.name || defaultSettings.adminAccount.name,
+            email: profile?.email || defaultSettings.adminAccount.email,
+          },
+        };
+        
+        setSettings(fetchedSettings);
+        setOriginalSettings(fetchedSettings);
+      } catch (error) {
+        console.error('Error fetching settings:', error);
+        toastApi.error('Failed to load settings', 'Using default values');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSettings();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Update admin account when profile changes
   useEffect(() => {
     if (profile) {
       setSettings(prev => ({
@@ -101,8 +137,19 @@ export default function SettingsPage() {
     }
   }, [profile]);
 
-  // Check if form is dirty
-  const isDirty = JSON.stringify(settings) !== JSON.stringify(originalSettings);
+  // Check if form is dirty (only for active section)
+  const isDirty = (() => {
+    if (activeSection === 'general') {
+      return JSON.stringify(settings.general) !== JSON.stringify(originalSettings.general);
+    }
+    if (activeSection === 'footer') {
+      return JSON.stringify(settings.footer) !== JSON.stringify(originalSettings.footer);
+    }
+    if (activeSection === 'admin') {
+      return JSON.stringify(settings.adminAccount) !== JSON.stringify(originalSettings.adminAccount);
+    }
+    return false;
+  })();
 
   const handleFooterChange = (field: keyof FooterSettings, value: string) => {
     setSettings(prev => ({
@@ -151,21 +198,96 @@ export default function SettingsPage() {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setOriginalSettings({ ...settings });
-      // Show success notification
-      alert('Settings saved successfully!');
+      if (activeSection === 'admin') {
+        // Update admin account
+        const response = await fetch('/api/admin/settings/account', {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            name: settings.adminAccount.name,
+          }),
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'Failed to update admin account');
+        }
+
+        const data = await response.json();
+        // Update local state with returned data
+        setSettings(prev => ({
+          ...prev,
+          adminAccount: {
+            name: data.admin.name,
+            email: data.admin.email,
+          },
+        }));
+        setOriginalSettings(prev => ({
+          ...prev,
+          adminAccount: {
+            name: data.admin.name,
+            email: data.admin.email,
+          },
+        }));
+        
+        // Refresh admin profile in store
+        await loadProfile();
+      } else {
+        // Update general or footer settings
+        const response = await fetch('/api/admin/settings', {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            general: activeSection === 'general' ? settings.general : undefined,
+            footer: activeSection === 'footer' ? settings.footer : undefined,
+          }),
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'Failed to save settings');
+        }
+
+        const data = await response.json();
+        // Update local state with returned data
+        setSettings(prev => ({
+          ...prev,
+          general: data.general || prev.general,
+          footer: data.footer || prev.footer,
+        }));
+        setOriginalSettings(prev => ({
+          ...prev,
+          general: data.general || prev.general,
+          footer: data.footer || prev.footer,
+        }));
+      }
+
+      toastApi.success('Settings saved successfully', 'All settings have been updated');
     } catch (error) {
       console.error('Failed to save settings:', error);
-      alert('Failed to save settings. Please try again.');
+      toastApi.error('Failed to save settings', error instanceof Error ? error.message : 'Please try again');
     } finally {
       setIsSaving(false);
     }
   };
 
+  if (loading) {
+    return (
+      <div className="h-full flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <InlineSpinner size="lg" className="mx-auto mb-4" />
+          <p className="text-sm text-gray-500 dark:text-[#bdbdbd]">Loading settings...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
+    <div className="space-y-6 mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
       {/* Header */}
       <div className="flex md:items-center gap-4 flex-col md:flex-row justify-between">
         <div>
@@ -186,7 +308,7 @@ export default function SettingsPage() {
             >
               {isSaving ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <InlineSpinner size="sm" />
                   Saving...
                 </>
               ) : (
@@ -513,7 +635,7 @@ export default function SettingsPage() {
           >
             {isSaving ? (
               <>
-                <Loader2 className="h-5 w-5 animate-spin" />
+                <InlineSpinner size="md" />
                 <span>Saving Changes...</span>
               </>
             ) : (

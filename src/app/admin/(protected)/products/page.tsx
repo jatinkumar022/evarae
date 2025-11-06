@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
@@ -16,6 +16,8 @@ import { useProductStore, Product } from '@/lib/data/store/productStore';
 import { useCategoryStore } from '@/lib/data/store/categoryStore';
 import { CustomSelect } from '@/app/admin/components/CustomSelect';
 import Modal from '@/app/admin/components/Modal';
+import { toastApi } from '@/lib/toast';
+import InlineSpinner from '@/app/admin/components/InlineSpinner';
 
 export default function ProductsPage() {
   const {
@@ -33,6 +35,7 @@ export default function ProductsPage() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Fetch categories on mount
   useEffect(() => {
@@ -71,14 +74,19 @@ export default function ProductsPage() {
 
   const confirmDelete = async () => {
     if (productToDelete) {
+      setIsDeleting(true);
       try {
         await deleteProduct(productToDelete._id);
+        toastApi.success('Product deleted successfully', 'The product has been removed from your catalog');
         setIsDeleteModalOpen(false);
         setProductToDelete(null);
         // Refresh products after deletion
         fetchProducts();
       } catch (error) {
         console.error('Delete failed:', error);
+        toastApi.error('Failed to delete product', 'Please try again');
+      } finally {
+        setIsDeleting(false);
       }
     }
   };
@@ -304,7 +312,7 @@ export default function ProductsPage() {
         <div className="px-4 py-5 sm:p-6">
           {status === 'loading' ? (
             <div className="text-center py-12">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
+              <InlineSpinner size="lg" className="mx-auto mb-4" />
               <p className="mt-2 text-sm text-gray-500 dark:text-[#bdbdbd]">Loading products...</p>
             </div>
           ) : products.length === 0 ? (
@@ -363,12 +371,20 @@ export default function ProductsPage() {
             <button
               type="button"
               onClick={confirmDelete}
-              className="w-full sm:w-auto inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 text-sm font-medium text-white transition-colors"
-              style={{ backgroundColor: '#d92d20' }}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#c0231a'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#d92d20'}
+              disabled={isDeleting}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-md border border-transparent shadow-sm px-4 py-2 text-sm font-medium text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ backgroundColor: isDeleting ? '#c0231a' : '#d92d20' }}
+              onMouseEnter={(e) => !isDeleting && (e.currentTarget.style.backgroundColor = '#c0231a')}
+              onMouseLeave={(e) => !isDeleting && (e.currentTarget.style.backgroundColor = '#d92d20')}
             >
-              Delete
+              {isDeleting ? (
+                <>
+                  <InlineSpinner size="sm" />
+                  Deleting...
+                </>
+              ) : (
+                'Delete'
+              )}
             </button>
             <button
               type="button"

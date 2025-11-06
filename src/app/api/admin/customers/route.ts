@@ -1,8 +1,56 @@
 import { NextResponse } from 'next/server';
 import { connect } from '@/dbConfig/dbConfig';
 import User from '@/models/userModel';
-import UserProfile from '@/models/userProfile';
 import Order from '@/models/orderModel';
+import mongoose from 'mongoose';
+
+// Type definitions
+interface Address {
+  _id?: mongoose.Types.ObjectId | string;
+  label?: string;
+  fullName?: string;
+  phone?: string;
+  line1?: string;
+  line2?: string;
+  city?: string;
+  state?: string;
+  postalCode?: string;
+  country?: string;
+  isDefaultShipping?: boolean;
+  isDefaultBilling?: boolean;
+}
+
+interface UserProfile {
+  _id?: mongoose.Types.ObjectId | string;
+  phone?: string;
+  gender?: string;
+  dob?: Date;
+  newsletterOptIn?: boolean;
+  smsNotifications?: boolean;
+  emailNotifications?: boolean;
+  orderUpdates?: boolean;
+  promotionalEmails?: boolean;
+  language?: string;
+  twoFactorEnabled?: boolean;
+  addresses?: Address[];
+}
+
+interface LeanUser {
+  _id: mongoose.Types.ObjectId;
+  name: string;
+  email: string;
+  role: string;
+  isVerified: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  profile?: UserProfile | mongoose.Types.ObjectId;
+}
+
+interface LeanOrder {
+  _id: mongoose.Types.ObjectId;
+  totalAmount?: number;
+  createdAt: Date;
+}
 
 // GET: List customers with filters, search, pagination
 export async function GET(request: Request) {
@@ -51,16 +99,16 @@ export async function GET(request: Request) {
 
     // Enrich with order statistics
     const customers = await Promise.all(
-      users.map(async (user: any) => {
-        const orders = await Order.find({ user: user._id }).lean();
+      users.map(async (user: LeanUser) => {
+        const orders = await Order.find({ user: user._id }).lean() as LeanOrder[];
         const totalOrders = orders.length;
-        const totalSpent = orders.reduce((sum: number, order: any) => sum + (order.totalAmount || 0), 0);
+        const totalSpent = orders.reduce((sum: number, order: LeanOrder) => sum + (order.totalAmount || 0), 0);
         const lastOrder = orders.length > 0 
-          ? orders.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0]
+          ? orders.sort((a: LeanOrder, b: LeanOrder) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0]
           : null;
         const averageOrderValue = totalOrders > 0 ? totalSpent / totalOrders : 0;
 
-        const profile = user.profile && typeof user.profile === 'object' ? user.profile : null;
+        const profile = user.profile && typeof user.profile === 'object' && !(user.profile instanceof mongoose.Types.ObjectId) ? user.profile as UserProfile : null;
 
         return {
           _id: user._id.toString(),
@@ -83,7 +131,7 @@ export async function GET(request: Request) {
             promotionalEmails: profile.promotionalEmails,
             language: profile.language,
             twoFactorEnabled: profile.twoFactorEnabled,
-            addresses: (profile.addresses || []).map((addr: any) => ({
+            addresses: (profile.addresses || []).map((addr: Address) => ({
               _id: addr._id?.toString() || '',
               label: addr.label || '',
               fullName: addr.fullName || '',

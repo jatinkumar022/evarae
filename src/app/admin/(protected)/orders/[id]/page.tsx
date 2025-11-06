@@ -4,7 +4,6 @@ import { useParams } from 'next/navigation';
 import {
   ArrowLeft,
   Package,
-  Loader2,
   AlertCircle,
   MapPin,
   CreditCard,
@@ -19,6 +18,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useOrderStore, Order } from '@/lib/data/store/orderStore';
 import { CustomSelect } from '@/app/admin/components/CustomSelect';
+import { toastApi } from '@/lib/toast';
+import InlineSpinner from '@/app/admin/components/InlineSpinner';
 
 export default function OrderDetailPage() {
   const params = useParams();
@@ -78,6 +79,14 @@ export default function OrderDetailPage() {
     formValues.courierName !== originalValues.courierName
   );
 
+  // Show error toast when error occurs
+  useEffect(() => {
+    if (error) {
+      toastApi.error('Error updating order', error);
+      clearError();
+    }
+  }, [error, clearError]);
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
@@ -136,10 +145,29 @@ export default function OrderDetailPage() {
     );
   };
 
+  // Generate tracking number
+  const generateTrackingNumber = () => {
+    const now = new Date();
+    const ymd = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
+    const random = Math.floor(100000 + Math.random() * 900000);
+    return `TRK-${ymd}-${random}`;
+  };
+
   // Handle form field changes (updates local state only)
   const handleStatusChange = (newStatus: Order['orderStatus']) => {
     if (formValues) {
-      setFormValues({ ...formValues, orderStatus: newStatus });
+      const updated = { ...formValues, orderStatus: newStatus };
+      
+      // Auto-generate tracking number when status changes to shipped
+      if (newStatus === 'shipped' && !formValues.trackingNumber) {
+        updated.trackingNumber = generateTrackingNumber();
+        // Auto-set courier name if not set
+        if (!formValues.courierName) {
+          updated.courierName = 'Standard Shipping';
+        }
+      }
+      
+      setFormValues(updated);
     }
   };
 
@@ -198,16 +226,31 @@ export default function OrderDetailPage() {
           courierName: formValues.courierName,
         },
       });
+      
+      toastApi.success('Order updated successfully', 'Order details have been saved');
     } catch (error) {
       console.error('Failed to save changes:', error);
+      toastApi.error('Failed to update order', 'Please try again');
     } finally {
       setIsUpdating(false);
     }
   };
 
+  // Show loading state while fetching
+  if (status === 'loading') {
+    return (
+      <div className="h-full bg-gray-50 dark:bg-[#0d0d0d] flex items-center justify-center">
+        <div className="text-center">
+          <InlineSpinner size="lg" className="mx-auto mb-4" />
+          <p className="text-sm text-gray-500 dark:text-[#bdbdbd]">Loading order...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!currentOrder) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-[#0d0d0d] flex items-center justify-center">
+      <div className="h-full bg-gray-50 dark:bg-[#0d0d0d] flex items-center justify-center">
         <div className="text-center">
           <h3 className="text-lg font-medium text-gray-900 dark:text-white">
             Order not found
@@ -228,7 +271,7 @@ export default function OrderDetailPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#0d0d0d]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
+      <div className="mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
         {/* Header */}
         <div className="mb-6 pb-6 border-b border-gray-100 dark:border-[#1f1f1f]">
           <div>
@@ -254,7 +297,7 @@ export default function OrderDetailPage() {
                     >
                       {isUpdating ? (
                         <>
-                          <Loader2 className="h-4 w-4 animate-spin" />
+                          <InlineSpinner size="sm" />
                           Saving...
                         </>
                       ) : (
@@ -289,30 +332,6 @@ export default function OrderDetailPage() {
           </div>
         </div>
 
-        {/* Error Message */}
-        {error && (
-          <div className="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <AlertCircle className="h-5 w-5 text-red-400 dark:text-red-500" />
-              </div>
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-red-800 dark:text-red-400">Error</h3>
-                <div className="mt-2 text-sm text-red-700 dark:text-red-300">
-                  <p>{error}</p>
-                </div>
-                <div className="mt-4">
-                  <button
-                    onClick={clearError}
-                    className="bg-red-100 dark:bg-red-900/30 px-3 py-1 rounded-md text-sm text-red-800 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-900/40 transition-colors"
-                  >
-                    Dismiss
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
 
         <div className="space-y-6">
           {/* Order Items */}
@@ -528,14 +547,32 @@ export default function OrderDetailPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Tracking Number
-                  </label>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Tracking Number
+                    </label>
+                    {!formValues?.trackingNumber && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (formValues) {
+                            setFormValues({
+                              ...formValues,
+                              trackingNumber: generateTrackingNumber(),
+                            });
+                          }
+                        }}
+                        className="text-xs text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium"
+                      >
+                        Generate
+                      </button>
+                    )}
+                  </div>
                   <input
                     type="text"
                     value={formValues?.trackingNumber || currentOrder.trackingNumber || ''}
                     onChange={(e) => handleTrackingNumberChange(e.target.value)}
-                    placeholder="Enter tracking number"
+                    placeholder="Enter tracking number or click Generate"
                     className="block w-full px-3 py-2 border border-gray-300 dark:border-[#525252] rounded-md shadow-sm bg-white dark:bg-[#242424] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#bdbdbd] focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-600 dark:focus:border-primary-600 sm:text-sm"
                     disabled={isUpdating}
                   />
@@ -663,7 +700,7 @@ export default function OrderDetailPage() {
           >
             {isUpdating ? (
               <>
-                <Loader2 className="h-5 w-5 animate-spin" />
+                <InlineSpinner size="md" />
                 <span>Saving Changes...</span>
               </>
             ) : (

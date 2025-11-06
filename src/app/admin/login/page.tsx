@@ -165,16 +165,16 @@ export default function AdminLoginPage() {
               <h1 className="text-2xl md:text-3xl font-heading bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] bg-clip-text text-transparent mb-1.5">
                 Admin Login
               </h1>
-              <p className="text-sm text-[oklch(0.55_0.06_15)] font-light">
+              <p className="text-sm text-[oklch(0.55_0.06_15)] dark:text-[#bdbdbd] font-light">
                 Sign in securely with your admin email and OTP.
               </p>
             </div>
 
             {/* Stepper */}
-            <div className="mb-6 rounded-xl border border-[oklch(0.84_0.04_10.35)]/50 bg-white/80 backdrop-blur-sm px-4 py-3 shadow">
+            <div className="mb-6 rounded-xl border border-[oklch(0.84_0.04_10.35)]/50 dark:border-[#525252] bg-white/80 dark:bg-[#191919]/80 backdrop-blur-sm px-4 py-3 shadow">
               <ol className="relative flex items-center justify-between">
                 <div className="absolute left-5 right-5 top-2">
-                  <div className="h-px w-full bg-[oklch(0.84_0.04_10.35)]/40 rounded-full" />
+                  <div className="h-px w-full bg-[oklch(0.84_0.04_10.35)]/40 dark:bg-[#525252]/40 rounded-full" />
                   <div
                     className="h-px bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] via-[oklch(0.62_0.15_3)] to-[oklch(0.58_0.16_8)] rounded-full transition-all duration-500 ease-out"
                     style={{ width: `${progressPercent}%` }}
@@ -197,7 +197,7 @@ export default function AdminLoginPage() {
                             ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] text-white shadow-md'
                             : isActive
                             ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] text-white shadow-lg scale-110 ring-2 ring-[oklch(0.66_0.14_358.91)]/25'
-                            : 'bg-white text-[oklch(0.55_0.06_15)] border-2 border-[oklch(0.84_0.04_10.35)]'
+                            : 'bg-white dark:bg-[#242424] text-[oklch(0.55_0.06_15)] dark:text-gray-300 border-2 border-[oklch(0.84_0.04_10.35)] dark:border-[#525252]'
                         }`}
                       >
                         {item.number}
@@ -205,8 +205,8 @@ export default function AdminLoginPage() {
                       <span
                         className={`text-xs font-medium ${
                           isCompleted || isActive
-                            ? 'text-[oklch(0.66_0.14_358.91)]'
-                            : 'text-[oklch(0.55_0.06_15)]'
+                            ? 'text-[oklch(0.66_0.14_358.91)] dark:text-primary-400'
+                            : 'text-[oklch(0.55_0.06_15)] dark:text-[#bdbdbd]'
                         }`}
                       >
                         {item.label}
@@ -225,9 +225,9 @@ export default function AdminLoginPage() {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -20, scale: 0.95 }}
                   transition={{ duration: 0.3, ease: 'easeOut' }}
-                  className="rounded-xl border border-[oklch(0.84_0.04_10.35)]/30 bg-white/90 backdrop-blur-sm p-6 shadow"
+                  className="rounded-xl border border-[oklch(0.84_0.04_10.35)]/30 dark:border-[#525252] bg-white/90 dark:bg-[#191919]/90 backdrop-blur-sm p-6 shadow"
                 >
-                  <h3 className="text/base font-medium text-[oklch(0.39_0.09_17.83)] mb-4">
+                  <h3 className="text/base font-medium text-[oklch(0.39_0.09_17.83)] dark:text-white mb-4">
                     Enter your admin email
                   </h3>
                   <input
@@ -235,12 +235,12 @@ export default function AdminLoginPage() {
                     type="email"
                     value={email}
                     onChange={e => setEmailLocal(e.target.value)}
-                    className="w-full rounded-lg border border-[oklch(0.84_0.04_10.35)] bg-white px-3 py-2 text-sm text-[oklch(0.39_0.09_17.83)] placeholder-[oklch(0.7_0.04_12)] focus:outline-none focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/30 focus:border-[oklch(0.66_0.14_358.91)] transition-all"
+                    className="w-full rounded-lg border border-[oklch(0.84_0.04_10.35)] dark:border-[#525252] bg-white dark:bg-[#242424] px-3 py-2 text-sm text-[oklch(0.39_0.09_17.83)] dark:text-white placeholder-[oklch(0.7_0.04_12)] dark:placeholder-[#bdbdbd] focus:outline-none focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/30 dark:focus:ring-primary-500/30 focus:border-[oklch(0.66_0.14_358.91)] dark:focus:border-primary-500 transition-all"
                     placeholder="admin@example.com"
                   />
                   <div className="mt-4 flex justify-between items-center">
                     {requestStatus === 'error' && (
-                      <span className="text-xs text-red-600">
+                      <span className="text-xs text-red-600 dark:text-red-400">
                         Failed to send OTP
                       </span>
                     )}
@@ -251,7 +251,7 @@ export default function AdminLoginPage() {
                         className={`rounded-lg px-4 py-2.5 min-w-40 text-white text-sm font-medium transition-all duration-200 ${
                           isValidEmail && requestStatus !== 'loading'
                             ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] hover:shadow-lg hover:scale-105 shadow-md'
-                            : 'bg-[oklch(0.84_0.04_10.35)] cursor-not-allowed'
+                            : 'bg-[oklch(0.84_0.04_10.35)] dark:bg-[#525252] cursor-not-allowed'
                         }`}
                       >
                         {requestStatus === 'loading' ? 'Sending…' : 'Send OTP'}
@@ -259,7 +259,7 @@ export default function AdminLoginPage() {
                     </div>
                   </div>
                   {devOtp && process.env.NODE_ENV !== 'production' && (
-                    <p className="mt-3 text-xs text-[oklch(0.55_0.06_15)]">
+                    <p className="mt-3 text-xs text-[oklch(0.55_0.06_15)] dark:text-[#bdbdbd]">
                       Dev OTP: {devOtp}
                     </p>
                   )}
@@ -273,14 +273,14 @@ export default function AdminLoginPage() {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -20, scale: 0.95 }}
                   transition={{ duration: 0.3, ease: 'easeOut' }}
-                  className="rounded-xl border border-[oklch(0.84_0.04_10.35)]/30 bg-white/90 backdrop-blur-sm p-6 shadow"
+                  className="rounded-xl border border-[oklch(0.84_0.04_10.35)]/30 dark:border-[#525252] bg-white/90 dark:bg-[#191919]/90 backdrop-blur-sm p-6 shadow"
                 >
-                  <h3 className="text-base font-medium text-[oklch(0.39_0.09_17.83)] mb-3">
+                  <h3 className="text-base font-medium text-[oklch(0.39_0.09_17.83)] dark:text-white mb-3">
                     Verify your email
                   </h3>
-                  <p className="text-sm text-[oklch(0.55_0.06_15)] mb-6">
+                  <p className="text-sm text-[oklch(0.55_0.06_15)] dark:text-[#bdbdbd] mb-6">
                     Enter the 6-digit code sent to{' '}
-                    <span className="font-semibold text-[oklch(0.66_0.14_358.91)]">
+                    <span className="font-semibold text-[oklch(0.66_0.14_358.91)] dark:text-primary-400">
                       {storeEmail || email}
                     </span>
                   </p>
@@ -299,7 +299,7 @@ export default function AdminLoginPage() {
                         onPaste={handleOtpPaste}
                         onChange={e => handleOtpChange(i, e.target.value)}
                         onKeyDown={e => handleOtpKeyDown(i, e)}
-                        className="aspect-square w-9 sm:w-10 md:w-12 text-center rounded-lg border border-[oklch(0.84_0.04_10.35)] bg-white text-sm sm:text-base font-semibold text-[oklch(0.39_0.09_17.83)] focus:outline-none focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/30 focus:border-[oklch(0.66_0.14_358.91)] transition-all hover:border-[oklch(0.66_0.14_358.91)]/50 flex-shrink-0"
+                        className="aspect-square w-9 sm:w-10 md:w-12 text-center rounded-lg border border-[oklch(0.84_0.04_10.35)] dark:border-[#525252] bg-white dark:bg-[#242424] text-sm sm:text-base font-semibold text-[oklch(0.39_0.09_17.83)] dark:text-white focus:outline-none focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/30 dark:focus:ring-primary-500/30 focus:border-[oklch(0.66_0.14_358.91)] dark:focus:border-primary-500 transition-all hover:border-[oklch(0.66_0.14_358.91)]/50 dark:hover:border-primary-500/50 flex-shrink-0"
                       />
                     ))}
                   </div>
@@ -307,7 +307,7 @@ export default function AdminLoginPage() {
                   <div className="flex items-center justify-between">
                     <button
                       onClick={() => setStep('email')}
-                      className="text-sm text-[oklch(0.55_0.06_15)] hover:text-[oklch(0.66_0.14_358.91)] transition-colors"
+                      className="text-sm text-[oklch(0.55_0.06_15)] dark:text-[#bdbdbd] hover:text-[oklch(0.66_0.14_358.91)] dark:hover:text-primary-400 transition-colors"
                     >
                       Back
                     </button>
@@ -318,8 +318,8 @@ export default function AdminLoginPage() {
                         onClick={() => resendOtp()}
                         className={`text-sm transition-colors ${
                           resendInSec > 0
-                            ? 'text-[oklch(0.7_0.04_12)] cursor-not-allowed'
-                            : 'text-[oklch(0.66_0.14_358.91)] hover:text-[oklch(0.58_0.16_8)]'
+                            ? 'text-[oklch(0.7_0.04_12)] dark:text-[#525252] cursor-not-allowed'
+                            : 'text-[oklch(0.66_0.14_358.91)] dark:text-primary-400 hover:text-[oklch(0.58_0.16_8)] dark:hover:text-primary-500'
                         }`}
                       >
                         {resendInSec > 0
@@ -335,7 +335,7 @@ export default function AdminLoginPage() {
                         className={`rounded-lg px-4 py-2.5 text-white text-sm font-medium transition-all duration-200 ${
                           isValidOtp && verifyStatus !== 'loading'
                             ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] hover:shadow-lg hover:scale-105 shadow-md'
-                            : 'bg-[oklch(0.84_0.04_10.35)] cursor-not-allowed'
+                            : 'bg-[oklch(0.84_0.04_10.35)] dark:bg-[#525252] cursor-not-allowed'
                         }`}
                       >
                         {verifyStatus === 'loading' ? 'Verifying…' : 'Verify'}
@@ -351,15 +351,15 @@ export default function AdminLoginPage() {
                 initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.3, ease: 'easeOut' }}
-                className="rounded-xl border border-[oklch(0.84_0.04_10.35)]/30 bg-white p-8 text-center shadow"
+                className="rounded-xl border border-[oklch(0.84_0.04_10.35)]/30 dark:border-[#525252] bg-white dark:bg-[#191919] p-8 text-center shadow"
               >
                 <div className="w-14 h-14 bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] rounded-full flex items-center justify-center mx-auto mb-4">
                   <span className="text-2xl text-white">✓</span>
                 </div>
-                <h2 className="text-xl font-semibold text-[oklch(0.39_0.09_17.83)] mb-1">
+                <h2 className="text-xl font-semibold text-[oklch(0.39_0.09_17.83)] dark:text-white mb-1">
                   Welcome Admin
                 </h2>
-                <p className="text-sm text-[oklch(0.55_0.06_15)] mb-6">
+                <p className="text-sm text-[oklch(0.55_0.06_15)] dark:text-[#bdbdbd] mb-6">
                   You are signed in securely.
                 </p>
                 <Link

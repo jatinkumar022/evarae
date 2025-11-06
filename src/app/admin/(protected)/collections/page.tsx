@@ -15,6 +15,8 @@ import {
 import { useCollectionStore } from '@/lib/data/store/collectionStore';
 import { Collection } from '@/lib/data/store/collectionStore';
 import Modal from '@/app/admin/components/Modal';
+import { toastApi } from '@/lib/toast';
+import InlineSpinner from '@/app/admin/components/InlineSpinner';
 
 export default function CollectionsPage() {
   const {
@@ -33,6 +35,8 @@ export default function CollectionsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null);
   const itemsPerPage = 9;
 
   useEffect(() => {
@@ -41,15 +45,23 @@ export default function CollectionsPage() {
   }, [fetchCollections]);
 
   const handleToggleStatus = async (id: string) => {
+    setUpdatingStatusId(id);
     try {
       const collection = collections.find(col => col._id === id);
       if (collection) {
         await updateCollection(id, { isActive: !collection.isActive });
+        toastApi.success(
+          'Status updated successfully',
+          `Collection is now ${!collection.isActive ? 'active' : 'inactive'}`
+        );
         // Refresh collections after update
         fetchCollections();
       }
     } catch (error) {
       console.error('Failed to toggle status:', error);
+      toastApi.error('Failed to update status', 'Please try again');
+    } finally {
+      setUpdatingStatusId(null);
     }
   };
 
@@ -60,14 +72,19 @@ export default function CollectionsPage() {
 
   const confirmDelete = async () => {
     if (collectionToDelete) {
+      setIsDeleting(true);
       try {
         await deleteCollection(collectionToDelete._id);
+        toastApi.success('Collection deleted successfully', 'The collection has been removed');
         setIsDeleteModalOpen(false);
         setCollectionToDelete(null);
         // Refresh collections after deletion
         fetchCollections();
       } catch (error) {
         console.error('Failed to delete collection:', error);
+        toastApi.error('Failed to delete collection', 'Please try again');
+      } finally {
+        setIsDeleting(false);
       }
     }
   };
@@ -90,7 +107,7 @@ export default function CollectionsPage() {
   }, [searchTerm]);
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
+    <div className="space-y-6  mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
       {/* Header */}
       <div className="flex md:items-center gap-4 flex-col md:flex-row justify-between">
         <div>
@@ -180,7 +197,7 @@ export default function CollectionsPage() {
         <div className="px-4 py-5 sm:p-6">
           {status === 'loading' ? (
             <div className="text-center py-12">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
+              <InlineSpinner size="lg" className="mx-auto mb-4" />
               <p className="mt-2 text-sm text-gray-500 dark:text-[#bdbdbd]">Loading collections...</p>
             </div>
           ) : paginatedCollections.length > 0 ? (
@@ -244,9 +261,17 @@ export default function CollectionsPage() {
                                     handleToggleStatus(collection._id);
                                     setActiveDropdown(null);
                                   }}
-                                  className="w-full flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#525252]"
+                                  disabled={updatingStatusId === collection._id}
+                                  className="w-full flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#525252] disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                  {collection.isActive ? 'Deactivate' : 'Activate'}
+                                  {updatingStatusId === collection._id ? (
+                                    <>
+                                      <InlineSpinner size="sm" className="mr-2" />
+                                      Updating...
+                                    </>
+                                  ) : (
+                                    collection.isActive ? 'Deactivate' : 'Activate'
+                                  )}
                                 </button>
                                 <button
                                   onClick={() => {
@@ -361,12 +386,20 @@ export default function CollectionsPage() {
             <button
               type="button"
               onClick={confirmDelete}
-              className="w-full sm:w-auto inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 text-sm font-medium text-white transition-colors"
-              style={{ backgroundColor: '#d92d20' }}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#c0231a'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#d92d20'}
+              disabled={isDeleting}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-md border border-transparent shadow-sm px-4 py-2 text-sm font-medium text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ backgroundColor: isDeleting ? '#c0231a' : '#d92d20' }}
+              onMouseEnter={(e) => !isDeleting && (e.currentTarget.style.backgroundColor = '#c0231a')}
+              onMouseLeave={(e) => !isDeleting && (e.currentTarget.style.backgroundColor = '#d92d20')}
             >
-              Delete
+              {isDeleting ? (
+                <>
+                  <InlineSpinner size="sm" />
+                  Deleting...
+                </>
+              ) : (
+                'Delete'
+              )}
             </button>
             <button
               type="button"

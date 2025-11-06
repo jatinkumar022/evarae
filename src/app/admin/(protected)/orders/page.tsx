@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState, useMemo, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
@@ -16,6 +16,8 @@ import {
 } from 'lucide-react';
 import { useOrderStore, Order } from '@/lib/data/store/orderStore';
 import { CustomSelect } from '@/app/admin/components/CustomSelect';
+import { toastApi } from '@/lib/toast';
+import InlineSpinner from '@/app/admin/components/InlineSpinner';
 
 export default function OrdersPage() {
   const {
@@ -25,10 +27,13 @@ export default function OrdersPage() {
     status,
     setFilters,
     fetchOrders,
+    updateOrderStatus,
   } = useOrderStore();
 
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
   const [dropdownPosition, setDropdownPosition] = useState<{ top: number; right: number } | null>(null);
+  const [downloadingInvoiceId, setDownloadingInvoiceId] = useState<string | null>(null);
+  const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null);
   const buttonRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
 
   // Fetch orders from API
@@ -128,8 +133,36 @@ export default function OrdersPage() {
     );
   };
 
+  // Handle quick status change
+  const handleStatusChange = async (orderId: string, newStatus: Order['orderStatus']) => {
+    setUpdatingStatusId(orderId);
+    try {
+      await updateOrderStatus(orderId, newStatus);
+      toastApi.success('Status updated', `Order status changed to ${newStatus}`);
+      fetchOrders(); // Refresh the list
+    } catch (error) {
+      console.error('Failed to update status:', error);
+      toastApi.error('Failed to update status', 'Please try again');
+    } finally {
+      setUpdatingStatusId(null);
+    }
+  };
+
+  // Get all status options with labels and icons
+  const getAllStatusOptions = () => {
+    return [
+      { value: 'pending' as Order['orderStatus'], label: 'Pending', icon: Clock },
+      { value: 'confirmed' as Order['orderStatus'], label: 'Confirmed', icon: Package },
+      { value: 'processing' as Order['orderStatus'], label: 'Processing', icon: Package },
+      { value: 'shipped' as Order['orderStatus'], label: 'Shipped', icon: Truck },
+      { value: 'delivered' as Order['orderStatus'], label: 'Delivered', icon: CheckCircle },
+      { value: 'cancelled' as Order['orderStatus'], label: 'Cancelled', icon: XCircle },
+      { value: 'returned' as Order['orderStatus'], label: 'Returned', icon: AlertCircle },
+    ];
+  };
+
   return (
-    <div className="space-y-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
+    <div className="space-y-6 mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
       {/* Header */}
       <div className="flex md:items-center gap-4 flex-col md:flex-row justify-between">
         <div>
@@ -249,7 +282,7 @@ export default function OrdersPage() {
               {status === 'loading' ? (
                 <tr>
                   <td colSpan={8} className="px-3 sm:px-4 py-12 text-center">
-                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
+                    <InlineSpinner size="lg" className="mx-auto mb-4" />
                     <p className="mt-2 text-sm text-gray-500 dark:text-[#bdbdbd]">Loading orders...</p>
                   </td>
                 </tr>
@@ -451,7 +484,7 @@ export default function OrdersPage() {
             }}
           />
           <div
-            className="fixed min-w-48 rounded-md shadow-xl bg-white dark:bg-[#1d1d1d] ring-1 ring-black ring-opacity-5 z-[9999] border border-gray-200 dark:border-[#525252]"
+            className="fixed min-w-56 rounded-md shadow-xl bg-white dark:bg-[#1d1d1d] ring-1 ring-black ring-opacity-5 z-[9999] border border-gray-200 dark:border-[#525252]"
             style={{
               top: `${dropdownPosition.top}px`,
               right: `${dropdownPosition.right}px`,
@@ -469,15 +502,108 @@ export default function OrdersPage() {
                 <Eye className="h-4 w-4 mr-2 flex-shrink-0" /> View Details
               </Link>
               <button
-                onClick={() => {
-                  setOpenDropdownId(null);
-                  setDropdownPosition(null);
-                  // Handle export/invoice
+                onClick={async () => {
+                  if (!openDropdownId) return;
+                  const order = orders.find(o => o._id === openDropdownId);
+                  if (!order) {
+                    toastApi.error('Order not found', 'Unable to download invoice');
+                    return;
+                  }
+                  
+                  const orderId = order.orderNumber || order._id;
+                  setDownloadingInvoiceId(openDropdownId);
+                  
+                  try {
+                    const res = await fetch(`/api/admin/orders/${orderId}/invoice`, {
+                      method: 'GET',
+                      credentials: 'include',
+                    });
+                    
+                    if (!res.ok) {
+                      throw new Error('Failed to download invoice');
+                    }
+                    
+                    const blob = await res.blob();
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `invoice-${orderId}.pdf`;
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    URL.revokeObjectURL(url);
+                    
+                    toastApi.success('Invoice downloaded', 'Invoice has been downloaded successfully');
+                  } catch (error) {
+                    console.error('Failed to download invoice:', error);
+                    toastApi.error('Failed to download invoice', 'Please try again');
+                  } finally {
+                    setDownloadingInvoiceId(null);
+                    // Keep dropdown open to show the loading state
+                  }
                 }}
-                className="w-full flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#525252] whitespace-nowrap"
+                disabled={downloadingInvoiceId === openDropdownId}
+                className="w-full flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#525252] whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Download className="h-4 w-4 mr-2 flex-shrink-0" /> Download Invoice
+                {downloadingInvoiceId === openDropdownId ? (
+                  <>
+                    <InlineSpinner size="sm" className="mr-2 flex-shrink-0" />
+                    <span>Downloading...</span>
+                  </>
+                ) : (
+                  <>
+                    <Download className="h-4 w-4 mr-2 flex-shrink-0" /> Download Invoice
+                  </>
+                )}
               </button>
+              
+              {/* Status Change Options */}
+              {openDropdownId && (
+                <>
+                  <div className="border-t border-gray-200 dark:border-[#525252] my-1"></div>
+                  <div className="px-2 py-1">
+                    <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider px-2 mb-1">
+                      Change Status
+                    </div>
+                    {getAllStatusOptions().map((statusOption) => {
+                      const currentOrder = orders.find(o => o._id === openDropdownId);
+                      const isCurrentStatus = currentOrder?.orderStatus === statusOption.value;
+                      const Icon = statusOption.icon;
+                      return (
+                        <button
+                          key={statusOption.value}
+                          onClick={() => {
+                            if (openDropdownId) {
+                              handleStatusChange(openDropdownId, statusOption.value);
+                              setOpenDropdownId(null);
+                              setDropdownPosition(null);
+                            }
+                          }}
+                          disabled={isCurrentStatus || updatingStatusId === openDropdownId}
+                          className={`w-full flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#525252] whitespace-nowrap transition-colors ${
+                            isCurrentStatus || updatingStatusId === openDropdownId ? 'opacity-50 cursor-not-allowed' : ''
+                          }`}
+                        >
+                          {updatingStatusId === openDropdownId ? (
+                            <>
+                              <InlineSpinner size="sm" className="mr-2 flex-shrink-0" />
+                              Updating...
+                            </>
+                          ) : (
+                            <>
+                              <Icon className="h-4 w-4 mr-2 flex-shrink-0" />
+                              {statusOption.label}
+                              {isCurrentStatus && (
+                                <span className="ml-auto text-xs text-gray-400 dark:text-gray-500">(Current)</span>
+                              )}
+                            </>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </>

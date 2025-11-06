@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { type Product } from '@/lib/data/store/productStore';
 import { Package } from 'lucide-react';
 import Modal from './Modal';
+import InlineSpinner from './InlineSpinner';
 
 interface Props {
   isOpen: boolean;
@@ -11,6 +12,7 @@ interface Props {
   products: Product[];
   selectedProducts: string[];
   onSave: (ids: string[]) => void;
+  isSaving?: boolean;
 }
 
 export default function ProductSelectionModal({
@@ -19,6 +21,7 @@ export default function ProductSelectionModal({
   products,
   selectedProducts,
   onSave,
+  isSaving = false,
 }: Props) {
   const [tempSelection, setTempSelection] =
     useState<string[]>(selectedProducts);
@@ -35,8 +38,9 @@ export default function ProductSelectionModal({
   };
 
   const handleSave = () => {
+    if (isSaving) return;
     onSave(tempSelection);
-    onClose();
+    // Parent will close modal after save completes
   };
 
   return (
@@ -49,9 +53,17 @@ export default function ProductSelectionModal({
         <>
           <button
             onClick={handleSave}
-            className="w-full sm:w-auto inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary-600 text-sm font-medium text-white hover:bg-primary-700 dark:bg-primary-600 dark:hover:bg-primary-700"
+            disabled={isSaving}
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary-600 text-sm font-medium text-white hover:bg-primary-700 dark:bg-primary-600 dark:hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Save Selection
+            {isSaving ? (
+              <>
+                <InlineSpinner size="sm" />
+                Saving...
+              </>
+            ) : (
+              'Save Selection'
+            )}
           </button>
           <button
             onClick={onClose}
