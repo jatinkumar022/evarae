@@ -49,7 +49,7 @@ interface LeanUser {
 interface LeanOrder {
   _id: mongoose.Types.ObjectId;
   totalAmount?: number;
-  createdAt: Date;
+  createdAt?: Date;
 }
 
 // GET: Get single customer by ID
@@ -76,11 +76,15 @@ export async function GET(
     }
 
     // Get order statistics
-    const orders = await Order.find({ user: id }).lean() as LeanOrder[];
+    const orders = (await Order.find({ user: id }).lean()) as unknown as LeanOrder[];
     const totalOrders = orders.length;
     const totalSpent = orders.reduce((sum: number, order: LeanOrder) => sum + (order.totalAmount || 0), 0);
     const lastOrder = orders.length > 0 
-      ? orders.sort((a: LeanOrder, b: LeanOrder) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0]
+      ? orders.sort((a: LeanOrder, b: LeanOrder) => {
+          const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+          const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+          return bTime - aTime;
+        })[0]
       : null;
     const averageOrderValue = totalOrders > 0 ? totalSpent / totalOrders : 0;
 
@@ -177,11 +181,15 @@ export async function PATCH(
     }
 
     // Get order statistics
-    const orders = await Order.find({ user: id }).lean() as LeanOrder[];
+    const orders = (await Order.find({ user: id }).lean()) as unknown as LeanOrder[];
     const totalOrders = orders.length;
     const totalSpent = orders.reduce((sum: number, order: LeanOrder) => sum + (order.totalAmount || 0), 0);
     const lastOrder = orders.length > 0 
-      ? orders.sort((a: LeanOrder, b: LeanOrder) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0]
+      ? orders.sort((a: LeanOrder, b: LeanOrder) => {
+          const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+          const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+          return bTime - aTime;
+        })[0]
       : null;
     const averageOrderValue = totalOrders > 0 ? totalSpent / totalOrders : 0;
 

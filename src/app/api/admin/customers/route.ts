@@ -49,7 +49,7 @@ interface LeanUser {
 interface LeanOrder {
   _id: mongoose.Types.ObjectId;
   totalAmount?: number;
-  createdAt: Date;
+  createdAt?: Date;
 }
 
 // GET: List customers with filters, search, pagination
@@ -100,11 +100,15 @@ export async function GET(request: Request) {
     // Enrich with order statistics
     const customers = await Promise.all(
       users.map(async (user: LeanUser) => {
-        const orders = await Order.find({ user: user._id }).lean() as LeanOrder[];
+        const orders = (await Order.find({ user: user._id }).lean()) as unknown as LeanOrder[];
         const totalOrders = orders.length;
         const totalSpent = orders.reduce((sum: number, order: LeanOrder) => sum + (order.totalAmount || 0), 0);
         const lastOrder = orders.length > 0 
-          ? orders.sort((a: LeanOrder, b: LeanOrder) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0]
+          ? orders.sort((a: LeanOrder, b: LeanOrder) => {
+              const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+              const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+              return bTime - aTime;
+            })[0]
           : null;
         const averageOrderValue = totalOrders > 0 ? totalSpent / totalOrders : 0;
 
