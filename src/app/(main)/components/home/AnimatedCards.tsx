@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import { GoHeart } from 'react-icons/go';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -45,7 +45,6 @@ type Product = {
   name: string;
   price: number;
   discountPrice?: number;
-  thumbnail: string;
   images?: string[];
   tags?: string[];
   slug: string;
@@ -159,6 +158,9 @@ export default function AnimatedCards() {
       exit: { opacity: 0, y: -20 },
     };
 
+    const primaryImage = item.images?.[0] || '';
+    const hoverImage = item.images?.[1] || primaryImage;
+
     return (
       <div
         className="relative w-full aspect-square rounded-xl overflow-hidden cursor-pointer"
@@ -177,7 +179,7 @@ export default function AnimatedCards() {
               className="w-full h-full relative"
             >
               <Image
-                src={isHovered ? item.thumbnail || '' : item.images?.[0] || ''}
+                src={isHovered ? hoverImage : primaryImage}
                 alt={item.name}
                 fill
                 sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 256px"

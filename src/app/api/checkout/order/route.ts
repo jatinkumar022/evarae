@@ -40,8 +40,8 @@ interface PopulatedProductForOrder {
   price?: number;
   discountPrice?: number | null;
   images?: string[];
-  thumbnail?: string | null;
 }
+
 
 type PopulatedCartItem = CartLean['items'][number] & {
   product: PopulatedProductForOrder | null | undefined;
@@ -91,20 +91,20 @@ export async function POST(request: Request) {
       );
     }
 
-    const items: OrderItemLean[] = cart.items.map(ci => ({
-      product: ci.product?._id || '',
-      name: ci.product?.name || '',
-      slug: ci.product?.slug || '',
-      sku: ci.product?.sku || '',
-      price: (ci.product?.discountPrice ?? ci.product?.price ?? 0) || 0,
-      quantity: ci.quantity || 1,
-      image:
-        (ci.product?.images && ci.product.images[0]) ||
-        ci.product?.thumbnail ||
-        null,
-      selectedColor: ci.selectedColor ?? null,
-      selectedSize: ci.selectedSize ?? null,
-    }));
+    const items: OrderItemLean[] = cart.items.map(item => {
+      const primaryImage = item.product?.images?.[0] || '';
+      return {
+        product: item.product?._id,
+        name: item.product?.name || 'Unknown Product',
+        slug: item.product?.slug,
+        sku: item.product?.sku,
+        price: item.product?.discountPrice ?? item.product?.price ?? 0,
+        quantity: item.quantity,
+        image: primaryImage,
+        selectedColor: item.selectedColor,
+        selectedSize: item.selectedSize,
+      };
+    });
 
     const subtotal = items.reduce((sum, it) => sum + it.price * it.quantity, 0);
     const originalSubtotal = items.reduce(

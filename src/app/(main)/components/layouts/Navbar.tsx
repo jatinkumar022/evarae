@@ -356,13 +356,17 @@ export default function Navbar() {
     }
   };
 
-  const miniCartItems = items.map(i => ({
-    id: String(i?.product?._id || i?.product?.id),
-    name: i?.product?.name,
-    price: i?.product?.discountPrice ?? i?.product?.price ?? 0,
-    quantity: i?.quantity || 1,
-    image: (i?.product?.images && i.product.images[0]) || i?.product?.thumbnail,
-  }));
+  const miniCartItems = items.map(i => {
+    const imageSrc =
+      (i?.product?.images && (i.product.images[0] as string)) || '/favicon.ico';
+    return {
+      id: String(i?.product?._id || i?.product?.id),
+      name: i?.product?.name,
+      price: i?.product?.discountPrice ?? i?.product?.price ?? 0,
+      quantity: i?.quantity || 1,
+      image: imageSrc,
+    };
+  });
   const subtotal = miniCartItems.reduce(
     (sum: number, item) => sum + item.price * item.quantity,
     0
@@ -1056,11 +1060,11 @@ export default function Navbar() {
                             >
                               <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-md bg-gray-100">
                                 <Image
-                                  src={String(
+                                  src={
                                     (i?.product?.images &&
-                                      (i.product.images[0] as string)) ??
-                                      i?.product?.thumbnail
-                                  )}
+                                      (i.product.images[0] as string)) ||
+                                    '/favicon.ico'
+                                  }
                                   alt={i?.product?.name || 'Product'}
                                   className="h-full w-full object-cover"
                                   width={56}

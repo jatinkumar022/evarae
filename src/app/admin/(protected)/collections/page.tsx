@@ -45,7 +45,7 @@ export default function CollectionsPage() {
 
   useEffect(() => {
     if (collections.length === 0) fetchCollections();
-  }, []);
+  }, [collections.length, fetchCollections]);
 
   const handleToggleStatus = async (id: string) => {
     setUpdatingStatusId(id);

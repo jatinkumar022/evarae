@@ -5,7 +5,7 @@
 /**
  * Debounce function for optimizing event handlers
  */
-export function debounce<T extends (...args: any[]) => any>(
+export function debounce<T extends (...args: unknown[]) => unknown>(
   func: T,
   wait: number
 ): (...args: Parameters<T>) => void {
@@ -25,7 +25,7 @@ export function debounce<T extends (...args: any[]) => any>(
 /**
  * Throttle function for limiting function calls
  */
-export function throttle<T extends (...args: any[]) => any>(
+export function throttle<T extends (...args: unknown[]) => unknown>(
   func: T,
   limit: number
 ): (...args: Parameters<T>) => void {
@@ -43,14 +43,14 @@ export function throttle<T extends (...args: any[]) => any>(
 /**
  * Request deduplication - prevents duplicate API calls
  */
-const pendingRequests = new Map<string, Promise<any>>();
+const pendingRequests = new Map<string, Promise<unknown>>();
 
 export function dedupeRequest<T>(
   key: string,
   requestFn: () => Promise<T>
 ): Promise<T> {
   if (pendingRequests.has(key)) {
-    return pendingRequests.get(key)!;
+    return pendingRequests.get(key)! as Promise<T>;
   }
   
   const promise = requestFn().finally(() => {

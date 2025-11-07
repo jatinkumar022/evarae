@@ -73,7 +73,6 @@ export default function EnhancedNewArrivalsPage() {
           description?: string;
           price?: number | null;
           discountPrice?: number | null;
-          thumbnail?: string;
           images?: string[];
           categories?: Array<{
             _id?: string;
@@ -93,6 +92,8 @@ export default function EnhancedNewArrivalsPage() {
             p.discountPrice != null &&
             p.price != null &&
             p.discountPrice < p.price;
+          const productImages =
+            p.images && p.images.length > 0 ? p.images : ['/favicon.ico'];
           return {
             id: p.slug,
             name: p.name,
@@ -100,8 +101,8 @@ export default function EnhancedNewArrivalsPage() {
             price: hasDiscount ? p.discountPrice : p.price ?? null,
             originalPrice: hasDiscount ? p.price : null,
             currency: 'INR',
-            images: [p.thumbnail || p.images?.[0]],
-            hoverImage: p.images?.[1],
+            images: productImages,
+            hoverImage: productImages[1],
             category: {
               id: p.categories?.[0]?._id || p.categories?.[0]?.slug || '',
               name: p.categories?.[0]?.name || '',
@@ -315,44 +316,58 @@ export default function EnhancedNewArrivalsPage() {
             {/* Right Content - Featured Products Showcase */}
             <div className="relative">
               <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:gap-6">
-                {allProducts.slice(0, 3).map((product, index) => (
-                  <div
-                    key={product.id}
-                    className={`relative group cursor-pointer ${
-                      index === 0 ? 'col-span-2' : ''
-                    }`}
-                  >
-                    <div className="relative aspect-square overflow-hidden rounded-lg sm:rounded-xl lg:rounded-2xl bg-white shadow-lg hover:shadow-xl transition-all duration-500 border border-gray-100">
-                      <Image
-                        src={product.thumbnail || product.images[0]}
-                        alt={product.name}
-                        fill
-                        className="object-cover group-hover:scale-110 transition-transform duration-700"
-                        sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                        loading="lazy"
-                      />
-                      <div className="absolute inset-0 bg-black/0  transition-all duration-300" />
-                      <div className="absolute bottom-2 sm:bottom-3 lg:bottom-4 left-2 sm:left-3 lg:left-4 right-2 sm:right-3 lg:right-4 transform translate-y-8 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all z-50">
-                        <div className="bg-black/20 backdrop-blur-md rounded-lg sm:rounded-xl p-2 sm:p-3 lg:p-4">
-                          <h4 className="font-medium text-white mb-1 text-xs sm:text-sm lg:text-base">
-                            {product.name}
-                          </h4>
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm sm:text-base lg:text-lg font-medium text-white">
-                              ₹{product.price?.toLocaleString()}
-                            </span>
-                            <div className="flex items-center gap-1">
-                              <Star className="w-3 h-3 sm:w-4 sm:h-4 text-yellow-400 fill-current" />
-                              <span className="text-xs sm:text-sm text-white">
-                                {product.rating}
+                {allProducts.slice(0, 3).map((product, index) => {
+                  const primaryImage = (product.images?.[0] as string) || '/favicon.ico';
+                  const secondaryImage = (product.images?.[1] as string) || primaryImage;
+                  return (
+                    <div
+                      key={product.id}
+                      className={`relative group cursor-pointer ${
+                        index === 0 ? 'col-span-2' : ''
+                      }`}
+                    >
+                      <div className="relative aspect-square overflow-hidden rounded-lg sm:rounded-xl lg:rounded-2xl bg-white shadow-lg hover:shadow-xl transition-all duration-500 border border-gray-100">
+                        <Image
+                          src={primaryImage}
+                          alt={product.name}
+                          fill
+                          className="object-cover transition-transform duration-700 group-hover:scale-110 group-hover:opacity-0"
+                          sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                          loading="lazy"
+                        />
+                        {secondaryImage && secondaryImage !== primaryImage && (
+                          <Image
+                            src={secondaryImage}
+                            alt={`${product.name} alternate view`}
+                            fill
+                            className="object-cover transition-transform duration-700 opacity-0 group-hover:opacity-100 group-hover:scale-110"
+                            sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                            loading="lazy"
+                          />
+                        )}
+                        <div className="absolute inset-0 bg-black/0  transition-all duration-300" />
+                        <div className="absolute bottom-2 sm:bottom-3 lg:bottom-4 left-2 sm:left-3 lg:left-4 right-2 sm:right-3 lg:right-4 transform translate-y-8 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all z-50">
+                          <div className="bg-black/20 backdrop-blur-md rounded-lg sm:rounded-xl p-2 sm:p-3 lg:p-4">
+                            <h4 className="font-medium text-white mb-1 text-xs sm:text-sm lg:text-base">
+                              {product.name}
+                            </h4>
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm sm:text-base lg:text-lg font-medium text-white">
+                                ₹{product.price?.toLocaleString()}
                               </span>
+                              <div className="flex items-center gap-1">
+                                <Star className="w-3 h-3 sm:w-4 sm:h-4 text-yellow-400 fill-current" />
+                                <span className="text-xs sm:text-sm text-white">
+                                  {product.rating}
+                                </span>
+                              </div>
                             </div>
                           </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               {/* Floating Stats */}

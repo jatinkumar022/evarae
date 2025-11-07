@@ -46,13 +46,13 @@ export default function ProductsPage() {
   useEffect(() => {
     if (categories.length === 0) fetchCategories();
     if (filters.limit !== 9) setFilters({ limit: 9 });
-  }, []);
+  }, [categories.length, fetchCategories, filters.limit, setFilters]);
 
   // Debounced fetch products
   useEffect(() => {
     const timer = setTimeout(() => fetchProducts(), 150);
     return () => clearTimeout(timer);
-  }, [filters.search, filters.category, filters.status, filters.sortBy, filters.sortOrder, filters.page]);
+  }, [filters.search, filters.category, filters.status, filters.sortBy, filters.sortOrder, filters.page, fetchProducts]);
 
   const formatCurrency = (amount: number) =>
     new Intl.NumberFormat('en-IN', {
@@ -153,9 +153,9 @@ export default function ProductsPage() {
 
       {/* Product Image */}
       <div className="aspect-square w-full overflow-hidden rounded-t-lg bg-gray-200 dark:bg-[#525252] relative">
-        {(product.thumbnail || (product.images && product.images[0])) ? (
+        {product.images && product.images.length > 0 ? (
           <Image
-            src={product.thumbnail || (product.images && product.images[0]) || ''}
+            src={product.images[0] || ''}
             alt={product.name}
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"

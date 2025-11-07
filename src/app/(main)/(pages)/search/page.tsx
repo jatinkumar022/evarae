@@ -106,7 +106,6 @@ function SearchPageInner() {
     description?: string;
     price?: number | null;
     discountPrice?: number | null;
-    thumbnail?: string;
     images?: string[];
     categories?: Array<{ _id?: string; name?: string; slug?: string }>;
     material?: string;
@@ -123,6 +122,8 @@ function SearchPageInner() {
           p.discountPrice != null &&
           p.price != null &&
           p.discountPrice < p.price;
+        const productImages =
+          p.images && p.images.length > 0 ? p.images : ['/favicon.ico'];
         return {
           id: p.slug,
           name: p.name,
@@ -130,8 +131,8 @@ function SearchPageInner() {
           price: hasDiscount ? p.discountPrice : p.price ?? null,
           originalPrice: hasDiscount ? p.price : null,
           currency: 'INR',
-          images: [p.thumbnail || p.images?.[0] || '/favicon.ico'],
-          hoverImage: p.images?.[1],
+          images: productImages,
+          hoverImage: productImages[1],
           category: {
             id: p.categories?.[0]?._id || p.categories?.[0]?.slug || '',
             name: p.categories?.[0]?.name || '',
@@ -232,7 +233,6 @@ function SearchPageInner() {
         price: product.price ?? 0,
         discountPrice: product.price ?? 0,
         images: product.images as string[],
-        thumbnail: (product.images?.[0] as string) || undefined,
         stockQuantity: product.stockCount ?? 1,
       };
 

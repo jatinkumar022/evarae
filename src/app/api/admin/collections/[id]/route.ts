@@ -11,7 +11,7 @@ export async function GET(request: Request, { params }: RouteContext) {
     const { id } = await params;
     const collection = await Collection.findById(id)
       .select('-__v')
-      .populate('products', 'name slug thumbnail price stockQuantity status')
+      .populate('products', 'name slug price stockQuantity status')
       .lean();
 
     if (!collection) {
@@ -65,7 +65,7 @@ export async function PUT(request: Request, { params }: RouteContext) {
       id,
       updateData,
       { new: true, runValidators: true }
-    ).select('-__v').populate('products', 'name slug thumbnail price stockQuantity status').lean();
+    ).select('-__v').populate('products', 'name slug price stockQuantity status').lean();
 
     if (!updatedCollection) {
       return NextResponse.json(

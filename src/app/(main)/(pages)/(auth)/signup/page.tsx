@@ -558,7 +558,7 @@ export default function SignupPage() {
                               isValidPassword
                             ) {
                               e.preventDefault();
-                              handleSubmit(e as any);
+                              handleSubmit(e as React.FormEvent);
                             }
                           }}
                           className="w-full rounded-lg border border-[oklch(0.84_0.04_10.35)] bg-white px-3 py-2 pr-10 text-sm"

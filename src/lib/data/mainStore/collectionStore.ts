@@ -15,7 +15,6 @@ export interface PublicCollectionWithProducts extends PublicCollection {
     _id?: string;
     name: string;
     slug: string;
-    thumbnail?: string;
     price: number;
     discountPrice?: number;
   }>;

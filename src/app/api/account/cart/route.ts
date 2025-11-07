@@ -1,9 +1,10 @@
-import { NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 import { connect } from '@/dbConfig/dbConfig';
 import Product from '@/models/productModel';
 import Cart from '@/models/cartModel';
 import mongoose from 'mongoose';
+import { deleteCache, getCacheKey } from '@/lib/cache/redis';
+import { createNoCacheResponse, createErrorResponse } from '@/lib/api/response';
 
 const USER_JWT_SECRET = process.env.USER_JWT_SECRET as string;
 
@@ -89,20 +90,21 @@ export async function GET(request: Request) {
   try {
     await connect();
     const uid = getUserIdFromRequest(request);
-    if (!uid) return NextResponse.json({ items: [], savedItems: [] });
+    if (!uid) {
+      return createNoCacheResponse({ items: [], savedItems: [] });
+    }
 
     const cart = await Cart.findOne({ user: uid })
-      .populate('items.product')
-      .populate('savedItems.product')
+      .populate('items.product', 'name slug images price discountPrice status stockQuantity material colors')
+      .populate('savedItems.product', 'name slug images price discountPrice status stockQuantity material colors')
       .lean<CartDoc | null>();
 
-    return NextResponse.json({
+    return createNoCacheResponse({
       items: cart?.items ?? [],
       savedItems: cart?.savedItems ?? [],
     });
-  } catch (error) {
-    console.error('[account/cart GET] Error:', error);
-    return NextResponse.json({
+  } catch {
+    return createNoCacheResponse({
       items: [],
       savedItems: [],
     });
@@ -114,10 +116,7 @@ export async function POST(request: Request) {
     await connect();
     const uid = getUserIdFromRequest(request);
     if (!uid) {
-      return NextResponse.json(
-        { error: 'Please log in to update your cart' },
-        { status: 401 }
-      );
+      return createErrorResponse('Please log in to update your cart', 401);
     }
 
     const url = new URL(request.url);
@@ -132,15 +131,14 @@ export async function POST(request: Request) {
     const selectedSize = (b.selectedSize as string | null | undefined) ?? null;
 
     if (!productKey)
-      return NextResponse.json(
-        { error: 'Product identifier is required' },
-        { status: 400 }
-      );
+      return createErrorResponse('Product identifier is required', 400);
 
     const pid = await resolveProductObjectId(productKey);
     if (!pid)
-      return NextResponse.json({ error: 'Product not found' }, { status: 404 });
+      return createErrorResponse('Product not found', 404);
 
+    await deleteCache(getCacheKey('cart', uid));
+    
     if (action === 'save') {
       await Cart.findOneAndUpdate(
         { user: uid },
@@ -151,7 +149,6 @@ export async function POST(request: Request) {
         { upsert: true, new: true }
       );
     } else {
-      // Reliable add: try to increment existing exact variant
       let updated = await Cart.findOneAndUpdate(
         {
           user: uid,
@@ -164,7 +161,6 @@ export async function POST(request: Request) {
       );
 
       if (!updated) {
-        // Fallback: merge by product, regardless of variant differences
         updated = await Cart.findOneAndUpdate(
           {
             user: uid,
@@ -176,7 +172,6 @@ export async function POST(request: Request) {
       }
 
       if (!updated) {
-        // No existing item for this product -> push new line
         await Cart.findOneAndUpdate(
           { user: uid },
           {
@@ -190,38 +185,27 @@ export async function POST(request: Request) {
     }
 
     const cart = await Cart.findOne({ user: uid })
-      .populate('items.product')
-      .populate('savedItems.product')
+      .populate('items.product', 'name slug images price discountPrice status stockQuantity material colors')
+      .populate('savedItems.product', 'name slug images price discountPrice status stockQuantity material colors')
       .lean<CartDoc | null>();
-    return NextResponse.json({
+    return createNoCacheResponse({
       items: cart?.items ?? [],
       savedItems: cart?.savedItems ?? [],
     });
   } catch (error) {
-    console.error('[account/cart POST] Error:', error);
     const errorMessage =
       error instanceof Error ? error.message : 'Unable to update cart';
     
-    // Handle specific error types
     if (error instanceof Error) {
       if (error.message.includes('not found') || error.message.includes('NotFound')) {
-        return NextResponse.json(
-          { error: 'Product not found' },
-          { status: 404 }
-        );
+        return createErrorResponse('Product not found', 404);
       }
       if (error.message.includes('Unauthorized') || error.message.includes('token')) {
-        return NextResponse.json(
-          { error: 'Authentication required' },
-          { status: 401 }
-        );
+        return createErrorResponse('Authentication required', 401);
       }
     }
     
-    return NextResponse.json(
-      { error: errorMessage },
-      { status: 500 }
-    );
+    return createErrorResponse(errorMessage, 500);
   }
 }
 
@@ -230,10 +214,7 @@ export async function PATCH(request: Request) {
     await connect();
     const uid = getUserIdFromRequest(request);
     if (!uid) {
-      return NextResponse.json(
-        { error: 'Please log in to update your cart' },
-        { status: 401 }
-      );
+      return createErrorResponse('Please log in to update your cart', 401);
     }
 
     const body = (await request.json()) as unknown;
@@ -245,14 +226,13 @@ export async function PATCH(request: Request) {
     const selectedSize = b.selectedSize as string | undefined;
 
     if (!productKey)
-      return NextResponse.json(
-        { error: 'Product identifier is required' },
-        { status: 400 }
-      );
+      return createErrorResponse('Product identifier is required', 400);
 
     const pid = await resolveProductObjectId(productKey);
     if (!pid)
-      return NextResponse.json({ error: 'Product not found' }, { status: 404 });
+      return createErrorResponse('Product not found', 404);
+
+    await deleteCache(getCacheKey('cart', uid));
 
     const match: Record<string, unknown> = { user: uid, 'items.product': pid };
     if (selectedColor !== undefined)
@@ -275,37 +255,27 @@ export async function PATCH(request: Request) {
     }
 
     const cart = await Cart.findOne({ user: uid })
-      .populate('items.product')
-      .populate('savedItems.product')
+      .populate('items.product', 'name slug images price discountPrice status stockQuantity material colors')
+      .populate('savedItems.product', 'name slug images price discountPrice status stockQuantity material colors')
       .lean<CartDoc | null>();
-    return NextResponse.json({
+    return createNoCacheResponse({
       items: cart?.items ?? [],
       savedItems: cart?.savedItems ?? [],
     });
   } catch (error) {
-    console.error('[account/cart PATCH] Error:', error);
     const errorMessage =
       error instanceof Error ? error.message : 'Unable to update cart item';
     
     if (error instanceof Error) {
       if (error.message.includes('not found') || error.message.includes('NotFound')) {
-        return NextResponse.json(
-          { error: 'Product not found' },
-          { status: 404 }
-        );
+        return createErrorResponse('Product not found', 404);
       }
       if (error.message.includes('Unauthorized') || error.message.includes('token')) {
-        return NextResponse.json(
-          { error: 'Authentication required' },
-          { status: 401 }
-        );
+        return createErrorResponse('Authentication required', 401);
       }
     }
     
-    return NextResponse.json(
-      { error: errorMessage },
-      { status: 500 }
-    );
+    return createErrorResponse(errorMessage, 500);
   }
 }
 
@@ -314,10 +284,7 @@ export async function DELETE(request: Request) {
     await connect();
     const uid = getUserIdFromRequest(request);
     if (!uid) {
-      return NextResponse.json(
-        { error: 'Please log in to update your cart' },
-        { status: 401 }
-      );
+      return createErrorResponse('Please log in to update your cart', 401);
     }
 
     const url = new URL(request.url);
@@ -330,14 +297,13 @@ export async function DELETE(request: Request) {
     const selectedSize = b.selectedSize as string | undefined;
 
     if (!productKey)
-      return NextResponse.json(
-        { error: 'Product identifier is required' },
-        { status: 400 }
-      );
+      return createErrorResponse('Product identifier is required', 400);
 
     const pid = await resolveProductObjectId(productKey);
     if (!pid)
-      return NextResponse.json({ error: 'Product not found' }, { status: 404 });
+      return createErrorResponse('Product not found', 404);
+
+    await deleteCache(getCacheKey('cart', uid));
 
     if (action === 'unsave') {
       await Cart.updateOne(
@@ -354,36 +320,26 @@ export async function DELETE(request: Request) {
     }
 
     const cart = await Cart.findOne({ user: uid })
-      .populate('items.product')
-      .populate('savedItems.product')
+      .populate('items.product', 'name slug images price discountPrice status stockQuantity material colors')
+      .populate('savedItems.product', 'name slug images price discountPrice status stockQuantity material colors')
       .lean<CartDoc | null>();
-    return NextResponse.json({
+    return createNoCacheResponse({
       items: cart?.items ?? [],
       savedItems: cart?.savedItems ?? [],
     });
   } catch (error) {
-    console.error('[account/cart DELETE] Error:', error);
     const errorMessage =
       error instanceof Error ? error.message : 'Unable to remove item from cart';
     
     if (error instanceof Error) {
       if (error.message.includes('not found') || error.message.includes('NotFound')) {
-        return NextResponse.json(
-          { error: 'Product not found' },
-          { status: 404 }
-        );
+        return createErrorResponse('Product not found', 404);
       }
       if (error.message.includes('Unauthorized') || error.message.includes('token')) {
-        return NextResponse.json(
-          { error: 'Authentication required' },
-          { status: 401 }
-        );
+        return createErrorResponse('Authentication required', 401);
       }
     }
     
-    return NextResponse.json(
-      { error: errorMessage },
-      { status: 500 }
-    );
+    return createErrorResponse(errorMessage, 500);
   }
 }

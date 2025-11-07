@@ -1,8 +1,8 @@
-import { NextResponse } from 'next/server';
 import { connect } from '@/dbConfig/dbConfig';
 import jwt from 'jsonwebtoken';
 import UserProfile from '@/models/userProfile';
 import type { Address, UserProfileLean } from '@/lib/types/product';
+import { createErrorResponse, createNoCacheResponse } from '@/lib/api/response';
 
 function getCookie(req: Request, name: string): string | null {
   try {
@@ -64,12 +64,10 @@ export async function PUT(
 ) {
   const { id } = await ctx.params;
   try {
-    if (!USER_JWT_SECRET)
-      return NextResponse.json({ error: 'Please log in to continue' }, { status: 401 });
+    if (!USER_JWT_SECRET) return createErrorResponse('Please log in to continue', 401);
     await connect();
     const token = getCookie(request, 'token');
-    if (!token)
-      return NextResponse.json({ error: 'Please log in to continue' }, { status: 401 });
+    if (!token) return createErrorResponse('Please log in to continue', 401);
     
     let payload: { uid?: string } | null = null;
     try {
@@ -78,19 +76,15 @@ export async function PUT(
       } | null;
     } catch (jwtError) {
       console.error('[addresses PUT] JWT verification failed:', jwtError);
-      return NextResponse.json({ error: 'Your session has expired. Please log in again' }, { status: 401 });
+      return createErrorResponse('Your session has expired. Please log in again', 401);
     }
     
-    if (!payload?.uid)
-      return NextResponse.json({ error: 'Please log in to continue' }, { status: 401 });
+    if (!payload?.uid) return createErrorResponse('Please log in to continue', 401);
 
     const raw: Partial<Address> = await request.json();
     const $setFields = sanitizePartialAddress(raw);
     if (Object.keys($setFields).length === 0) {
-      return NextResponse.json(
-        { error: 'No changes provided' },
-        { status: 400 }
-      );
+      return createErrorResponse('No changes provided', 400);
     }
 
     await UserProfile.updateOne(
@@ -104,23 +98,17 @@ export async function PUT(
     const profile = await UserProfile.findOne({ user: payload.uid })
       .select({ addresses: 1 })
       .lean<UserProfileLean | null>();
-    return NextResponse.json({ ok: true, addresses: profile?.addresses || [] });
+    return createNoCacheResponse({ ok: true, addresses: profile?.addresses || [] });
   } catch (error) {
     console.error('[addresses PUT] Error:', error);
     
     if (error instanceof Error) {
       if (error.message.includes('Cast to ObjectId failed') || error.message.includes('Invalid')) {
-        return NextResponse.json(
-          { error: 'Address not found' },
-          { status: 404 }
-        );
+        return createErrorResponse('Address not found', 404);
       }
     }
     
-    return NextResponse.json(
-      { error: 'Unable to update address. Please try again' },
-      { status: 500 }
-    );
+    return createErrorResponse('Unable to update address. Please try again', 500);
   }
 }
 
@@ -130,12 +118,10 @@ export async function PATCH(
 ) {
   const { id } = await ctx.params;
   try {
-    if (!USER_JWT_SECRET)
-      return NextResponse.json({ error: 'Please log in to continue' }, { status: 401 });
+    if (!USER_JWT_SECRET) return createErrorResponse('Please log in to continue', 401);
     await connect();
     const token = getCookie(request, 'token');
-    if (!token)
-      return NextResponse.json({ error: 'Please log in to continue' }, { status: 401 });
+    if (!token) return createErrorResponse('Please log in to continue', 401);
     
     let payload: { uid?: string } | null = null;
     try {
@@ -144,11 +130,10 @@ export async function PATCH(
       } | null;
     } catch (jwtError) {
       console.error('[addresses PATCH] JWT verification failed:', jwtError);
-      return NextResponse.json({ error: 'Your session has expired. Please log in again' }, { status: 401 });
+      return createErrorResponse('Your session has expired. Please log in again', 401);
     }
     
-    if (!payload?.uid)
-      return NextResponse.json({ error: 'Please log in to continue' }, { status: 401 });
+    if (!payload?.uid) return createErrorResponse('Please log in to continue', 401);
 
     // Unset default on all addresses
     await UserProfile.updateOne(
@@ -164,23 +149,17 @@ export async function PATCH(
     const profile = await UserProfile.findOne({ user: payload.uid })
       .select({ addresses: 1 })
       .lean<UserProfileLean | null>();
-    return NextResponse.json({ ok: true, addresses: profile?.addresses || [] });
+    return createNoCacheResponse({ ok: true, addresses: profile?.addresses || [] });
   } catch (error) {
     console.error('[addresses PATCH] Error:', error);
     
     if (error instanceof Error) {
       if (error.message.includes('Cast to ObjectId failed') || error.message.includes('Invalid')) {
-        return NextResponse.json(
-          { error: 'Address not found' },
-          { status: 404 }
-        );
+        return createErrorResponse('Address not found', 404);
       }
     }
     
-    return NextResponse.json(
-      { error: 'Unable to set default address. Please try again' },
-      { status: 500 }
-    );
+    return createErrorResponse('Unable to set default address. Please try again', 500);
   }
 }
 
@@ -190,12 +169,10 @@ export async function DELETE(
 ) {
   const { id } = await ctx.params;
   try {
-    if (!USER_JWT_SECRET)
-      return NextResponse.json({ error: 'Please log in to continue' }, { status: 401 });
+    if (!USER_JWT_SECRET) return createErrorResponse('Please log in to continue', 401);
     await connect();
     const token = getCookie(request, 'token');
-    if (!token)
-      return NextResponse.json({ error: 'Please log in to continue' }, { status: 401 });
+    if (!token) return createErrorResponse('Please log in to continue', 401);
     
     let payload: { uid?: string } | null = null;
     try {
@@ -204,11 +181,10 @@ export async function DELETE(
       } | null;
     } catch (jwtError) {
       console.error('[addresses DELETE] JWT verification failed:', jwtError);
-      return NextResponse.json({ error: 'Your session has expired. Please log in again' }, { status: 401 });
+      return createErrorResponse('Your session has expired. Please log in again', 401);
     }
     
-    if (!payload?.uid)
-      return NextResponse.json({ error: 'Please log in to continue' }, { status: 401 });
+    if (!payload?.uid) return createErrorResponse('Please log in to continue', 401);
 
     await UserProfile.updateOne(
       { user: payload.uid },
@@ -217,22 +193,16 @@ export async function DELETE(
     const profile = await UserProfile.findOne({ user: payload.uid })
       .select({ addresses: 1 })
       .lean<UserProfileLean | null>();
-    return NextResponse.json({ ok: true, addresses: profile?.addresses || [] });
+    return createNoCacheResponse({ ok: true, addresses: profile?.addresses || [] });
   } catch (error) {
     console.error('[addresses DELETE] Error:', error);
     
     if (error instanceof Error) {
       if (error.message.includes('Cast to ObjectId failed') || error.message.includes('Invalid')) {
-        return NextResponse.json(
-          { error: 'Address not found' },
-          { status: 404 }
-        );
+        return createErrorResponse('Address not found', 404);
       }
     }
     
-    return NextResponse.json(
-      { error: 'Unable to delete address. Please try again' },
-      { status: 500 }
-    );
+    return createErrorResponse('Unable to delete address. Please try again', 500);
   }
 }

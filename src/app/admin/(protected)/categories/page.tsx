@@ -50,7 +50,7 @@ export default function CategoriesPage() {
 
   useEffect(() => {
     if (categories.length === 0) fetchCategories();
-  }, []);
+  }, [categories.length, fetchCategories]);
 
   const handleDeleteCategory = (category: Category) => {
     setCategoryToDelete(category);

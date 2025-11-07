@@ -1,12 +1,14 @@
-import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { connect } from '@/dbConfig/dbConfig';
 import User from '@/models/userModel';
 import PendingSignup from '@/models/pendingSignupModel';
 import { notifyUserOtp } from '@/lib/notify';
+import { createErrorResponse, createNoCacheResponse } from '@/lib/api/response';
 
 const OTP_EXP_MIN = 10;
 const RESEND_COOLDOWN_SEC = 45;
+
+export const runtime = 'nodejs';
 
 function generateOtp(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -15,28 +17,26 @@ function generateOtp(): string {
 export async function POST(request: Request) {
   try {
     await connect();
-    const { email } = await request.json();
-    if (!email || typeof email !== 'string') {
-      return NextResponse.json({ error: 'Email is required' }, { status: 400 });
-    }
-    const normalized = email.toLowerCase();
+    const body = (await request.json().catch(() => ({}))) as { email?: unknown };
+    const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
 
-    const exists = await User.exists({ email: normalized });
+    if (!email) {
+      return createErrorResponse('Email is required', 400);
+    }
+
+    const exists = await User.exists({ email });
     if (exists) {
-      return NextResponse.json(
-        { error: 'This email is already registered. Please log in instead' },
-        { status: 400 }
-      );
+      return createErrorResponse('This email is already registered. Please log in instead', 400);
     }
 
-    let pending = await PendingSignup.findOne({ email: normalized });
-    if (pending && pending.lastSentAt) {
-      const diff = (Date.now() - new Date(pending.lastSentAt).getTime()) / 1000;
-      if (diff < RESEND_COOLDOWN_SEC) {
-        return NextResponse.json(
-          { error: 'Please wait before requesting a new OTP' },
-          { status: 429 }
-        );
+    let pending = await PendingSignup.findOne({ email })
+      .select('otpHash otpExpiry attempts lastSentAt email')
+      .exec();
+
+    if (pending?.lastSentAt) {
+      const diffSeconds = (Date.now() - new Date(pending.lastSentAt).getTime()) / 1000;
+      if (diffSeconds < RESEND_COOLDOWN_SEC) {
+        return createErrorResponse('Please wait before requesting a new OTP', 429);
       }
     }
 
@@ -45,34 +45,29 @@ export async function POST(request: Request) {
 
     if (!pending) {
       pending = await PendingSignup.create({
-        email: normalized,
+        email,
         otpHash: hash,
         otpExpiry: new Date(Date.now() + OTP_EXP_MIN * 60 * 1000),
         attempts: 0,
         lastSentAt: new Date(),
       });
     } else {
-      pending.otpHash = hash as unknown as string;
-      pending.otpExpiry = new Date(
-        Date.now() + OTP_EXP_MIN * 60 * 1000
-      ) as unknown as Date;
-      pending.attempts = 0 as unknown as number;
-      pending.lastSentAt = new Date() as unknown as Date;
+      pending.otpHash = hash;
+      pending.otpExpiry = new Date(Date.now() + OTP_EXP_MIN * 60 * 1000);
+      pending.attempts = 0;
+      pending.lastSentAt = new Date();
       await pending.save();
     }
 
-    await notifyUserOtp({ email: normalized, name: 'User' }, otp);
+    await notifyUserOtp({ email, name: 'User' }, otp);
 
-    return NextResponse.json({
+    return createNoCacheResponse({
       ok: true,
       message: 'OTP sent',
       devOtp: process.env.NODE_ENV !== 'production' ? otp : undefined,
     });
   } catch (error) {
     console.error('[auth/signup/request-otp] Error:', error);
-    return NextResponse.json(
-      { error: 'Unable to send OTP. Please try again later' },
-      { status: 500 }
-    );
+    return createErrorResponse('Unable to send OTP. Please try again later', 500);
   }
 }

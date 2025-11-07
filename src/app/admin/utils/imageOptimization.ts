@@ -9,14 +9,12 @@ export const BLUR_DATA_URL = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
 /**
  * Get optimal image sizes for different contexts
  */
-export const getImageSizes = (context: 'card' | 'detail' | 'thumbnail' | 'banner') => {
+export const getImageSizes = (context: 'card' | 'detail' | 'banner') => {
   switch (context) {
     case 'card':
       return '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw';
     case 'detail':
       return '(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw';
-    case 'thumbnail':
-      return '(max-width: 640px) 50vw, 128px';
     case 'banner':
       return '100vw';
     default:
@@ -27,7 +25,7 @@ export const getImageSizes = (context: 'card' | 'detail' | 'thumbnail' | 'banner
 /**
  * Determine if image should be priority loaded (above the fold)
  */
-export const shouldPriorityLoad = (index: number, context: 'card' | 'detail' | 'thumbnail' | 'banner') => {
+export const shouldPriorityLoad = (index: number, context: 'card' | 'detail' | 'banner') => {
   if (context === 'banner') return true;
   if (context === 'card' && index < 4) return true; // First row of cards
   if (context === 'detail' && index === 0) return true; // First detail image

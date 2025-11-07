@@ -16,7 +16,7 @@ export interface PublicCategoryWithProducts extends PublicCategory {
     _id?: string;
     name: string;
     slug: string;
-    thumbnail?: string;
+    image?: string;
     price: number;
     discountPrice?: number;
   }>;

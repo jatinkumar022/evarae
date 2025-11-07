@@ -14,7 +14,7 @@ export async function GET(request: Request) {
     const filter = activeOnly ? { isActive: true } : {};
 
     const collections = includeProducts
-      ? await Collection.find(filter).select('-__v').populate('products', 'name slug thumbnail price').sort({ sortOrder: 1, name: 1 }).lean()
+      ? await Collection.find(filter).select('-__v').populate('products', 'name slug price').sort({ sortOrder: 1, name: 1 }).lean()
       : await Collection.find(filter).select('-__v').sort({ sortOrder: 1, name: 1 }).lean();
 
     return NextResponse.json({ collections });

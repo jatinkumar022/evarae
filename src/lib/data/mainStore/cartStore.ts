@@ -9,7 +9,6 @@ export type CartProduct = {
   sku?: string;
   price?: number;
   discountPrice?: number | null;
-  thumbnail?: string | null;
   images?: string[];
 };
 export type CartItem = {
@@ -40,7 +39,18 @@ interface CartState {
     productId?: string;
     productSlug?: string;
     sku?: string;
-    product?: CartProduct; // nested support
+    product?: {
+      _id: string;
+      name: string;
+      slug: string;
+      images?: string[];
+      price?: number;
+      discountPrice?: number;
+      status?: string;
+      stockQuantity?: number;
+      material?: string;
+      colors?: string[];
+    } | null;
     quantity?: number;
     selectedColor?: string | null;
     selectedSize?: string | null;
@@ -119,12 +129,10 @@ export const useCartStore = create<CartState>(set => ({
             payload.productSlug ||
             payload.sku ||
             payload.product?._id ||
-            payload.optimisticProduct?._id ||
-            payload.product?.id ||
-            payload.optimisticProduct?.id
+            payload.optimisticProduct?._id
         );
         const existingIndex = state.items.findIndex(
-          i => String(i?.product?._id || i?.product?.id) === key
+          i => String(i?.product?._id) === key
         );
         const nextItems = [...state.items];
         if (existingIndex >= 0) {

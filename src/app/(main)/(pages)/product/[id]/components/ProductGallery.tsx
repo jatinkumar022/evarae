@@ -63,7 +63,7 @@ export function ProductGallery({
             >
               <Image
                 src={product.images[selectedImage]}
-                alt={`${product.name} - Image ${selectedImage + 1}`}
+                alt={`${product.name} image ${selectedImage + 1}`}
                 fill
                 className="object-cover"
                 sizes="(max-width: 768px) 100vw, 50vw"
@@ -93,7 +93,7 @@ export function ProductGallery({
               >
                 <Image
                   src={image}
-                  alt={`${product.name} thumbnail ${index + 1}`}
+                  alt={`${product.name} image ${index + 1}`}
                   fill
                   className="object-cover"
                   sizes="80px"
@@ -140,7 +140,7 @@ export function ProductGallery({
               >
                 <Image
                   src={image}
-                  alt={`${product.name} thumbnail ${index + 1}`}
+                  alt={`${product.name} image ${index + 1}`}
                   fill
                   className="object-cover"
                   sizes="56px"
@@ -204,7 +204,7 @@ export function ProductGallery({
                     >
                       <Image
                         src={image}
-                        alt={`${product.name} thumbnail ${index + 1}`}
+                        alt={`${product.name} image ${index + 1}`}
                         fill
                         className="object-cover"
                       />

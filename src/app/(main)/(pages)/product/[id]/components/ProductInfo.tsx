@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { Product } from '@/lib/types/product';
 import {
   Star,
@@ -98,7 +98,6 @@ export function ProductInfo({ product }: ProductInfoProps) {
       price: product.price ?? 0,
       discountPrice: product.price ?? 0,
       images: product.images as string[],
-      thumbnail: (product.images?.[0] as string) || undefined,
       stockQuantity: product.stockCount ?? 1,
     };
     try {

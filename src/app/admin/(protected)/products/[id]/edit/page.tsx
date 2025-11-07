@@ -22,6 +22,7 @@ import { useProductStore } from '@/lib/data/store/productStore';
 import { useCategoryStore } from '@/lib/data/store/categoryStore';
 import { CustomSelect } from '@/app/admin/components/LazyCustomSelect';
 import { useUploadStore } from '@/lib/data/store/uploadStore';
+import UploadProgressModal from '@/app/admin/components/UploadProgressModal';
 import { toastApi } from '@/lib/toast';
 import InlineSpinner from '@/app/admin/components/InlineSpinner';
 
@@ -56,7 +57,6 @@ const productFormSchema = z.object({
   tags: z.array(z.string()),
   video: z.string().optional(),
   images: z.array(z.string()).min(1, 'At least one product image is required'),
-  thumbnail: z.string().optional(),
 }).refine(
   (data) => {
     if (data.discountPrice && data.discountPrice.trim() !== '') {
@@ -148,7 +148,6 @@ export default function EditProductPage() {
       tags: [],
       video: '',
       images: [],
-      thumbnail: undefined,
     },
     mode: 'onChange',
   });
@@ -187,7 +186,6 @@ export default function EditProductPage() {
         tags: currentProduct.tags || [],
         video: currentProduct.video || '',
         images: currentProduct.images || [],
-        thumbnail: currentProduct.thumbnail,
       });
     }
   }, [currentProduct, reset]);
@@ -198,33 +196,6 @@ export default function EditProductPage() {
       ? current.filter(v => v !== value)
       : [...current, value];
     setValue(field, updated, { shouldValidate: true });
-  };
-
-  // Upload thumbnail and set URL
-  const handleThumbnailSelect = async (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (!file.type.startsWith('image/')) {
-      setValue('thumbnail', undefined, { shouldValidate: true });
-      return;
-    }
-    if (file.size > 2 * 1024 * 1024) {
-      setValue('thumbnail', undefined, { shouldValidate: true });
-      return;
-    }
-
-    await uploadFile(file);
-    const uploadState = useUploadStore.getState();
-    if (uploadState.error) {
-      console.error('Upload error:', uploadState.error);
-      return;
-    }
-    if (uploadState.fileUrl) {
-      setValue('thumbnail', uploadState.fileUrl, { shouldValidate: true });
-    }
   };
 
   // Upload images and append URLs
@@ -288,7 +259,6 @@ export default function EditProductPage() {
         weight: data.weight?.trim() || undefined,
         colors: data.colors,
         images: data.images,
-        thumbnail: data.thumbnail || undefined,
         tags: data.tags.filter(tag => tag.trim().length > 0),
         video: data.video?.trim() && data.video.trim().length > 0 ? data.video.trim() : undefined,
         status: data.status,
@@ -882,65 +852,6 @@ export default function EditProductPage() {
                 </div>
               </div>
 
-              {/* Thumbnail Image */}
-              <div className="bg-white dark:bg-[#191919] shadow-sm rounded-xl border border-gray-200 dark:border-[#3a3a3a] overflow-hidden">
-                <div className="px-6 py-4 border-b border-gray-200 dark:border-[#2a2a2a] bg-gray-50 dark:bg-[#1f1f1f]">
-                  <div className="flex items-center">
-                    <ImageIcon className="h-5 w-5 text-gray-600 dark:text-gray-400 mr-2" />
-                    <h2 className="md:text-lg font-semibold text-gray-900 dark:text-white">
-                      Thumbnail Image *
-                    </h2>
-                  </div>
-                </div>
-                <div className="p-6 space-y-4">
-                  <div className="border-2 border-dashed border-gray-300 dark:border-[#2a2a2a] rounded-lg p-6 text-center hover:border-gray-400 dark:hover:border-[#3a3a3a] transition-colors">
-                    <Upload className="mx-auto h-8 w-8 text-gray-400 dark:text-gray-500 mb-2" />
-                    <label className="cursor-pointer">
-                      <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                        Upload thumbnail
-                      </span>
-                      <span className="text-sm text-gray-500 dark:text-gray-400 block">
-                        PNG, JPG up to 2MB
-                      </span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={e => handleThumbnailSelect(e)}
-                        className="hidden"
-                      />
-                    </label>
-                  </div>
-
-                  {watch('thumbnail') && (
-                    <>
-                      <div className="relative group w-32 h-32 mx-auto">
-                        <Image
-                          src={watch('thumbnail')!}
-                          alt="Thumbnail"
-                          fill
-                          className="object-cover rounded-lg border border-gray-200 dark:border-[#2a2a2a]"
-                          loading="lazy"
-                          placeholder="blur"
-                          blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWEREiMxUf/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
-                        />
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setValue('thumbnail', undefined, { shouldValidate: true })
-                          }
-                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </div>
-                      <p className="text-xs text-gray-600 dark:text-gray-400 break-all text-center">
-                        {watch('thumbnail')}
-                      </p>
-                    </>
-                  )}
-                </div>
-              </div>
-
               {/* Video URL */}
               <div className="bg-white dark:bg-[#191919] shadow-sm rounded-xl border border-gray-200 dark:border-[#3a3a3a] overflow-hidden">
                 <div className="px-6 py-4 border-b border-gray-200 dark:border-[#2a2a2a] bg-gray-50 dark:bg-[#1f1f1f]">
@@ -1006,6 +917,7 @@ export default function EditProductPage() {
           </div>
         </form>
       </div>
+      <UploadProgressModal />
     </div>
   );
 }

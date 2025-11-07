@@ -1,10 +1,12 @@
-import { NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { connect } from '@/dbConfig/dbConfig';
 import User from '@/models/userModel';
+import { createErrorResponse, createNoCacheResponse } from '@/lib/api/response';
 
 const USER_JWT_SECRET = process.env.USER_JWT_SECRET as string;
+
+export const runtime = 'nodejs';
 
 function getCookie(req: Request, name: string): string | null {
   const cookieHeader = req.headers.get('cookie') || '';
@@ -20,10 +22,7 @@ export async function POST(request: Request) {
   try {
     if (!USER_JWT_SECRET) {
       console.error('[account/change-password] USER_JWT_SECRET is not set');
-      return NextResponse.json(
-        { error: 'Please log in to continue' },
-        { status: 401 }
-      );
+      return createErrorResponse('Please log in to continue', 401);
     }
 
     await connect();
@@ -31,167 +30,122 @@ export async function POST(request: Request) {
     const token = getCookie(request, 'token');
     if (!token) {
       console.error('[account/change-password] No token found in cookies');
-      return NextResponse.json(
-        { error: 'Please log in to continue' },
-        { status: 401 }
-      );
+      return createErrorResponse('Please log in to continue', 401);
     }
 
     let payload: { uid?: string } | null = null;
     try {
-      payload = jwt.verify(token, USER_JWT_SECRET) as {
-        uid?: string;
-      } | null;
+      payload = jwt.verify(token, USER_JWT_SECRET) as { uid?: string } | null;
     } catch (jwtError) {
       console.error('[account/change-password] JWT verification failed:', jwtError);
-      return NextResponse.json(
-        { error: 'Your session has expired. Please log in again' },
-        { status: 401 }
-      );
+      return createErrorResponse('Your session has expired. Please log in again', 401);
     }
 
     if (!payload?.uid) {
       console.error('[account/change-password] No uid in payload:', payload);
-      return NextResponse.json(
-        { error: 'Please log in to continue' },
-        { status: 401 }
-      );
+      return createErrorResponse('Please log in to continue', 401);
     }
 
-    const body = (await request.json()) as {
-      newPassword: string;
-      oldPassword?: string;
-      otp?: string;
-      method: 'password' | 'otp';
-    };
+    const body = (await request.json().catch(() => null)) as
+      | {
+          newPassword?: unknown;
+          oldPassword?: unknown;
+          otp?: unknown;
+          method?: unknown;
+        }
+      | null;
 
-    const { newPassword, oldPassword, otp, method } = body;
-
-    if (!newPassword || typeof newPassword !== 'string' || newPassword.length < 6) {
-      return NextResponse.json(
-        { error: 'Password must be at least 6 characters long' },
-        { status: 400 }
-      );
+    if (!body) {
+      return createErrorResponse('Invalid request payload', 400);
     }
 
-    const user = await User.findById(payload.uid);
+    const newPassword =
+      typeof body.newPassword === 'string' ? body.newPassword.trim() : '';
+    const method = body.method === 'otp' ? 'otp' : 'password';
+    const oldPassword =
+      typeof body.oldPassword === 'string' ? body.oldPassword : undefined;
+    const otp = typeof body.otp === 'string' ? body.otp.trim() : undefined;
+
+    if (newPassword.length < 6) {
+      return createErrorResponse('Password must be at least 6 characters long', 400);
+    }
+
+    const user = await User.findById(payload.uid)
+      .select('passwordHash loginOtpHash loginOtpExpiry loginOtpAttempts name email')
+      .exec();
     if (!user) {
       console.error('[account/change-password] User not found:', payload.uid);
-      return NextResponse.json(
-        { error: 'Account not found. Please log in again' },
-        { status: 404 }
-      );
+      return createErrorResponse('Account not found. Please log in again', 404);
     }
 
-    // Check if user has a password (not Google sign-in)
     if (!user.passwordHash) {
-      return NextResponse.json(
-        { error: 'Password change not available for Google sign-in accounts' },
-        { status: 400 }
-      );
+      return createErrorResponse('Password change not available for Google sign-in accounts', 400);
     }
 
-    // Verify old password or OTP
     if (method === 'password') {
-      if (!oldPassword || typeof oldPassword !== 'string') {
-        return NextResponse.json(
-          { error: 'Please enter your current password' },
-          { status: 400 }
-        );
+      if (!oldPassword) {
+        return createErrorResponse('Please enter your current password', 400);
       }
 
       const isPasswordValid = await bcrypt.compare(oldPassword, user.passwordHash);
       if (!isPasswordValid) {
-        return NextResponse.json(
-          { error: 'Current password is incorrect' },
-          { status: 401 }
-        );
+        return createErrorResponse('Current password is incorrect', 401);
       }
 
-      // Check if new password is different from old password
       const isNewPasswordSame = await bcrypt.compare(newPassword, user.passwordHash);
       if (isNewPasswordSame) {
-        return NextResponse.json(
-          { error: 'New password must be different from your current password' },
-          { status: 400 }
-        );
+        return createErrorResponse('New password must be different from your current password', 400);
       }
     } else if (method === 'otp') {
-      if (!otp || typeof otp !== 'string') {
-        return NextResponse.json(
-          { error: 'Please enter the OTP' },
-          { status: 400 }
-        );
+      if (!otp) {
+        return createErrorResponse('Please enter the OTP', 400);
       }
 
-      // Check if OTP exists and is valid
       if (!user.loginOtpHash || !user.loginOtpExpiry) {
-        return NextResponse.json(
-          { error: 'No OTP found. Please request a new OTP' },
-          { status: 400 }
-        );
+        return createErrorResponse('No OTP found. Please request a new OTP', 400);
       }
 
       if (new Date() > new Date(user.loginOtpExpiry)) {
-        return NextResponse.json(
-          { error: 'OTP has expired. Please request a new one' },
-          { status: 400 }
-        );
+        return createErrorResponse('OTP has expired. Please request a new one', 400);
       }
 
       const isOtpValid = await bcrypt.compare(otp, user.loginOtpHash);
       if (!isOtpValid) {
-        // Increment OTP attempts
         user.loginOtpAttempts = (user.loginOtpAttempts || 0) + 1;
         if (user.loginOtpAttempts >= 5) {
           user.loginOtpHash = null;
           user.loginOtpExpiry = null;
           user.loginOtpAttempts = 0;
-          await user.save();
-          return NextResponse.json(
-            { error: 'Too many failed attempts. Please request a new OTP' },
-            { status: 429 }
-          );
         }
         await user.save();
-        return NextResponse.json(
-          { error: 'Invalid OTP. Please try again' },
-          { status: 401 }
-        );
+
+        if (user.loginOtpAttempts === 0) {
+          return createErrorResponse('Too many failed attempts. Please request a new OTP', 429);
+        }
+
+        return createErrorResponse('Invalid OTP. Please try again', 401);
       }
 
-      // Clear OTP after successful verification
       user.loginOtpHash = null;
       user.loginOtpExpiry = null;
       user.loginOtpAttempts = 0;
 
-      // Check if new password is different from current password (for OTP method)
       const isNewPasswordSame = await bcrypt.compare(newPassword, user.passwordHash);
       if (isNewPasswordSame) {
-        return NextResponse.json(
-          { error: 'New password must be different from your current password' },
-          { status: 400 }
-        );
+        return createErrorResponse('New password must be different from your current password', 400);
       }
     } else {
-      return NextResponse.json(
-        { error: 'Invalid method. Please use password or OTP' },
-        { status: 400 }
-      );
+      return createErrorResponse('Invalid method. Please use password or OTP', 400);
     }
 
-    // Update password
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     user.passwordHash = hashedPassword;
     await user.save();
 
-    return NextResponse.json({ ok: true, message: 'Password changed successfully' });
+    return createNoCacheResponse({ ok: true, message: 'Password changed successfully' });
   } catch (error) {
     console.error('[account/change-password] Unexpected error:', error);
-    return NextResponse.json(
-      { error: 'Unable to change password. Please try again' },
-      { status: 500 }
-    );
+    return createErrorResponse('Unable to change password. Please try again', 500);
   }
 }
 

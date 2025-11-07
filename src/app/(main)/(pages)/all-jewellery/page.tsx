@@ -80,9 +80,7 @@ export default function AllJewelleryPage() {
 
   const mappedProducts: UiProduct[] = useMemo(() => {
     return products.map(p => {
-      const mainImage =
-        p.thumbnail || (p.images && p.images[0]) || '/favicon.ico';
-      const hoverImage = p.images && p.images[1] ? p.images[1] : undefined;
+      const productImages = p.images && p.images.length > 0 ? p.images : ['/favicon.ico'];
       const hasDiscount =
         p.discountPrice != null && p.price != null && p.discountPrice < p.price;
       const sku = (p as { sku?: string }).sku;
@@ -93,8 +91,8 @@ export default function AllJewelleryPage() {
         price: hasDiscount ? p.discountPrice! : p.price ?? null,
         originalPrice: hasDiscount ? p.price! : null,
         currency: 'INR',
-        images: [mainImage],
-        hoverImage,
+        images: productImages,
+        hoverImage: productImages[1],
         category: {
           id: p.categories?.[0]?._id || p.categories?.[0]?.slug || '',
           name: p.categories?.[0]?.name || '',

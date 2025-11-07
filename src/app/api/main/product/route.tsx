@@ -1,20 +1,40 @@
-import { NextResponse } from 'next/server';
 import { connect } from '@/dbConfig/dbConfig';
 import Product from '@/models/productModel';
+import { getCache, setCache, getCacheKey, CACHE_TTL } from '@/lib/cache/redis';
+import { createCachedResponse, createErrorResponse } from '@/lib/api/response';
+import { cache } from 'react';
+
+const getCachedProducts = cache(async (
+  filter: Record<string, unknown>,
+  sort: Record<string, 1 | -1>,
+  page: number,
+  limit: number
+) => {
+  await connect();
+  const skip = (page - 1) * limit;
+  return Promise.all([
+    Product.find(filter)
+      .select('name slug images price discountPrice status tags material colors stockQuantity')
+      .populate('categories', 'name slug')
+      .sort(sort)
+      .skip(skip)
+      .limit(limit)
+      .lean(),
+    Product.countDocuments(filter),
+  ]);
+});
+
+export const runtime = 'nodejs';
 
 export async function GET(request: Request) {
   try {
-    await connect();
-
     const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '12');
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
+    const limit = Math.min(50, Math.max(1, parseInt(searchParams.get('limit') || '12')));
     const search = searchParams.get('search') || '';
     const category = searchParams.get('category') || '';
     const sortBy = searchParams.get('sortBy') || 'createdAt';
     const sortOrder = searchParams.get('sortOrder') || 'desc';
-
-    const skip = (page - 1) * limit;
 
     const filter: Record<string, unknown> = { status: 'active' };
     if (search) {
@@ -29,20 +49,20 @@ export async function GET(request: Request) {
     const sort: Record<string, 1 | -1> = {};
     sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
 
-    const products = await Product.find(filter)
-      .select(
-        'name slug images thumbnail price discountPrice status tags material colors stockQuantity'
-      )
-      .populate('categories', 'name slug')
-      .sort(sort)
-      .skip(skip)
-      .limit(limit)
-      .lean();
+    const cacheKey = getCacheKey('products', page.toString(), limit.toString(), search, category, sortBy, sortOrder);
+    const cached = await getCache<{ products: unknown[]; pagination: unknown }>(cacheKey);
+    
+    if (cached) {
+      return createCachedResponse(cached, {
+        maxAge: CACHE_TTL.SHORT,
+        staleWhileRevalidate: CACHE_TTL.MEDIUM,
+      });
+    }
 
-    const total = await Product.countDocuments(filter);
+    const [products, total] = await getCachedProducts(filter, sort, page, limit);
     const totalPages = Math.ceil(total / limit);
-
-    return NextResponse.json({
+    
+    const response = {
       products,
       pagination: {
         page,
@@ -52,12 +72,15 @@ export async function GET(request: Request) {
         hasNext: page < totalPages,
         hasPrev: page > 1,
       },
+    };
+    
+    await setCache(cacheKey, response, CACHE_TTL.SHORT);
+    
+    return createCachedResponse(response, {
+      maxAge: CACHE_TTL.SHORT,
+      staleWhileRevalidate: CACHE_TTL.MEDIUM,
     });
-  } catch (error) {
-    console.error('Public products GET error:', error);
-    return NextResponse.json(
-      { error: 'Unable to load products. Please try again later' },
-      { status: 500 }
-    );
+  } catch {
+    return createErrorResponse('Unable to load products. Please try again later', 500);
   }
 }

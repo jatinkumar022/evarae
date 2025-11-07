@@ -1,14 +1,16 @@
-import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { connect } from '@/dbConfig/dbConfig';
 import User from '@/models/userModel';
 import UserProfile from '@/models/userProfile';
 import PendingSignup from '@/models/pendingSignupModel';
+import { createErrorResponse, createNoCacheResponse } from '@/lib/api/response';
 
 const USER_JWT_SECRET = process.env.USER_JWT_SECRET as string;
 const SIGNUP_JWT_SECRET = process.env.SIGNUP_JWT_SECRET as string;
 const SESSION_HOURS = Number(process.env.SESSION_HOURS || 72);
+
+export const runtime = 'nodejs';
 
 function getCookie(req: Request, name: string): string | null {
   const cookieHeader = req.headers.get('cookie') || '';
@@ -24,83 +26,84 @@ export async function POST(request: Request) {
   try {
     await connect();
 
-    const { name, phone, password } = await request.json();
+    const body = (await request.json().catch(() => null)) as
+      | {
+          name?: unknown;
+          phone?: unknown;
+          password?: unknown;
+        }
+      | null;
 
-    if (!name || typeof name !== 'string') {
-      return NextResponse.json({ error: 'Name is required' }, { status: 400 });
+    if (!body) {
+      return createErrorResponse('Invalid request payload', 400);
     }
-    if (!phone || typeof phone !== 'string' || !/^\d{10}$/.test(phone)) {
-      return NextResponse.json(
-        { error: 'Valid 10-digit phone is required' },
-        { status: 400 }
-      );
+
+    const name = typeof body.name === 'string' ? body.name.trim() : '';
+    const phoneRaw = typeof body.phone === 'string' ? body.phone : '';
+    const password = typeof body.password === 'string' ? body.password : '';
+
+    if (!name) {
+      return createErrorResponse('Name is required', 400);
     }
-    if (!password || typeof password !== 'string' || password.length < 6) {
-      return NextResponse.json(
-        { error: 'Password must be at least 6 chars' },
-        { status: 400 }
-      );
+    if (!/^\d{10}$/.test(phoneRaw)) {
+      return createErrorResponse('Valid 10-digit phone is required', 400);
     }
+    if (password.length < 6) {
+      return createErrorResponse('Password must be at least 6 chars', 400);
+    }
+
+    const normalizedPhone = phoneRaw.replace(/\D/g, '').slice(0, 10);
 
     const userToken = USER_JWT_SECRET ? getCookie(request, 'token') : null;
-    const signupToken = SIGNUP_JWT_SECRET
-      ? getCookie(request, 'signupToken')
-      : null;
+    const signupToken = SIGNUP_JWT_SECRET ? getCookie(request, 'signupToken') : null;
 
-    // ✅ Case 1: Existing logged-in user completing profile
     if (userToken && USER_JWT_SECRET) {
-      const payload = jwt.verify(userToken, USER_JWT_SECRET) as {
-        uid?: string;
-      } | null;
-      if (!payload?.uid) {
-        return NextResponse.json(
-          { error: 'Your session has expired. Please log in again' },
-          { status: 401 }
-        );
+      let payload: { uid?: string } | null = null;
+      try {
+        payload = jwt.verify(userToken, USER_JWT_SECRET) as { uid?: string } | null;
+      } catch {
+        return createErrorResponse('Your session has expired. Please log in again', 401);
       }
 
-      const user = await User.findById(payload.uid);
+      if (!payload?.uid) {
+        return createErrorResponse('Your session has expired. Please log in again', 401);
+      }
+
+      const user = await User.findById(payload.uid).select('passwordHash').exec();
       if (!user) {
-        return NextResponse.json(
-          { error: 'Account not found. Please sign up again' },
-          { status: 404 }
-        );
+        return createErrorResponse('Account not found. Please sign up again', 404);
       }
 
       user.name = name;
       user.passwordHash = await bcrypt.hash(password, 10);
       await user.save();
 
-      // Save phone number to UserProfile
-      const normalizedPhone = phone.replace(/\D/g, '').slice(0, 10);
       await UserProfile.findOneAndUpdate(
         { user: user._id },
         { $set: { user: user._id, phone: normalizedPhone } },
         { new: true, upsert: true }
       );
 
-      return NextResponse.json({ ok: true });
+      return createNoCacheResponse({ ok: true });
     }
 
-    // ✅ Case 2: New signup flow with signupToken
     if (signupToken && SIGNUP_JWT_SECRET) {
-      const payload = jwt.verify(signupToken, SIGNUP_JWT_SECRET) as {
-        email?: string;
-      } | null;
+      let payload: { email?: string } | null = null;
+      try {
+        payload = jwt.verify(signupToken, SIGNUP_JWT_SECRET) as { email?: string } | null;
+      } catch {
+        return createErrorResponse('Your signup session has expired. Please start again', 401);
+      }
+
       if (!payload?.email) {
-        return NextResponse.json(
-          { error: 'Your signup session has expired. Please start again' },
-          { status: 401 }
-        );
+        return createErrorResponse('Your signup session has expired. Please start again', 401);
       }
 
       const email = payload.email.toLowerCase();
       const exists = await User.exists({ email });
-      if (exists)
-        return NextResponse.json(
-          { error: 'Email already registered' },
-          { status: 400 }
-        );
+      if (exists) {
+        return createErrorResponse('Email already registered', 400);
+      }
 
       const user = await User.create({
         name,
@@ -109,50 +112,34 @@ export async function POST(request: Request) {
         passwordHash: await bcrypt.hash(password, 10),
       });
 
-      // Save phone number to UserProfile
-      const normalizedPhone = phone.replace(/\D/g, '').slice(0, 10);
-      await UserProfile.create({
-        user: user._id,
-        phone: normalizedPhone,
-      });
-
-      // Remove pending signup
+      await UserProfile.create({ user: user._id, phone: normalizedPhone });
       await PendingSignup.deleteOne({ email });
 
-      // Issue login token
       const token = jwt.sign({ uid: user._id, role: 'user' }, USER_JWT_SECRET, {
         expiresIn: `${SESSION_HOURS}h`,
       });
 
-      const res = NextResponse.json({
+      const response = createNoCacheResponse({
         ok: true,
         user: { id: user._id, name: user.name, email: user.email },
       });
 
-      // Set real login cookie
-      res.cookies.set('token', token, {
+      response.cookies.set('token', token, {
         httpOnly: true,
         sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-        secure: process.env.NODE_ENV === 'production' ? true : false,
+        secure: process.env.NODE_ENV === 'production',
         path: '/',
         maxAge: SESSION_HOURS * 60 * 60,
       });
 
-      // Clear signupToken cookie
-      res.cookies.set('signupToken', '', { maxAge: 0 });
+      response.cookies.set('signupToken', '', { maxAge: 0, path: '/' });
 
-      return res;
+      return response;
     }
 
-    return NextResponse.json(
-      { error: 'Please complete signup to continue' },
-      { status: 401 }
-    );
+    return createErrorResponse('Please complete signup to continue', 401);
   } catch (error) {
     console.error('[auth/complete-profile] Error:', error);
-    return NextResponse.json(
-      { error: 'Unable to complete profile. Please try again' },
-      { status: 500 }
-    );
+    return createErrorResponse('Unable to complete profile. Please try again', 500);
   }
 }

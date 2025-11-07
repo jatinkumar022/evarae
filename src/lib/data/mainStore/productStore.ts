@@ -11,7 +11,6 @@ export interface PublicProduct {
   name: string;
   slug: string;
   images?: string[];
-  thumbnail?: string;
   price: number;
   discountPrice?: number;
   status?: string;

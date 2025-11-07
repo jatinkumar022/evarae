@@ -358,7 +358,7 @@ export function ProductReviews({ product }: ProductReviewsProps) {
               {review.comment}
             </p>
 
-            {/* Review images thumbnails */}
+            {/* Review image previews */}
             {review.images && review.images.length > 0 && (
               <div className="flex gap-2 mb-2 overflow-x-auto pb-1">
                 {review.images.map((img, idx) => (
