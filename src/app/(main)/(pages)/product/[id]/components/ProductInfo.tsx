@@ -17,6 +17,7 @@ import { ringsCat } from '@/app/(main)/assets/CategoryGrid';
 import Image from 'next/image';
 import { useCartStore } from '@/lib/data/mainStore/cartStore';
 import CartNotification from '@/app/(main)/components/ui/CartNotification';
+import InlineLoader from '@/app/(main)/components/ui/InlineLoader';
 interface ProductInfoProps {
   product: Product;
 }
@@ -27,6 +28,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
   const [isStickyVisible, setIsStickyVisible] = useState(false);
   const [showNotification, setShowNotification] = useState(false);
   const addToCart = useCartStore(s => s.add);
+  const isAdding = useCartStore(s => s.isAdding);
 
   // Mock variants - in real app, this would come from product data
   const variants = [
@@ -36,15 +38,22 @@ export function ProductInfo({ product }: ProductInfoProps) {
     { id: 'platinum', name: 'Platinum', color: '#E5E4E2' },
   ];
 
-  // Sticky cart visibility on scroll
+  // Sticky cart visibility on scroll - debounced
   useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
     const handleScroll = () => {
-      const scrollY = window.scrollY;
-      setIsStickyVisible(scrollY > 300);
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        const scrollY = window.scrollY;
+        setIsStickyVisible(scrollY > 300);
+      }, 50);
     };
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      clearTimeout(timeoutId);
+    };
   }, []);
 
   const handleQuantityChange = (newQuantity: number) => {
@@ -89,7 +98,6 @@ export function ProductInfo({ product }: ProductInfoProps) {
       price: product.price ?? 0,
       discountPrice: product.price ?? 0,
       images: product.images as string[],
-      thumbnail: (product.images?.[0] as string) || undefined,
       stockQuantity: product.stockCount ?? 1,
     };
     try {
@@ -222,10 +230,20 @@ export function ProductInfo({ product }: ProductInfoProps) {
             {/* Primary CTA - Add to Cart */}
               <button
                 onClick={onAddToCart}
-              className="w-full bg-primary border border-primary text-white py-2 px-5 rounded-sm text-sm lg:text-base font-medium hover:bg-primary-dark transition-colors flex items-center justify-center gap-2"
+                disabled={isAdding}
+                className="w-full bg-primary border border-primary text-white py-2 px-5 rounded-sm text-sm lg:text-base font-medium hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
               >
-                <Cart className="w-4 h-4" />
-                Add to Cart
+                {isAdding ? (
+                  <>
+                    <InlineLoader size="sm" />
+                    <span>Adding...</span>
+                  </>
+                ) : (
+                  <>
+                    <Cart className="w-4 h-4" />
+                    Add to Cart
+                  </>
+                )}
               </button>
 
             {/* Secondary action - Wishlist */}

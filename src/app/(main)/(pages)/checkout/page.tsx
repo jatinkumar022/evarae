@@ -678,6 +678,7 @@ export default function CheckoutPage() {
                         fill
                         className="object-cover"
                         sizes="(max-width: 640px) 64px, 80px"
+                        loading="lazy"
                       />
                     </div>
                   )}
@@ -736,6 +737,7 @@ export default function CheckoutPage() {
                   </p>
                   <Link
                     href="/all-jewellery"
+                    prefetch={true}
                     className="btn btn-filled btn-animated text-sm"
                   >
                     Continue Shopping
@@ -893,12 +895,13 @@ export default function CheckoutPage() {
               By placing your order you agree to our
               <Link
                 href="/terms-conditions"
+                prefetch={true}
                 className="text-primary underline ml-1"
               >
                 Terms
               </Link>
               <span className="mx-1">and</span>
-              <Link href="/privacy" className="text-primary underline">
+              <Link href="/privacy" prefetch={true} className="text-primary underline">
                 Privacy Policy
               </Link>
               .

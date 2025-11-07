@@ -10,13 +10,22 @@ import {
 } from 'react';
 import { Search, Grid3X3, List, ArrowLeft } from 'lucide-react';
 import Container from '@/app/(main)/components/layouts/Container';
-import ProductFilters from '@/app/(main)/components/filters/ProductFilters';
+import dynamic from 'next/dynamic';
 import {
   FilterOptions,
   SortOption,
   Product as UiProduct,
 } from '@/lib/types/product';
-import { ProductCard } from '../shop/components/ProductCard';
+
+// Lazy load heavy components
+const ProductFilters = dynamic(
+  () => import('@/app/(main)/components/filters/ProductFilters'),
+  { ssr: true }
+);
+const ProductCard = dynamic(
+  () => import('../shop/components/ProductCard').then(mod => ({ default: mod.ProductCard })),
+  { ssr: true }
+);
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useSearchParams } from 'next/navigation';
@@ -97,7 +106,6 @@ function SearchPageInner() {
     description?: string;
     price?: number | null;
     discountPrice?: number | null;
-    thumbnail?: string;
     images?: string[];
     categories?: Array<{ _id?: string; name?: string; slug?: string }>;
     material?: string;
@@ -114,6 +122,8 @@ function SearchPageInner() {
           p.discountPrice != null &&
           p.price != null &&
           p.discountPrice < p.price;
+        const productImages =
+          p.images && p.images.length > 0 ? p.images : ['/favicon.ico'];
         return {
           id: p.slug,
           name: p.name,
@@ -121,8 +131,8 @@ function SearchPageInner() {
           price: hasDiscount ? p.discountPrice : p.price ?? null,
           originalPrice: hasDiscount ? p.price : null,
           currency: 'INR',
-          images: [p.thumbnail || p.images?.[0] || '/favicon.ico'],
-          hoverImage: p.images?.[1],
+          images: productImages,
+          hoverImage: productImages[1],
           category: {
             id: p.categories?.[0]?._id || p.categories?.[0]?.slug || '',
             name: p.categories?.[0]?.name || '',
@@ -223,7 +233,6 @@ function SearchPageInner() {
         price: product.price ?? 0,
         discountPrice: product.price ?? 0,
         images: product.images as string[],
-        thumbnail: (product.images?.[0] as string) || undefined,
         stockQuantity: product.stockCount ?? 1,
       };
 

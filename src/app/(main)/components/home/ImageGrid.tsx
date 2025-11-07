@@ -1,12 +1,13 @@
 'use client';
 import Image, { StaticImageData } from 'next/image';
+import { memo } from 'react';
 
 import {
   signOne,
   signTwo,
   signThree,
 } from '@/app/(main)/assets/Home/Signature';
-const GridItem = ({
+const GridItem = memo(({
   src,
   alt,
   title,
@@ -20,6 +21,8 @@ const GridItem = ({
       src={src}
       alt={alt}
       className="w-full h-full object-cover transition-transform duration-500 ease-in-out group-hover:scale-105"
+      sizes="(max-width: 768px) 100vw, 50vw"
+      loading="lazy"
     />
     <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-all duration-300 flex flex-col items-center justify-center p-6 text-center">
       <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 ease-in-out transform group-hover:translate-y-0 translate-y-4">
@@ -35,9 +38,10 @@ const GridItem = ({
       </div>
     </div>
   </div>
-);
+));
+GridItem.displayName = 'GridItem';
 
-const ImageGrid = () => {
+const ImageGrid = memo(() => {
   return (
     <section className="mt-20">
       <div className="heading-component-main-container">
@@ -65,6 +69,8 @@ const ImageGrid = () => {
       </div>
     </section>
   );
-};
+});
+
+ImageGrid.displayName = 'ImageGrid';
 
 export default ImageGrid;

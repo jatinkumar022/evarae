@@ -733,12 +733,14 @@ export default function OrderDetailsPage() {
             <div className="flex flex-col sm:flex-row justify-center gap-4">
               <Link
                 href="/contact-us"
+                prefetch={true}
                 className="px-8 py-2 sm:py-3 text-sm sm:text-base bg-gradient-to-r from-primary to-accent text-white rounded-full transform hover:scale-105 transition-all duration-300 font-medium"
               >
                 Contact Support
               </Link>
               <Link
                 href="/help-faq"
+                prefetch={true}
                 className="px-8 py-2 sm:py-3 text-sm sm:text-base bg-white text-primary border border-primary/20 rounded-full hover:bg-primary/5 hover:border-primary/40 transition-all duration-300 font-medium"
               >
                 View FAQ

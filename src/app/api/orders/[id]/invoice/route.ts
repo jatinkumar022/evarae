@@ -1,10 +1,13 @@
 import { NextResponse } from 'next/server';
 import { connect } from '@/dbConfig/dbConfig';
 import jwt from 'jsonwebtoken';
-import Order from '@/models/orderModel';
 import puppeteer from 'puppeteer';
+import Order from '@/models/orderModel';
+import { createErrorResponse } from '@/lib/api/response';
 
 const USER_JWT_SECRET = process.env.USER_JWT_SECRET as string;
+
+export const runtime = 'nodejs';
 
 function getUid(request: Request): string | null {
   try {
@@ -15,9 +18,7 @@ function getUid(request: Request): string | null {
       .find(p => p.startsWith('token='))
       ?.split('=')[1];
     if (!token || !USER_JWT_SECRET) return null;
-    const payload = jwt.verify(token, USER_JWT_SECRET) as {
-      uid?: string;
-    } | null;
+    const payload = jwt.verify(token, USER_JWT_SECRET) as { uid?: string } | null;
     return payload?.uid || null;
   } catch {
     return null;
@@ -26,43 +27,49 @@ function getUid(request: Request): string | null {
 
 const money = (n: number) => `₹${Number(n || 0).toLocaleString()}`;
 
-type HtmlOrderItem = {
-  name: string;
-  price: number;
-  quantity: number;
-};
+function escapeHtml(str: string) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
 
-type HtmlShippingAddress = {
+interface InvoiceOrderItem {
+  name?: string;
+  price?: number;
+  quantity?: number;
+}
+
+interface InvoiceShippingAddress {
   fullName?: string;
-  phone?: string;
   line1?: string;
   line2?: string;
   city?: string;
   state?: string;
   postalCode?: string;
   country?: string;
-};
+  phone?: string;
+}
 
-type HtmlOrder = {
-  _id: string;
+interface InvoiceOrder {
   orderNumber?: string;
-  items: HtmlOrderItem[];
-  subtotalAmount: number;
-  taxAmount: number;
-  shippingAmount: number;
-  discountAmount: number;
-  paymentChargesAmount: number;
-  totalAmount: number;
-  orderStatus: string;
-  paymentStatus: string;
-  shippingAddress?: HtmlShippingAddress;
+  _id?: string;
+  subtotalAmount?: number;
+  discountAmount?: number;
+  taxAmount?: number;
+  shippingAmount?: number;
+  paymentChargesAmount?: number;
+  totalAmount?: number;
+  orderStatus?: string;
+  paymentStatus?: string;
+  shippingAddress?: InvoiceShippingAddress;
+  items?: InvoiceOrderItem[];
   createdAt?: string | Date;
-  courierName?: string | null;
-  trackingNumber?: string | null;
-  paidAt?: string | Date | null;
-};
+}
 
-function buildHtml(order: HtmlOrder) {
+function buildHtml(order: InvoiceOrder) {
   const subtotal = order.subtotalAmount || 0;
   const discount = order.discountAmount || 0;
   const gst = order.taxAmount || 0;
@@ -74,7 +81,7 @@ function buildHtml(order: HtmlOrder) {
 
   const rows = (order.items || [])
     .map(
-      (it: HtmlOrderItem, idx: number) => `
+      (it: InvoiceOrderItem, idx: number) => `
       <tr class="row ${idx % 2 === 0 ? 'zebra' : ''}">
         <td class="item">${escapeHtml(it.name || '')}</td>
         <td class="qty">${it.quantity || 0}</td>
@@ -132,7 +139,7 @@ function buildHtml(order: HtmlOrder) {
       </div>
       <div class="meta">
         <div class="row"><div>Invoice</div><div class="value">${escapeHtml(
-          order.orderNumber || order._id
+          (order.orderNumber || order._id || 'N/A').toString()
         )}</div></div>
         <div class="row" style="margin-top:6px"><div class="label">Date</div><div>${
           order.createdAt ? new Date(order.createdAt).toLocaleDateString() : ''
@@ -170,25 +177,15 @@ function buildHtml(order: HtmlOrder) {
     </table>
 
     <div class="summary">
-      <div class="line"><div class="label">Subtotal</div><div>${money(
-        subtotal
-      )}</div></div>
+      <div class="line"><div class="label">Subtotal</div><div>${money(subtotal)}</div></div>
       ${
         discount > 0
-          ? `<div class="line"><div class="label">Discount</div><div>-${money(
-              discount
-            )}</div></div>`
+          ? `<div class="line"><div class="label">Discount</div><div>-${money(discount)}</div></div>`
           : ''
       }
-      <div class="line"><div class="label">GST (3%)</div><div>${money(
-        gst
-      )}</div></div>
-      <div class="line"><div class="label">Payment Charges</div><div>${money(
-        paymentCharges
-      )}</div></div>
-      <div class="line"><div class="label">Shipping</div><div>${money(
-        shipping
-      )}</div></div>
+      <div class="line"><div class="label">GST (3%)</div><div>${money(gst)}</div></div>
+      <div class="line"><div class="label">Payment Charges</div><div>${money(paymentCharges)}</div></div>
+      <div class="line"><div class="label">Shipping</div><div>${money(shipping)}</div></div>
       <div class="line total"><div>Total</div><div>${money(total)}</div></div>
     </div>
 
@@ -196,15 +193,6 @@ function buildHtml(order: HtmlOrder) {
   </div>
 </body>
 </html>`;
-}
-
-function escapeHtml(str: string) {
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
 }
 
 export async function GET(
@@ -215,23 +203,25 @@ export async function GET(
     await connect();
     const uid = getUid(request);
     if (!uid) {
-      return NextResponse.json(
-        { error: 'Please log in to download invoice' },
-        { status: 401 }
-      );
+      return createErrorResponse('Please log in to download invoice', 401);
     }
 
     const { id } = await context.params;
-    const key = id;
-    const order = (await Order.findOne(
-      key.startsWith('ORD-')
-        ? { orderNumber: key, user: uid }
-        : { _id: key, user: uid }
-    ).lean()) as unknown as HtmlOrder | null;
+    const filter = id.startsWith('ORD-')
+      ? { orderNumber: id, user: uid }
+      : { _id: id, user: uid };
 
-    if (!order) {
-      return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+    const orderDoc = await Order.findOne(filter)
+      .select(
+        'orderNumber items.name items.price items.quantity subtotalAmount taxAmount shippingAmount discountAmount paymentChargesAmount totalAmount orderStatus paymentStatus shippingAddress.fullName shippingAddress.line1 shippingAddress.line2 shippingAddress.city shippingAddress.state shippingAddress.postalCode shippingAddress.country shippingAddress.phone createdAt courierName trackingNumber paidAt'
+      )
+      .lean();
+
+    if (!orderDoc) {
+      return createErrorResponse('Order not found', 404);
     }
+
+    const order = orderDoc as InvoiceOrder;
 
     const html = buildHtml(order);
 
@@ -239,29 +229,30 @@ export async function GET(
       headless: 'new',
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
-    const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: 'networkidle0' });
-    const pdfBuffer = await page.pdf({
-      format: 'A4',
-      margin: { top: '20mm', right: '15mm', bottom: '20mm', left: '15mm' },
-      printBackground: true,
-    });
-    await browser.close();
+    try {
+      const page = await browser.newPage();
+      await page.setContent(html, { waitUntil: 'networkidle0' });
+      const pdfBuffer = await page.pdf({
+        format: 'A4',
+        margin: { top: '20mm', right: '15mm', bottom: '20mm', left: '15mm' },
+        printBackground: true,
+      });
 
-    const fileName = `invoice-${order.orderNumber || order._id}.pdf`;
-    return new NextResponse(pdfBuffer, {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="${fileName}"`,
-        'Cache-Control': 'private, no-store, no-cache, must-revalidate',
-      },
-    });
+      const pdfArray = new Uint8Array(pdfBuffer);
+      const fileName = `invoice-${order.orderNumber || order._id}.pdf`;
+      return new NextResponse(pdfArray, {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/pdf',
+          'Content-Disposition': `attachment; filename="${fileName}"`,
+          'Cache-Control': 'private, no-store, no-cache, must-revalidate',
+        },
+      });
+    } finally {
+      await browser.close();
+    }
   } catch (error) {
     console.error('[orders/[id]/invoice GET] Error:', error);
-    return NextResponse.json(
-      { error: 'Unable to generate invoice. Please try again later' },
-      { status: 500 }
-    );
+    return createErrorResponse('Unable to generate invoice. Please try again later', 500);
   }
 }

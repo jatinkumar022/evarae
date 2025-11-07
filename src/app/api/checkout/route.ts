@@ -32,7 +32,6 @@ interface PopulatedProductForCheckout {
   slug?: string;
   sku?: string;
   images?: string[];
-  thumbnail?: string | null;
   price?: number;
   discountPrice?: number | null;
   originalPrice?: number | null;
@@ -59,21 +58,21 @@ export async function GET(request: Request) {
       } | null>(),
     ]);
 
-    const items = (cart?.items || []).map(ci => ({
-      productId: String(ci.product?._id || ci.product?.id || ''),
-      name: ci.product?.name,
-      slug: ci.product?.slug,
-      sku: ci.product?.sku,
-      image:
-        (ci.product?.images && ci.product.images[0]) ||
-        ci.product?.thumbnail ||
-        undefined,
-      price: ci.product?.discountPrice ?? ci.product?.price ?? 0,
-      originalPrice: ci.product?.originalPrice ?? ci.product?.price ?? null,
-      quantity: ci.quantity || 1,
-      selectedColor: ci.selectedColor ?? null,
-      selectedSize: ci.selectedSize ?? null,
-    }));
+    const items = (cart?.items || []).map(ci => {
+      const primaryImage = ci.product?.images?.[0] || '';
+      return {
+        productId: String(ci.product?._id || ci.product?.id || ''),
+        name: ci.product?.name,
+        slug: ci.product?.slug,
+        sku: ci.product?.sku,
+        image: primaryImage,
+        price: ci.product?.discountPrice ?? ci.product?.price ?? 0,
+        originalPrice: ci.product?.originalPrice ?? ci.product?.price ?? null,
+        quantity: ci.quantity || 1,
+        selectedColor: ci.selectedColor ?? null,
+        selectedSize: ci.selectedSize ?? null,
+      };
+    });
 
     const addresses = (profile?.addresses || []).map(a => ({
       id: String(a._id),

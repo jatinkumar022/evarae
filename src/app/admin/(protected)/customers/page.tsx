@@ -24,13 +24,13 @@ export default function CustomersPage() {
   // Initialize filters once
   useEffect(() => {
     if (filters.limit !== 10) setFilters({ limit: 10 });
-  }, []);
+  }, [filters.limit, setFilters]);
 
   // Debounced fetch customers
   useEffect(() => {
     const timer = setTimeout(() => fetchCustomers(), 150);
     return () => clearTimeout(timer);
-  }, [filters.search, filters.status, filters.role, filters.sortBy, filters.sortOrder, filters.page]);
+  }, [filters.search, filters.status, filters.role, filters.sortBy, filters.sortOrder, filters.page, fetchCustomers]);
 
   // Customers are filtered and paginated by the API, so we just use them directly
 

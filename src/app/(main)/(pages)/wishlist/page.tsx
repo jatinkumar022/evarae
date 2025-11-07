@@ -1,53 +1,44 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { Heart, Share2 } from 'lucide-react';
 import Container from '@/app/(main)/components/layouts/Container';
 import ProductFilters from '@/app/(main)/components/filters/ProductFilters';
 import { FilterOptions, SortOption, Product } from '@/lib/types/product';
-import { allProducts } from '@/lib/data/products';
 import Image from 'next/image';
 import { GiCrystalShine } from 'react-icons/gi';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Cart } from '@/app/(main)/assets/Common';
-import ProductOptionsModal from '@/app/(main)/components/ui/ProductOptionsModal';
-
-// Combine all products from different categories
-const allJewelleryProducts = [
-  ...allProducts.rings,
-  ...allProducts.earrings,
-  ...allProducts.bangles,
-  ...allProducts.bracelets,
-  ...allProducts.chains,
-  ...allProducts.mangalsutras,
-  ...allProducts.pendants,
-  ...allProducts.necklaces,
-  ...allProducts.nosePins,
-  ...allProducts.kadas,
-  ...allProducts.engagementRings,
-  ...allProducts.jhumkas,
-];
+import { LazyProductOptionsModal } from '@/app/(main)/components/ui/LazyProductOptionsModal';
 
 export default function AllJewelleryPage() {
-  const [filteredProducts, setFilteredProducts] =
-    useState(allJewelleryProducts);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [visibleProducts, setVisibleProducts] = useState(10);
   const [isMobile, setIsMobile] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
-  // Detect screen size
+  // Detect screen size with debouncing
   useEffect(() => {
     const checkScreen = () => setIsMobile(window.innerWidth < 1024); // lg breakpoint
     checkScreen();
-    window.addEventListener('resize', checkScreen);
-    return () => window.removeEventListener('resize', checkScreen);
+    let timeoutId: NodeJS.Timeout;
+    const debouncedCheck = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(checkScreen, 150);
+    };
+    window.addEventListener('resize', debouncedCheck);
+    return () => {
+      window.removeEventListener('resize', debouncedCheck);
+      clearTimeout(timeoutId);
+    };
   }, []);
 
-  const handleAddToCart = (product: Product) => {
+  const handleAddToCart = useCallback((product: Product) => {
     setSelectedProduct(product);
     setIsModalOpen(true);
-  };
-  const filterOptions: FilterOptions = {
+  }, []);
+  
+  const filterOptions: FilterOptions = useMemo(() => ({
     priceRanges: [
       { value: 'under-1k', label: 'Under ₹1,000' },
       { value: '1k-2k', label: '₹1,000 - ₹2,000' },
@@ -138,19 +129,19 @@ export default function AllJewelleryPage() {
       'Designer Jhumkas',
       'Traditional Jhumkas',
     ],
-  };
+  }), []);
 
-  const sortOptions: SortOption[] = [
+  const sortOptions: SortOption[] = useMemo(() => [
     { value: 'best-matches', label: 'Best Matches' },
     { value: 'price-low-high', label: 'Price: Low to High' },
     { value: 'price-high-low', label: 'Price: High to Low' },
     { value: 'newest', label: 'Newest First' },
     { value: 'rating', label: 'Highest Rated' },
-  ];
+  ], []);
 
-  const handleLoadMore = () => {
+  const handleLoadMore = useCallback(() => {
     setVisibleProducts(prev => prev + 10);
-  };
+  }, []);
 
   const displayedProducts = filteredProducts.slice(0, visibleProducts);
   const hasMoreProducts = visibleProducts < filteredProducts.length;
@@ -221,7 +212,7 @@ export default function AllJewelleryPage() {
               <div className="flex items-center gap-3 bg-white/60 backdrop-blur-xl px-6 py-3 rounded-full shadow-lg border border-white/20 hover:bg-white/70 transition-all duration-300">
                 <div className="w-2 h-2 rounded-full bg-gradient-to-r from-pink-400 to-rose-400"></div>
                 <span className="font-light text-gray-700 tracking-wide">
-                  {allJewelleryProducts.length} Precious Items
+                  {filteredProducts.length} Precious Items
                 </span>
               </div>
               <div className="flex items-center gap-3 bg-white/60 backdrop-blur-xl px-6 py-3 rounded-full shadow-lg border border-white/20 hover:bg-white/70 transition-all duration-300 cursor-pointer">
@@ -240,7 +231,7 @@ export default function AllJewelleryPage() {
       </div>
       <Container>
         <ProductFilters
-          products={allJewelleryProducts}
+          products={filteredProducts}
           filterOptions={filterOptions}
           sortOptions={sortOptions}
           onFiltersChange={setFilteredProducts}
@@ -267,8 +258,8 @@ export default function AllJewelleryPage() {
                       >
                         <Image
                           src={
-                            isHovered && product.hoverImage
-                              ? product.hoverImage
+                            isHovered && product.images[1]
+                              ? product.images[1]
                               : product.images[0]
                           }
                           alt={product.name}
@@ -387,11 +378,14 @@ export default function AllJewelleryPage() {
       </Container>
       
       {/* Product Options Modal */}
-      <ProductOptionsModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        product={selectedProduct}
-      />
+      {/* Product Options Modal - Lazy loaded */}
+      {isModalOpen && (
+        <LazyProductOptionsModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          product={selectedProduct}
+        />
+      )}
     </>
   );
 }

@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
 import { connect } from '@/dbConfig/dbConfig';
 import jwt from 'jsonwebtoken';
+import mongoose from 'mongoose';
 import UserProfile from '@/models/userProfile';
 import type { Address, UserProfileLean } from '@/lib/types/product';
-import mongoose from 'mongoose';
+import { createErrorResponse, createNoCacheResponse } from '@/lib/api/response';
 
 function getCookie(req: Request, name: string): string | null {
   try {
@@ -19,6 +20,8 @@ function getCookie(req: Request, name: string): string | null {
 }
 
 const USER_JWT_SECRET = process.env.USER_JWT_SECRET as string;
+
+export const runtime = 'nodejs';
 
 function sanitizeAddress(body: Partial<Address>): Address {
   const coerceStr = (v: unknown, fallback = ''): string =>
@@ -132,53 +135,50 @@ async function parseAddressBody(request: Request): Promise<Partial<Address>> {
 
 export async function GET(request: Request) {
   try {
-    if (!USER_JWT_SECRET)
-      return NextResponse.json({ addresses: [] as Address[] });
+    if (!USER_JWT_SECRET) return createNoCacheResponse({ addresses: [] as Address[] });
+
     await connect();
+
     const token = getCookie(request, 'token');
-    if (!token) return NextResponse.json({ addresses: [] as Address[] });
+    if (!token) return createNoCacheResponse({ addresses: [] as Address[] });
 
     let payload: { uid?: string } | null = null;
     try {
       payload = jwt.verify(token, USER_JWT_SECRET) as { uid?: string } | null;
     } catch {
-      return NextResponse.json({ addresses: [] as Address[] });
+      return createNoCacheResponse({ addresses: [] as Address[] });
     }
-    if (!payload?.uid) return NextResponse.json({ addresses: [] as Address[] });
+    if (!payload?.uid) return createNoCacheResponse({ addresses: [] as Address[] });
 
     const profile = await UserProfile.findOne({ user: payload.uid })
       .select({ addresses: 1 })
       .lean<UserProfileLean | null>();
-    return NextResponse.json({ addresses: profile?.addresses || [] });
+    return createNoCacheResponse({ addresses: profile?.addresses || [] });
   } catch {
-    return NextResponse.json({ addresses: [] as Address[] });
+    return createNoCacheResponse({ addresses: [] as Address[] });
   }
 }
 
 export async function POST(request: Request) {
   try {
-    if (!USER_JWT_SECRET)
-      return NextResponse.json({ error: 'Please log in to continue' }, { status: 401 });
+    if (!USER_JWT_SECRET) return createErrorResponse('Please log in to continue', 401);
 
     await connect();
 
     const token = getCookie(request, 'token');
-    if (!token)
-      return NextResponse.json({ error: 'Please log in to continue' }, { status: 401 });
+    if (!token) return createErrorResponse('Please log in to continue', 401);
 
     let payload: { uid?: string } | null = null;
     try {
       payload = jwt.verify(token, USER_JWT_SECRET) as { uid?: string } | null;
     } catch (jwtError) {
       console.error('[addresses POST] JWT verification failed:', jwtError);
-      return NextResponse.json({ error: 'Your session has expired. Please log in again' }, { status: 401 });
+      return createErrorResponse('Your session has expired. Please log in again', 401);
     }
-    if (!payload?.uid)
-      return NextResponse.json({ error: 'Please log in to continue' }, { status: 401 });
+    if (!payload?.uid) return createErrorResponse('Please log in to continue', 401);
 
-    // Validate uid for ObjectId to avoid cast errors during upsert
     if (!mongoose.isValidObjectId(payload.uid)) {
-      return NextResponse.json({ error: 'Invalid account. Please log in again' }, { status: 400 });
+      return createErrorResponse('Invalid account. Please log in again', 400);
     }
 
     const rawPartial = await parseAddressBody(request);
@@ -186,7 +186,7 @@ export async function POST(request: Request) {
 
     const invalid = validateAddress(addr);
     if (invalid) {
-      return NextResponse.json({ error: invalid }, { status: 400 });
+      return createErrorResponse(invalid, 400);
     }
 
     const now = new Date();
@@ -209,7 +209,7 @@ export async function POST(request: Request) {
       { new: true, upsert: true }
     ).lean<UserProfileLean>();
 
-    return NextResponse.json({ ok: true, addresses: profile?.addresses || [] });
+    return createNoCacheResponse({ ok: true, addresses: profile?.addresses || [] });
   } catch (err: unknown) {
     // Log server-side for diagnosis
     try {
@@ -226,18 +226,12 @@ export async function POST(request: Request) {
       // Extract field name from validation error if possible
       const fieldMatch = anyErr.message?.match(/path `(\w+)`/);
       const fieldName = fieldMatch ? fieldMatch[1] : 'field';
-      return NextResponse.json(
-        { error: `Please check your ${fieldName} and try again` },
-        { status: 400 }
-      );
+      return createErrorResponse(`Please check your ${fieldName} and try again`, 400);
     }
     if (anyErr?.name === 'MongoServerError' && anyErr?.code === 11000) {
-      return NextResponse.json({ error: 'This address already exists' }, { status: 409 });
+      return createErrorResponse('This address already exists', 409);
     }
 
-    return NextResponse.json(
-      { error: 'Unable to save address. Please check all fields and try again' },
-      { status: 500 }
-    );
+    return createErrorResponse('Unable to save address. Please check all fields and try again', 500);
   }
 }

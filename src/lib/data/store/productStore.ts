@@ -16,7 +16,6 @@ export interface Product {
   weight: string;
   colors: string[];
   images: string[];
-  thumbnail?: string;
   tags: string[];
   video?: string;
   status: 'active' | 'out_of_stock' | 'hidden';

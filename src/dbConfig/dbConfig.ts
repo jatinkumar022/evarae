@@ -27,9 +27,13 @@ export async function connect() {
     cached.promise = mongoose
       .connect(MONGODB_URI, {
         bufferCommands: false,
+        maxPoolSize: 10,
+        minPoolSize: 2,
+        maxIdleTimeMS: 30000,
+        serverSelectionTimeoutMS: 5000,
+        socketTimeoutMS: 45000,
       })
       .then(mongoose => {
-        console.log('✅ MongoDB Connected');
         return mongoose;
       })
       .catch(err => {

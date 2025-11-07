@@ -21,6 +21,7 @@ const CategoryItem = ({
   <div className="text-center group">
     <Link
       href={`/shop/${slug}`}
+      prefetch={true}
       className="inline-block"
       aria-label={`Explore ${slug} collection`}
     >
@@ -45,6 +46,7 @@ const ViewAllItem = ({ categories }: { categories: PublicCategory[] }) => (
   <div className="text-center group">
     <Link
       href="/categories"
+      prefetch={true}
       className=" w-32 h-32 md:w-44 md:h-44 lg:w-52 lg:h-52 rounded-full border-2 border-border border-dashed group-hover:border-primary group-hover:border-solid transition-all duration-300 flex items-center justify-center text-center bg-background/70"
       aria-label="View all jewellery categories"
     >

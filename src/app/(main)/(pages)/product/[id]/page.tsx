@@ -22,7 +22,6 @@ type ApiProduct = {
   price?: number | null;
   discountPrice?: number | null;
   images?: string[];
-  thumbnail?: string;
   brand?: string;
   material?: string;
   weight?: number | string;
@@ -49,6 +48,11 @@ function mapApiToUiProduct(api: ApiProduct): UiProduct {
       ? api.discountPrice
       : api.price ?? 0;
   const originalPrice = api.price ?? null;
+  const fallbackImage = '/favicon.ico';
+  const productImages =
+    Array.isArray(api.images) && api.images.length > 0
+      ? api.images
+      : [fallbackImage];
 
   return {
     id: String(api.sku || api._id || api.slug),
@@ -57,13 +61,8 @@ function mapApiToUiProduct(api: ApiProduct): UiProduct {
     price,
     originalPrice,
     currency: 'INR',
-    images:
-      Array.isArray(api.images) && api.images.length > 0
-        ? api.images
-        : api.thumbnail
-        ? [api.thumbnail]
-        : [],
-    hoverImage: api.thumbnail || undefined,
+    images: productImages,
+    hoverImage: productImages[1],
     category,
     subcategory: undefined,
     brand: api.brand || '',

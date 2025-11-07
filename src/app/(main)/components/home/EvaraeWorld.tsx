@@ -1,5 +1,6 @@
 import Image, { StaticImageData } from 'next/image';
 import Link from 'next/link';
+import { memo } from 'react';
 import { worldOne, worldThree, worldTwo } from '@/app/(main)/assets/Home/World';
 const categories = [
   {
@@ -23,7 +24,7 @@ const categories = [
   },
 ];
 
-const CategoryCard = ({
+const CategoryCard = memo(({
   href,
   src,
   alt,
@@ -38,6 +39,7 @@ const CategoryCard = ({
 }) => (
   <Link
     href={href}
+    prefetch={true}
     className="relative block overflow-hidden rounded-lg group cursor-pointer"
     aria-label={`Explore ${label} collection`}
   >
@@ -47,6 +49,7 @@ const CategoryCard = ({
       className="w-full h-full object-cover transition-transform duration-500 ease-in-out group-hover:scale-105"
       quality={90}
       sizes={isLarge ? '100vw' : '(max-width: 768px) 100vw, 50vw'}
+      loading="lazy"
     />
     <div
       className="absolute bottom-0 left-0 w-full h-1/4"
@@ -64,9 +67,10 @@ const CategoryCard = ({
       </div>
     </div>
   </Link>
-);
+));
+CategoryCard.displayName = 'CategoryCard';
 
-export default function CaelviWorld() {
+const CaelviWorld = memo(function CaelviWorld() {
   return (
     <section className="mt-20">
       <div className="heading-component-main-container">
@@ -87,4 +91,8 @@ export default function CaelviWorld() {
       </div>
     </section>
   );
-}
+});
+
+CaelviWorld.displayName = 'CaelviWorld';
+
+export default CaelviWorld;

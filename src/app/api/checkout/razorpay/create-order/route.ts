@@ -45,20 +45,18 @@ function getUid(request: Request): string | null {
   }
 }
 
-interface PopulatedProductForOrder {
+interface PopulatedProductLite {
   _id: string;
   name: string;
-  slug?: string;
+  slug: string;
   sku?: string;
   price?: number;
   discountPrice?: number | null;
   images?: string[];
-  thumbnail?: string | null;
-  originalPrice?: number | null;
 }
 
 type PopulatedCartItem = CartLean['items'][number] & {
-  product: PopulatedProductForOrder | null | undefined;
+  product: PopulatedProductLite | null | undefined;
 };
 
 type PopulatedCart = Omit<CartLean, 'items'> & { items: PopulatedCartItem[] };
@@ -150,7 +148,6 @@ export async function POST(request: Request) {
       quantity: ci.quantity || 1,
       image:
         (ci.product?.images && ci.product.images[0]) ||
-        ci.product?.thumbnail ||
         null,
       selectedColor: ci.selectedColor ?? null,
       selectedSize: ci.selectedSize ?? null,
@@ -247,7 +244,16 @@ export async function POST(request: Request) {
         key_secret: RAZORPAY_KEY_SECRET,
       });
 
-      const razorpayOrder = await razorpayInstance.orders.create({
+      const razorpayLineItems = items.map(item => ({
+        name: item.name || 'Unknown item',
+        description: item.slug || '',
+        amount: Math.round(100 * item.price),
+        currency: 'INR',
+        quantity: item.quantity,
+        image: item.image || '',
+      }));
+
+      const razorpayOrder = (await razorpayInstance.orders.create({
         amount: amountPaise,
         currency: 'INR',
         receipt: `order_${order._id}`,
@@ -255,7 +261,9 @@ export async function POST(request: Request) {
           orderId: order._id.toString(),
           userId: uid,
         },
-      });
+        // @ts-expect-error - Razorpay API accepts this format despite stricter TypeScript types
+        line_items: razorpayLineItems,
+      })) as unknown as { id: string };
 
       // Update order with Razorpay order ID
       await Order.findByIdAndUpdate(order._id, {

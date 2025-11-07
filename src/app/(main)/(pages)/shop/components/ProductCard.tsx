@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { Heart } from '@/app/(main)/assets/Navbar';
 import { Product } from '@/lib/types/product';
 import Image from 'next/image';
@@ -7,13 +7,13 @@ import { GiCrystalShine } from 'react-icons/gi';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Cart } from '@/app/(main)/assets/Common';
 import Link from 'next/link';
-import ProductOptionsModal from '@/app/(main)/components/ui/ProductOptionsModal';
+import { LazyProductOptionsModal } from '@/app/(main)/components/ui/LazyProductOptionsModal';
 
 interface ProductCardProps {
   product: Product;
 }
 
-export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+export const ProductCard: React.FC<ProductCardProps> = React.memo(({ product }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -21,24 +21,40 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   useEffect(() => {
     const checkScreen = () => setIsMobile(window.innerWidth < 1024); // lg breakpoint
     checkScreen();
-    window.addEventListener('resize', checkScreen);
-    return () => window.removeEventListener('resize', checkScreen);
+    
+    // Debounce resize listener for better performance
+    let timeoutId: NodeJS.Timeout;
+    const handleResize = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(checkScreen, 150);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      clearTimeout(timeoutId);
+    };
   }, []);
 
-  const variants = {
+  const variants = useMemo(() => ({
     initial: { opacity: 0 },
     animate: { opacity: 1 },
     exit: { opacity: 0 },
-  };
+  }), []);
 
-  const handleAddToCart = (e: React.MouseEvent) => {
+  const handleAddToCart = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setIsModalOpen(true);
-  };
+  }, []);
+
+  const imageSrc = useMemo(() => 
+    isHovered && product.hoverImage ? product.hoverImage : product.images[0],
+    [isHovered, product.hoverImage, product.images]
+  );
 
   return (
-    <Link href={`/product/${product.id}`} className="block h-full">
+    <Link href={`/product/${product.id}`} className="block h-full" prefetch={true}>
       <div
         className="relative w-full h-full rounded-lg overflow-hidden cursor-pointer border border-primary/10 flex flex-col group"
         onMouseEnter={() => !isMobile && setIsHovered(true)}
@@ -57,11 +73,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                 className="w-full h-full"
               >
                 <Image
-                  src={
-                    isHovered && product.hoverImage
-                      ? product.hoverImage
-                      : product.images[0]
-                  }
+                  src={imageSrc}
                   alt={product.name}
                   className="w-full h-full object-cover aspect-square rounded-t-lg"
                   fill
@@ -158,12 +170,23 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         </div>
       </div>
       
-      {/* Product Options Modal */}
-      <ProductOptionsModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        product={product}
-      />
+      {/* Product Options Modal - Lazy loaded */}
+      {isModalOpen && (
+        <LazyProductOptionsModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          product={product}
+        />
+      )}
     </Link>
   );
-};
+}, (prevProps, nextProps) => {
+  // Custom comparison function for React.memo
+  return (
+    prevProps.product.id === nextProps.product.id &&
+    prevProps.product.price === nextProps.product.price &&
+    prevProps.product.images?.[0] === nextProps.product.images?.[0]
+  );
+});
+
+ProductCard.displayName = 'ProductCard';

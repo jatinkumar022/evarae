@@ -13,8 +13,11 @@ const NavigationMenu = () => {
 
   const { categories, status, fetchCategories } = usePublicCategoryStore();
 
+  // Only fetch if needed - store handles smart caching
   useEffect(() => {
-    if (status === 'idle') fetchCategories();
+    if (status === 'idle') {
+      fetchCategories(); // Will skip if data is fresh
+    }
   }, [status, fetchCategories]);
 
   const topCategories = categories.slice(0, 7);
@@ -39,6 +42,7 @@ const NavigationMenu = () => {
               >
                 <Link
                   href={`/shop/${item.slug}`}
+                  prefetch={true}
                   onMouseEnter={() => setActive(item.name)}
                   className={`relative text-[15px] transition-colors ${
                     active === item.name
@@ -61,6 +65,7 @@ const NavigationMenu = () => {
           <div className="relative flex h-full items-center">
             <Link
               href="/categories"
+              prefetch={true}
               onMouseEnter={() => setActive('All Categories')}
               className={`relative text-[15px] transition-colors ${
                 active === 'All Categories'

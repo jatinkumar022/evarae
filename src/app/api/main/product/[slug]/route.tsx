@@ -1,6 +1,8 @@
-import { NextResponse } from 'next/server';
 import { connect } from '@/dbConfig/dbConfig';
 import Product from '@/models/productModel';
+import { getCache, setCache, getCacheKey, CACHE_TTL } from '@/lib/cache/redis';
+import { createCachedResponse, createErrorResponse } from '@/lib/api/response';
+import { cache } from 'react';
 
 type RouteContext = { params: Promise<{ slug: string }> };
 
@@ -10,7 +12,6 @@ type PublicProduct = {
   slug: string;
   description?: string;
   images?: string[];
-  thumbnail?: string | null;
   price?: number;
   discountPrice?: number | null;
   status?: string;
@@ -25,42 +26,53 @@ type PublicProduct = {
   categories?: Array<{ name: string; slug: string }>;
 };
 
+const getCachedProduct = cache(async (query: Record<string, unknown>) => {
+  await connect();
+  return Product.findOne({ ...query, status: 'active' })
+    .select('name slug description images price discountPrice status tags material colors stockQuantity video metaTitle metaDescription sku -__v')
+    .populate('categories', 'name slug -__v')
+    .lean<PublicProduct | null>();
+});
+
+export const runtime = 'nodejs';
+
 export async function GET(request: Request, { params }: RouteContext) {
   try {
-    await connect();
-
     const { slug } = await params;
     const isObjectId = /^[a-f0-9]{24}$/i.test(slug);
+    
+    const cacheKey = getCacheKey('product', slug);
+    const cached = await getCache<{ product: PublicProduct }>(cacheKey);
+    
+    if (cached) {
+      return createCachedResponse(cached, {
+        maxAge: CACHE_TTL.MEDIUM,
+        staleWhileRevalidate: CACHE_TTL.LONG,
+      });
+    }
 
-    // Try find by sku first, then by _id or slug
+    await connect();
+    
     const baseQuery: Record<string, unknown> = { status: 'active' };
-    let product = await Product.findOne({ ...baseQuery, sku: slug })
-      .select(
-        'name slug description images thumbnail price discountPrice status tags material colors stockQuantity video metaTitle metaDescription sku'
-      )
-      .populate('categories', 'name slug')
-      .lean<PublicProduct | null>();
+    let product = await getCachedProduct({ ...baseQuery, sku: slug });
 
     if (!product) {
       const which = isObjectId ? { _id: slug } : { slug };
-      product = await Product.findOne({ ...which, status: 'active' })
-        .select(
-          'name slug description images thumbnail price discountPrice status tags material colors stockQuantity video metaTitle metaDescription sku'
-        )
-        .populate('categories', 'name slug')
-        .lean<PublicProduct | null>();
+      product = await getCachedProduct(which);
     }
 
     if (!product) {
-      return NextResponse.json({ error: 'Product not found' }, { status: 404 });
+      return createErrorResponse('Product not found', 404);
     }
 
-    return NextResponse.json({ product });
-  } catch (error) {
-    console.error('Public product GET error:', error);
-    return NextResponse.json(
-      { error: 'Product not found or unavailable' },
-      { status: 500 }
-    );
+    const response = { product };
+    await setCache(cacheKey, response, CACHE_TTL.MEDIUM);
+    
+    return createCachedResponse(response, {
+      maxAge: CACHE_TTL.MEDIUM,
+      staleWhileRevalidate: CACHE_TTL.LONG,
+    });
+  } catch {
+    return createErrorResponse('Product not found or unavailable', 500);
   }
 }

@@ -1,46 +1,48 @@
-import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { connect } from '@/dbConfig/dbConfig';
 import User from '@/models/userModel';
+import { createErrorResponse, createNoCacheResponse } from '@/lib/api/response';
 
 const USER_JWT_SECRET = process.env.USER_JWT_SECRET as string;
 const SESSION_HOURS = Number(process.env.SESSION_HOURS || 72);
 
+export const runtime = 'nodejs';
+
 export async function POST(request: Request) {
   try {
     if (!USER_JWT_SECRET) {
-      return NextResponse.json({ error: 'Config error' }, { status: 500 });
+      return createErrorResponse('Config error', 500);
     }
 
     await connect();
-    const { email, otp } = await request.json();
-    if (
-      !email ||
-      typeof email !== 'string' ||
-      !otp ||
-      typeof otp !== 'string'
-    ) {
-      return NextResponse.json(
-        { error: 'Email and OTP are required' },
-        { status: 400 }
-      );
+    const body = (await request.json().catch(() => ({}))) as {
+      email?: unknown;
+      otp?: unknown;
+    };
+    const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
+    const otp = typeof body.otp === 'string' ? body.otp.trim() : '';
+
+    if (!email || !otp) {
+      return createErrorResponse('Email and OTP are required', 400);
     }
 
-    const user = await User.findOne({ email: email.toLowerCase() });
+    const user = await User.findOne({ email })
+      .select(
+        'name email loginOtpHash loginOtpExpiry loginOtpAttempts passwordHash'
+      )
+      .exec();
+
     if (!user || !user.loginOtpHash || !user.loginOtpExpiry) {
-      return NextResponse.json({ error: 'Invalid OTP' }, { status: 400 });
+      return createErrorResponse('Invalid OTP', 400);
     }
 
     if (new Date() > new Date(user.loginOtpExpiry)) {
-      return NextResponse.json({ error: 'OTP expired' }, { status: 400 });
+      return createErrorResponse('OTP expired', 400);
     }
 
-    if (user.loginOtpAttempts >= 5) {
-      return NextResponse.json(
-        { error: 'Too many attempts. Request a new OTP.' },
-        { status: 429 }
-      );
+    if ((user.loginOtpAttempts || 0) >= 5) {
+      return createErrorResponse('Too many attempts. Request a new OTP.', 429);
     }
 
     const valid = await bcrypt.compare(otp, user.loginOtpHash);
@@ -48,37 +50,34 @@ export async function POST(request: Request) {
 
     if (!valid) {
       await user.save();
-      return NextResponse.json({ error: 'Invalid OTP' }, { status: 400 });
+      return createErrorResponse('Invalid OTP', 400);
     }
 
-    user.loginOtpHash = undefined as unknown as string;
-    user.loginOtpExpiry = undefined as unknown as Date;
-    user.loginOtpAttempts = 0 as unknown as number;
+    user.loginOtpHash = null;
+    user.loginOtpExpiry = null;
+    user.loginOtpAttempts = 0;
     await user.save();
 
     const token = jwt.sign({ uid: user._id, role: 'user' }, USER_JWT_SECRET, {
       expiresIn: `${SESSION_HOURS}h`,
     });
 
-    const res = NextResponse.json({
+    const response = createNoCacheResponse({
       ok: true,
       user: { id: user._id, name: user.name, email: user.email },
     });
-    res.cookies.set('token', token, {
+
+    response.cookies.set('token', token, {
       httpOnly: true,
       sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-      secure: process.env.NODE_ENV === 'production' ? true : false,
-
+      secure: process.env.NODE_ENV === 'production',
       path: '/',
       maxAge: SESSION_HOURS * 60 * 60,
     });
 
-    return res;
+    return response;
   } catch (error) {
     console.error('[auth/login/verify-otp] Error:', error);
-    return NextResponse.json(
-      { error: 'Unable to verify OTP. Please try again' },
-      { status: 500 }
-    );
+    return createErrorResponse('Unable to verify OTP. Please try again', 500);
   }
 }

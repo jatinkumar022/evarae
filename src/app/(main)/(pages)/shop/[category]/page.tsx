@@ -1,22 +1,37 @@
 'use client';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 import Container from '@/app/(main)/components/layouts/Container';
-import ProductFilters from '@/app/(main)/components/filters/ProductFilters';
-import DailywearCardsAd from '@/app/(main)/components/ads/DailywearCardsAd';
 import {
   FilterOptions,
   SortOption,
   Product as UiProduct,
 } from '@/lib/types/product';
-import BannerImage from '../components/Banner';
 import { ad } from '@/app/(main)/assets/Shop-list';
-import { ProductCard } from '../components/ProductCard';
 import Image from 'next/image';
 import { useParams } from 'next/navigation';
 import { usePublicCategoryStore } from '@/lib/data/mainStore/categoryStore';
 import { List, NoItems } from '@/app/(main)/assets/Common';
+
+// Lazy load heavy components
+const ProductFilters = dynamic(
+  () => import('@/app/(main)/components/filters/ProductFilters'),
+  { ssr: true }
+);
+const DailywearCardsAd = dynamic(
+  () => import('@/app/(main)/components/ads/DailywearCardsAd'),
+  { ssr: false }
+);
+const BannerImage = dynamic(
+  () => import('../components/Banner'),
+  { ssr: true }
+);
+const ProductCard = dynamic(
+  () => import('../components/ProductCard').then(mod => ({ default: mod.ProductCard })),
+  { ssr: true }
+);
 
 export default function ShopCategoryPage() {
   const params = useParams();
@@ -42,15 +57,12 @@ export default function ShopCategoryPage() {
       name: string;
       slug: string;
       images?: string[];
-      thumbnail?: string;
       price?: number;
       discountPrice?: number;
     }>;
 
     return apiProducts.map(p => {
-      const mainImage =
-        p.thumbnail || (p.images && p.images[0]) || '/favicon.ico';
-      const hoverImage = p.images && p.images[1] ? p.images[1] : undefined;
+      const productImages = p.images && p.images.length > 0 ? p.images : ['/favicon.ico'];
       const hasDiscount =
         p.discountPrice != null && p.price != null && p.discountPrice < p.price;
       return {
@@ -60,8 +72,8 @@ export default function ShopCategoryPage() {
         price: hasDiscount ? p.discountPrice! : p.price ?? null,
         originalPrice: hasDiscount ? p.price! : null,
         currency: 'INR',
-        images: [mainImage],
-        hoverImage,
+        images: productImages,
+        hoverImage: productImages[1],
         category: {
           id: currentCategory?._id || currentCategory?.slug || '',
           name: currentCategory?.name || '',
@@ -122,11 +134,20 @@ export default function ShopCategoryPage() {
       }
     }
     updateColumns();
-    window.addEventListener('resize', updateColumns);
-    return () => window.removeEventListener('resize', updateColumns);
+    // Debounce resize handler
+    let timeoutId: NodeJS.Timeout;
+    const debouncedUpdate = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(updateColumns, 150);
+    };
+    window.addEventListener('resize', debouncedUpdate);
+    return () => {
+      window.removeEventListener('resize', debouncedUpdate);
+      clearTimeout(timeoutId);
+    };
   }, []);
 
-  const filterOptions: FilterOptions = {
+  const filterOptions: FilterOptions = useMemo(() => ({
     priceRanges: [
       { value: 'under-1k', label: 'Under ₹1,000' },
       { value: '1k-2k', label: '₹1,000 - ₹2,000' },
@@ -156,24 +177,24 @@ export default function ShopCategoryPage() {
       'Kadas',
       'Jhumkas',
     ],
-  };
+  }), []);
 
-  const sortOptions: SortOption[] = [
+  const sortOptions: SortOption[] = useMemo(() => [
     { value: 'best-matches', label: 'Best Matches' },
     { value: 'price-low-high', label: 'Price: Low to High' },
     { value: 'price-high-low', label: 'Price: High to Low' },
     { value: 'newest', label: 'Newest First' },
     { value: 'rating', label: 'Highest Rated' },
-  ];
+  ], []);
 
-  const handleLoadMore = () => {
+  const handleLoadMore = useCallback(() => {
     setVisibleProducts(prev => prev + 10);
-  };
+  }, []);
 
   const displayedProducts = filteredProducts.slice(0, visibleProducts);
   const hasMoreProducts = visibleProducts < filteredProducts.length;
 
-  const renderProductsWithAds = () => {
+  const renderProductsWithAds = useMemo(() => {
     const products = displayedProducts;
     const totalItems = products.length;
     const isLargeScreen = columns >= 3;
@@ -219,7 +240,13 @@ export default function ShopCategoryPage() {
             key="ad-2"
             className="col-span-2 flex items-center justify-center h-full border border-primary/20 p-5 rounded-md"
           >
-            <Image src={ad} alt="" className="lg:h-auto rounded-xl" />
+            <Image 
+              src={ad} 
+              alt="" 
+              className="lg:h-auto rounded-xl"
+              loading="lazy"
+              sizes="(max-width: 1024px) 50vw, 33vw"
+            />
           </div>
         );
         insertedAd2 = true;
@@ -239,7 +266,7 @@ export default function ShopCategoryPage() {
     }
 
     return items;
-  };
+  }, [displayedProducts, columns]);
 
   const headerTitle =
     currentCategory?.name ||
@@ -308,7 +335,7 @@ export default function ShopCategoryPage() {
           onFiltersChange={setFilteredProducts}
         >
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6 items-center">
-            {renderProductsWithAds()}
+            {renderProductsWithAds}
           </div>
 
           {hasMoreProducts && (

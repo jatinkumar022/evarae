@@ -63,6 +63,7 @@ const NavLink = ({
 }) => (
   <Link
     href={href}
+    prefetch={true}
     className="rounded-md px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100/80 hover:text-primary cursor-pointer"
   >
     <div className="flex items-center gap-2">
@@ -145,10 +146,19 @@ const clearSearchHistory = (): void => {
 
 export default function Navbar() {
   const { items, load } = useCartStore();
-  const { categories, status } = usePublicCategoryStore();
+  const { categories, status, fetchCategories } = usePublicCategoryStore();
+  
+  // Only fetch cart and categories if they're not already loaded or stale
+  // The stores now handle smart caching internally
   useEffect(() => {
-    load();
+    load(); // Will skip if data is fresh
   }, [load]);
+  
+  useEffect(() => {
+    if (status === 'idle') {
+      fetchCategories(); // Will skip if data is fresh
+    }
+  }, [status, fetchCategories]);
 
   const placeholders = [
     'Search Gold Jewellery',
@@ -346,13 +356,17 @@ export default function Navbar() {
     }
   };
 
-  const miniCartItems = items.map(i => ({
-    id: String(i?.product?._id || i?.product?.id),
-    name: i?.product?.name,
-    price: i?.product?.discountPrice ?? i?.product?.price ?? 0,
-    quantity: i?.quantity || 1,
-    image: (i?.product?.images && i.product.images[0]) || i?.product?.thumbnail,
-  }));
+  const miniCartItems = items.map(i => {
+    const imageSrc =
+      (i?.product?.images && (i.product.images[0] as string)) || '/favicon.ico';
+    return {
+      id: String(i?.product?._id || i?.product?.id),
+      name: i?.product?.name,
+      price: i?.product?.discountPrice ?? i?.product?.price ?? 0,
+      quantity: i?.quantity || 1,
+      image: imageSrc,
+    };
+  });
   const subtotal = miniCartItems.reduce(
     (sum: number, item) => sum + item.price * item.quantity,
     0
@@ -492,7 +506,7 @@ export default function Navbar() {
                 />
               </div>
               <div className="lg:hidden">
-                <Link href="/" className="cursor-pointer">
+                <Link href="/" prefetch={true} className="cursor-pointer">
                   <h1
                     className={`${philosopher.className} text-lg   text-primary `}
                   >
@@ -521,7 +535,7 @@ export default function Navbar() {
             </div>
 
             {/* Centered Logo (Desktop-only) */}
-            <Link href="/" className="hidden lg:block cursor-pointer">
+            <Link href="/" prefetch={true} className="hidden lg:block cursor-pointer">
               <h1
                 className={`${philosopher.className} text-3xl   text-primary `}
               >
@@ -631,14 +645,15 @@ export default function Navbar() {
                             {activeSubmenu === item.key && (
                               <div className="bg-gray-50 border-l-2 border-[#d56a90]/30">
                                 {item.submenu.map((subItem, index) => (
-                                  <a
+                                  <Link
                                     key={index}
                                     href={subItem.href}
+                                    prefetch={true}
                                     className="flex items-center gap-3 px-8 py-2.5 text-sm text-gray-600 hover:text-[#d56a90] hover:bg-[#d56a90]/5 transition-colors duration-200"
                                   >
                                     <subItem.icon className="w-4 h-4" />
                                     {subItem.label}
-                                  </a>
+                                  </Link>
                                 ))}
                               </div>
                             )}
@@ -652,14 +667,15 @@ export default function Navbar() {
                       {/* Quick Actions */}
                       <div className="py-2">
                         {quickActions.map((action, index) => (
-                          <a
+                          <Link
                             key={index}
                             href={action.href}
+                            prefetch={true}
                             className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#d56a90] transition-colors duration-200"
                           >
                             <action.icon className="w-5 h-5 text-gray-500" />
                             <span className="font-medium">{action.label}</span>
-                          </a>
+                          </Link>
                         ))}
                       </div>
 
@@ -1044,15 +1060,17 @@ export default function Navbar() {
                             >
                               <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-md bg-gray-100">
                                 <Image
-                                  src={String(
+                                  src={
                                     (i?.product?.images &&
-                                      (i.product.images[0] as string)) ??
-                                      i?.product?.thumbnail
-                                  )}
+                                      (i.product.images[0] as string)) ||
+                                    '/favicon.ico'
+                                  }
                                   alt={i?.product?.name || 'Product'}
                                   className="h-full w-full object-cover"
                                   width={56}
                                   height={56}
+                                  sizes="56px"
+                                  loading="lazy"
                                 />
                               </div>
                               <div className="min-w-0 flex-1">
@@ -1084,12 +1102,14 @@ export default function Navbar() {
                             <div className="mt-3 flex gap-2">
                               <Link
                                 href="/cart"
+                                prefetch={true}
                                 className="flex-1 rounded-md border border-gray-200 px-3 py-2 text-center text-sm text-gray-700 transition-colors hover:bg-gray-100 hover:text-gray-900"
                               >
                                 View Cart
                               </Link>
                               <Link
                                 href="/checkout"
+                                prefetch={true}
                                 className="flex-1 rounded-md bg-primary px-3 py-2 text-center text-sm text-white transition-colors hover:bg-primary/90"
                               >
                                 Checkout
@@ -1225,6 +1245,7 @@ export default function Navbar() {
                             <Link
                               href={`/shop/${cat.slug}`}
                               key={cat._id || cat.slug}
+                              prefetch={true}
                               onClick={() => setIsSearchOpen(false)}
                               className="group block"
                             >
@@ -1235,7 +1256,9 @@ export default function Navbar() {
                                     alt={cat.name}
                                     width={200}
                                     height={200}
+                                    sizes="(max-width: 1024px) 150px, 200px"
                                     className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                    loading="lazy"
                                   />
                                 ) : (
                                   <div className="h-full w-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">

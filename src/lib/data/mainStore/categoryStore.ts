@@ -16,7 +16,7 @@ export interface PublicCategoryWithProducts extends PublicCategory {
     _id?: string;
     name: string;
     slug: string;
-    thumbnail?: string;
+    image?: string;
     price: number;
     discountPrice?: number;
   }>;
@@ -29,9 +29,12 @@ interface PublicCategoryState {
   currentCategory: PublicCategoryWithProducts | null;
   status: Status;
   error: string | null;
+  // Cache management
+  lastFetched: number | null; // Timestamp of last successful fetch
+  cacheMaxAge: number; // Cache max age in milliseconds (10 minutes)
 
-  fetchCategories: () => Promise<void>;
-  fetchCategory: (slugOrId: string, includeProducts?: boolean) => Promise<void>;
+  fetchCategories: (force?: boolean) => Promise<void>;
+  fetchCategory: (slugOrId: string, includeProducts?: boolean, force?: boolean) => Promise<void>;
   clearError: () => void;
   reset: () => void;
 }
@@ -41,14 +44,33 @@ export const usePublicCategoryStore = create<PublicCategoryState>(set => ({
   currentCategory: null,
   status: 'idle',
   error: null,
+  lastFetched: null,
+  cacheMaxAge: 10 * 60 * 1000, // 10 minutes (categories change less frequently)
 
-  fetchCategories: async () => {
+  fetchCategories: async (force = false) => {
+    const state = usePublicCategoryStore.getState();
+    
+    // Check if we need to fetch (force, no data, or stale cache)
+    const now = Date.now();
+    const isStale = state.lastFetched 
+      ? (now - state.lastFetched) > state.cacheMaxAge 
+      : true;
+    const hasData = state.categories.length > 0;
+    
+    // Skip fetch if we have fresh data and not forcing
+    if (!force && hasData && !isStale && state.status === 'success') {
+      return;
+    }
+    
     set({ status: 'loading', error: null });
     try {
-      const res = await fetch('/api/main/categories', { cache: 'no-store' });
+      const res = await fetch('/api/main/categories', { 
+        cache: 'force-cache',
+        next: { revalidate: 600 } // Revalidate every 10 minutes
+      });
       if (!res.ok) throw new Error('Failed to fetch categories');
       const data: { categories: PublicCategory[] } = await res.json();
-      set({ categories: data.categories, status: 'success' });
+      set({ categories: data.categories, status: 'success', lastFetched: Date.now() });
     } catch (e: unknown) {
       set({
         status: 'error',
@@ -57,14 +79,26 @@ export const usePublicCategoryStore = create<PublicCategoryState>(set => ({
     }
   },
 
-  fetchCategory: async (slugOrId, includeProducts = false) => {
+  fetchCategory: async (slugOrId, includeProducts = false, force = false) => {
+    const state = usePublicCategoryStore.getState();
+    
+    // For category pages, always fetch if different category or forcing
+    const isDifferentCategory = state.currentCategory?.slug !== slugOrId;
+    
+    if (!force && !isDifferentCategory && state.status === 'success') {
+      return;
+    }
+    
     set({ status: 'loading', error: null });
     try {
       const res = await fetch(
         `/api/main/categories/${slugOrId}?includeProducts=${
           includeProducts ? 'true' : 'false'
         }`,
-        { cache: 'no-store' }
+        { 
+          cache: 'force-cache',
+          next: { revalidate: 300 } // Revalidate every 5 minutes
+        }
       );
       if (!res.ok) throw new Error('Failed to fetch category');
       const data: {
@@ -75,7 +109,7 @@ export const usePublicCategoryStore = create<PublicCategoryState>(set => ({
         ...data.category,
         products: data.products,
       };
-      set({ currentCategory: merged, status: 'success' });
+      set({ currentCategory: merged, status: 'success', lastFetched: Date.now() });
     } catch (e: unknown) {
       set({
         status: 'error',

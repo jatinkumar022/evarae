@@ -39,13 +39,13 @@ export default function OrdersPage() {
   // Initialize filters once
   useEffect(() => {
     if (filters.limit !== 10) setFilters({ limit: 10 });
-  }, []);
+  }, [filters.limit, setFilters]);
 
   // Debounced fetch orders
   useEffect(() => {
     const timer = setTimeout(() => fetchOrders(), 150);
     return () => clearTimeout(timer);
-  }, [filters.search, filters.orderStatus, filters.paymentStatus, filters.paymentMethod, filters.sortBy, filters.sortOrder, filters.page, filters.dateFrom, filters.dateTo]);
+  }, [filters.search, filters.orderStatus, filters.paymentStatus, filters.paymentMethod, filters.sortBy, filters.sortOrder, filters.page, filters.dateFrom, filters.dateTo, fetchOrders]);
 
   // Calculate dropdown position based on button position
   const calculateDropdownPosition = (buttonElement: HTMLButtonElement) => {

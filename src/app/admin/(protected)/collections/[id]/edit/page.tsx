@@ -18,6 +18,7 @@ import { useCollectionStore } from '@/lib/data/store/collectionStore';
 import { useUploadStore } from '@/lib/data/store/uploadStore';
 import { toastApi } from '@/lib/toast';
 import InlineSpinner from '@/app/admin/components/InlineSpinner';
+import UploadProgressModal from '@/app/admin/components/UploadProgressModal';
 
 // Zod schema for collection form validation
 const collectionFormSchema = z.object({
@@ -356,31 +357,26 @@ export default function EditCollectionPage() {
                   )}
 
                   {watch('image') && (
-                    <>
-                      <div className="relative group w-32 h-32 mx-auto">
-                        <Image
-                          src={watch('image')}
-                          alt="Collection preview"
-                          fill
-                          className="object-cover rounded-lg border border-gray-200 dark:border-[#2a2a2a]"
-                          loading="lazy"
-                          placeholder="blur"
-                          blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWEREiMxUf/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
-                        />
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setValue('image', '', { shouldValidate: true })
-                          }
-                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </div>
-                      <p className="text-xs text-gray-600 dark:text-gray-400 break-all text-center">
-                        {watch('image')}
-                      </p>
-                    </>
+                    <div className="relative group w-32 h-32 mx-auto">
+                      <Image
+                        src={watch('image')}
+                        alt="Collection preview"
+                        fill
+                        className="object-cover rounded-lg border border-gray-200 dark:border-[#2a2a2a]"
+                        loading="lazy"
+                        placeholder="blur"
+                        blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWEREiMxUf/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
+                      />
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setValue('image', '', { shouldValidate: true })
+                        }
+                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>
@@ -429,6 +425,7 @@ export default function EditCollectionPage() {
           </div>
         </form>
       </div>
+      <UploadProgressModal />
     </div>
   );
 }

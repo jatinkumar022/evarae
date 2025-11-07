@@ -1,47 +1,50 @@
-import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { connect } from '@/dbConfig/dbConfig';
 import PendingSignup from '@/models/pendingSignupModel';
+import { createErrorResponse, createNoCacheResponse } from '@/lib/api/response';
 
 const SIGNUP_JWT_SECRET = process.env.SIGNUP_JWT_SECRET as string;
+
+export const runtime = 'nodejs';
 
 export async function POST(request: Request) {
   try {
     if (!SIGNUP_JWT_SECRET) {
-      return NextResponse.json({ error: 'Config error' }, { status: 500 });
+      return createErrorResponse('Config error', 500);
     }
 
     await connect();
-    const { email, otp } = await request.json();
-    if (
-      !email ||
-      typeof email !== 'string' ||
-      !otp ||
-      typeof otp !== 'string'
-    ) {
-      return NextResponse.json(
-        { error: 'Email and OTP are required' },
-        { status: 400 }
-      );
+    const body = (await request.json().catch(() => ({}))) as {
+      email?: unknown;
+      otp?: unknown;
+    };
+    const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
+    const otp = typeof body.otp === 'string' ? body.otp.trim() : '';
+
+    if (!email || !otp) {
+      return createErrorResponse('Email and OTP are required', 400);
     }
 
-    const pending = await PendingSignup.findOne({ email: email.toLowerCase() });
+    const pending = await PendingSignup.findOne({ email })
+      .select('otpHash otpExpiry attempts email')
+      .exec();
+
     if (!pending || !pending.otpHash || !pending.otpExpiry) {
-      return NextResponse.json({ error: 'Invalid OTP' }, { status: 400 });
+      return createErrorResponse('Invalid OTP', 400);
     }
     if (new Date() > new Date(pending.otpExpiry)) {
-      return NextResponse.json({ error: 'OTP expired' }, { status: 400 });
+      return createErrorResponse('OTP expired', 400);
     }
-    if (pending.attempts >= 5) {
-      return NextResponse.json({ error: 'Too many attempts' }, { status: 429 });
+    if ((pending.attempts || 0) >= 5) {
+      return createErrorResponse('Too many attempts', 429);
     }
 
     const valid = await bcrypt.compare(otp, pending.otpHash);
     pending.attempts = (pending.attempts || 0) + 1;
     if (!valid) {
       await pending.save();
-      return NextResponse.json({ error: 'Invalid OTP' }, { status: 400 });
+      return createErrorResponse('Invalid OTP', 400);
     }
 
     // Issue short signup token for completing profile
@@ -49,20 +52,17 @@ export async function POST(request: Request) {
       expiresIn: '30m',
     });
 
-    const res = NextResponse.json({ ok: true });
-    res.cookies.set('signupToken', signupToken, {
+    const response = createNoCacheResponse({ ok: true });
+    response.cookies.set('signupToken', signupToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       path: '/',
       maxAge: 30 * 60,
     });
-    return res;
+    return response;
   } catch (error) {
     console.error('[auth/signup/verify-otp] Error:', error);
-    return NextResponse.json(
-      { error: 'Unable to verify OTP. Please try again' },
-      { status: 500 }
-    );
+    return createErrorResponse('Unable to verify OTP. Please try again', 500);
   }
 }
