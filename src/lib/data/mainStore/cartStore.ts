@@ -25,8 +25,17 @@ interface CartState {
   savedItems: SavedItem[];
   status: 'idle' | 'loading' | 'success' | 'error';
   error: string | null;
+  // Per-operation loading states for inline loaders
+  isAdding: boolean;
+  isUpdating: string | null; // productId that's being updated
+  isRemoving: string | null; // productId that's being removed
+  isSaving: string | null; // productId that's being saved
+  isUnsaving: string | null; // productId that's being unsaved
+  // Cache management
+  lastFetched: number | null; // Timestamp of last successful fetch
+  cacheMaxAge: number; // Cache max age in milliseconds (5 minutes)
 
-  load: () => Promise<void>;
+  load: (force?: boolean) => Promise<void>;
   add: (payload: {
     productId?: string;
     productSlug?: string;
@@ -55,8 +64,29 @@ export const useCartStore = create<CartState>(set => ({
   savedItems: [],
   status: 'idle',
   error: null,
+  isAdding: false,
+  isUpdating: null,
+  isRemoving: null,
+  isSaving: null,
+  isUnsaving: null,
+  lastFetched: null,
+  cacheMaxAge: 5 * 60 * 1000, // 5 minutes
 
-  load: async () => {
+  load: async (force = false) => {
+    const state = useCartStore.getState();
+    
+    // Check if we need to fetch (force, no data, or stale cache)
+    const now = Date.now();
+    const isStale = state.lastFetched 
+      ? (now - state.lastFetched) > state.cacheMaxAge 
+      : true;
+    const hasData = state.items.length > 0 || state.savedItems.length > 0;
+    
+    // Skip fetch if we have fresh data and not forcing
+    if (!force && hasData && !isStale && state.status === 'success') {
+      return;
+    }
+    
     set({ status: 'loading', error: null });
     try {
       const data = await apiFetch<{
@@ -67,6 +97,7 @@ export const useCartStore = create<CartState>(set => ({
         items: data.items || [],
         savedItems: data.savedItems || [],
         status: 'success',
+        lastFetched: Date.now(),
       });
     } catch (e: unknown) {
       const message =
@@ -80,6 +111,7 @@ export const useCartStore = create<CartState>(set => ({
   },
 
   add: async payload => {
+    set({ isAdding: true });
     if (payload.optimisticProduct) {
       set(state => {
         const key = String(
@@ -126,6 +158,8 @@ export const useCartStore = create<CartState>(set => ({
         savedItems: data.savedItems || [],
         status: 'success',
         error: null,
+        isAdding: false,
+        lastFetched: Date.now(),
       });
     } catch (e: unknown) {
       const message =
@@ -134,11 +168,12 @@ export const useCartStore = create<CartState>(set => ({
               (e as { message?: unknown }).message || 'Failed to add to cart'
             )
           : 'Failed to add to cart';
-      set({ status: 'error', error: message });
+      set({ status: 'error', error: message, isAdding: false });
     }
   },
 
   save: async productId => {
+    set({ isSaving: productId });
     try {
       const data = await apiFetch<{
         items: CartItem[];
@@ -152,6 +187,8 @@ export const useCartStore = create<CartState>(set => ({
         savedItems: data.savedItems || [],
         status: 'success',
         error: null,
+        isSaving: null,
+        lastFetched: Date.now(),
       });
     } catch (e: unknown) {
       const message =
@@ -160,11 +197,12 @@ export const useCartStore = create<CartState>(set => ({
               (e as { message?: unknown }).message || 'Failed to save item'
             )
           : 'Failed to save item';
-      set({ status: 'error', error: message });
+      set({ status: 'error', error: message, isSaving: null });
     }
   },
 
   unsave: async productId => {
+    set({ isUnsaving: productId });
     try {
       const data = await apiFetch<{
         items: CartItem[];
@@ -178,6 +216,8 @@ export const useCartStore = create<CartState>(set => ({
         savedItems: data.savedItems || [],
         status: 'success',
         error: null,
+        isUnsaving: null,
+        lastFetched: Date.now(),
       });
     } catch (e: unknown) {
       const message =
@@ -190,11 +230,13 @@ export const useCartStore = create<CartState>(set => ({
       set({
         status: 'error',
         error: message,
+        isUnsaving: null,
       });
     }
   },
 
   update: async (productId, quantity, opts) => {
+    set({ isUpdating: productId });
     try {
       const data = await apiFetch<{
         items: CartItem[];
@@ -208,6 +250,8 @@ export const useCartStore = create<CartState>(set => ({
         savedItems: data.savedItems || [],
         status: 'success',
         error: null,
+        isUpdating: null,
+        lastFetched: Date.now(),
       });
     } catch (e: unknown) {
       const message =
@@ -216,11 +260,12 @@ export const useCartStore = create<CartState>(set => ({
               (e as { message?: unknown }).message || 'Failed to update cart'
             )
           : 'Failed to update cart';
-      set({ status: 'error', error: message });
+      set({ status: 'error', error: message, isUpdating: null });
     }
   },
 
   remove: async (productId, opts) => {
+    set({ isRemoving: productId });
     try {
       const data = await apiFetch<{
         items: CartItem[];
@@ -234,6 +279,8 @@ export const useCartStore = create<CartState>(set => ({
         savedItems: data.savedItems || [],
         status: 'success',
         error: null,
+        isRemoving: null,
+        lastFetched: Date.now(),
       });
     } catch (e: unknown) {
       const message =
@@ -242,7 +289,7 @@ export const useCartStore = create<CartState>(set => ({
               (e as { message?: unknown }).message || 'Failed to remove item'
             )
           : 'Failed to remove item';
-      set({ status: 'error', error: message });
+      set({ status: 'error', error: message, isRemoving: null });
     }
   },
 }));

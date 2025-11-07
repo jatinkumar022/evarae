@@ -1,19 +1,45 @@
 'use client';
 import { useState } from 'react';
+import dynamic from 'next/dynamic';
 import { Product } from '@/lib/types/product';
-import { ProductGallery } from './ProductGallery';
-import { ProductInfo } from './ProductInfo';
-import { ProductTabs } from './ProductTabs';
-import { RelatedProducts } from './RelatedProducts';
-import { ProductReviews } from './ProductReviews';
-import { ProductSpecifications } from './ProductSpecifications';
-import { ProductDelivery } from './ProductDelivery';
-import { ProductWarranty } from './ProductWarranty';
-import { ProductFAQ } from './ProductFAQ';
 import Container from '@/app/(main)/components/layouts/Container';
 
+// Critical above-the-fold components - load immediately
+import { ProductGallery } from './ProductGallery';
+import { ProductInfo } from './ProductInfo';
 
-import { PeopleAlsoBought } from './PeopleAlsoBought';
+// Lazy load below-the-fold components
+const ProductTabs = dynamic(() => import('./ProductTabs').then(mod => ({ default: mod.ProductTabs })), {
+  ssr: true,
+});
+
+const RelatedProducts = dynamic(() => import('./RelatedProducts').then(mod => ({ default: mod.RelatedProducts })), {
+  ssr: true,
+});
+
+const ProductReviews = dynamic(() => import('./ProductReviews').then(mod => ({ default: mod.ProductReviews })), {
+  ssr: true,
+});
+
+const ProductSpecifications = dynamic(() => import('./ProductSpecifications').then(mod => ({ default: mod.ProductSpecifications })), {
+  ssr: true,
+});
+
+const ProductDelivery = dynamic(() => import('./ProductDelivery').then(mod => ({ default: mod.ProductDelivery })), {
+  ssr: true,
+});
+
+const ProductWarranty = dynamic(() => import('./ProductWarranty').then(mod => ({ default: mod.ProductWarranty })), {
+  ssr: true,
+});
+
+const ProductFAQ = dynamic(() => import('./ProductFAQ').then(mod => ({ default: mod.ProductFAQ })), {
+  ssr: true,
+});
+
+const PeopleAlsoBought = dynamic(() => import('./PeopleAlsoBought').then(mod => ({ default: mod.PeopleAlsoBought })), {
+  ssr: true,
+});
 
 interface ProductDetailsProps {
   product: Product;

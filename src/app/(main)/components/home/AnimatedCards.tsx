@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import Image from 'next/image';
 import { GoHeart } from 'react-icons/go';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -91,8 +91,17 @@ export default function AnimatedCards() {
     };
 
     calculatePagination();
-    window.addEventListener('resize', calculatePagination);
-    return () => window.removeEventListener('resize', calculatePagination);
+    // Debounce resize handler
+    let timeoutId: NodeJS.Timeout;
+    const debouncedCalculate = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(calculatePagination, 150);
+    };
+    window.addEventListener('resize', debouncedCalculate);
+    return () => {
+      window.removeEventListener('resize', debouncedCalculate);
+      clearTimeout(timeoutId);
+    };
   }, []);
 
   useEffect(() => {
@@ -113,7 +122,7 @@ export default function AnimatedCards() {
     return () => container.removeEventListener('scroll', handleScroll);
   }, [cardsPerPage]);
 
-  const scrollToPage = (index: number) => {
+  const scrollToPage = useCallback((index: number) => {
     const container = sliderRef.current;
     const card = container?.querySelector('.scroll-item') as HTMLElement;
     if (!container || !card) return;
@@ -123,18 +132,26 @@ export default function AnimatedCards() {
       left: index * cardWidth * cardsPerPage,
       behavior: 'smooth',
     });
-  };
+  }, [cardsPerPage]);
 
   const ImageCard = ({ item }: { item: Product }) => {
     const [isHovered, setIsHovered] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
 
-    // Detect screen size
+    // Detect screen size with debouncing
     useEffect(() => {
       const checkScreen = () => setIsMobile(window.innerWidth < 1024); // lg breakpoint
       checkScreen();
-      window.addEventListener('resize', checkScreen);
-      return () => window.removeEventListener('resize', checkScreen);
+      let timeoutId: NodeJS.Timeout;
+      const debouncedCheck = () => {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(checkScreen, 150);
+      };
+      window.addEventListener('resize', debouncedCheck);
+      return () => {
+        window.removeEventListener('resize', debouncedCheck);
+        clearTimeout(timeoutId);
+      };
     }, []);
     const variants = {
       initial: { opacity: 0, y: 20 },
@@ -163,7 +180,9 @@ export default function AnimatedCards() {
                 src={isHovered ? item.thumbnail || '' : item.images?.[0] || ''}
                 alt={item.name}
                 fill
+                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 256px"
                 className="object-cover rounded-xl"
+                loading="lazy"
               />
             </motion.div>
           </AnimatePresence>
@@ -215,6 +234,7 @@ export default function AnimatedCards() {
             <Link
               href={`/product/${item.slug}`}
               key={item._id + index}
+              prefetch={true}
               className="flex-shrink-0 w-64 snap-start scroll-item cursor-pointer"
             >
               <ImageCard item={item} />
@@ -256,6 +276,7 @@ export default function AnimatedCards() {
           <Link
             href={`/product/${item.slug}`}
             key={item._id + '-desktop'}
+            prefetch={true}
             className="flex flex-col cursor-pointer"
           >
             <ImageCard item={item} />

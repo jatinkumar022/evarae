@@ -1,6 +1,20 @@
-import Navbar from './components/layouts/Navbar';
-import NavigationMenu from './components/layouts/NavigationMenu';
-import Footer from './components/layouts/Footer';
+'use client';
+
+import dynamic from 'next/dynamic';
+import React from 'react';
+
+// Lazy load heavy layout components - only load when needed
+const Navbar = dynamic(() => import('./components/layouts/Navbar'), {
+  ssr: true, // Navbar should be SSR for SEO and initial render
+});
+
+const NavigationMenu = dynamic(() => import('./components/layouts/NavigationMenu'), {
+  ssr: true, // NavigationMenu should be SSR for initial render
+});
+
+const Footer = dynamic(() => import('./components/layouts/Footer'), {
+  ssr: true, // Footer should be SSR for SEO
+});
 
 export default function MainLayout({
   children,

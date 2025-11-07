@@ -178,11 +178,12 @@ function PaymentSuccessInner() {
 
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link href="/orders/history" className="btn btn-filled btn-animated">
+          <Link href="/orders/history" prefetch={true} className="btn btn-filled btn-animated">
             View Order History
           </Link>
           <Link
             href="/all-jewellery"
+            prefetch={true}
             className="btn btn-outline btn-animated hover:!text-primary"
           >
             Continue Shopping

@@ -36,6 +36,7 @@ const CircleCategories = () => {
               <Link
                 href={`/shop/${item.slug}`}
                 key={idx}
+                prefetch={true}
                 className="flex-shrink-0 flex flex-col items-center text-center w-24 md:w-28"
                 onClick={e => handleClick(e, idx)}
               >

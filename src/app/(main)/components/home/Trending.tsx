@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import {
   trendingOne,
   trendingTwo,
@@ -28,7 +28,7 @@ const trendingItems = [
   },
 ];
 
-const TrendingItem = ({
+const TrendingItem = memo(({
   image,
   title,
   alt,
@@ -38,12 +38,14 @@ const TrendingItem = ({
   alt: string;
 }) => (
   <div className="group text-center">
-    <Link href="#" aria-label={`Explore ${title} collection`}>
+    <Link href="#" prefetch={true} aria-label={`Explore ${title} collection`}>
       <div className="bg-muted rounded-t-full overflow-hidden">
         <Image
           src={image}
           alt={alt}
-          className="w-full  object-cover group-hover:scale-105 transition-transform duration-500 ease-in-out h-full sm:h-[485px] h-[395px]"
+          className="w-full object-cover group-hover:scale-105 transition-transform duration-500 ease-in-out h-[395px] sm:h-[485px]"
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          loading="lazy"
         />
       </div>
       <div className="py-4">
@@ -53,9 +55,10 @@ const TrendingItem = ({
       </div>
     </Link>
   </div>
-);
+));
+TrendingItem.displayName = 'TrendingItem';
 
-function Trending() {
+const Trending = memo(function Trending() {
   return (
     <section className="mt-20">
       <div className="heading-component-main-container">
@@ -77,6 +80,8 @@ function Trending() {
       </div>
     </section>
   );
-}
+});
+
+Trending.displayName = 'Trending';
 
 export default Trending;

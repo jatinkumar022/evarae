@@ -42,6 +42,7 @@ const FooterLinkGroup = ({
         <li key={link.to}>
           <Link
             href={link.to}
+            prefetch={true}
             className="hover:text-primary transition-colors duration-200 hover:translate-x-1 inline-block"
           >
             {link.name}

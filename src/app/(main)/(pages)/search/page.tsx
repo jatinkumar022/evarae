@@ -10,13 +10,22 @@ import {
 } from 'react';
 import { Search, Grid3X3, List, ArrowLeft } from 'lucide-react';
 import Container from '@/app/(main)/components/layouts/Container';
-import ProductFilters from '@/app/(main)/components/filters/ProductFilters';
+import dynamic from 'next/dynamic';
 import {
   FilterOptions,
   SortOption,
   Product as UiProduct,
 } from '@/lib/types/product';
-import { ProductCard } from '../shop/components/ProductCard';
+
+// Lazy load heavy components
+const ProductFilters = dynamic(
+  () => import('@/app/(main)/components/filters/ProductFilters'),
+  { ssr: true }
+);
+const ProductCard = dynamic(
+  () => import('../shop/components/ProductCard').then(mod => ({ default: mod.ProductCard })),
+  { ssr: true }
+);
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useSearchParams } from 'next/navigation';

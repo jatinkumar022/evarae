@@ -1,20 +1,35 @@
 'use client';
-import { useState, useEffect, useMemo, ReactNode } from 'react';
+import { useState, useEffect, useMemo, useCallback, type ReactNode } from 'react';
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 import Container from '@/app/(main)/components/layouts/Container';
-import ProductFilters from '@/app/(main)/components/filters/ProductFilters';
-import DailywearCardsAd from '@/app/(main)/components/ads/DailywearCardsAd';
 import {
   FilterOptions,
   SortOption,
   Product as UiProduct,
 } from '@/lib/types/product';
-import BannerImage from '../shop/components/Banner';
 import { ad, Banner, BannerMobile } from '@/app/(main)/assets/Shop-list';
-import { ProductCard } from '../shop/components/ProductCard';
 import Image from 'next/image';
 import { usePublicProductStore } from '@/lib/data/mainStore/productStore';
+
+// Lazy load heavy components
+const ProductFilters = dynamic(
+  () => import('@/app/(main)/components/filters/ProductFilters'),
+  { ssr: true }
+);
+const DailywearCardsAd = dynamic(
+  () => import('@/app/(main)/components/ads/DailywearCardsAd'),
+  { ssr: false }
+);
+const BannerImage = dynamic(
+  () => import('../shop/components/Banner'),
+  { ssr: true }
+);
+const ProductCard = dynamic(
+  () => import('../shop/components/ProductCard').then(mod => ({ default: mod.ProductCard })),
+  { ssr: true }
+);
 
 export default function AllJewelleryPage() {
   const {
@@ -50,8 +65,17 @@ export default function AllJewelleryPage() {
       }
     }
     updateColumns();
-    window.addEventListener('resize', updateColumns);
-    return () => window.removeEventListener('resize', updateColumns);
+    // Debounce resize handler
+    let timeoutId: NodeJS.Timeout;
+    const debouncedUpdate = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(updateColumns, 150);
+    };
+    window.addEventListener('resize', debouncedUpdate);
+    return () => {
+      window.removeEventListener('resize', debouncedUpdate);
+      clearTimeout(timeoutId);
+    };
   }, []);
 
   const mappedProducts: UiProduct[] = useMemo(() => {
@@ -144,7 +168,7 @@ export default function AllJewelleryPage() {
     { value: 'rating', label: 'Highest Rated' },
   ];
 
-  const handleLoadMore = async () => {
+  const handleLoadMore = useCallback(async () => {
     // If server has more, increase requested limit and re-fetch
     if (pagination?.hasNext) {
       const newLimit = filters.limit + 12;
@@ -152,13 +176,13 @@ export default function AllJewelleryPage() {
       await fetchProducts();
     }
     setVisibleProducts(prev => prev + 12);
-  };
+  }, [pagination?.hasNext, filters.limit, setFilters, fetchProducts]);
 
   const displayedProducts = filteredProducts.slice(0, visibleProducts);
   const hasMoreProducts =
     pagination?.hasNext || visibleProducts < filteredProducts.length;
 
-  const renderProductsWithAds = () => {
+  const renderProductsWithAds = useMemo(() => {
     const productsRender = displayedProducts;
     const totalItems = productsRender.length;
     const isLargeScreen = columns >= 3;
@@ -201,7 +225,13 @@ export default function AllJewelleryPage() {
             key="ad-2"
             className="col-span-2 flex items-center justify-center h-full border border-primary/20 p-5 rounded-md"
           >
-            <Image src={ad} alt="" className="lg:h-auto rounded-xl" />
+            <Image 
+              src={ad} 
+              alt="" 
+              className="lg:h-auto rounded-xl"
+              loading="lazy"
+              sizes="(max-width: 1024px) 50vw, 33vw"
+            />
           </div>
         );
         insertedAd2 = true;
@@ -220,7 +250,7 @@ export default function AllJewelleryPage() {
       }
     }
     return items;
-  };
+  }, [displayedProducts, columns]);
 
   return (
     <>
@@ -264,7 +294,7 @@ export default function AllJewelleryPage() {
             onFiltersChange={setFilteredProducts}
           >
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6 items-center">
-              {renderProductsWithAds()}
+              {renderProductsWithAds}
             </div>
 
             {hasMoreProducts && (

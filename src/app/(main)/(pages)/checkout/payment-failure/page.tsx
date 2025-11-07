@@ -56,6 +56,7 @@ function FailureInner() {
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link
             href="/checkout"
+            prefetch={true}
             className="btn btn-filled btn-animated flex items-center justify-center gap-2"
           >
             <RefreshCw className="w-4 h-4" />
@@ -63,6 +64,7 @@ function FailureInner() {
           </Link>
           <Link
             href="/cart"
+            prefetch={true}
             className="btn btn-outline btn-animated flex items-center justify-center gap-2"
           >
             <ArrowLeft className="w-4 h-4" />

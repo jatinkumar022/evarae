@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { GiCrystalShine } from 'react-icons/gi';
@@ -28,7 +28,10 @@ export function RelatedProducts({
       try {
         const res = await fetch(
           `/api/main/product/${currentProduct.id}/related`,
-          { cache: 'no-store' }
+          { 
+            cache: 'force-cache',
+            next: { revalidate: 300 } // Revalidate every 5 minutes
+          }
         );
         if (!res.ok) return;
         const data = await res.json();
@@ -120,8 +123,17 @@ export function RelatedProducts({
     };
 
     calculatePagination();
-    window.addEventListener('resize', calculatePagination);
-    return () => window.removeEventListener('resize', calculatePagination);
+    // Debounce resize handler
+    let timeoutId: NodeJS.Timeout;
+    const debouncedCalculate = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(calculatePagination, 150);
+    };
+    window.addEventListener('resize', debouncedCalculate);
+    return () => {
+      window.removeEventListener('resize', debouncedCalculate);
+      clearTimeout(timeoutId);
+    };
   }, [items]);
 
   useEffect(() => {
@@ -139,7 +151,7 @@ export function RelatedProducts({
     return () => container.removeEventListener('scroll', handleScroll);
   }, [cardsPerPage]);
 
-  const scrollToPage = (index: number) => {
+  const scrollToPage = useCallback((index: number) => {
     const container = sliderRef.current;
     const card = container?.querySelector('.scroll-item') as HTMLElement;
     if (!container || !card) return;
@@ -148,7 +160,85 @@ export function RelatedProducts({
       left: index * cardWidth * cardsPerPage,
       behavior: 'smooth',
     });
-  };
+  }, [cardsPerPage]);
+
+  // Memoize product cards at top level (Rules of Hooks)
+  const memoizedProductCards = useMemo(() => {
+    return items.map(product => (
+      <div
+        key={product.id}
+        className="flex-shrink-0 w-64 snap-start scroll-item"
+      >
+        <Link
+          href={`/product/${product.id}`}
+          prefetch={true}
+          className="group relative flex flex-col rounded-lg border border-primary/10 overflow-hidden hover:shadow-md transition-all"
+        >
+          <div className="relative aspect-square w-full overflow-hidden">
+            <Image
+              src={product.images[0]}
+              alt={product.name}
+              fill
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 256px"
+              className="object-cover group-hover:scale-105 transition-transform duration-300"
+              loading="lazy"
+            />
+            <button className="absolute top-2 right-2 bg-white/70 backdrop-blur-sm rounded-full p-1.5 hover:bg-primary hover:text-white transition">
+              <Heart className="w-4 h-4" />
+            </button>
+            {product.isNew && (
+              <span className="absolute top-2 left-2 bg-primary text-white text-[10px] px-2 py-1 rounded-md font-semibold flex items-center gap-1">
+                <GiCrystalShine size={12} /> NEW
+              </span>
+            )}
+            {product.isSale && (
+              <span className="absolute top-2 left-2 bg-accent text-white text-[10px] px-2 py-1 rounded-md font-semibold flex items-center gap-1">
+                <GiCrystalShine size={12} /> SALE
+              </span>
+            )}
+          </div>
+          <div className="flex flex-col flex-1 p-3 sm:p-4 gap-2">
+            <p className="font-medium text-primary-dark text-sm truncate">
+              {product.name}
+            </p>
+            {product.price ? (
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-sm font-bold text-accent">
+                  ₹{product.price.toLocaleString()}
+                </span>
+                {product.originalPrice &&
+                  product.originalPrice > product.price && (
+                    <>
+                      <span className="text-xs text-primary-dark line-through">
+                        ₹{product.originalPrice.toLocaleString()}
+                      </span>
+                      <span className="text-xs text-primary font-semibold">
+                        {Math.round(
+                          ((product.originalPrice - product.price) /
+                            product.originalPrice) *
+                            100
+                        )}
+                        % off
+                      </span>
+                    </>
+                  )}
+              </div>
+            ) : (
+              <button className="w-full bg-primary text-white py-2 px-3 rounded-md text-xs font-medium hover:bg-primary-dark transition-colors">
+                REQUEST STORE AVAILABILITY
+              </button>
+            )}
+            {product.price && (
+              <button className="w-full bg-primary text-white py-2 rounded-md text-xs sm:text-sm font-medium flex items-center justify-center gap-1 hover:bg-primary-dark transition-colors">
+                <Cart className="w-4 h-4" />
+                Add to Cart
+              </button>
+            )}
+          </div>
+        </Link>
+      </div>
+    ));
+  }, [items]);
 
   if (items.length === 0) return null;
 
@@ -159,6 +249,7 @@ export function RelatedProducts({
           You Might Also Like
           <Link
             href={`/shop/${category.slug}`}
+            prefetch={true}
             className="inline-block max-md:underline md:bg-primary text-primary-dark md:!text-white px-3 py-2 md:px-5  whitespace-nowrap rounded-md hover:bg-primary-dark transition-colors font-medium text-xs md:text-sm lg:text-base"
           >
             View All
@@ -173,77 +264,7 @@ export function RelatedProducts({
           ref={sliderRef}
           className="flex gap-4 overflow-x-auto pb-4 scroll-smooth snap-x snap-mandatory scrollbar-hide"
         >
-          {items.map(product => (
-            <div
-              key={product.id}
-              className="flex-shrink-0 w-64 snap-start scroll-item"
-            >
-              <Link
-                href={`/product/${product.id}`}
-                className="group relative flex flex-col rounded-lg border border-primary/10 overflow-hidden hover:shadow-md transition-all"
-              >
-                <div className="relative aspect-square w-full overflow-hidden">
-                  <Image
-                    src={product.images[0]}
-                    alt={product.name}
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <button className="absolute top-2 right-2 bg-white/70 backdrop-blur-sm rounded-full p-1.5 hover:bg-primary hover:text-white transition">
-                    <Heart className="w-4 h-4" />
-                  </button>
-                  {product.isNew && (
-                    <span className="absolute top-2 left-2 bg-primary text-white text-[10px] px-2 py-1 rounded-md font-semibold flex items-center gap-1">
-                      <GiCrystalShine size={12} /> NEW
-                    </span>
-                  )}
-                  {product.isSale && (
-                    <span className="absolute top-2 left-2 bg-accent text-white text-[10px] px-2 py-1 rounded-md font-semibold flex items-center gap-1">
-                      <GiCrystalShine size={12} /> SALE
-                    </span>
-                  )}
-                </div>
-                <div className="flex flex-col flex-1 p-3 sm:p-4 gap-2">
-                  <p className="font-medium text-primary-dark text-sm truncate">
-                    {product.name}
-                  </p>
-                  {product.price ? (
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-sm font-bold text-accent">
-                        ₹{product.price.toLocaleString()}
-                      </span>
-                      {product.originalPrice &&
-                        product.originalPrice > product.price && (
-                          <>
-                            <span className="text-xs text-primary-dark line-through">
-                              ₹{product.originalPrice.toLocaleString()}
-                            </span>
-                            <span className="text-xs text-primary font-semibold">
-                              {Math.round(
-                                ((product.originalPrice - product.price) /
-                                  product.originalPrice) *
-                                  100
-                              )}
-                              % off
-                            </span>
-                          </>
-                        )}
-                    </div>
-                  ) : (
-                    <button className="w-full bg-primary text-white py-2 px-3 rounded-md text-xs font-medium hover:bg-primary-dark transition-colors">
-                      REQUEST STORE AVAILABILITY
-                    </button>
-                  )}
-                  {product.price && (
-                    <button className="w-full bg-primary text-white py-2 rounded-md text-xs sm:text-sm font-medium flex items-center justify-center gap-1 hover:bg-primary-dark transition-colors">
-                      <Cart className="w-4 h-4" />
-                      Add to Cart
-                    </button>
-                  )}
-                </div>
-              </Link>
-            </div>
-          ))}
+          {memoizedProductCards}
         </div>
         {totalPages > 1 && (
           <div className="flex justify-center items-center gap-2 mt-4">

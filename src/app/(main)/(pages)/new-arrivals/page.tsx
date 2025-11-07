@@ -1,5 +1,6 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import dynamic from 'next/dynamic';
 import {
   ChevronRight,
   Sparkles,
@@ -16,16 +17,23 @@ import {
 } from 'lucide-react';
 import { worldOne } from '@/app/(main)/assets/Home/World';
 import Image from 'next/image';
-
 import Link from 'next/link';
 import {
   FilterOptions,
   SortOption,
   Product as UiProduct,
 } from '@/lib/types/product';
-import ProductFilters from '@/app/(main)/components/filters/ProductFilters';
-import { ProductCard } from '../shop/components/ProductCard';
 import Container from '@/app/(main)/components/layouts/Container';
+
+// Lazy load heavy components
+const ProductFilters = dynamic(
+  () => import('@/app/(main)/components/filters/ProductFilters'),
+  { ssr: true }
+);
+const ProductCard = dynamic(
+  () => import('../shop/components/ProductCard').then(mod => ({ default: mod.ProductCard })),
+  { ssr: true }
+);
 
 // Main Component
 export default function EnhancedNewArrivalsPage() {
@@ -125,7 +133,7 @@ export default function EnhancedNewArrivalsPage() {
     })();
   }, []);
 
-  const filterOptions: FilterOptions = {
+  const filterOptions: FilterOptions = useMemo(() => ({
     priceRanges: [
       { value: 'under-1k', label: 'Under ₹1,000' },
       { value: '1k-2k', label: '₹1,000 - ₹2,000' },
@@ -149,17 +157,19 @@ export default function EnhancedNewArrivalsPage() {
       'Pearl Bead Rings',
       'Oxidised Rings',
     ],
-  };
+  }), []);
 
-  const sortOptions: SortOption[] = [
+  const sortOptions: SortOption[] = useMemo(() => [
     { value: 'best-matches', label: 'Best Matches' },
     { value: 'price-low-high', label: 'Price: Low to High' },
     { value: 'price-high-low', label: 'Price: High to Low' },
     { value: 'newest', label: 'Newest First' },
     { value: 'rating', label: 'Highest Rated' },
-  ];
+  ], []);
 
-  const handleLoadMore = () => setVisibleProducts(prev => prev + 12);
+  const handleLoadMore = useCallback(() => {
+    setVisibleProducts(prev => prev + 12);
+  }, []);
 
   const displayedProducts = filteredProducts.slice(0, visibleProducts);
   const hasMoreProducts = visibleProducts < filteredProducts.length;
@@ -319,6 +329,7 @@ export default function EnhancedNewArrivalsPage() {
                         fill
                         className="object-cover group-hover:scale-110 transition-transform duration-700"
                         sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                        loading="lazy"
                       />
                       <div className="absolute inset-0 bg-black/0  transition-all duration-300" />
                       <div className="absolute bottom-2 sm:bottom-3 lg:bottom-4 left-2 sm:left-3 lg:left-4 right-2 sm:right-3 lg:right-4 transform translate-y-8 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all z-50">
@@ -485,12 +496,15 @@ export default function EnhancedNewArrivalsPage() {
             {[...Array(12)].map((_, index) => (
               <div
                 key={index}
-                className="aspect-square rounded-lg sm:rounded-xl overflow-hidden bg-gradient-to-br from-[var(--bg-cart)] to-[var(--bg-menu)] group cursor-pointer"
+                className="relative aspect-square rounded-lg sm:rounded-xl overflow-hidden bg-gradient-to-br from-[var(--bg-cart)] to-[var(--bg-menu)] group cursor-pointer"
               >
                 <Image
                   src={worldOne}
                   alt={`Instagram post ${index + 1}`}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                  fill
+                  className="object-cover group-hover:scale-110 transition-transform duration-500"
+                  sizes="(max-width: 768px) 50vw, (max-width: 1024px) 25vw, 16vw"
+                  loading="lazy"
                 />
               </div>
             ))}

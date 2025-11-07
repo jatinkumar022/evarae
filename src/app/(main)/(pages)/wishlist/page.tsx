@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { Heart, Share2 } from 'lucide-react';
 import Container from '@/app/(main)/components/layouts/Container';
 import ProductFilters from '@/app/(main)/components/filters/ProductFilters';
@@ -9,7 +9,7 @@ import Image from 'next/image';
 import { GiCrystalShine } from 'react-icons/gi';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Cart } from '@/app/(main)/assets/Common';
-import ProductOptionsModal from '@/app/(main)/components/ui/ProductOptionsModal';
+import { LazyProductOptionsModal } from '@/app/(main)/components/ui/LazyProductOptionsModal';
 
 // Combine all products from different categories
 const allJewelleryProducts = [
@@ -35,19 +35,28 @@ export default function AllJewelleryPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
-  // Detect screen size
+  // Detect screen size with debouncing
   useEffect(() => {
     const checkScreen = () => setIsMobile(window.innerWidth < 1024); // lg breakpoint
     checkScreen();
-    window.addEventListener('resize', checkScreen);
-    return () => window.removeEventListener('resize', checkScreen);
+    let timeoutId: NodeJS.Timeout;
+    const debouncedCheck = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(checkScreen, 150);
+    };
+    window.addEventListener('resize', debouncedCheck);
+    return () => {
+      window.removeEventListener('resize', debouncedCheck);
+      clearTimeout(timeoutId);
+    };
   }, []);
 
-  const handleAddToCart = (product: Product) => {
+  const handleAddToCart = useCallback((product: Product) => {
     setSelectedProduct(product);
     setIsModalOpen(true);
-  };
-  const filterOptions: FilterOptions = {
+  }, []);
+  
+  const filterOptions: FilterOptions = useMemo(() => ({
     priceRanges: [
       { value: 'under-1k', label: 'Under ₹1,000' },
       { value: '1k-2k', label: '₹1,000 - ₹2,000' },
@@ -138,19 +147,19 @@ export default function AllJewelleryPage() {
       'Designer Jhumkas',
       'Traditional Jhumkas',
     ],
-  };
+  }), []);
 
-  const sortOptions: SortOption[] = [
+  const sortOptions: SortOption[] = useMemo(() => [
     { value: 'best-matches', label: 'Best Matches' },
     { value: 'price-low-high', label: 'Price: Low to High' },
     { value: 'price-high-low', label: 'Price: High to Low' },
     { value: 'newest', label: 'Newest First' },
     { value: 'rating', label: 'Highest Rated' },
-  ];
+  ], []);
 
-  const handleLoadMore = () => {
+  const handleLoadMore = useCallback(() => {
     setVisibleProducts(prev => prev + 10);
-  };
+  }, []);
 
   const displayedProducts = filteredProducts.slice(0, visibleProducts);
   const hasMoreProducts = visibleProducts < filteredProducts.length;
@@ -387,11 +396,14 @@ export default function AllJewelleryPage() {
       </Container>
       
       {/* Product Options Modal */}
-      <ProductOptionsModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        product={selectedProduct}
-      />
+      {/* Product Options Modal - Lazy loaded */}
+      {isModalOpen && (
+        <LazyProductOptionsModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          product={selectedProduct}
+        />
+      )}
     </>
   );
 }

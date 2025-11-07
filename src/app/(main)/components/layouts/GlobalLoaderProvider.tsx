@@ -6,8 +6,8 @@ import Loader from '@/app/(main)/components/layouts/Loader';
 /**
  * GlobalLoaderProvider
  * - Intercepts window.fetch for selected API routes
- * - Shows fullscreen Loader while any tracked requests are in-flight
- * - Provides contextual loading messages based on the API endpoint
+ * - Shows fullscreen Loader ONLY for GET requests
+ * - Non-GET requests (POST, PUT, DELETE, etc.) should use inline loaders in components
  */
 export default function GlobalLoaderProvider({
   children,
@@ -36,7 +36,12 @@ export default function GlobalLoaderProvider({
         url.includes(prefix)
       );
 
-      if (isTracked) {
+      // Only track GET requests for fullscreen loader
+      // Non-GET requests should use inline loaders in components
+      const method = init?.method || 'GET';
+      const isGetRequest = method.toUpperCase() === 'GET';
+
+      if (isTracked && isGetRequest) {
         setInFlightCount(count => count + 1);
       }
 
@@ -44,7 +49,7 @@ export default function GlobalLoaderProvider({
         const res = await originalFetchRef.current!(input as RequestInfo, init);
         return res;
       } finally {
-        if (isTracked) {
+        if (isTracked && isGetRequest) {
           setInFlightCount(count => Math.max(0, count - 1));
           // Reset message after a short delay to avoid flickering
           setTimeout(() => {
@@ -68,6 +73,7 @@ export default function GlobalLoaderProvider({
     <>
       {children}
       {/* Do not show fullscreen global loader on admin routes. Admin pages will handle inline/content loaders themselves. */}
+      {/* Only show fullscreen loader for GET requests */}
       {typeof window !== 'undefined' &&
         !window.location.pathname.startsWith('/admin') &&
         inFlightCount > 0 && <Loader fullscreen showLogo />}

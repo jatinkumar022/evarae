@@ -21,6 +21,7 @@ import CustomDatePicker from '@/app/(main)/components/ui/customDatePicker';
 import { useProfileForm } from '@/app/(main)/hooks/useProfileForm';
 import { useProfileData } from '@/app/(main)/hooks/useProfileData';
 import toastApi from '@/lib/toast';
+import InlineLoader from '@/app/(main)/components/ui/InlineLoader';
 
 function AccountPageInner() {
   const searchParams = useSearchParams();
@@ -758,7 +759,7 @@ function AccountPageInner() {
                               >
                                 {isSubmitting ? (
                                   <div className="flex items-center gap-1.5 sm:gap-2">
-                                    <div className="w-3 h-3 sm:w-4 sm:h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                    <InlineLoader size="sm" variant="white" />
                                     <span className="text-xs sm:text-sm">Saving...</span>
                                   </div>
                                 ) : (
@@ -999,7 +1000,7 @@ function AccountPageInner() {
                 >
                   {isChangingPassword ? (
                     <span className="flex items-center gap-2">
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <InlineLoader size="sm" variant="white" />
                       Changing...
                     </span>
                   ) : (

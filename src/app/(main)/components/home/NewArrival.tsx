@@ -45,6 +45,7 @@ function NewArrival() {
             <div className="bg-white/5 backdrop-blur-sm rounded-xl p-2">
               <Link
                 href="#"
+                prefetch={true}
                 className="relative block overflow-hidden rounded-lg group cursor-pointer"
                 aria-label="Explore The Eternal Vow mangalsutra collection"
               >
@@ -54,6 +55,8 @@ function NewArrival() {
                   width={400}
                   height={500}
                   className="w-full h-full object-cover aspect-square"
+                  sizes="(max-width: 640px) 100vw, 50vw"
+                  loading="lazy"
                 />
                 <div className="absolute inset-0 flex items-end bg-gradient-to-t from-black/60 to-transparent p-4">
                   <h3 className="font-heading text-lg text-white font-semibold">
@@ -65,6 +68,7 @@ function NewArrival() {
             <div className="bg-white/5 backdrop-blur-sm rounded-xl p-2">
               <Link
                 href="#"
+                prefetch={true}
                 className="relative block overflow-hidden rounded-lg group cursor-pointer"
                 aria-label="Explore Delicate Statements pendant collection"
               >
@@ -74,6 +78,8 @@ function NewArrival() {
                   width={400}
                   height={500}
                   className="w-full h-full object-cover aspect-square"
+                  sizes="(max-width: 640px) 100vw, 50vw"
+                  loading="lazy"
                 />
                 <div className="absolute inset-0 flex items-end bg-gradient-to-t from-black/60 to-transparent p-4">
                   <h3 className="font-heading text-lg text-white font-semibold">

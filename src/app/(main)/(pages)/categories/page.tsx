@@ -68,6 +68,7 @@ export default function CategoriesPage() {
                   <Link
                     key={category.slug}
                     href={`/shop/${category.slug}`}
+                    prefetch={true}
                     className="group block"
                     style={{ animationDelay: `${index * 150}ms` }}
                   >

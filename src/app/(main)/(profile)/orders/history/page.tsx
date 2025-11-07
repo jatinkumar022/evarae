@@ -454,6 +454,7 @@ export default function OrdersHistoryPage() {
                   <div className="flex flex-wrap gap-3 pt-4 border-t border-primary/10">
                     <Link
                       href={`/orders/${order.orderNumber || order._id}`}
+                      prefetch={true}
                       className="btn btn-filled flex items-center gap-2 text-sm"
                     >
                       <Eye className="w-4 h-4" />

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import Container from '@/app/(main)/components/layouts/Container';
@@ -11,9 +11,10 @@ import { Visa, Mastercard, Paypal, Maestro } from '@/app/(main)/assets/Footer';
 import { useCartStore } from '@/lib/data/mainStore/cartStore';
 import type { CartItem, SavedItem } from '@/lib/data/mainStore/cartStore';
 import toastApi from '@/lib/toast';
+import InlineLoader from '@/app/(main)/components/ui/InlineLoader';
 
 export default function CartPage() {
-  const { items, savedItems, load, update, remove, save, unsave } =
+  const { items, savedItems, load, update, remove, save, unsave, isUpdating, isRemoving, isSaving, isUnsaving, isAdding } =
     useCartStore();
   const [pincode, setPincode] = useState('');
   const [deliveryMsg, setDeliveryMsg] = useState<string>('');
@@ -150,7 +151,7 @@ export default function CartPage() {
     };
   }, [items, couponRate]);
 
-  const updateQuantity = async (productId: string, delta: number) => {
+  const updateQuantity = useCallback(async (productId: string, delta: number) => {
     const current = items.find(
       (ci: CartItem) =>
         String(ci?.product?._id || ci?.product?.id) === productId
@@ -159,19 +160,19 @@ export default function CartPage() {
     await update(productId, newQty)
       .then(() => toastApi.success('Quantity updated'))
       .catch(() => toastApi.error('Failed to update quantity'));
-  };
+  }, [items, update]);
 
-  const removeItem = async (productId: string) => {
+  const removeItem = useCallback(async (productId: string) => {
     await remove(productId)
       .then(() => toastApi.success('Removed from cart'))
       .catch(() => toastApi.error('Failed to remove item'));
-  };
+  }, [remove]);
 
-  const moveToSaved = async (productId: string) => {
+  const moveToSaved = useCallback(async (productId: string) => {
     await save(productId)
       .then(() => toastApi.success('Moved to wishlist'))
       .catch(() => toastApi.error('Failed to move to wishlist'));
-  };
+  }, [save]);
 
   const moveToCart = async (productId: string) => {
     await unsave(productId)
@@ -206,7 +207,7 @@ export default function CartPage() {
     }
   };
 
-  const cartItems = items.map((ci: CartItem) => ({
+  const cartItems = useMemo(() => items.map((ci: CartItem) => ({
     product: {
       id: String(ci?.product?._id || ci?.product?.id || ''),
       name: (ci?.product as Product | undefined)?.name || '',
@@ -222,9 +223,9 @@ export default function CartPage() {
       stockCount: (ci?.product as Product | undefined)?.stockCount ?? 1,
     } as Product,
     quantity: ci.quantity || 1,
-  }));
+  })), [items]);
 
-  const savedLocal = (savedItems as SavedItem[]).map(si => ({
+  const savedLocal = useMemo(() => (savedItems as SavedItem[]).map(si => ({
     product: {
       id: String(si?.product?._id || si?.product?.id || ''),
       name: (si?.product as Product | undefined)?.name || '',
@@ -234,7 +235,7 @@ export default function CartPage() {
       price: si?.product?.discountPrice ?? si?.product?.price ?? 0,
     } as Product,
     quantity: 1,
-  }));
+  })), [savedItems]);
 
   return (
     <Container className="py-4 md:py-8 lg:py-12">
@@ -256,6 +257,7 @@ export default function CartPage() {
                 </p>
                 <Link
                   href="/all-jewellery"
+                  prefetch={true}
                   className="btn btn-filled btn-animated mt-3"
                 >
                   Continue Shopping
@@ -279,7 +281,7 @@ export default function CartPage() {
                           fill
                           className="object-cover"
                           sizes="(max-width: 640px) 80px, (max-width: 768px) 96px, 112px"
-                          priority={false}
+                          loading="lazy"
                         />
                       </div>
 
@@ -315,17 +317,23 @@ export default function CartPage() {
                           <div className="flex items-center gap-2 self-start sm:self-auto">
                             <button
                               aria-label="Decrease quantity"
-                              className="p-1.5 sm:p-2 rounded-md border border-primary/20 hover:bg-primary/10 transition-colors"
+                              disabled={isUpdating === product.id}
+                              className="p-1.5 sm:p-2 rounded-md border border-primary/20 hover:bg-primary/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                               onClick={() => updateQuantity(product.id, -1)}
                             >
                               <Minus className="w-3 h-3 sm:w-4 sm:h-4" />
                             </button>
-                            <span className="w-6 sm:w-8 text-center text-sm font-medium">
-                              {quantity}
+                            <span className="w-6 sm:w-8 text-center text-sm font-medium flex items-center justify-center min-h-[1.5rem]">
+                              {isUpdating === product.id ? (
+                                <InlineLoader size="sm" />
+                              ) : (
+                                quantity
+                              )}
                             </span>
                             <button
                               aria-label="Increase quantity"
-                              className="p-1.5 sm:p-2 rounded-md border border-primary/20 hover:bg-primary/10 transition-colors"
+                              disabled={isUpdating === product.id}
+                              className="p-1.5 sm:p-2 rounded-md border border-primary/20 hover:bg-primary/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                               onClick={() => updateQuantity(product.id, 1)}
                             >
                               <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
@@ -346,22 +354,32 @@ export default function CartPage() {
                         {/* Action Buttons */}
                         <div className="flex items-center gap-2 mt-3 sm:mt-4">
                           <button
-                            className="p-1 px-2 rounded-full flex gap-2 items-center btn-outline btn-animated text-xs"
+                            className="p-1 px-2 rounded-full flex gap-2 items-center btn-outline btn-animated text-xs disabled:opacity-50 disabled:cursor-not-allowed"
                             aria-label="Move to wishlist"
+                            disabled={isSaving === product.id || isUpdating === product.id || isRemoving === product.id}
                             onClick={() => moveToSaved(product.id)}
                           >
-                            <Heart className="w-3 h-3" />
+                            {isSaving === product.id ? (
+                              <InlineLoader size="sm" />
+                            ) : (
+                              <Heart className="w-3 h-3" />
+                            )}
                             <span className="hidden sm:inline">
                               Move to wishlist
                             </span>
                             <span className="sm:hidden">Wishlist</span>
                           </button>
                           <button
-                            className="p-1 px-2 rounded-full flex gap-2 items-center btn-outline btn-animated text-xs"
+                            className="p-1 px-2 rounded-full flex gap-2 items-center btn-outline btn-animated text-xs disabled:opacity-50 disabled:cursor-not-allowed"
                             aria-label="Remove item"
+                            disabled={isRemoving === product.id || isUpdating === product.id || isSaving === product.id}
                             onClick={() => removeItem(product.id)}
                           >
-                            <Trash2 className="w-3 h-3" />
+                            {isRemoving === product.id ? (
+                              <InlineLoader size="sm" />
+                            ) : (
+                              <Trash2 className="w-3 h-3" />
+                            )}
                             <span>Remove</span>
                           </button>
                         </div>
@@ -502,6 +520,7 @@ export default function CartPage() {
             </div>
             <Link
               href={'/checkout'}
+              prefetch={true}
               className="mt-4 sm:mt-5 w-full btn btn-filled btn-animated text-sm sm:text-base"
               onClick={() => sessionStorage.setItem('cameFromCart', 'true')}
             >
@@ -546,6 +565,7 @@ export default function CartPage() {
                       fill
                       className="object-cover"
                       sizes="(max-width: 640px) 64px, 80px"
+                      loading="lazy"
                     />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -558,15 +578,23 @@ export default function CartPage() {
                   </div>
                   <div className="flex items-center gap-2 self-start sm:self-auto">
                     <button
-                      className=" p-2 rounded-full flex gap-2 items-center btn-outline btn-animated text-xs"
+                      className=" p-2 rounded-full flex gap-2 items-center btn-outline btn-animated text-xs disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={isUnsaving === product.id || isAdding}
                       onClick={() => moveToCart(product.id)}
                     >
+                      {isUnsaving === product.id || isAdding ? (
+                        <InlineLoader size="sm" />
+                      ) : null}
                       Move to cart
                     </button>
                     <button
-                      className="p-2 rounded-full flex gap-2 items-center btn-outline btn-animated text-xs"
+                      className="p-2 rounded-full flex gap-2 items-center btn-outline btn-animated text-xs disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={isUnsaving === product.id}
                       onClick={() => unsave(product.id)}
                     >
+                      {isUnsaving === product.id ? (
+                        <InlineLoader size="sm" />
+                      ) : null}
                       Remove
                     </button>
                   </div>
@@ -600,14 +628,15 @@ export default function CartPage() {
           </h3>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
             {categoryTiles.map(tile => (
-              <Link key={tile.href} href={tile.href} className="group block">
+              <Link key={tile.href} href={tile.href} prefetch={true} className="group block">
                 <div className="relative w-full aspect-[4/3] overflow-hidden rounded-lg border border-primary/10">
                   <Image
                     src={tile.image}
                     alt={tile.label}
                     fill
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                     className="object-cover transition-transform duration-300 group-hover:scale-105"
-                    sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 25vw"
+                    loading="lazy"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
                   <span className="absolute bottom-2 left-2 text-white text-xs sm:text-sm md:text-base font-medium">

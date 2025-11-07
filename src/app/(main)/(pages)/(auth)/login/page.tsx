@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import Link from 'next/link';
 import Container from '@/app/(main)/components/layouts/Container';
 import { Eye, EyeOff } from 'lucide-react';
 import { useUserAuth } from '@/lib/data/mainStore/userAuth';
+import InlineLoader from '@/app/(main)/components/ui/InlineLoader';
 
 export default function LoginPage() {
   type Step = 'phone' | 'otp' | 'done';
@@ -19,11 +20,15 @@ export default function LoginPage() {
   const [otpError, setOtpError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [otp, setOtp] = useState<string[]>(Array(6).fill(''));
+  const [isCheckingEmail, setIsCheckingEmail] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
   const {
     setEmail: setStoreEmail,
     requestLoginOtp,
     verifyLoginOtp,
     resendInSec,
+    requestStatus,
+    verifyStatus,
   } = useUserAuth();
   const inputsRef = useRef<Array<HTMLInputElement | null>>([]);
 
@@ -60,15 +65,27 @@ export default function LoginPage() {
 
   // resend cooldown handled by store
 
-  const handleOtpChange = (index: number, value: string) => {
+  const handleOtpChange = useCallback((index: number, value: string) => {
     const digit = value.replace(/\D/g, '').slice(0, 1);
     const next = [...otp];
     next[index] = digit;
     setOtp(next);
     if (digit && index < otp.length - 1) inputsRef.current[index + 1]?.focus();
-  };
+  }, [otp]);
 
-  const handleOtpKeyDown = (
+  const handleVerify = useCallback(async () => {
+    if (!isValidOtp) return;
+    try {
+      setOtpError(null);
+      await verifyLoginOtp(otp.join(''));
+      setStep('done');
+    } catch (e) {
+      const message = e instanceof Error ? e.message : 'Invalid OTP';
+      setOtpError(message);
+    }
+  }, [otp, isValidOtp, verifyLoginOtp]);
+
+  const handleOtpKeyDown = useCallback((
     index: number,
     e: React.KeyboardEvent<HTMLInputElement>
   ) => {
@@ -85,17 +102,24 @@ export default function LoginPage() {
       inputsRef.current[index - 1]?.focus();
     if (e.key === 'ArrowRight' && index < otp.length - 1)
       inputsRef.current[index + 1]?.focus();
-  };
+    // Handle Enter key on last OTP input
+    if (e.key === 'Enter' && index === otp.length - 1 && isValidOtp) {
+      e.preventDefault();
+      handleVerify();
+    }
+  }, [otp, isValidOtp, handleVerify]);
 
-  const goToNext = async () => {
+  const goToNext = useCallback(async () => {
     if (!isValidEmail) return;
     setStoreEmail(email);
     setEmailError(null);
+    setIsCheckingEmail(true);
     try {
       const { userAuthApi } = await import('@/lib/utils');
       const { exists } = await userAuthApi.checkEmail(email);
       if (!exists) {
         setEmailError('No account found with this email. Please sign up.');
+        setIsCheckingEmail(false);
         return;
       }
       if (authMode === 'otp') {
@@ -105,12 +129,15 @@ export default function LoginPage() {
     } catch (e) {
       const message = e instanceof Error ? e.message : 'Unable to continue';
       setEmailError(message);
+    } finally {
+      setIsCheckingEmail(false);
     }
-  };
+  }, [email, isValidEmail, authMode, setStoreEmail, requestLoginOtp]);
 
-  const handlePasswordLogin = async () => {
+  const handlePasswordLogin = useCallback(async () => {
     setError(null);
     if (!isValidEmail || !isValidPassword) return;
+    setIsLoggingIn(true);
     try {
       const res = await (
         await import('@/lib/utils')
@@ -119,21 +146,12 @@ export default function LoginPage() {
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : 'Invalid credentials';
       setError(message);
+    } finally {
+      setIsLoggingIn(false);
     }
-  };
-
-  const handleVerify = async () => {
-    if (!isValidOtp) return;
-    try {
-      setOtpError(null);
-      await verifyLoginOtp(otp.join(''));
-      setStep('done');
-    } catch (e) {
-      const message = e instanceof Error ? e.message : 'Invalid OTP';
-      setOtpError(message);
-    }
-  };
-  const handleOtpPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+  }, [email, password, isValidEmail, isValidPassword]);
+  
+  const handleOtpPaste = useCallback((e: React.ClipboardEvent<HTMLInputElement>) => {
     e.preventDefault();
     const pasted = e.clipboardData
       .getData('text')
@@ -150,7 +168,8 @@ export default function LoginPage() {
     // Focus the last filled input
     const lastIndex = Math.min(pasted.length - 1, otp.length - 1);
     inputsRef.current[lastIndex]?.focus();
-  };
+  }, [otp]);
+  
   return (
     <main className="">
       <Container>
@@ -328,14 +347,21 @@ export default function LoginPage() {
                     </p>
                     <button
                       onClick={goToNext}
-                      disabled={!isValidEmail}
-                      className={`rounded-lg px-4 py-2.5 min-w-40 text-white text-sm font-medium transition-all duration-200 ${
-                        isValidEmail
+                      disabled={!isValidEmail || isCheckingEmail}
+                      className={`rounded-lg px-4 py-2.5 min-w-40 text-white text-sm font-medium transition-all duration-200 flex items-center justify-center gap-2 ${
+                        isValidEmail && !isCheckingEmail
                           ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] hover:shadow-lg hover:scale-105 shadow-md'
                           : 'bg-[oklch(0.84_0.04_10.35)] cursor-not-allowed'
                       }`}
                     >
-                      Continue
+                      {isCheckingEmail ? (
+                        <>
+                          <InlineLoader size="sm" variant="white" />
+                          <span>Checking...</span>
+                        </>
+                      ) : (
+                        'Continue'
+                      )}
                     </button>
                   </div>
                 </motion.section>
@@ -393,14 +419,21 @@ export default function LoginPage() {
                         </button>
                         <button
                           onClick={handlePasswordLogin}
-                          disabled={!isValidPassword}
-                          className={`rounded-lg px-4 py-2.5 text-white text-sm font-medium transition-all duration-200 ${
-                            isValidPassword
+                          disabled={!isValidPassword || isLoggingIn}
+                          className={`rounded-lg px-4 py-2.5 text-white text-sm font-medium transition-all duration-200 flex items-center justify-center gap-2 ${
+                            isValidPassword && !isLoggingIn
                               ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] hover:shadow-lg hover:scale-105 shadow-md'
                               : 'bg-[oklch(0.84_0.04_10.35)] cursor-not-allowed'
                           }`}
                         >
-                          Login
+                          {isLoggingIn ? (
+                            <>
+                              <InlineLoader size="sm" variant="white" />
+                              <span>Logging in...</span>
+                            </>
+                          ) : (
+                            'Login'
+                          )}
                         </button>
                       </div>
                     </div>
@@ -460,37 +493,48 @@ export default function LoginPage() {
                         <div className="flex items-center gap-4">
                           <button
                             type="button"
-                            disabled={resendInSec > 0}
+                            disabled={resendInSec > 0 || requestStatus === 'loading'}
                             onClick={() => requestLoginOtp()}
-                            className={`text-sm transition-colors ${
-                              resendInSec > 0
+                            className={`text-sm transition-colors flex items-center gap-1 ${
+                              resendInSec > 0 || requestStatus === 'loading'
                                 ? 'text-[oklch(0.7_0.04_12)] cursor-not-allowed'
                                 : 'text-[oklch(0.66_0.14_358.91)] hover:text-[oklch(0.58_0.16_8)]'
                             }`}
                           >
-                            {resendInSec > 0
-                              ? `Resend in 00:${String(resendInSec).padStart(
-                                  2,
-                                  '0'
-                                )}`
-                              : 'Resend OTP'}
+                            {requestStatus === 'loading' ? (
+                              <>
+                                <InlineLoader size="sm" />
+                                <span>Sending...</span>
+                              </>
+                            ) : resendInSec > 0 ? (
+                              `Resend in 00:${String(resendInSec).padStart(2, '0')}`
+                            ) : (
+                              'Resend OTP'
+                            )}
                           </button>
                           <button
                             onClick={handleVerify}
-                            disabled={!isValidOtp}
-                            className={`rounded-lg px-4 py-2.5 text-white text-sm font-medium transition-all duration-200 ${
-                              isValidOtp
+                            disabled={!isValidOtp || verifyStatus === 'loading'}
+                            className={`rounded-lg px-4 py-2.5 text-white text-sm font-medium transition-all duration-200 flex items-center justify-center gap-2 ${
+                              isValidOtp && verifyStatus !== 'loading'
                                 ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] hover:shadow-lg hover:scale-105 shadow-md'
                                 : 'bg-[oklch(0.84_0.04_10.35)] cursor-not-allowed'
                             }`}
                             onKeyDown={e => {
-                              if (e.key === 'Enter' && isValidOtp) {
+                              if (e.key === 'Enter' && isValidOtp && verifyStatus !== 'loading') {
                                 e.preventDefault();
                                 handleVerify();
                               }
                             }}
                           >
-                            Verify
+                            {verifyStatus === 'loading' ? (
+                              <>
+                                <InlineLoader size="sm" variant="white" />
+                                <span>Verifying...</span>
+                              </>
+                            ) : (
+                              'Verify'
+                            )}
                           </button>
                         </div>
                       </div>
@@ -519,12 +563,14 @@ export default function LoginPage() {
                 <div className="flex items-center justify-center gap-3 flex-wrap">
                   <Link
                     href="/"
+                    prefetch={true}
                     className="rounded-lg bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] px-4 py-2.5 text-white text-sm font-medium hover:shadow-md transition-all"
                   >
                     Go to Home
                   </Link>
                   <Link
                     href="/account/profile"
+                    prefetch={true}
                     className="rounded-lg border border-[oklch(0.84_0.04_10.35)] bg-white px-4 py-2.5 text-sm text-[oklch(0.55_0.06_15)] hover:bg-[oklch(0.93_0.03_12.01)] transition-all"
                   >
                     Manage Account
@@ -538,6 +584,7 @@ export default function LoginPage() {
                 <Link
                   className="text-[oklch(0.66_0.14_358.91)] hover:text-[oklch(0.58_0.16_8)] font-medium transition-colors"
                   href="/signup"
+                  prefetch={true}
                 >
                   Create one
                 </Link>

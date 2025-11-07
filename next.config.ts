@@ -3,8 +3,13 @@ import type { NextConfig } from 'next';
 const nextConfig: NextConfig = {
   // Performance optimizations
   poweredByHeader: false,
-  compress: true,
+  compress: true, // Enables gzip compression
   generateEtags: false,
+  
+  // Enable experimental features for better performance
+  experimental: {
+    optimizePackageImports: ['lucide-react', 'framer-motion', 'react-icons'],
+  },
 
   // Image optimization
   images: {

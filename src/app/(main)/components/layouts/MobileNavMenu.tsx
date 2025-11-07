@@ -413,6 +413,7 @@ const MobileNavMenu = ({ isOpen, onClose }: MobileNavMenuProps) => {
                     <Link
                       key={item.name}
                       href={item.href}
+                      prefetch={true}
                       className="flex items-center gap-3 rounded-md px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 hover:text-primary"
                       onClick={onClose}
                     >
@@ -435,6 +436,7 @@ const MobileNavMenu = ({ isOpen, onClose }: MobileNavMenuProps) => {
                         <Link
                           key={item.slug}
                           href={`/shop/${item.slug}`}
+                          prefetch={true}
                           className="block rounded-md px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 hover:text-primary"
                           onClick={onClose}
                         >
@@ -443,6 +445,7 @@ const MobileNavMenu = ({ isOpen, onClose }: MobileNavMenuProps) => {
                       ))}
                     <Link
                       href={'/categories'}
+                      prefetch={true}
                       className="block rounded-md px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 hover:text-primary"
                       onClick={onClose}
                     >
@@ -459,6 +462,7 @@ const MobileNavMenu = ({ isOpen, onClose }: MobileNavMenuProps) => {
                 </h3>
                 <div className="space-y-2">
                   <Link href={'/account/profile?tab=profile'}
+                    prefetch={true}
                     className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 hover:text-primary"
                     aria-label="My Account - Sign in or manage your account"
                   >
@@ -467,6 +471,7 @@ const MobileNavMenu = ({ isOpen, onClose }: MobileNavMenuProps) => {
                   </Link>
                   <Link
                     href={'/wishlist'}
+                    prefetch={true}
                     className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 hover:text-primary"
                     aria-label="Wishlist - View your saved items"
                   >

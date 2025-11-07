@@ -5,6 +5,7 @@ import { X, Plus, Minus, ShoppingCart } from 'lucide-react';
 import { Product } from '@/lib/types/product';
 import { useCartStore } from '@/lib/data/mainStore/cartStore';
 import CartNotification from './CartNotification';
+import InlineLoader from './InlineLoader';
 
 interface ProductOptionsModalProps {
   isOpen: boolean;
@@ -21,6 +22,7 @@ export default function ProductOptionsModal({
   const [quantity, setQuantity] = useState(1);
   const [showNotification, setShowNotification] = useState(false);
   const addToCart = useCartStore(s => s.add);
+  const isAdding = useCartStore(s => s.isAdding);
 
   // Reset state when modal opens/closes or product changes
   useEffect(() => {
@@ -205,11 +207,20 @@ export default function ProductOptionsModal({
               <div className="p-4 border-t space-y-2">
           <button
             onClick={handleAddToCart}
-            disabled={!canAddToCart}
+            disabled={!canAddToCart || isAdding}
             className="w-full bg-primary text-white py-2.5 px-4 rounded-lg text-sm font-medium hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
           >
-            <ShoppingCart className="w-4 h-4" />
-            Add to Cart
+            {isAdding ? (
+              <>
+                <InlineLoader size="sm" />
+                <span>Adding...</span>
+              </>
+            ) : (
+              <>
+                <ShoppingCart className="w-4 h-4" />
+                Add to Cart
+              </>
+            )}
           </button>
           
           <button

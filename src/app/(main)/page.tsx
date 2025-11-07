@@ -1,14 +1,41 @@
-import Hero from './components/home/Hero';
+'use client';
+
+import dynamic from 'next/dynamic';
 import Container from './components/layouts/Container';
-import ImageGrid from './components/home/ImageGrid';
-import CategoryGrid from './components/home/CategoryGrid';
-import Trending from './components/home/Trending';
-import AnimatedCards from './components/home/AnimatedCards';
-import EvaraeWorld from './components/home/EvaraeWorld';
-import NewArrival from './components/home/NewArrival';
-import OurPromise from './components/home/Assurance';
-import CircleCategories from './components/home/Category';
 import { Devider } from './assets/Common';
+
+// Critical above-the-fold components - load immediately
+import Hero from './components/home/Hero';
+import CircleCategories from './components/home/Category';
+
+// Lazy load below-the-fold components - only load when user scrolls
+const CategoryGrid = dynamic(() => import('./components/home/CategoryGrid'), {
+  ssr: true, // SSR for SEO
+});
+
+const AnimatedCards = dynamic(() => import('./components/home/AnimatedCards'), {
+  ssr: true,
+});
+
+const ImageGrid = dynamic(() => import('./components/home/ImageGrid'), {
+  ssr: true,
+});
+
+const Trending = dynamic(() => import('./components/home/Trending'), {
+  ssr: true,
+});
+
+const NewArrival = dynamic(() => import('./components/home/NewArrival'), {
+  ssr: true,
+});
+
+const EvaraeWorld = dynamic(() => import('./components/home/EvaraeWorld'), {
+  ssr: true,
+});
+
+const OurPromise = dynamic(() => import('./components/home/Assurance'), {
+  ssr: true,
+});
 
 export default function Home() {
   return (
