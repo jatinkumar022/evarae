@@ -1,5 +1,6 @@
 'use client';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useEffect } from 'react';
 import { useHomepageStore } from '@/lib/data/mainStore/homepageStore';
 
@@ -18,14 +19,17 @@ const CategoryCard = ({
 }) => (
   <Link
     href={href || '#'}
-    className="relative block overflow-hidden rounded-lg group cursor-pointer"
+    className="relative block overflow-hidden rounded-lg group cursor-pointer min-h-[260px]"
     aria-label={`Explore ${label} collection`}
   >
     {src ? (
-      <img
-        src={src as string}
+      <Image
+        src={src}
         alt={alt}
-        className="w-full h-full object-cover transition-transform duration-500 ease-in-out group-hover:scale-105"
+        fill
+        sizes="(max-width: 768px) 100vw, 50vw"
+        priority={isLarge}
+        className="object-cover transition-transform duration-500 ease-in-out group-hover:scale-105"
       />
     ) : (
       <div className="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">

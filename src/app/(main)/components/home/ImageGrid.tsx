@@ -8,22 +8,22 @@ const GridItem = ({
   image,
   slug,
   name,
-  index,
 }: {
   image?: string;
   slug: string;
   name: string;
-  index: number;
 }) => (
   <Link
     href={`/collections/${slug}`}
-    className="relative overflow-hidden rounded-lg group cursor-pointer h-full block"
+    className="relative overflow-hidden rounded-lg group cursor-pointer h-full block min-h-[280px]"
   >
     {image ? (
-      <img
+      <Image
         src={image}
         alt={name}
-        className="w-full h-full object-cover transition-transform duration-500 ease-in-out group-hover:scale-105"
+        fill
+        sizes="(max-width: 768px) 100vw, 50vw"
+        className="object-cover transition-transform duration-500 ease-in-out group-hover:scale-105"
       />
     ) : (
       <div className="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
@@ -86,7 +86,6 @@ const ImageGrid = () => {
               image={collection.image}
               slug={collection.slug}
               name={collection.name}
-              index={index}
             />
           </div>
         ))}

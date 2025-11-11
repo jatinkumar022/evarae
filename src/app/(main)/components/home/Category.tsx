@@ -9,7 +9,7 @@ import { usePublicCategoryStore } from '@/lib/data/mainStore/categoryStore';
 const CircleCategories = memo(() => {
   const [clickedIndex, setClickedIndex] = useState<number | null>(null);
 
-  const { categories, status, fetchCategories } = usePublicCategoryStore();
+  const { categories, fetchCategories } = usePublicCategoryStore();
 
   useEffect(() => {
     // Fetch categories once on mount, using cache

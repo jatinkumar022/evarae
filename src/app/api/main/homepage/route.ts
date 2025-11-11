@@ -80,12 +80,12 @@ export async function GET() {
     dateThreshold.setDate(dateThreshold.getDate() - daysBack);
 
     // Get collections with products sold in the last N days
-    const recentOrders = await Order.find<RecentOrder>({
+    const recentOrders = (await Order.find<RecentOrder>({
       createdAt: { $gte: dateThreshold },
       orderStatus: { $ne: 'cancelled' },
     })
       .select('items')
-      .lean();
+      .lean()) as unknown as RecentOrder[];
 
     // Extract product IDs from recent orders
     const soldProductIds = new Set<string>();

@@ -138,6 +138,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
         toastApi.success('Added to wishlist', 'Product added to your wishlist');
       }
     } catch (error) {
+      console.error('Wishlist toggle error', error);
       toastApi.error('Error', 'Failed to update wishlist. Please try again.');
     } finally {
       setIsWishlistLoading(false);

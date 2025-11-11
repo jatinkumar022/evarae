@@ -1,9 +1,9 @@
 'use client';
 
 import * as React from 'react';
-import Image from 'next/image';
+import Image, { type StaticImageData } from 'next/image';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { motion, AnimatePresence, PanInfo } from 'framer-motion';
+import { motion, AnimatePresence, type PanInfo } from 'framer-motion';
 
 import Container from '../layouts/Container';
 import { useHomepageStore } from '@/lib/data/mainStore/homepageStore';
@@ -12,36 +12,37 @@ export default function HeroCarousel() {
   const { data, fetchHomepage } = useHomepageStore();
   const [current, setCurrent] = React.useState(0);
   const [direction, setDirection] = React.useState(0);
-  const timerRef = React.useRef<NodeJS.Timeout | null>(null);
+  const timerRef = React.useRef<ReturnType<typeof setInterval> | null>(null);
 
   React.useEffect(() => {
     fetchHomepage();
   }, [fetchHomepage]);
 
-  const images = React.useMemo(() => {
+  const images = React.useMemo<(string | StaticImageData)[]>(() => {
     return data?.hero?.images || [];
   }, [data?.hero?.images]);
 
-  // Don't render if no images
-  if (!images || images.length === 0) {
-    return null;
-  }
+  const hasImages = images.length > 0;
 
-  const resetTimer = () => {
+  const resetTimer = React.useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
     if (images.length > 0) {
       timerRef.current = setInterval(() => {
         setCurrent(prev => (prev === images.length - 1 ? 0 : prev + 1));
       }, 5000);
     }
-  };
+  }, [images.length]);
 
   React.useEffect(() => {
     resetTimer();
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [images.length]);
+  }, [resetTimer]);
+
+  if (!hasImages) {
+    return null;
+  }
 
   const paginate = (newDirection: number) => {
     setDirection(newDirection);
@@ -70,19 +71,32 @@ export default function HeroCarousel() {
   };
 
   const slideVariants = {
-    enter: (direction: number) => ({
-      x: direction > 0 ? '100%' : '-100%',
+    enter: (dir: number) => ({
+      x: dir > 0 ? '100%' : '-100%',
       opacity: 0,
     }),
     center: {
       x: 0,
       opacity: 1,
     },
-    exit: (direction: number) => ({
-      x: direction > 0 ? '-100%' : '100%',
+    exit: (dir: number) => ({
+      x: dir > 0 ? '-100%' : '100%',
       opacity: 0,
     }),
   };
+
+  const renderSlideImage = (index: number) => (
+    <Image
+      src={images[index]}
+      alt={`Caelvi jewellery collection slide ${index + 1} of ${images.length}`}
+      fill
+      className="object-cover pointer-events-none rounded-lg"
+      priority
+      quality={90}
+      sizes="100vw"
+      draggable={false}
+    />
+  );
 
   return (
     <div className="w-full mt-1.5">
@@ -113,29 +127,7 @@ export default function HeroCarousel() {
               WebkitTouchCallout: 'none',
             }}
           >
-            {typeof images[current] === 'string' ? (
-              <img
-                src={images[current] as string}
-                alt={`Caelvi jewellery collection slide ${current + 1} of ${
-                  images.length
-                }`}
-                className="w-full h-full object-cover pointer-events-none rounded-lg"
-                draggable={false}
-              />
-            ) : (
-              <Image
-                src={images[current] as any}
-                alt={`Caelvi jewellery collection slide ${current + 1} of ${
-                  images.length
-                }`}
-                fill
-                className="object-cover pointer-events-none rounded-lg"
-                priority
-                quality={90}
-                sizes="100vw"
-                draggable={false}
-              />
-            )}
+            {renderSlideImage(current)}
           </motion.div>
         </AnimatePresence>
 
@@ -190,29 +182,7 @@ export default function HeroCarousel() {
                 WebkitTouchCallout: 'none',
               }}
             >
-              {typeof images[current] === 'string' ? (
-                <img
-                  src={images[current] as string}
-                  alt={`Caelvi jewellery collection slide ${current + 1} of ${
-                    images.length
-                  }`}
-                  className="w-full h-full object-cover pointer-events-none rounded-lg"
-                  draggable={false}
-                />
-              ) : (
-                <Image
-                  src={images[current] as any}
-                  alt={`Caelvi jewellery collection slide ${current + 1} of ${
-                    images.length
-                  }`}
-                  fill
-                  className="object-cover pointer-events-none rounded-lg"
-                  priority
-                  quality={90}
-                  sizes="100vw"
-                  draggable={false}
-                />
-              )}
+              {renderSlideImage(current)}
             </motion.div>
           </AnimatePresence>
         </div>

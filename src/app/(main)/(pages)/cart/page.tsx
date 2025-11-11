@@ -258,6 +258,7 @@ export default function CartPage() {
         toastApi.error(data.message);
       }
     } catch (error) {
+      console.error('Check delivery error', error);
       setDeliveryMsg('Failed to check delivery');
       toastApi.error('Failed to check delivery');
     } finally {

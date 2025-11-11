@@ -1,6 +1,7 @@
 'use client';
 import React, { useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useHomepageStore } from '@/lib/data/mainStore/homepageStore';
 
 const TrendingItem = ({
@@ -17,10 +18,13 @@ const TrendingItem = ({
   const content = (
     <>
       <div className="bg-muted rounded-t-full overflow-hidden">
-        <img
+        <Image
           src={image}
           alt={alt}
+          width={640}
+          height={640}
           className="w-full object-cover group-hover:scale-105 transition-transform duration-500 ease-in-out h-full sm:h-[485px] h-[395px]"
+          sizes="(max-width: 768px) 100vw, 33vw"
         />
       </div>
       <div className="py-4">

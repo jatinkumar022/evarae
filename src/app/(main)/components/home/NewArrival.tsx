@@ -1,5 +1,6 @@
 'use client';
 import React, { useEffect } from 'react';
+import Image from 'next/image';
 import { FaRegGem } from 'react-icons/fa6';
 import Container from '../layouts/Container';
 import Link from 'next/link';
@@ -32,10 +33,13 @@ function NewArrival() {
       {/* Background Image */}
       {backgroundImage && (
         <div className="absolute inset-0">
-          <img
+          <Image
             src={backgroundImage}
             alt="New Arrivals Background"
-            className="absolute inset-0 w-full h-full object-cover blur-xs lg:blur-none"
+            fill
+            className="object-cover blur-xs lg:blur-none"
+            sizes="100vw"
+            priority
           />
           <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/20" />
         </div>
@@ -66,9 +70,11 @@ function NewArrival() {
                   className="relative block overflow-hidden rounded-lg group cursor-pointer"
                   aria-label={`Explore ${topImage1Title} collection`}
                 >
-                  <img
+                  <Image
                     src={topImage1}
                     alt={topImage1Title}
+                    width={600}
+                    height={600}
                     className="w-full h-full object-cover aspect-square"
                   />
                   {topImage1Title && (
@@ -88,9 +94,11 @@ function NewArrival() {
                   className="relative block overflow-hidden rounded-lg group cursor-pointer"
                   aria-label={`Explore ${topImage2Title} collection`}
                 >
-                  <img
+                  <Image
                     src={topImage2}
                     alt={topImage2Title}
+                    width={600}
+                    height={600}
                     className="w-full h-full object-cover aspect-square"
                   />
                   {topImage2Title && (

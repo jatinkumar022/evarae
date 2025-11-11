@@ -7,7 +7,7 @@ import mongoose from 'mongoose';
 
 const USER_JWT_SECRET = process.env.USER_JWT_SECRET as string;
 
-type PopulatedWishlistProduct = {
+interface PopulatedWishlistProduct {
   _id: mongoose.Types.ObjectId;
   name: string;
   slug: string;
@@ -20,11 +20,53 @@ type PopulatedWishlistProduct = {
   colors?: string[];
   stockQuantity?: number;
   categories?: Array<{ _id?: string; name?: string; slug?: string }>;
-};
+}
 
 type LeanProfileWithWishlist = {
   wishlist?: PopulatedWishlistProduct[];
 };
+
+interface WishlistResponseProduct {
+  _id: mongoose.Types.ObjectId;
+  name: string;
+  slug: string;
+  images: string[];
+  price?: number;
+  discountPrice?: number | null;
+  tags: string[];
+  material: string;
+  colors: string[];
+  stockQuantity: number;
+  categories: Array<{ _id?: string; name?: string; slug?: string }>;
+}
+
+function isActiveProduct(
+  product: PopulatedWishlistProduct | null | undefined
+): product is PopulatedWishlistProduct {
+  return Boolean(product) && product?.status === 'active';
+}
+
+function serializeWishlistProducts(
+  wishlist?: PopulatedWishlistProduct[] | null
+): WishlistResponseProduct[] {
+  if (!wishlist) return [];
+
+  return wishlist
+    .filter(isActiveProduct)
+    .map(product => ({
+      _id: product._id,
+      name: product.name,
+      slug: product.slug,
+      images: product.images ?? [],
+      price: product.price,
+      discountPrice: product.discountPrice ?? null,
+      tags: product.tags ?? [],
+      material: product.material ?? '',
+      colors: product.colors ?? [],
+      stockQuantity: product.stockQuantity ?? 0,
+      categories: product.categories ?? [],
+    }));
+}
 
 function getUserIdFromRequest(request: Request): string | null {
   try {
@@ -46,7 +88,9 @@ function getUserIdFromRequest(request: Request): string | null {
   }
 }
 
-async function resolveProductObjectId(idOrSlug: string) {
+async function resolveProductObjectId(
+  idOrSlug: string
+): Promise<mongoose.Types.ObjectId | null> {
   if (!idOrSlug) return null;
   if (/^[a-f0-9]{24}$/i.test(idOrSlug))
     return new mongoose.Types.ObjectId(idOrSlug);
@@ -84,30 +128,7 @@ export async function GET(request: Request) {
       })
       .lean()) as LeanProfileWithWishlist | null;
 
-    if (!profile || !profile.wishlist || profile.wishlist.length === 0) {
-      return NextResponse.json({ products: [] });
-    }
-
-    // Extract products from wishlist
-    const products = (profile.wishlist || [])
-      .map((product: any) => {
-        if (!product || product.status !== 'active') return null;
-
-        return {
-          _id: product._id,
-          name: product.name,
-          slug: product.slug,
-          images: product.images || [],
-          price: product.price,
-          discountPrice: product.discountPrice,
-          tags: product.tags || [],
-          material: product.material || '',
-          colors: product.colors || [],
-          stockQuantity: product.stockQuantity || 0,
-          categories: product.categories || [],
-        };
-      })
-      .filter(Boolean);
+    const products = serializeWishlistProducts(profile?.wishlist);
 
     return NextResponse.json({ products });
   } catch (error) {
@@ -175,25 +196,7 @@ export async function POST(request: Request) {
       })
       .lean()) as LeanProfileWithWishlist | null;
 
-    const products = (updatedProfile?.wishlist || [])
-      .map((product: any) => {
-        if (!product || product.status !== 'active') return null;
-
-        return {
-          _id: product._id,
-          name: product.name,
-          slug: product.slug,
-          images: product.images || [],
-          price: product.price,
-          discountPrice: product.discountPrice,
-          tags: product.tags || [],
-          material: product.material || '',
-          colors: product.colors || [],
-          stockQuantity: product.stockQuantity || 0,
-          categories: product.categories || [],
-        };
-      })
-      .filter(Boolean);
+    const products = serializeWishlistProducts(updatedProfile?.wishlist);
 
     return NextResponse.json({ products });
   } catch (error) {
@@ -254,25 +257,7 @@ export async function DELETE(request: Request) {
       })
       .lean()) as LeanProfileWithWishlist | null;
 
-    const products = (profile?.wishlist || [])
-      .map((product: any) => {
-        if (!product || product.status !== 'active') return null;
-
-        return {
-          _id: product._id,
-          name: product.name,
-          slug: product.slug,
-          images: product.images || [],
-          price: product.price,
-          discountPrice: product.discountPrice,
-          tags: product.tags || [],
-          material: product.material || '',
-          colors: product.colors || [],
-          stockQuantity: product.stockQuantity || 0,
-          categories: product.categories || [],
-        };
-      })
-      .filter(Boolean);
+    const products = serializeWishlistProducts(profile?.wishlist);
 
     return NextResponse.json({ products });
   } catch (error) {

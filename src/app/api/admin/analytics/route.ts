@@ -319,11 +319,12 @@ export async function GET(request: Request) {
     });
 
     // Remove createdAt before returning
-    const formattedActivity = recentActivity.slice(0, 5).map(({ createdAt, ...rest }) => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      void createdAt; // Explicitly mark as intentionally unused
-      return rest;
-    });
+    const formattedActivity = recentActivity
+      .slice(0, 5)
+      .map(({ createdAt, ...rest }) => {
+        void createdAt;
+        return rest;
+      });
 
     // Get total counts (all time, not just period)
     const totalCustomers = await User.countDocuments({ role: 'user' });

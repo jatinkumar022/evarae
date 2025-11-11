@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -69,20 +69,22 @@ export function useAddressForm({
   editingId,
   onSuccess,
 }: UseAddressFormOptions = {}) {
-  const defaultValues: AddressFormData = {
-    label: 'Home',
-    fullName: '',
-    phone: '',
-    line1: '',
-    line2: '',
-    city: '',
-    state: '',
-    postalCode: '',
-    country: 'IN',
-    isDefaultShipping: false,
-    isDefaultBilling: false,
-    ...initialData,
-  };
+  const defaultValues: AddressFormData = useMemo(
+    () => ({
+      label: initialData?.label ?? 'Home',
+      fullName: initialData?.fullName ?? '',
+      phone: initialData?.phone ?? '',
+      line1: initialData?.line1 ?? '',
+      line2: initialData?.line2 ?? '',
+      city: initialData?.city ?? '',
+      state: initialData?.state ?? '',
+      postalCode: initialData?.postalCode ?? '',
+      country: initialData?.country ?? 'IN',
+      isDefaultShipping: initialData?.isDefaultShipping ?? false,
+      isDefaultBilling: initialData?.isDefaultBilling ?? false,
+    }),
+    [initialData]
+  );
 
   const form = useForm<AddressFormData>({
     resolver: zodResolver(addressFormSchema),

@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import {
   Save,
   Upload,
@@ -249,9 +250,11 @@ export default function HomepagePage() {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                 {homepageData.heroImages.map((image, index) => (
                   <div key={index} className="relative group">
-                    <img
+                    <Image
                       src={image}
                       alt={`Hero ${index + 1}`}
+                      width={320}
+                      height={128}
                       className="w-full h-32 object-cover rounded-lg"
                     />
                     <button
@@ -318,9 +321,11 @@ export default function HomepagePage() {
                       >
                         <div className="flex items-center gap-3">
                           {collection.image && (
-                            <img
+                            <Image
                               src={collection.image}
                               alt={collection.name}
+                              width={48}
+                              height={48}
                               className="w-12 h-12 object-cover rounded"
                             />
                           )}
@@ -367,10 +372,11 @@ export default function HomepagePage() {
                 </label>
                 {homepageData.freshlyMinted.backgroundImage ? (
                   <div className="relative w-full h-48 mb-2">
-                    <img
+                    <Image
                       src={homepageData.freshlyMinted.backgroundImage}
                       alt="Background"
-                      className="w-full h-full object-cover rounded-lg"
+                      fill
+                      className="object-cover rounded-lg"
                     />
                     <button
                       onClick={() =>
@@ -417,10 +423,11 @@ export default function HomepagePage() {
                   </label>
                   {homepageData.freshlyMinted.topImage1 ? (
                     <div className="relative w-full h-48 mb-2">
-                      <img
+                      <Image
                         src={homepageData.freshlyMinted.topImage1}
                         alt="Top 1"
-                        className="w-full h-full object-cover rounded-lg"
+                        fill
+                        className="object-cover rounded-lg"
                       />
                       <button
                         onClick={() =>
@@ -495,10 +502,11 @@ export default function HomepagePage() {
                   </label>
                   {homepageData.freshlyMinted.topImage2 ? (
                     <div className="relative w-full h-48 mb-2">
-                      <img
+                      <Image
                         src={homepageData.freshlyMinted.topImage2}
                         alt="Top 2"
-                        className="w-full h-full object-cover rounded-lg"
+                        fill
+                        className="object-cover rounded-lg"
                       />
                       <button
                         onClick={() =>
@@ -666,9 +674,11 @@ export default function HomepagePage() {
                       >
                         <div className="flex items-center gap-3">
                           {collection.image && (
-                            <img
+                            <Image
                               src={collection.image}
                               alt={collection.name}
+                              width={48}
+                              height={48}
                               className="w-12 h-12 object-cover rounded"
                             />
                           )}

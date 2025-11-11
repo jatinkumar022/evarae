@@ -11,7 +11,7 @@ interface CartCountState {
 }
 
 export const useCartCountStore = create<CartCountState>()(
-  subscribeWithSelector((set, get) => ({
+  subscribeWithSelector((set) => ({
     count: 0,
     updateCount: (count) => set({ count }),
     syncWithCart: () => {
