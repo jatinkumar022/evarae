@@ -16,7 +16,10 @@ import CustomSelect from '@/app/(main)/components/filters/CustomSelect';
 import { ringsCat } from '@/app/(main)/assets/CategoryGrid';
 import Image from 'next/image';
 import { useCartStore } from '@/lib/data/mainStore/cartStore';
+import { useWishlistStore } from '@/lib/data/mainStore/wishlistStore';
 import CartNotification from '@/app/(main)/components/ui/CartNotification';
+import toastApi from '@/lib/toast';
+
 interface ProductInfoProps {
   product: Product;
 }
@@ -26,7 +29,14 @@ export function ProductInfo({ product }: ProductInfoProps) {
   const [selectedVariant, setSelectedVariant] = useState('default');
   const [isStickyVisible, setIsStickyVisible] = useState(false);
   const [showNotification, setShowNotification] = useState(false);
+  const [isWishlistLoading, setIsWishlistLoading] = useState(false);
   const addToCart = useCartStore(s => s.add);
+  const { load: loadWishlist, add: addToWishlist, remove: removeFromWishlist, isWishlisted } = useWishlistStore();
+
+  // Load wishlist on mount to check initial state
+  useEffect(() => {
+    loadWishlist();
+  }, [loadWishlist]);
 
   // Mock variants - in real app, this would come from product data
   const variants = [
@@ -89,7 +99,6 @@ export function ProductInfo({ product }: ProductInfoProps) {
       price: product.price ?? 0,
       discountPrice: product.price ?? 0,
       images: product.images as string[],
-      thumbnail: (product.images?.[0] as string) || undefined,
       stockQuantity: product.stockCount ?? 1,
     };
     try {
@@ -105,6 +114,30 @@ export function ProductInfo({ product }: ProductInfoProps) {
       console.error('Failed to add to cart:', error);
     }
   };
+
+  const handleWishlistToggle = async () => {
+    if (isWishlistLoading) return;
+    
+    setIsWishlistLoading(true);
+    try {
+      const productId = product.id;
+      const isCurrentlyWishlisted = isWishlisted(productId);
+      
+      if (isCurrentlyWishlisted) {
+        await removeFromWishlist(productId);
+        toastApi.success('Removed from wishlist', 'Product removed from your wishlist');
+      } else {
+        await addToWishlist(productId);
+        toastApi.success('Added to wishlist', 'Product added to your wishlist');
+      }
+    } catch (error) {
+      toastApi.error('Error', 'Failed to update wishlist. Please try again.');
+    } finally {
+      setIsWishlistLoading(false);
+    }
+  };
+
+  const isProductWishlisted = isWishlisted(product.id);
 
   return (
     <>
@@ -229,10 +262,18 @@ export function ProductInfo({ product }: ProductInfoProps) {
               </button>
 
             {/* Secondary action - Wishlist */}
-            <button className="w-full border border-primary/40 text-primary py-2 px-5 rounded-sm text-sm lg:text-base font-medium hover:bg-primary hover:!text-white transition-colors flex items-center justify-center gap-2">
-                <Heart className="w-4 h-4" />
-              Add to Wishlist
-              </button>
+            <button 
+              onClick={handleWishlistToggle}
+              disabled={isWishlistLoading}
+              className={`w-full border py-2 px-5 rounded-sm text-sm lg:text-base font-medium transition-colors flex items-center justify-center gap-2 ${
+                isProductWishlisted
+                  ? 'border-primary bg-primary text-white hover:bg-primary-dark'
+                  : 'border-primary/40 text-primary hover:bg-primary hover:!text-white'
+              } ${isWishlistLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              <Heart className={`w-4 h-4 ${isProductWishlisted ? 'fill-current' : ''}`} />
+              {isProductWishlisted ? 'Remove from Wishlist' : 'Add to Wishlist'}
+            </button>
           </div>
         )}
 

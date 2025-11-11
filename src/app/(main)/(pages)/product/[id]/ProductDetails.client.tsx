@@ -1,19 +1,46 @@
 'use client';
+
 import { useState } from 'react';
+import dynamic from 'next/dynamic';
 import { Product } from '@/lib/types/product';
-import { ProductGallery } from './ProductGallery';
-import { ProductInfo } from './ProductInfo';
-import { ProductTabs } from './ProductTabs';
-import { RelatedProducts } from './RelatedProducts';
-import { ProductReviews } from './ProductReviews';
-import { ProductSpecifications } from './ProductSpecifications';
-import { ProductDelivery } from './ProductDelivery';
-import { ProductWarranty } from './ProductWarranty';
-import { ProductFAQ } from './ProductFAQ';
 import Container from '@/app/(main)/components/layouts/Container';
 
+// Critical above-the-fold components - load immediately
+import { ProductGallery } from './components/ProductGallery';
+import { ProductInfo } from './components/ProductInfo';
 
-import { PeopleAlsoBought } from './PeopleAlsoBought';
+// Lazy load below-the-fold components for optimization
+const ProductTabs = dynamic(() => import('./components/ProductTabs').then(mod => ({ default: mod.ProductTabs })), {
+  ssr: true,
+});
+
+const RelatedProducts = dynamic(() => import('./components/RelatedProducts').then(mod => ({ default: mod.RelatedProducts })), {
+  ssr: true,
+});
+
+const ProductReviews = dynamic(() => import('./components/ProductReviews').then(mod => ({ default: mod.ProductReviews })), {
+  ssr: true,
+});
+
+const ProductSpecifications = dynamic(() => import('./components/ProductSpecifications').then(mod => ({ default: mod.ProductSpecifications })), {
+  ssr: true,
+});
+
+const ProductDelivery = dynamic(() => import('./components/ProductDelivery').then(mod => ({ default: mod.ProductDelivery })), {
+  ssr: true,
+});
+
+const ProductWarranty = dynamic(() => import('./components/ProductWarranty').then(mod => ({ default: mod.ProductWarranty })), {
+  ssr: true,
+});
+
+const ProductFAQ = dynamic(() => import('./components/ProductFAQ').then(mod => ({ default: mod.ProductFAQ })), {
+  ssr: true,
+});
+
+const PeopleAlsoBought = dynamic(() => import('./components/PeopleAlsoBought').then(mod => ({ default: mod.PeopleAlsoBought })), {
+  ssr: true,
+});
 
 interface ProductDetailsProps {
   product: Product;
@@ -22,6 +49,7 @@ interface ProductDetailsProps {
 export function ProductDetails({ product }: ProductDetailsProps) {
   const [selectedTab, setSelectedTab] = useState('description');
   const [isGallaryModelOpen, setIsGallaryModelOpen] = useState(false);
+  
   return (
     <Container>
       {/* Main Product Section */}

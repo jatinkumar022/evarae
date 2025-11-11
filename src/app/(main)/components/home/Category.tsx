@@ -1,19 +1,20 @@
 'use client';
 
-import React, { useState, MouseEvent, useEffect } from 'react';
+import React, { useState, MouseEvent, useEffect, memo } from 'react';
 import Container from '../layouts/Container';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePublicCategoryStore } from '@/lib/data/mainStore/categoryStore';
 
-const CircleCategories = () => {
+const CircleCategories = memo(() => {
   const [clickedIndex, setClickedIndex] = useState<number | null>(null);
 
   const { categories, status, fetchCategories } = usePublicCategoryStore();
 
   useEffect(() => {
-    if (status === 'idle') fetchCategories();
-  }, [status, fetchCategories]);
+    // Fetch categories once on mount, using cache
+    fetchCategories();
+  }, [fetchCategories]);
 
   const handleClick = (e: MouseEvent<HTMLAnchorElement>, idx: number) => {
     e.preventDefault();
@@ -67,6 +68,8 @@ const CircleCategories = () => {
       </Container>
     </section>
   );
-};
+});
+
+CircleCategories.displayName = 'CircleCategories';
 
 export default CircleCategories;

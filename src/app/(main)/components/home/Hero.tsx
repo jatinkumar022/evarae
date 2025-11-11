@@ -5,24 +5,35 @@ import Image from 'next/image';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence, PanInfo } from 'framer-motion';
 
-import { one, two, three, four, five } from '@/app/(main)/assets/Home/CAROUSEL';
-
 import Container from '../layouts/Container';
-
-const images = [one, two, three, four, five];
-
-const mobileImages = [one, two, three, four, five];
+import { useHomepageStore } from '@/lib/data/mainStore/homepageStore';
 
 export default function HeroCarousel() {
+  const { data, fetchHomepage } = useHomepageStore();
   const [current, setCurrent] = React.useState(0);
   const [direction, setDirection] = React.useState(0);
   const timerRef = React.useRef<NodeJS.Timeout | null>(null);
 
+  React.useEffect(() => {
+    fetchHomepage();
+  }, [fetchHomepage]);
+
+  const images = React.useMemo(() => {
+    return data?.hero?.images || [];
+  }, [data?.hero?.images]);
+
+  // Don't render if no images
+  if (!images || images.length === 0) {
+    return null;
+  }
+
   const resetTimer = () => {
     if (timerRef.current) clearInterval(timerRef.current);
-    timerRef.current = setInterval(() => {
-      setCurrent(prev => (prev === images.length - 1 ? 0 : prev + 1));
-    }, 5000);
+    if (images.length > 0) {
+      timerRef.current = setInterval(() => {
+        setCurrent(prev => (prev === images.length - 1 ? 0 : prev + 1));
+      }, 5000);
+    }
   };
 
   React.useEffect(() => {
@@ -30,7 +41,7 @@ export default function HeroCarousel() {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, []);
+  }, [images.length]);
 
   const paginate = (newDirection: number) => {
     setDirection(newDirection);
@@ -102,18 +113,29 @@ export default function HeroCarousel() {
               WebkitTouchCallout: 'none',
             }}
           >
-            <Image
-              src={images[current]}
-              alt={`Caelvi jewellery collection slide ${current + 1} of ${
-                images.length
-              }`}
-              fill
-              className="object-cover pointer-events-none rounded-lg"
-              priority
-              quality={90}
-              sizes="100vw"
-              draggable={false}
-            />
+            {typeof images[current] === 'string' ? (
+              <img
+                src={images[current] as string}
+                alt={`Caelvi jewellery collection slide ${current + 1} of ${
+                  images.length
+                }`}
+                className="w-full h-full object-cover pointer-events-none rounded-lg"
+                draggable={false}
+              />
+            ) : (
+              <Image
+                src={images[current] as any}
+                alt={`Caelvi jewellery collection slide ${current + 1} of ${
+                  images.length
+                }`}
+                fill
+                className="object-cover pointer-events-none rounded-lg"
+                priority
+                quality={90}
+                sizes="100vw"
+                draggable={false}
+              />
+            )}
           </motion.div>
         </AnimatePresence>
 
@@ -168,39 +190,52 @@ export default function HeroCarousel() {
                 WebkitTouchCallout: 'none',
               }}
             >
-              <Image
-                src={mobileImages[current]}
-                alt={`Caelvi jewellery collection slide ${current + 1} of ${
-                  mobileImages.length
-                }`}
-                fill
-                className="object-cover pointer-events-none rounded-lg"
-                priority
-                quality={90}
-                sizes="100vw"
-                draggable={false}
-              />
+              {typeof images[current] === 'string' ? (
+                <img
+                  src={images[current] as string}
+                  alt={`Caelvi jewellery collection slide ${current + 1} of ${
+                    images.length
+                  }`}
+                  className="w-full h-full object-cover pointer-events-none rounded-lg"
+                  draggable={false}
+                />
+              ) : (
+                <Image
+                  src={images[current] as any}
+                  alt={`Caelvi jewellery collection slide ${current + 1} of ${
+                    images.length
+                  }`}
+                  fill
+                  className="object-cover pointer-events-none rounded-lg"
+                  priority
+                  quality={90}
+                  sizes="100vw"
+                  draggable={false}
+                />
+              )}
             </motion.div>
           </AnimatePresence>
         </div>
       </Container>
 
       {/* Dot Indicators */}
-      <div className="mt-6 flex justify-center gap-2">
-        {images.map((_, i) => (
-          <motion.button
-            key={i}
-            onClick={() => goToSlide(i)}
-            className={`w-2.5 h-2.5 rounded-full transition-all duration-300 cursor-pointer ${
-              current === i ? 'bg-primary px-3' : 'bg-primary/30'
-            }`}
-            aria-label={`Go to slide ${i + 1} of ${images.length}`}
-            aria-current={current === i ? 'true' : 'false'}
-            whileHover={{ scale: 1.2 }}
-            whileTap={{ scale: 0.9 }}
-          />
-        ))}
-      </div>
+      {images.length > 1 && (
+        <div className="mt-6 flex justify-center gap-2">
+          {images.map((_, i) => (
+            <motion.button
+              key={i}
+              onClick={() => goToSlide(i)}
+              className={`w-2.5 h-2.5 rounded-full transition-all duration-300 cursor-pointer ${
+                current === i ? 'bg-primary px-3' : 'bg-primary/30'
+              }`}
+              aria-label={`Go to slide ${i + 1} of ${images.length}`}
+              aria-current={current === i ? 'true' : 'false'}
+              whileHover={{ scale: 1.2 }}
+              whileTap={{ scale: 0.9 }}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

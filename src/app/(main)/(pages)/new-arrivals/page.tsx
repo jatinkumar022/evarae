@@ -65,7 +65,6 @@ export default function EnhancedNewArrivalsPage() {
           description?: string;
           price?: number | null;
           discountPrice?: number | null;
-          thumbnail?: string;
           images?: string[];
           categories?: Array<{
             _id?: string;
@@ -85,6 +84,8 @@ export default function EnhancedNewArrivalsPage() {
             p.discountPrice != null &&
             p.price != null &&
             p.discountPrice < p.price;
+          const primaryImage = p.images?.[0] || '/favicon.ico';
+          const secondaryImage = p.images?.[1];
           return {
             id: p.slug,
             name: p.name,
@@ -92,8 +93,10 @@ export default function EnhancedNewArrivalsPage() {
             price: hasDiscount ? p.discountPrice : p.price ?? null,
             originalPrice: hasDiscount ? p.price : null,
             currency: 'INR',
-            images: [p.thumbnail || p.images?.[0]],
-            hoverImage: p.images?.[1],
+            images: secondaryImage
+              ? [primaryImage, secondaryImage]
+              : [primaryImage],
+            hoverImage: secondaryImage,
             category: {
               id: p.categories?.[0]?._id || p.categories?.[0]?.slug || '',
               name: p.categories?.[0]?.name || '',
@@ -314,7 +317,7 @@ export default function EnhancedNewArrivalsPage() {
                   >
                     <div className="relative aspect-square overflow-hidden rounded-lg sm:rounded-xl lg:rounded-2xl bg-white shadow-lg hover:shadow-xl transition-all duration-500 border border-gray-100">
                       <Image
-                        src={product.thumbnail || product.images[0]}
+                        src={String(product.images[0] || '/favicon.ico')}
                         alt={product.name}
                         fill
                         className="object-cover group-hover:scale-110 transition-transform duration-700"

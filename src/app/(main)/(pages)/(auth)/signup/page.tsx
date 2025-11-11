@@ -65,11 +65,31 @@ export default function SignupPage() {
   // resend cooldown is handled by user auth store
 
   const handleOtpChange = (index: number, value: string) => {
-    const digit = value.replace(/\D/g, '').slice(0, 1);
+    const digits = value.replace(/\D/g, '');
+    if (!digits) {
+      const cleared = [...otp];
+      cleared[index] = '';
+      setOtp(cleared);
+      return;
+    }
+
     const next = [...otp];
-    next[index] = digit;
+    if (digits.length === 1) {
+      next[index] = digits;
+      setOtp(next);
+      if (index < otp.length - 1) inputsRef.current[index + 1]?.focus();
+      return;
+    }
+
+    let lastFilled = index;
+    for (let offset = 0; offset < digits.length && index + offset < otp.length; offset++) {
+      next[index + offset] = digits[offset];
+      lastFilled = index + offset;
+    }
     setOtp(next);
-    if (digit && index < otp.length - 1) inputsRef.current[index + 1]?.focus();
+    if (lastFilled < otp.length - 1) {
+      inputsRef.current[lastFilled + 1]?.focus();
+    }
   };
 
   const handleOtpKeyDown = (
@@ -89,6 +109,12 @@ export default function SignupPage() {
       inputsRef.current[index - 1]?.focus();
     if (e.key === 'ArrowRight' && index < otp.length - 1)
       inputsRef.current[index + 1]?.focus();
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (isValidOtp) {
+        completeAuth();
+      }
+    }
   };
 
   const goToAuth = async () => {
@@ -282,44 +308,46 @@ export default function SignupPage() {
                   transition={{ duration: 0.3, ease: 'easeOut' }}
                   className="rounded-xl border border-[oklch(0.84_0.04_10.35)]/30 bg-white/90 backdrop-blur-sm p-4 sm:p-6 shadow"
                 >
-                  <h3 className="text-base font-medium text-[oklch(0.39_0.09_17.83)] mb-4">
-                    Enter your email
-                  </h3>
-                  <div className="space-y-2">
-                    <input
-                      id="email"
-                      type="email"
-                      value={email}
-                      onChange={e => {
-                        setEmail(e.target.value);
-                        if (emailError) setEmailError(null);
-                      }}
-                      onKeyDown={e => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          goToAuth();
-                        }
-                      }}
-                      className="w-full rounded-lg border border-[oklch(0.84_0.04_10.35)] bg-white px-3 py-2 text-sm text-[oklch(0.39_0.09_17.83)] placeholder-[oklch(0.7_0.04_12)] focus:outline-none focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/30 focus:border-[oklch(0.66_0.14_358.91)] transition-all"
-                      placeholder="you@example.com"
-                    />
-                    {emailError && (
-                      <p className="text-xs text-red-600">{emailError}</p>
-                    )}
-                  </div>
-                  <div className="gap-3 mt-3 flex sm:items-center justify-end">
-                    <button
-                      onClick={goToAuth}
-                      disabled={!isValidEmail}
-                      className={`rounded-lg px-4 py-2.5 min-w-40 text-white text-sm font-medium transition-all duration-200 ${
-                        isValidEmail
-                          ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] hover:shadow-lg hover:scale-105 shadow-md'
-                          : 'bg-[oklch(0.84_0.04_10.35)] cursor-not-allowed'
-                      }`}
-                    >
-                      Continue
-                    </button>
-                  </div>
+                  <form
+                    onSubmit={e => {
+                      e.preventDefault();
+                      goToAuth();
+                    }}
+                    className="space-y-4"
+                  >
+                    <h3 className="text-base font-medium text-[oklch(0.39_0.09_17.83)]">
+                      Enter your email
+                    </h3>
+                    <div className="space-y-2">
+                      <input
+                        id="email"
+                        type="email"
+                        value={email}
+                        onChange={e => {
+                          setEmail(e.target.value);
+                          if (emailError) setEmailError(null);
+                        }}
+                        className="w-full rounded-lg border border-[oklch(0.84_0.04_10.35)] bg-white px-3 py-2 text-sm text-[oklch(0.39_0.09_17.83)] placeholder-[oklch(0.7_0.04_12)] focus:outline-none focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/30 focus:border-[oklch(0.66_0.14_358.91)] transition-all"
+                        placeholder="you@example.com"
+                      />
+                      {emailError && (
+                        <p className="text-xs text-red-600">{emailError}</p>
+                      )}
+                    </div>
+                    <div className="gap-3 flex sm:items-center justify-end">
+                      <button
+                        type="submit"
+                        disabled={!isValidEmail}
+                        className={`rounded-lg px-4 py-2.5 min-w-40 text-white text-sm font-medium transition-all duration-200 ${
+                          isValidEmail
+                            ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] hover:shadow-lg hover:scale-105 shadow-md'
+                            : 'bg-[oklch(0.84_0.04_10.35)] cursor-not-allowed'
+                        }`}
+                      >
+                        Continue
+                      </button>
+                    </div>
+                  </form>
                 </motion.section>
               )}
 
@@ -332,88 +360,90 @@ export default function SignupPage() {
                   transition={{ duration: 0.3, ease: 'easeOut' }}
                   className="rounded-xl border border-[oklch(0.84_0.04_10.35)]/30 bg-white/90 backdrop-blur-sm p-6 shadow"
                 >
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-base font-medium text-[oklch(0.39_0.09_17.83)]">
-                      Verify your email
-                    </h3>
-                  </div>
-
-                  <div>
-                    <p className="text-sm text-[oklch(0.55_0.06_15)] mb-4">
-                      Enter the 6-digit code sent to
-                      <span className="font-semibold text-[oklch(0.66_0.14_358.91)]">
-                        {' '}
-                        {email}
-                      </span>
-                    </p>
-                    <div className="flex gap-2.5 mb-4 justify-center">
-                      {otp.map((d, i) => (
-                        <input
-                          key={i}
-                          ref={el => {
-                            inputsRef.current[i] = el;
-                          }}
-                          inputMode="numeric"
-                          pattern="[0-9]*"
-                          maxLength={1}
-                          onPaste={handleOtpPaste}
-                          value={d}
-                          onChange={e => handleOtpChange(i, e.target.value)}
-                          onKeyDown={e => handleOtpKeyDown(i, e)}
-                          className="aspect-square w-8 md:w-12 lg:w-14 text-center rounded-lg border border-[oklch(0.84_0.04_10.35)] bg-white text-base font-semibold"
-                        />
-                      ))}
+                  <form
+                    onSubmit={e => {
+                      e.preventDefault();
+                      completeAuth();
+                    }}
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-base font-medium text-[oklch(0.39_0.09_17.83)]">
+                        Verify your email
+                      </h3>
                     </div>
-                    {otpError && (
-                      <p className="text-xs text-red-600 text-center mb-2">
-                        {otpError}
+
+                    <div>
+                      <p className="text-sm text-[oklch(0.55_0.06_15)] mb-4">
+                        Enter the 6-digit code sent to
+                        <span className="font-semibold text-[oklch(0.66_0.14_358.91)]">
+                          {' '}
+                          {email}
+                        </span>
                       </p>
-                    )}
-                    <div className="flex items-center justify-between">
-                      <button
-                        onClick={() => setStep('email')}
-                        className="text-sm text-[oklch(0.55_0.06_15)] hover:text-[oklch(0.66_0.14_358.91)]"
-                      >
-                        ← Back
-                      </button>
-                      <div className="flex items-center gap-4">
+                      <div className="flex gap-2.5 mb-4 justify-center">
+                        {otp.map((d, i) => (
+                          <input
+                            key={i}
+                            ref={el => {
+                              inputsRef.current[i] = el;
+                            }}
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            maxLength={1}
+                            onPaste={handleOtpPaste}
+                            value={d}
+                            onChange={e => handleOtpChange(i, e.target.value)}
+                            onKeyDown={e => handleOtpKeyDown(i, e)}
+                            className="aspect-square w-8 md:w-12 lg:w-14 text-center rounded-lg border border-[oklch(0.84_0.04_10.35)] bg-white text-base font-semibold"
+                          />
+                        ))}
+                      </div>
+                      {otpError && (
+                        <p className="text-xs text-red-600 text-center mb-2">
+                          {otpError}
+                        </p>
+                      )}
+                      <div className="flex items-center justify-between">
                         <button
                           type="button"
-                          disabled={resendInSec > 0}
-                          onClick={() => requestSignupOtp()}
-                          className={`text-sm transition-colors ${
-                            resendInSec > 0
-                              ? 'text-[oklch(0.7_0.04_12)] cursor-not-allowed'
-                              : 'text-[oklch(0.66_0.14_358.91)] hover:text-[oklch(0.58_0.16_8)]'
-                          }`}
+                          onClick={() => setStep('email')}
+                          className="text-sm text-[oklch(0.55_0.06_15)] hover:text-[oklch(0.66_0.14_358.91)]"
                         >
-                          {resendInSec > 0
-                            ? `Resend in 00:${String(resendInSec).padStart(
-                                2,
-                                '0'
-                              )}`
-                            : 'Resend OTP'}
+                          ← Back
                         </button>
-                        <button
-                          onClick={completeAuth}
-                          disabled={!isValidOtp}
-                          className={`rounded-lg px-4 py-2.5 text-white text-sm font-medium transition-all duration-200 ${
-                            isValidOtp
-                              ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] hover:shadow-lg hover:scale-105 shadow-md'
-                              : 'bg-[oklch(0.84_0.04_10.35)] cursor-not-allowed'
-                          }`}
-                          onKeyDown={e => {
-                            if (e.key === 'Enter' && isValidOtp) {
-                              e.preventDefault();
-                              completeAuth();
-                            }
-                          }}
-                        >
-                          Continue
-                        </button>
+                        <div className="flex items-center gap-4">
+                          <button
+                            type="button"
+                            disabled={resendInSec > 0}
+                            onClick={() => requestSignupOtp()}
+                            className={`text-sm transition-colors ${
+                              resendInSec > 0
+                                ? 'text-[oklch(0.7_0.04_12)] cursor-not-allowed'
+                                : 'text-[oklch(0.66_0.14_358.91)] hover:text-[oklch(0.58_0.16_8)]'
+                            }`}
+                          >
+                            {resendInSec > 0
+                              ? `Resend in 00:${String(resendInSec).padStart(
+                                  2,
+                                  '0'
+                                )}`
+                              : 'Resend OTP'}
+                          </button>
+                          <button
+                            type="submit"
+                            disabled={!isValidOtp}
+                            className={`rounded-lg px-4 py-2.5 text-white text-sm font-medium transition-all duration-200 ${
+                              isValidOtp
+                                ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] hover:shadow-lg hover:scale-105 shadow-md'
+                                : 'bg-[oklch(0.84_0.04_10.35)] cursor-not-allowed'
+                            }`}
+                          >
+                            Continue
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  </form>
                 </motion.section>
               )}
 
@@ -426,10 +456,10 @@ export default function SignupPage() {
                   transition={{ duration: 0.3, ease: 'easeOut' }}
                   className="rounded-xl border border-[oklch(0.84_0.04_10.35)]/30 bg-white/90 backdrop-blur-sm p-6 shadow"
                 >
-                  <h3 className="text-base font-medium text-[oklch(0.39_0.09_17.83)] mb-4">
-                    Complete your profile
-                  </h3>
-                  <div className="space-y-6">
+                  <form onSubmit={handleSubmit} className="space-y-6">
+                    <h3 className="text-base font-medium text-[oklch(0.39_0.09_17.83)] mb-4">
+                      Complete your profile
+                    </h3>
                     <div>
                       <label className="block text-sm font-medium text-[oklch(0.55_0.06_15)] mb-2">
                         Email
@@ -523,7 +553,7 @@ export default function SignupPage() {
                         ← Back
                       </button>
                       <button
-                        onClick={handleSubmit}
+                        type="submit"
                         disabled={
                           isSubmitting ||
                           !fullName.trim() ||
@@ -544,7 +574,7 @@ export default function SignupPage() {
                           : 'Create account'}
                       </button>
                     </div>
-                  </div>
+                  </form>
                 </motion.section>
               )}
             </AnimatePresence>

@@ -1,4 +1,5 @@
 'use client';
+import React from 'react';
 import Container from '@/app/(main)/components/layouts/Container';
 import { AnimatePresence, motion } from 'framer-motion';
 import Image from 'next/image';
@@ -15,8 +16,13 @@ import { useEffect, useRef, useState } from 'react';
 import { RxCross2 } from 'react-icons/rx';
 import Link from 'next/link';
 import { BsInboxes } from 'react-icons/bs';
-import MobileNavMenu from './MobileNavMenu';
+import dynamic from 'next/dynamic';
 import { usePathname, useRouter } from 'next/navigation';
+
+// Dynamically import MobileNavMenu to reduce initial bundle size
+const MobileNavMenu = dynamic(() => import('./MobileNavMenu'), {
+  ssr: false,
+});
 // import { LogoCaelvi } from '@/app/(main)/assets';
 import { Philosopher } from 'next/font/google';
 import { Eye, EyeOff } from 'lucide-react';
@@ -41,6 +47,9 @@ import {
 } from 'lucide-react';
 import { useCartStore } from '@/lib/data/mainStore/cartStore';
 import { usePublicCategoryStore } from '@/lib/data/mainStore/categoryStore';
+import { useCartCountStore } from '@/lib/data/mainStore/cartCountStore';
+import { CartCount } from './Navbar/CartCount';
+import { NavbarLogo } from './Navbar/NavbarLogo';
 
 const Cross =({className}: {className: string})=>{
   return (
@@ -52,7 +61,7 @@ const philosopher = Philosopher({
   subsets: ['latin'],
   weight: ['400', '700'],
 });
-const NavLink = ({
+const NavLink = React.memo(({
   href,
   children,
   icon,
@@ -70,7 +79,9 @@ const NavLink = ({
       {children}
     </div>
   </Link>
-);
+));
+
+NavLink.displayName = 'NavLink';
 
 type IconButtonProps = {
   onClick?: () => void;
@@ -79,7 +90,7 @@ type IconButtonProps = {
   ariaLabel: string;
 };
 
-function IconButton({
+const IconButton = React.memo(function IconButton({
   onClick,
   children,
   className = '',
@@ -94,7 +105,7 @@ function IconButton({
       {children}
     </button>
   );
-}
+});
 
 // Search history localStorage key
 const SEARCH_HISTORY_KEY = 'caelvi_search_history';
@@ -145,10 +156,21 @@ const clearSearchHistory = (): void => {
 
 export default function Navbar() {
   const { items, load } = useCartStore();
-  const { categories, status } = usePublicCategoryStore();
+  const { categories, status, fetchCategories } = usePublicCategoryStore();
+  const syncCartCount = useCartCountStore((state) => state.syncWithCart);
+  
+  // Load cart and sync count
   useEffect(() => {
-    load();
-  }, [load]);
+    load().then(() => {
+      // Sync count after cart loads
+      syncCartCount();
+    });
+  }, [load, syncCartCount]);
+
+  // Fetch categories once on mount, using cache
+  useEffect(() => {
+    fetchCategories();
+  }, [fetchCategories]);
 
   const placeholders = [
     'Search Gold Jewellery',
@@ -351,7 +373,9 @@ export default function Navbar() {
     name: i?.product?.name,
     price: i?.product?.discountPrice ?? i?.product?.price ?? 0,
     quantity: i?.quantity || 1,
-    image: (i?.product?.images && i.product.images[0]) || i?.product?.thumbnail,
+    image:
+      (i?.product?.images && i.product.images[0]) ||
+      '/favicon.ico',
   }));
   const subtotal = miniCartItems.reduce(
     (sum: number, item) => sum + item.price * item.quantity,
@@ -492,14 +516,7 @@ export default function Navbar() {
                 />
               </div>
               <div className="lg:hidden">
-                <Link href="/" className="cursor-pointer">
-                  <h1
-                    className={`${philosopher.className} text-lg   text-primary `}
-                  >
-                    {/* <LogoCaelvi className="h-4" /> */}
-                    CAELVI
-                  </h1>
-                </Link>
+                <NavbarLogo />
               </div>
               <nav className="hidden items-center gap-2 lg:flex ">
                 <NavLink
@@ -521,14 +538,9 @@ export default function Navbar() {
             </div>
 
             {/* Centered Logo (Desktop-only) */}
-            <Link href="/" className="hidden lg:block cursor-pointer">
-              <h1
-                className={`${philosopher.className} text-3xl   text-primary `}
-              >
-                {/* <LogoCaelvi className="h-4" /> */}
-                CAELVI
-              </h1>
-            </Link>
+            <div className="hidden lg:block">
+              <NavbarLogo />
+            </div>
 
             {/* Right Group */}
             <div className="flex items-center justify-end gap-2 lg:flex-1 max-lg:text-primary">
@@ -1017,15 +1029,10 @@ export default function Navbar() {
                   onClick={() => {
                     router.push('/cart');
                   }}
-                  ariaLabel={`Shopping Bag - View cart with ${items.length} items`}
+                  ariaLabel="Shopping Bag - View cart"
                 >
                   <ShoppingBag className="h-5 w-5" />
-                  <span
-                    className="absolute top-0 right-0 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-white"
-                    aria-label={`${items.length} items in cart`}
-                  >
-                    {items.length}
-                  </span>
+                  <CartCount />
                 </IconButton>
                 {/* Mini Cart Dropdown (desktop only) */}
                 <div className={`hidden ${!isCartPage ? 'lg:block ' : ''}`}>
@@ -1047,7 +1054,7 @@ export default function Navbar() {
                                   src={String(
                                     (i?.product?.images &&
                                       (i.product.images[0] as string)) ??
-                                      i?.product?.thumbnail
+                                      '/favicon.ico'
                                   )}
                                   alt={i?.product?.name || 'Product'}
                                   className="h-full w-full object-cover"

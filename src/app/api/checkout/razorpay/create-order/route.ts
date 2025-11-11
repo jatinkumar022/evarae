@@ -53,7 +53,6 @@ interface PopulatedProductForOrder {
   price?: number;
   discountPrice?: number | null;
   images?: string[];
-  thumbnail?: string | null;
   originalPrice?: number | null;
 }
 
@@ -149,9 +148,7 @@ export async function POST(request: Request) {
       price: (ci.product?.discountPrice ?? ci.product?.price ?? 0) || 0,
       quantity: ci.quantity || 1,
       image:
-        (ci.product?.images && ci.product.images[0]) ||
-        ci.product?.thumbnail ||
-        null,
+        (ci.product?.images && ci.product.images[0]) || null,
       selectedColor: ci.selectedColor ?? null,
       selectedSize: ci.selectedSize ?? null,
     }));

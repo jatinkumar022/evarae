@@ -38,7 +38,6 @@ export function RelatedProducts({
           description?: string;
           price?: number | null;
           discountPrice?: number | null;
-          thumbnail?: string;
           images?: string[];
           categories?: Array<{
             _id?: string;
@@ -70,7 +69,10 @@ export function RelatedProducts({
               ? p.price
               : null,
           currency: 'INR',
-          images: [p.thumbnail || p.images?.[0] || '/favicon.ico'],
+          images:
+            p.images && p.images[1]
+              ? [p.images[0] || '/favicon.ico', p.images[1]]
+              : [p.images?.[0] || '/favicon.ico'],
           hoverImage: p.images?.[1],
           category: {
             id: p.categories?.[0]?._id || p.categories?.[0]?.slug || '',

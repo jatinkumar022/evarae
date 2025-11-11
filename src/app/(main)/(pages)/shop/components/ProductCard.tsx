@@ -1,13 +1,20 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { Heart } from '@/app/(main)/assets/Navbar';
+import { Heart } from 'lucide-react';
 import { Product } from '@/lib/types/product';
 import Image from 'next/image';
 import { GiCrystalShine } from 'react-icons/gi';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Cart } from '@/app/(main)/assets/Common';
 import Link from 'next/link';
-import ProductOptionsModal from '@/app/(main)/components/ui/ProductOptionsModal';
+import dynamic from 'next/dynamic';
+import { useWishlistStore } from '@/lib/data/mainStore/wishlistStore';
+import toastApi from '@/lib/toast';
+
+// Dynamically import ProductOptionsModal to reduce initial bundle size
+const ProductOptionsModal = dynamic(() => import('@/app/(main)/components/ui/ProductOptionsModal'), {
+  ssr: false,
+});
 
 interface ProductCardProps {
   product: Product;
@@ -17,6 +24,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isWishlistLoading, setIsWishlistLoading] = useState(false);
+  const { load: loadWishlist, add: addToWishlist, remove: removeFromWishlist, isWishlisted } = useWishlistStore();
 
   useEffect(() => {
     const checkScreen = () => setIsMobile(window.innerWidth < 1024); // lg breakpoint
@@ -24,6 +33,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     window.addEventListener('resize', checkScreen);
     return () => window.removeEventListener('resize', checkScreen);
   }, []);
+
+  // Load wishlist on mount to check initial state
+  useEffect(() => {
+    loadWishlist();
+  }, [loadWishlist]);
 
   const variants = {
     initial: { opacity: 0 },
@@ -36,6 +50,33 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     e.stopPropagation();
     setIsModalOpen(true);
   };
+
+  const handleWishlistToggle = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (isWishlistLoading) return;
+    
+    setIsWishlistLoading(true);
+    try {
+      const productId = product.id;
+      const isCurrentlyWishlisted = isWishlisted(productId);
+      
+      if (isCurrentlyWishlisted) {
+        await removeFromWishlist(productId);
+        toastApi.success('Removed from wishlist', 'Product removed from your wishlist');
+      } else {
+        await addToWishlist(productId);
+        toastApi.success('Added to wishlist', 'Product added to your wishlist');
+      }
+    } catch (error) {
+      toastApi.error('Error', 'Failed to update wishlist. Please try again.');
+    } finally {
+      setIsWishlistLoading(false);
+    }
+  };
+
+  const isProductWishlisted = isWishlisted(product.id);
 
   return (
     <Link href={`/product/${product.id}`} className="block h-full">
@@ -74,14 +115,18 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           </motion.div>
 
           <button
-            className="absolute bottom-3 right-3 bg-white/50 backdrop-blur-sm cursor-pointer hover:bg-primary hover:text-white rounded-full sm:p-2 p-1.5 transition-all duration-300"
-            aria-label={`Add ${product.name} to wishlist`}
-            onClick={e => {
-              e.preventDefault();
-              e.stopPropagation();
-            }}
+            className={`absolute bottom-3 right-3 backdrop-blur-sm cursor-pointer rounded-full sm:p-2 p-1.5 transition-all duration-300 z-10 ${
+              isProductWishlisted
+                ? 'bg-primary text-white hover:bg-primary-dark'
+                : 'bg-white/50 hover:bg-primary hover:text-white'
+            } ${isWishlistLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+            aria-label={isProductWishlisted ? `Remove ${product.name} from wishlist` : `Add ${product.name} to wishlist`}
+            onClick={handleWishlistToggle}
+            disabled={isWishlistLoading}
           >
-            <Heart className="sm:w-4 sm:h-4 w-3 h-3" />
+            <Heart 
+              className={`sm:w-4 sm:h-4 w-3 h-3 ${isProductWishlisted ? 'fill-current' : ''}`} 
+            />
           </button>
         </div>
 

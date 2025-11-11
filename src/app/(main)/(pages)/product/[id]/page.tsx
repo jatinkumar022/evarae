@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { ProductDetails } from './components/ProductDetails';
+import { ProductDetails } from './ProductDetails.client';
 import type {
   Product as UiProduct,
   Category as UiCategory,
@@ -22,7 +22,6 @@ type ApiProduct = {
   price?: number | null;
   discountPrice?: number | null;
   images?: string[];
-  thumbnail?: string;
   brand?: string;
   material?: string;
   weight?: number | string;
@@ -50,6 +49,12 @@ function mapApiToUiProduct(api: ApiProduct): UiProduct {
       : api.price ?? 0;
   const originalPrice = api.price ?? null;
 
+  const imagesArray =
+    Array.isArray(api.images) && api.images.length > 0
+      ? api.images
+      : ['/favicon.ico'];
+  const hoverImage = imagesArray[1];
+
   return {
     id: String(api.sku || api._id || api.slug),
     name: api.name || '',
@@ -57,13 +62,8 @@ function mapApiToUiProduct(api: ApiProduct): UiProduct {
     price,
     originalPrice,
     currency: 'INR',
-    images:
-      Array.isArray(api.images) && api.images.length > 0
-        ? api.images
-        : api.thumbnail
-        ? [api.thumbnail]
-        : [],
-    hoverImage: api.thumbnail || undefined,
+    images: imagesArray,
+    hoverImage,
     category,
     subcategory: undefined,
     brand: api.brand || '',

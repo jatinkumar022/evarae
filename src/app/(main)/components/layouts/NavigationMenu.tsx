@@ -1,21 +1,22 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, memo } from 'react';
 import { motion } from 'framer-motion';
 import useScrollDirection from '@/app/(main)/handlers/NavbarVisibilityHandler';
 import Link from 'next/link';
 import Container from './Container';
 import { usePublicCategoryStore } from '@/lib/data/mainStore/categoryStore';
 
-const NavigationMenu = () => {
+const NavigationMenu = memo(() => {
   const [active, setActive] = useState<string | null>(null);
   const scrollDir = useScrollDirection();
 
   const { categories, status, fetchCategories } = usePublicCategoryStore();
 
   useEffect(() => {
-    if (status === 'idle') fetchCategories();
-  }, [status, fetchCategories]);
+    // Fetch categories once on mount, using cache
+    fetchCategories();
+  }, [fetchCategories]);
 
   const topCategories = categories.slice(0, 7);
 
@@ -82,6 +83,8 @@ const NavigationMenu = () => {
       </Container>
     </motion.div>
   );
-};
+});
+
+NavigationMenu.displayName = 'NavigationMenu';
 
 export default NavigationMenu;

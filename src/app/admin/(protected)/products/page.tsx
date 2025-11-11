@@ -149,9 +149,9 @@ export default function ProductsPage() {
 
       {/* Product Image */}
       <div className="aspect-square w-full overflow-hidden rounded-t-lg bg-gray-200 dark:bg-[#525252] relative">
-        {(product.thumbnail || product.images?.[0]) ? (
+        {product.images?.[0] ? (
           <Image
-            src={product.thumbnail || product.images[0]}
+            src={product.images[0]}
             alt={product.name}
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"

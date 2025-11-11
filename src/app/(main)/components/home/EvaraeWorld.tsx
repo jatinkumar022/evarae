@@ -1,27 +1,7 @@
-import Image, { StaticImageData } from 'next/image';
+'use client';
 import Link from 'next/link';
-import { worldOne, worldThree, worldTwo } from '@/app/(main)/assets/Home/World';
-const categories = [
-  {
-    href: '',
-    src: worldOne,
-    alt: 'Wedding',
-    label: 'Wedding Collection',
-    isLarge: true,
-  },
-  {
-    href: '',
-    src: worldThree,
-    alt: 'Gold',
-    label: 'Gold Jewellery',
-  },
-  {
-    href: '',
-    src: worldTwo,
-    alt: 'Diamond',
-    label: 'Diamond Pieces',
-  },
-];
+import { useEffect } from 'react';
+import { useHomepageStore } from '@/lib/data/mainStore/homepageStore';
 
 const CategoryCard = ({
   href,
@@ -31,23 +11,27 @@ const CategoryCard = ({
   isLarge = false,
 }: {
   href: string;
-  src: StaticImageData;
+  src: string;
   alt: string;
   label: string;
   isLarge?: boolean;
 }) => (
   <Link
-    href={href}
+    href={href || '#'}
     className="relative block overflow-hidden rounded-lg group cursor-pointer"
     aria-label={`Explore ${label} collection`}
   >
-    <Image
-      src={src}
-      alt={alt}
-      className="w-full h-full object-cover transition-transform duration-500 ease-in-out group-hover:scale-105"
-      quality={90}
-      sizes={isLarge ? '100vw' : '(max-width: 768px) 100vw, 50vw'}
-    />
+    {src ? (
+      <img
+        src={src as string}
+        alt={alt}
+        className="w-full h-full object-cover transition-transform duration-500 ease-in-out group-hover:scale-105"
+      />
+    ) : (
+      <div className="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+        <span className="text-gray-400">No Image</span>
+      </div>
+    )}
     <div
       className="absolute bottom-0 left-0 w-full h-1/4"
       style={{
@@ -67,6 +51,35 @@ const CategoryCard = ({
 );
 
 export default function CaelviWorld() {
+  const { data, fetchHomepage } = useHomepageStore();
+
+  useEffect(() => {
+    fetchHomepage();
+  }, [fetchHomepage]);
+
+  const collections = data?.worldOfCaelvi || [];
+
+  // Don't show if no collections
+  if (!collections || collections.length === 0) {
+    return null;
+  }
+
+  // Use dynamic collections - filter out ones without images
+  const displayItems = collections
+    .filter((collection) => collection.image)
+    .slice(0, 3)
+    .map((collection, index) => ({
+      href: `/collections/${collection.slug}`,
+      src: collection.image!,
+      alt: collection.name,
+      label: collection.name,
+      isLarge: index === 0,
+    }));
+
+  if (displayItems.length === 0) {
+    return null;
+  }
+
   return (
     <section className="mt-20">
       <div className="heading-component-main-container">
@@ -78,12 +91,14 @@ export default function CaelviWorld() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Large Card */}
-        <div className="md:col-span-2">
-          <CategoryCard {...categories[0]} isLarge />
-        </div>
+        {displayItems[0] && (
+          <div className="md:col-span-2">
+            <CategoryCard {...displayItems[0]} />
+          </div>
+        )}
         {/* Small Cards */}
-        <CategoryCard {...categories[1]} />
-        <CategoryCard {...categories[2]} />
+        {displayItems[1] && <CategoryCard {...displayItems[1]} />}
+        {displayItems[2] && <CategoryCard {...displayItems[2]} />}
       </div>
     </section>
   );

@@ -15,7 +15,6 @@ export interface Product {
   material: string;
   colors?: string[];
   weight?: number;
-  thumbnail?: string;
   dimensions?: {
     length?: number;
     width?: number;

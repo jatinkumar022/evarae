@@ -43,6 +43,12 @@ const userProfileSchema = new mongoose.Schema(
 
     // Embedded data
     addresses: { type: [addressSchema], default: [] },
+    wishlist: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Product',
+      },
+    ],
   },
   { timestamps: true }
 );

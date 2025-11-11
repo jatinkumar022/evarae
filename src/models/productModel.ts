@@ -39,7 +39,6 @@ const productSchema = new mongoose.Schema(
 
     // Media
     images: [String], // multiple product images
-    thumbnail: String, // main image
 
     // Ratings
     rating: { type: Number, default: 0 },

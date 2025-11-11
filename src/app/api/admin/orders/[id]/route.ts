@@ -46,7 +46,7 @@ export async function GET(
 
     const order = await Order.findById(id)
       .populate('user', 'name email')
-      .populate('items.product', 'name slug images thumbnail')
+      .populate('items.product', 'name slug images')
       .lean();
 
     if (!order) {
@@ -109,7 +109,7 @@ export async function PATCH(
       { new: true, runValidators: true }
     )
       .populate('user', 'name email')
-      .populate('items.product', 'name slug images thumbnail')
+      .populate('items.product', 'name slug images')
       .lean();
 
     if (!order) {

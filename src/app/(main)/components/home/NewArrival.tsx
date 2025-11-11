@@ -1,28 +1,45 @@
-import React from 'react';
-import Image from 'next/image';
+'use client';
+import React, { useEffect } from 'react';
 import { FaRegGem } from 'react-icons/fa6';
-import {
-  mintedBg,
-  mintedOne,
-  mintedTwo,
-} from '@/app/(main)/assets/Home/Minted';
 import Container from '../layouts/Container';
 import Link from 'next/link';
+import { useHomepageStore } from '@/lib/data/mainStore/homepageStore';
 
 function NewArrival() {
+  const { data, fetchHomepage } = useHomepageStore();
+
+  useEffect(() => {
+    fetchHomepage();
+  }, [fetchHomepage]);
+
+  const freshlyMinted = data?.freshlyMinted;
+  
+  // Don't show section if no content
+  if (!freshlyMinted || (!freshlyMinted.backgroundImage && !freshlyMinted.topImage1 && !freshlyMinted.topImage2)) {
+    return null;
+  }
+
+  const backgroundImage = freshlyMinted.backgroundImage;
+  const topImage1 = freshlyMinted.topImage1;
+  const topImage2 = freshlyMinted.topImage2;
+  const topImage1Title = freshlyMinted.topImage1Title || '';
+  const topImage2Title = freshlyMinted.topImage2Title || '';
+  const topImage1Link = freshlyMinted.topImage1Link || '#';
+  const topImage2Link = freshlyMinted.topImage2Link || '#';
+
   return (
     <section className="relative mt-20">
       {/* Background Image */}
-      <div className="absolute inset-0">
-        <Image
-          src={mintedBg}
-          alt="New Arrivals Background"
-          fill
-          className="object-cover blur-xs lg:blur-none"
-          quality={90}
-        />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/20" />
-      </div>
+      {backgroundImage && (
+        <div className="absolute inset-0">
+          <img
+            src={backgroundImage}
+            alt="New Arrivals Background"
+            className="absolute inset-0 w-full h-full object-cover blur-xs lg:blur-none"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/20" />
+        </div>
+      )}
       <Container>
         <div className="relative grid grid-cols-1 lg:grid-cols-2 gap-12 items-center py-16 lg:py-24">
           {/* Content */}
@@ -42,46 +59,50 @@ function NewArrival() {
 
           {/* Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <div className="bg-white/5 backdrop-blur-sm rounded-xl p-2">
-              <Link
-                href="#"
-                className="relative block overflow-hidden rounded-lg group cursor-pointer"
-                aria-label="Explore The Eternal Vow mangalsutra collection"
-              >
-                <Image
-                  src={mintedOne}
-                  alt="Mangalsutra"
-                  width={400}
-                  height={500}
-                  className="w-full h-full object-cover aspect-square"
-                />
-                <div className="absolute inset-0 flex items-end bg-gradient-to-t from-black/60 to-transparent p-4">
-                  <h3 className="font-heading text-lg text-white font-semibold">
-                    The Eternal Vow
-                  </h3>
-                </div>
-              </Link>
-            </div>
-            <div className="bg-white/5 backdrop-blur-sm rounded-xl p-2">
-              <Link
-                href="#"
-                className="relative block overflow-hidden rounded-lg group cursor-pointer"
-                aria-label="Explore Delicate Statements pendant collection"
-              >
-                <Image
-                  src={mintedTwo}
-                  alt="Pendants"
-                  width={400}
-                  height={500}
-                  className="w-full h-full object-cover aspect-square"
-                />
-                <div className="absolute inset-0 flex items-end bg-gradient-to-t from-black/60 to-transparent p-4">
-                  <h3 className="font-heading text-lg text-white font-semibold">
-                    Delicate Statements
-                  </h3>
-                </div>
-              </Link>
-            </div>
+            {topImage1 && (
+              <div className="bg-white/5 backdrop-blur-sm rounded-xl p-2">
+                <Link
+                  href={topImage1Link}
+                  className="relative block overflow-hidden rounded-lg group cursor-pointer"
+                  aria-label={`Explore ${topImage1Title} collection`}
+                >
+                  <img
+                    src={topImage1}
+                    alt={topImage1Title}
+                    className="w-full h-full object-cover aspect-square"
+                  />
+                  {topImage1Title && (
+                    <div className="absolute inset-0 flex items-end bg-gradient-to-t from-black/60 to-transparent p-4">
+                      <h3 className="font-heading text-lg text-white font-semibold">
+                        {topImage1Title}
+                      </h3>
+                    </div>
+                  )}
+                </Link>
+              </div>
+            )}
+            {topImage2 && (
+              <div className="bg-white/5 backdrop-blur-sm rounded-xl p-2">
+                <Link
+                  href={topImage2Link}
+                  className="relative block overflow-hidden rounded-lg group cursor-pointer"
+                  aria-label={`Explore ${topImage2Title} collection`}
+                >
+                  <img
+                    src={topImage2}
+                    alt={topImage2Title}
+                    className="w-full h-full object-cover aspect-square"
+                  />
+                  {topImage2Title && (
+                    <div className="absolute inset-0 flex items-end bg-gradient-to-t from-black/60 to-transparent p-4">
+                      <h3 className="font-heading text-lg text-white font-semibold">
+                        {topImage2Title}
+                      </h3>
+                    </div>
+                  )}
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       </Container>

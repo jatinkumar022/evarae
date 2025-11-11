@@ -10,7 +10,6 @@ type PublicProduct = {
   slug: string;
   description?: string;
   images?: string[];
-  thumbnail?: string | null;
   price?: number;
   discountPrice?: number | null;
   status?: string;
@@ -36,7 +35,7 @@ export async function GET(request: Request, { params }: RouteContext) {
     const baseQuery: Record<string, unknown> = { status: 'active' };
     let product = await Product.findOne({ ...baseQuery, sku: slug })
       .select(
-        'name slug description images thumbnail price discountPrice status tags material colors stockQuantity video metaTitle metaDescription sku'
+        'name slug description images price discountPrice status tags material colors stockQuantity video metaTitle metaDescription sku'
       )
       .populate('categories', 'name slug')
       .lean<PublicProduct | null>();
@@ -45,7 +44,7 @@ export async function GET(request: Request, { params }: RouteContext) {
       const which = isObjectId ? { _id: slug } : { slug };
       product = await Product.findOne({ ...which, status: 'active' })
         .select(
-          'name slug description images thumbnail price discountPrice status tags material colors stockQuantity video metaTitle metaDescription sku'
+          'name slug description images price discountPrice status tags material colors stockQuantity video metaTitle metaDescription sku'
         )
         .populate('categories', 'name slug')
         .lean<PublicProduct | null>();

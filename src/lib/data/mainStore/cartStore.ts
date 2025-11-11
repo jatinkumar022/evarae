@@ -9,7 +9,6 @@ export type CartProduct = {
   sku?: string;
   price?: number;
   discountPrice?: number | null;
-  thumbnail?: string | null;
   images?: string[];
 };
 export type CartItem = {

@@ -61,11 +61,32 @@ export default function LoginPage() {
   // resend cooldown handled by store
 
   const handleOtpChange = (index: number, value: string) => {
-    const digit = value.replace(/\D/g, '').slice(0, 1);
+    const digits = value.replace(/\D/g, '');
+    if (!digits) {
+      const cleared = [...otp];
+      cleared[index] = '';
+      setOtp(cleared);
+      return;
+    }
+
     const next = [...otp];
-    next[index] = digit;
+
+    if (digits.length === 1) {
+      next[index] = digits;
+      setOtp(next);
+      if (index < otp.length - 1) inputsRef.current[index + 1]?.focus();
+      return;
+    }
+
+    let lastFilled = index;
+    for (let offset = 0; offset < digits.length && index + offset < otp.length; offset++) {
+      next[index + offset] = digits[offset];
+      lastFilled = index + offset;
+    }
     setOtp(next);
-    if (digit && index < otp.length - 1) inputsRef.current[index + 1]?.focus();
+    if (lastFilled < otp.length - 1) {
+      inputsRef.current[lastFilled + 1]?.focus();
+    }
   };
 
   const handleOtpKeyDown = (
@@ -85,6 +106,12 @@ export default function LoginPage() {
       inputsRef.current[index - 1]?.focus();
     if (e.key === 'ArrowRight' && index < otp.length - 1)
       inputsRef.current[index + 1]?.focus();
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (isValidOtp) {
+        handleVerify();
+      }
+    }
   };
 
   const goToNext = async () => {
@@ -293,51 +320,53 @@ export default function LoginPage() {
                   transition={{ duration: 0.3, ease: 'easeOut' }}
                   className="rounded-xl border border-[oklch(0.84_0.04_10.35)]/30 bg-white/90 backdrop-blur-sm p-4 sm:p-6 shadow"
                 >
-                  <h3 className="text-base font-medium text-[oklch(0.39_0.09_17.83)] mb-4">
-                    Enter your email address
-                  </h3>
+                  <form
+                    onSubmit={e => {
+                      e.preventDefault();
+                      goToNext();
+                    }}
+                    className="space-y-4"
+                  >
+                    <h3 className="text-base font-medium text-[oklch(0.39_0.09_17.83)]">
+                      Enter your email address
+                    </h3>
 
-                  <div className="space-y-2">
-                    <input
-                      id="email"
-                      type="email"
-                      value={email}
-                      onChange={e => {
-                        setEmail(e.target.value);
-                        if (emailError) setEmailError(null);
-                      }}
-                      onKeyDown={e => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          goToNext();
-                        }
-                      }}
-                      className="w-full rounded-lg border border-[oklch(0.84_0.04_10.35)] bg-white px-3 py-2 text-sm text-[oklch(0.39_0.09_17.83)] placeholder-[oklch(0.7_0.04_12)] focus:outline-none focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/30 focus:border-[oklch(0.66_0.14_358.91)] transition-all"
-                      placeholder="you@example.com"
-                    />
-                    {emailError && (
-                      <p className="text-xs text-red-600">{emailError}</p>
-                    )}
-                  </div>
+                    <div className="space-y-2">
+                      <input
+                        id="email"
+                        type="email"
+                        value={email}
+                        onChange={e => {
+                          setEmail(e.target.value);
+                          if (emailError) setEmailError(null);
+                        }}
+                        className="w-full rounded-lg border border-[oklch(0.84_0.04_10.35)] bg-white px-3 py-2 text-sm text-[oklch(0.39_0.09_17.83)] placeholder-[oklch(0.7_0.04_12)] focus:outline-none focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/30 focus:border-[oklch(0.66_0.14_358.91)] transition-all"
+                        placeholder="you@example.com"
+                      />
+                      {emailError && (
+                        <p className="text-xs text-red-600">{emailError}</p>
+                      )}
+                    </div>
 
-                  <div className="gap-3 mt-3 flex sm:items-center justify-between flex-col">
-                    <p className="text-xs text-[oklch(0.55_0.06_15)]">
-                      {authMode === 'password'
-                        ? 'Proceed to enter your password.'
-                        : "We'll send you a one-time password (OTP)."}
-                    </p>
-                    <button
-                      onClick={goToNext}
-                      disabled={!isValidEmail}
-                      className={`rounded-lg px-4 py-2.5 min-w-40 text-white text-sm font-medium transition-all duration-200 ${
-                        isValidEmail
-                          ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] hover:shadow-lg hover:scale-105 shadow-md'
-                          : 'bg-[oklch(0.84_0.04_10.35)] cursor-not-allowed'
-                      }`}
-                    >
-                      Continue
-                    </button>
-                  </div>
+                    <div className="gap-3 flex sm:items-center justify-between flex-col">
+                      <p className="text-xs text-[oklch(0.55_0.06_15)]">
+                        {authMode === 'password'
+                          ? 'Proceed to enter your password.'
+                          : "We'll send you a one-time password (OTP)."}
+                      </p>
+                      <button
+                        type="submit"
+                        disabled={!isValidEmail}
+                        className={`rounded-lg px-4 py-2.5 min-w-40 text-white text-sm font-medium transition-all duration-200 ${
+                          isValidEmail
+                            ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] hover:shadow-lg hover:scale-105 shadow-md'
+                            : 'bg-[oklch(0.84_0.04_10.35)] cursor-not-allowed'
+                        }`}
+                      >
+                        Continue
+                      </button>
+                    </div>
+                  </form>
                 </motion.section>
               )}
 
@@ -351,7 +380,12 @@ export default function LoginPage() {
                   className="rounded-xl border border-[oklch(0.84_0.04_10.35)]/30 bg-white/90 backdrop-blur-sm p-6 shadow"
                 >
                   {authMode === 'password' ? (
-                    <div>
+                    <form
+                      onSubmit={e => {
+                        e.preventDefault();
+                        handlePasswordLogin();
+                      }}
+                    >
                       <h3 className="text-base font-medium text-[oklch(0.39_0.09_17.83)] mb-3">
                         Enter your password
                       </h3>
@@ -363,12 +397,6 @@ export default function LoginPage() {
                           type={showPassword ? 'text' : 'password'}
                           value={password}
                           onChange={e => setPassword(e.target.value)}
-                          onKeyDown={e => {
-                            if (e.key === 'Enter') {
-                              e.preventDefault();
-                              handlePasswordLogin();
-                            }
-                          }}
                           placeholder="Your password"
                           className="w-full rounded-lg border border-[oklch(0.84_0.04_10.35)] bg-white px-3 py-2 pr-10 text-sm"
                         />
@@ -386,13 +414,14 @@ export default function LoginPage() {
                       </div>
                       <div className="flex items-center justify-between">
                         <button
+                          type="button"
                           onClick={() => setStep('phone')}
                           className="text-sm text-[oklch(0.55_0.06_15)] hover:text-[oklch(0.66_0.14_358.91)] transition-colors"
                         >
                           Back
                         </button>
                         <button
-                          onClick={handlePasswordLogin}
+                          type="submit"
                           disabled={!isValidPassword}
                           className={`rounded-lg px-4 py-2.5 text-white text-sm font-medium transition-all duration-200 ${
                             isValidPassword
@@ -403,9 +432,14 @@ export default function LoginPage() {
                           Login
                         </button>
                       </div>
-                    </div>
+                    </form>
                   ) : (
-                    <div>
+                    <form
+                      onSubmit={e => {
+                        e.preventDefault();
+                        handleVerify();
+                      }}
+                    >
                       <h3 className="text-base font-medium text-[oklch(0.39_0.09_17.83)] mb-3">
                         Verify your email
                       </h3>
@@ -452,6 +486,7 @@ export default function LoginPage() {
 
                       <div className="flex items-center justify-between">
                         <button
+                          type="button"
                           onClick={() => setStep('phone')}
                           className="text-sm text-[oklch(0.55_0.06_15)] hover:text-[oklch(0.66_0.14_358.91)] transition-colors"
                         >
@@ -476,25 +511,19 @@ export default function LoginPage() {
                               : 'Resend OTP'}
                           </button>
                           <button
-                            onClick={handleVerify}
+                            type="submit"
                             disabled={!isValidOtp}
                             className={`rounded-lg px-4 py-2.5 text-white text-sm font-medium transition-all duration-200 ${
                               isValidOtp
                                 ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] hover:shadow-lg hover:scale-105 shadow-md'
                                 : 'bg-[oklch(0.84_0.04_10.35)] cursor-not-allowed'
                             }`}
-                            onKeyDown={e => {
-                              if (e.key === 'Enter' && isValidOtp) {
-                                e.preventDefault();
-                                handleVerify();
-                              }
-                            }}
                           >
                             Verify
                           </button>
                         </div>
                       </div>
-                    </div>
+                    </form>
                   )}
                 </motion.section>
               )}

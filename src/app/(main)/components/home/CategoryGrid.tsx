@@ -8,6 +8,7 @@ import {
   PublicCategory,
   usePublicCategoryStore,
 } from '@/lib/data/mainStore/categoryStore';
+import { useHomepageStore } from '@/lib/data/mainStore/homepageStore';
 
 const CategoryItem = ({
   image,
@@ -62,11 +63,19 @@ const ViewAllItem = ({ categories }: { categories: PublicCategory[] }) => (
 );
 
 export default function CategoriesGrid() {
-  const { categories, status, fetchCategories } = usePublicCategoryStore();
+  const { categories: storeCategories, status, fetchCategories } = usePublicCategoryStore();
+  const { data, fetchHomepage } = useHomepageStore();
 
   useEffect(() => {
+    fetchHomepage();
     if (status === 'idle') fetchCategories();
-  }, [status, fetchCategories]);
+  }, [status, fetchCategories, fetchHomepage]);
+
+  // Use categories from homepage if available, otherwise use store
+  const categories = data?.categories && data.categories.length > 0 
+    ? data.categories 
+    : storeCategories;
+  
   const topCategories = categories.slice(0, 9);
   return (
     <section className="">

@@ -32,7 +32,6 @@ interface PopulatedProductForCheckout {
   slug?: string;
   sku?: string;
   images?: string[];
-  thumbnail?: string | null;
   price?: number;
   discountPrice?: number | null;
   originalPrice?: number | null;
@@ -65,9 +64,7 @@ export async function GET(request: Request) {
       slug: ci.product?.slug,
       sku: ci.product?.sku,
       image:
-        (ci.product?.images && ci.product.images[0]) ||
-        ci.product?.thumbnail ||
-        undefined,
+        (ci.product?.images && ci.product.images[0]) || undefined,
       price: ci.product?.discountPrice ?? ci.product?.price ?? 0,
       originalPrice: ci.product?.originalPrice ?? ci.product?.price ?? null,
       quantity: ci.quantity || 1,

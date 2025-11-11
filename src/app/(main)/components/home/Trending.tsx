@@ -1,49 +1,26 @@
-import React from 'react';
-import {
-  trendingOne,
-  trendingTwo,
-  trendingThree,
-} from '@/app/(main)/assets/Home/Trending';
-import Image, { StaticImageData } from 'next/image';
+'use client';
+import React, { useEffect } from 'react';
 import Link from 'next/link';
-
-const trendingItems = [
-  {
-    id: 1,
-    title: 'Auspicious Occasions',
-    image: trendingOne,
-    alt: 'Auspicious Occasion',
-  },
-  {
-    id: 2,
-    title: 'Jewellery for Gifting',
-    image: trendingTwo,
-    alt: 'Gifting Jewellery',
-  },
-  {
-    id: 3,
-    title: '18Kt Jewellery',
-    image: trendingThree,
-    alt: '18Kt Jewellery',
-  },
-];
+import { useHomepageStore } from '@/lib/data/mainStore/homepageStore';
 
 const TrendingItem = ({
   image,
   title,
   alt,
+  slug,
 }: {
-  image: StaticImageData;
+  image: string;
   title: string;
   alt: string;
-}) => (
-  <div className="group text-center">
-    <Link href="#" aria-label={`Explore ${title} collection`}>
+  slug: string;
+}) => {
+  const content = (
+    <>
       <div className="bg-muted rounded-t-full overflow-hidden">
-        <Image
+        <img
           src={image}
           alt={alt}
-          className="w-full  object-cover group-hover:scale-105 transition-transform duration-500 ease-in-out h-full sm:h-[485px] h-[395px]"
+          className="w-full object-cover group-hover:scale-105 transition-transform duration-500 ease-in-out h-full sm:h-[485px] h-[395px]"
         />
       </div>
       <div className="py-4">
@@ -51,11 +28,53 @@ const TrendingItem = ({
           {title}
         </h3>
       </div>
-    </Link>
-  </div>
-);
+    </>
+  );
+
+  return (
+    <div className="group text-center">
+      <Link
+        href={`/collections/${slug}`}
+        aria-label={`Explore ${title} collection`}
+      >
+        {content}
+      </Link>
+    </div>
+  );
+};
 
 function Trending() {
+  const { data, fetchHomepage } = useHomepageStore();
+
+  useEffect(() => {
+    fetchHomepage();
+  }, [fetchHomepage]);
+
+  const collections = data?.trendingCollections || [];
+  const trendingConfig = data?.trendingConfig;
+
+  // If trending is disabled or no collections, don't show section
+  if (!trendingConfig?.enabled || collections.length === 0) {
+    return null;
+  }
+
+  // Use dynamic collections - filter out ones without images
+  const displayItems = collections
+    .filter((collection) => collection.image)
+    .slice(0, 3)
+    .map((collection) => ({
+      id: collection._id,
+      title: collection.name,
+      image: collection.image!,
+      alt: collection.name,
+      slug: collection.slug,
+    }));
+
+  // Don't show if no valid items
+  if (displayItems.length === 0) {
+    return null;
+  }
+
   return (
     <section className="mt-20">
       <div className="heading-component-main-container">
@@ -66,12 +85,13 @@ function Trending() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 md:gap-6">
-        {trendingItems.map(item => (
+        {displayItems.map(item => (
           <TrendingItem
             key={item.id}
             image={item.image}
             title={item.title}
             alt={item.alt}
+            slug={item.slug}
           />
         ))}
       </div>

@@ -15,7 +15,6 @@ export async function GET() {
           name: 1,
           slug: 1,
           images: 1,
-          thumbnail: 1,
           price: 1,
           discountPrice: 1,
           status: 1,

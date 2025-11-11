@@ -91,11 +91,31 @@ export default function AdminLoginPage() {
   }, [verifyStatus, profile, router]);
 
   const handleOtpChange = (index: number, value: string) => {
-    const digit = value.replace(/\D/g, '').slice(0, 1);
+    const digits = value.replace(/\D/g, '');
+    if (!digits) {
+      const cleared = [...otp];
+      cleared[index] = '';
+      setOtp(cleared);
+      return;
+    }
+
     const next = [...otp];
-    next[index] = digit;
+    if (digits.length === 1) {
+      next[index] = digits;
+      setOtp(next);
+      if (index < otp.length - 1) inputsRef.current[index + 1]?.focus();
+      return;
+    }
+
+    let lastFilled = index;
+    for (let offset = 0; offset < digits.length && index + offset < otp.length; offset++) {
+      next[index + offset] = digits[offset];
+      lastFilled = index + offset;
+    }
     setOtp(next);
-    if (digit && index < otp.length - 1) inputsRef.current[index + 1]?.focus();
+    if (lastFilled < otp.length - 1) {
+      inputsRef.current[lastFilled + 1]?.focus();
+    }
   };
 
   const handleOtpKeyDown = (
@@ -115,6 +135,12 @@ export default function AdminLoginPage() {
       inputsRef.current[index - 1]?.focus();
     if (e.key === 'ArrowRight' && index < otp.length - 1)
       inputsRef.current[index + 1]?.focus();
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (isValidOtp) {
+        handleVerify();
+      }
+    }
   };
 
   const handleSendOtp = async () => {
@@ -227,42 +253,50 @@ export default function AdminLoginPage() {
                   transition={{ duration: 0.3, ease: 'easeOut' }}
                   className="rounded-xl border border-[oklch(0.84_0.04_10.35)]/30 dark:border-[#525252] bg-white/90 dark:bg-[#191919]/90 backdrop-blur-sm p-6 shadow"
                 >
-                  <h3 className="text/base font-medium text-[oklch(0.39_0.09_17.83)] dark:text-white mb-4">
-                    Enter your admin email
-                  </h3>
-                  <input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={e => setEmailLocal(e.target.value)}
-                    className="w-full rounded-lg border border-[oklch(0.84_0.04_10.35)] dark:border-[#525252] bg-white dark:bg-[#242424] px-3 py-2 text-sm text-[oklch(0.39_0.09_17.83)] dark:text-white placeholder-[oklch(0.7_0.04_12)] dark:placeholder-[#bdbdbd] focus:outline-none focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/30 dark:focus:ring-primary-500/30 focus:border-[oklch(0.66_0.14_358.91)] dark:focus:border-primary-500 transition-all"
-                    placeholder="admin@example.com"
-                  />
-                  <div className="mt-4 flex justify-between items-center">
-                    {requestStatus === 'error' && (
-                      <span className="text-xs text-red-600 dark:text-red-400">
-                        Failed to send OTP
-                      </span>
-                    )}
-                    <div className="ml-auto">
-                      <button
-                        onClick={handleSendOtp}
-                        disabled={!isValidEmail || requestStatus === 'loading'}
-                        className={`rounded-lg px-4 py-2.5 min-w-40 text-white text-sm font-medium transition-all duration-200 ${
-                          isValidEmail && requestStatus !== 'loading'
-                            ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] hover:shadow-lg hover:scale-105 shadow-md'
-                            : 'bg-[oklch(0.84_0.04_10.35)] dark:bg-[#525252] cursor-not-allowed'
-                        }`}
-                      >
-                        {requestStatus === 'loading' ? 'Sending…' : 'Send OTP'}
-                      </button>
+                  <form
+                    onSubmit={e => {
+                      e.preventDefault();
+                      handleSendOtp();
+                    }}
+                    className="space-y-4"
+                  >
+                    <h3 className="text/base font-medium text-[oklch(0.39_0.09_17.83)] dark:text-white">
+                      Enter your admin email
+                    </h3>
+                    <input
+                      id="email"
+                      type="email"
+                      value={email}
+                      onChange={e => setEmailLocal(e.target.value)}
+                      className="w-full rounded-lg border border-[oklch(0.84_0.04_10.35)] dark:border-[#525252] bg-white dark:bg-[#242424] px-3 py-2 text-sm text-[oklch(0.39_0.09_17.83)] dark:text-white placeholder-[oklch(0.7_0.04_12)] dark:placeholder-[#bdbdbd] focus:outline-none focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/30 dark:focus:ring-primary-500/30 focus:border-[oklch(0.66_0.14_358.91)] dark:focus:border-primary-500 transition-all"
+                      placeholder="admin@example.com"
+                    />
+                    <div className="mt-2 flex justify-between items-center">
+                      {requestStatus === 'error' && (
+                        <span className="text-xs text-red-600 dark:text-red-400">
+                          Failed to send OTP
+                        </span>
+                      )}
+                      <div className="ml-auto">
+                        <button
+                          type="submit"
+                          disabled={!isValidEmail || requestStatus === 'loading'}
+                          className={`rounded-lg px-4 py-2.5 min-w-40 text-white text-sm font-medium transition-all duration-200 ${
+                            isValidEmail && requestStatus !== 'loading'
+                              ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] hover:shadow-lg hover:scale-105 shadow-md'
+                              : 'bg-[oklch(0.84_0.04_10.35)] dark:bg-[#525252] cursor-not-allowed'
+                          }`}
+                        >
+                          {requestStatus === 'loading' ? 'Sending…' : 'Send OTP'}
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                  {devOtp && process.env.NODE_ENV !== 'production' && (
-                    <p className="mt-3 text-xs text-[oklch(0.55_0.06_15)] dark:text-[#bdbdbd]">
-                      Dev OTP: {devOtp}
-                    </p>
-                  )}
+                    {devOtp && process.env.NODE_ENV !== 'production' && (
+                      <p className="text-xs text-[oklch(0.55_0.06_15)] dark:text-[#bdbdbd]">
+                        Dev OTP: {devOtp}
+                      </p>
+                    )}
+                  </form>
                 </motion.section>
               )}
 
@@ -275,73 +309,84 @@ export default function AdminLoginPage() {
                   transition={{ duration: 0.3, ease: 'easeOut' }}
                   className="rounded-xl border border-[oklch(0.84_0.04_10.35)]/30 dark:border-[#525252] bg-white/90 dark:bg-[#191919]/90 backdrop-blur-sm p-6 shadow"
                 >
-                  <h3 className="text-base font-medium text-[oklch(0.39_0.09_17.83)] dark:text-white mb-3">
-                    Verify your email
-                  </h3>
-                  <p className="text-sm text-[oklch(0.55_0.06_15)] dark:text-[#bdbdbd] mb-6">
-                    Enter the 6-digit code sent to{' '}
-                    <span className="font-semibold text-[oklch(0.66_0.14_358.91)] dark:text-primary-400">
-                      {storeEmail || email}
-                    </span>
-                  </p>
+                  <form
+                    onSubmit={e => {
+                      e.preventDefault();
+                      handleVerify();
+                    }}
+                    className="space-y-6"
+                  >
+                    <div>
+                      <h3 className="text-base font-medium text-[oklch(0.39_0.09_17.83)] dark:text-white mb-3">
+                        Verify your email
+                      </h3>
+                      <p className="text-sm text-[oklch(0.55_0.06_15)] dark:text-[#bdbdbd]">
+                        Enter the 6-digit code sent to{' '}
+                        <span className="font-semibold text-[oklch(0.66_0.14_358.91)] dark:text-primary-400">
+                          {storeEmail || email}
+                        </span>
+                      </p>
+                    </div>
 
-                  <div className="flex gap-1.5 sm:gap-2 md:gap-2.5 mb-6 justify-center">
-                    {otp.map((d, i) => (
-                      <input
-                        key={i}
-                        ref={el => {
-                          inputsRef.current[i] = el;
-                        }}
-                        inputMode="numeric"
-                        pattern="[0-9]*"
-                        maxLength={1}
-                        value={d}
-                        onPaste={handleOtpPaste}
-                        onChange={e => handleOtpChange(i, e.target.value)}
-                        onKeyDown={e => handleOtpKeyDown(i, e)}
-                        className="aspect-square w-9 sm:w-10 md:w-12 text-center rounded-lg border border-[oklch(0.84_0.04_10.35)] dark:border-[#525252] bg-white dark:bg-[#242424] text-sm sm:text-base font-semibold text-[oklch(0.39_0.09_17.83)] dark:text-white focus:outline-none focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/30 dark:focus:ring-primary-500/30 focus:border-[oklch(0.66_0.14_358.91)] dark:focus:border-primary-500 transition-all hover:border-[oklch(0.66_0.14_358.91)]/50 dark:hover:border-primary-500/50 flex-shrink-0"
-                      />
-                    ))}
-                  </div>
+                    <div className="flex gap-1.5 sm:gap-2 md:gap-2.5 justify-center">
+                      {otp.map((d, i) => (
+                        <input
+                          key={i}
+                          ref={el => {
+                            inputsRef.current[i] = el;
+                          }}
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                          maxLength={1}
+                          value={d}
+                          onPaste={handleOtpPaste}
+                          onChange={e => handleOtpChange(i, e.target.value)}
+                          onKeyDown={e => handleOtpKeyDown(i, e)}
+                          className="aspect-square w-9 sm:w-10 md:w-12 text-center rounded-lg border border-[oklch(0.84_0.04_10.35)] dark:border-[#525252] bg-white dark:bg-[#242424] text-sm sm:text-base font-semibold text-[oklch(0.39_0.09_17.83)] dark:text-white focus:outline-none focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/30 dark:focus:ring-primary-500/30 focus:border-[oklch(0.66_0.14_358.91)] dark:focus:border-primary-500 transition-all hover:border-[oklch(0.66_0.14_358.91)]/50 dark:hover:border-primary-500/50 flex-shrink-0"
+                        />
+                      ))}
+                    </div>
 
-                  <div className="flex items-center justify-between">
-                    <button
-                      onClick={() => setStep('email')}
-                      className="text-sm text-[oklch(0.55_0.06_15)] dark:text-[#bdbdbd] hover:text-[oklch(0.66_0.14_358.91)] dark:hover:text-primary-400 transition-colors"
-                    >
-                      Back
-                    </button>
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center justify-between">
                       <button
                         type="button"
-                        disabled={resendInSec > 0}
-                        onClick={() => resendOtp()}
-                        className={`text-sm transition-colors ${
-                          resendInSec > 0
-                            ? 'text-[oklch(0.7_0.04_12)] dark:text-[#525252] cursor-not-allowed'
-                            : 'text-[oklch(0.66_0.14_358.91)] dark:text-primary-400 hover:text-[oklch(0.58_0.16_8)] dark:hover:text-primary-500'
-                        }`}
+                        onClick={() => setStep('email')}
+                        className="text-sm text-[oklch(0.55_0.06_15)] dark:text-[#bdbdbd] hover:text-[oklch(0.66_0.14_358.91)] dark:hover:text-primary-400 transition-colors"
                       >
-                        {resendInSec > 0
-                          ? `Resend in 00:${String(resendInSec).padStart(
-                              2,
-                              '0'
-                            )}`
-                          : 'Resend OTP'}
+                        Back
                       </button>
-                      <button
-                        onClick={handleVerify}
-                        disabled={!isValidOtp || verifyStatus === 'loading'}
-                        className={`rounded-lg px-4 py-2.5 text-white text-sm font-medium transition-all duration-200 ${
-                          isValidOtp && verifyStatus !== 'loading'
-                            ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] hover:shadow-lg hover:scale-105 shadow-md'
-                            : 'bg-[oklch(0.84_0.04_10.35)] dark:bg-[#525252] cursor-not-allowed'
-                        }`}
-                      >
-                        {verifyStatus === 'loading' ? 'Verifying…' : 'Verify'}
-                      </button>
+                      <div className="flex items-center gap-4">
+                        <button
+                          type="button"
+                          disabled={resendInSec > 0}
+                          onClick={() => resendOtp()}
+                          className={`text-sm transition-colors ${
+                            resendInSec > 0
+                              ? 'text-[oklch(0.7_0.04_12)] dark:text-[#525252] cursor-not-allowed'
+                              : 'text-[oklch(0.66_0.14_358.91)] dark:text-primary-400 hover:text-[oklch(0.58_0.16_8)] dark:hover:text-primary-500'
+                          }`}
+                        >
+                          {resendInSec > 0
+                            ? `Resend in 00:${String(resendInSec).padStart(
+                                2,
+                                '0'
+                              )}`
+                            : 'Resend OTP'}
+                        </button>
+                        <button
+                          type="submit"
+                          disabled={!isValidOtp || verifyStatus === 'loading'}
+                          className={`rounded-lg px-4 py-2.5 text-white text-sm font-medium transition-all duration-200 ${
+                            isValidOtp && verifyStatus !== 'loading'
+                              ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] hover:shadow-lg hover:scale-105 shadow-md'
+                              : 'bg-[oklch(0.84_0.04_10.35)] dark:bg-[#525252] cursor-not-allowed'
+                          }`}
+                        >
+                          {verifyStatus === 'loading' ? 'Verifying…' : 'Verify'}
+                        </button>
+                      </div>
                     </div>
-                  </div>
+                  </form>
                 </motion.section>
               )}
             </AnimatePresence>

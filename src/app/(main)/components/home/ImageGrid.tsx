@@ -1,43 +1,67 @@
 'use client';
-import Image, { StaticImageData } from 'next/image';
+import Image from 'next/image';
+import Link from 'next/link';
+import { useEffect } from 'react';
+import { useHomepageStore } from '@/lib/data/mainStore/homepageStore';
 
-import {
-  signOne,
-  signTwo,
-  signThree,
-} from '@/app/(main)/assets/Home/Signature';
 const GridItem = ({
-  src,
-  alt,
-  title,
+  image,
+  slug,
+  name,
+  index,
 }: {
-  src: StaticImageData;
-  alt: string;
-  title: string;
+  image?: string;
+  slug: string;
+  name: string;
+  index: number;
 }) => (
-  <div className="relative overflow-hidden rounded-lg group cursor-pointer h-full">
-    <Image
-      src={src}
-      alt={alt}
-      className="w-full h-full object-cover transition-transform duration-500 ease-in-out group-hover:scale-105"
-    />
+  <Link
+    href={`/collections/${slug}`}
+    className="relative overflow-hidden rounded-lg group cursor-pointer h-full block"
+  >
+    {image ? (
+      <img
+        src={image}
+        alt={name}
+        className="w-full h-full object-cover transition-transform duration-500 ease-in-out group-hover:scale-105"
+      />
+    ) : (
+      <div className="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+        <span className="text-gray-400">No Image</span>
+      </div>
+    )}
     <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-all duration-300 flex flex-col items-center justify-center p-6 text-center">
       <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 ease-in-out transform group-hover:translate-y-0 translate-y-4">
         <h3 className="text-2xl lg:text-3xl font-heading text-white font-semibold">
-          {title}
+          {name}
         </h3>
         <button
           className="mt-4 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors px-6 py-2 rounded-full text-sm font-semibold"
-          aria-label={`Shop ${title} collection`}
+          aria-label={`Shop ${name} collection`}
         >
           Shop Now
         </button>
       </div>
     </div>
-  </div>
+  </Link>
 );
 
 const ImageGrid = () => {
+  const { data, fetchHomepage } = useHomepageStore();
+
+  useEffect(() => {
+    fetchHomepage();
+  }, [fetchHomepage]);
+
+  const collections = data?.signatureCollections || [];
+
+  if (collections.length === 0) {
+    return null;
+  }
+
+  // Display up to 3 collections in a grid layout
+  const displayCollections = collections.slice(0, 3);
+
   return (
     <section className="mt-20">
       <div className="heading-component-main-container">
@@ -49,19 +73,23 @@ const ImageGrid = () => {
         </h2>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 md:grid-rows-2 gap-4">
-        <div className="md:col-span-1 md:row-span-1">
-          <GridItem src={signOne} alt="Stunning " title="Stunning Necklace" />
-        </div>
-        <div className="md:col-span-1 md:row-span-2">
-          <GridItem
-            src={signThree}
-            alt="Sparkling Avenues"
-            title="Sparkling Avenues"
-          />
-        </div>
-        <div className="md:col-span-1 md:row-span-1">
-          <GridItem src={signTwo} alt="Dailywear" title="Everyday Luxury" />
-        </div>
+        {displayCollections.map((collection, index) => (
+          <div
+            key={collection._id}
+            className={
+              index === 1
+                ? 'md:col-span-1 md:row-span-2'
+                : 'md:col-span-1 md:row-span-1'
+            }
+          >
+            <GridItem
+              image={collection.image}
+              slug={collection.slug}
+              name={collection.name}
+              index={index}
+            />
+          </div>
+        ))}
       </div>
     </section>
   );

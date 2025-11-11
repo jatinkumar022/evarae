@@ -12,6 +12,7 @@ import {
   Users,
   BarChart3,
   Settings,
+  Home,
 } from "lucide-react";
 
 type NavItem = {
@@ -40,6 +41,11 @@ const navItems: NavItem[] = [
     icon: <Grid3x3 className="w-5 h-5" />,
     name: "Collections",
     path: "/admin/collections",
+  },
+  {
+    icon: <Home className="w-5 h-5" />,
+    name: "Homepage",
+    path: "/admin/homepage",
   },
   {
     icon: <ShoppingBag className="w-5 h-5" />,

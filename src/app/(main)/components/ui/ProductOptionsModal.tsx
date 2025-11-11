@@ -51,8 +51,7 @@ export default function ProductOptionsModal({
       name: product.name,
       price: product.price ?? 0,
       discountPrice: product.price ?? 0,
-      images: product.images as string[],
-      thumbnail: (product.images?.[0] as string) || undefined,
+    images: product.images as string[],
       stockQuantity: product.stockCount ?? 1,
     };
 

@@ -27,7 +27,6 @@ export async function GET(request: Request, { params }: RouteContext) {
           slug: 1,
           description: 1,
           images: 1,
-          thumbnail: 1,
           price: 1,
           discountPrice: 1,
           status: 1,

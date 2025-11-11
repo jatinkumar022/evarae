@@ -1,10 +1,15 @@
 'use client';
 import { useState, useEffect, useMemo, ReactNode } from 'react';
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 import Container from '@/app/(main)/components/layouts/Container';
-import ProductFilters from '@/app/(main)/components/filters/ProductFilters';
 import DailywearCardsAd from '@/app/(main)/components/ads/DailywearCardsAd';
+
+// Lazy load ProductFilters to reduce initial bundle size
+const ProductFilters = dynamic(() => import('@/app/(main)/components/filters/ProductFilters'), {
+  ssr: false, // Filters are interactive, can be client-only
+});
 import {
   FilterOptions,
   SortOption,
@@ -56,8 +61,7 @@ export default function AllJewelleryPage() {
 
   const mappedProducts: UiProduct[] = useMemo(() => {
     return products.map(p => {
-      const mainImage =
-        p.thumbnail || (p.images && p.images[0]) || '/favicon.ico';
+      const mainImage = (p.images && p.images[0]) || '/favicon.ico';
       const hoverImage = p.images && p.images[1] ? p.images[1] : undefined;
       const hasDiscount =
         p.discountPrice != null && p.price != null && p.discountPrice < p.price;
@@ -69,7 +73,7 @@ export default function AllJewelleryPage() {
         price: hasDiscount ? p.discountPrice! : p.price ?? null,
         originalPrice: hasDiscount ? p.price! : null,
         currency: 'INR',
-        images: [mainImage],
+        images: hoverImage ? [mainImage, hoverImage] : [mainImage],
         hoverImage,
         category: {
           id: p.categories?.[0]?._id || p.categories?.[0]?.slug || '',

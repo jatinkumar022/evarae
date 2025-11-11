@@ -1,6 +1,11 @@
+import dynamic from 'next/dynamic';
 import Navbar from './components/layouts/Navbar';
 import NavigationMenu from './components/layouts/NavigationMenu';
-import Footer from './components/layouts/Footer';
+
+// Dynamically import Footer since it's below the fold and uses framer-motion
+const Footer = dynamic(() => import('./components/layouts/Footer'), {
+  ssr: true, // Keep SSR for SEO
+});
 
 export default function MainLayout({
   children,

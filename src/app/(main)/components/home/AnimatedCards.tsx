@@ -4,48 +4,14 @@ import React, { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import { GoHeart } from 'react-icons/go';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  star,
-  mangalsutra,
-  dazzling,
-  starWhite,
-  mangalsutraWhite,
-  dazzlingWhite,
-} from '@/app/(main)/assets/Animatedgrid';
 import { GiCrystalShine } from 'react-icons/gi';
 import Link from 'next/link';
-const savedItems = [
-  {
-    id: 1,
-    title: 'Dazzling Grace Drop Earrings',
-    price: '59863',
-    image: dazzling,
-    hoverImage: dazzlingWhite,
-    tag: null,
-  },
-  {
-    id: 2,
-    title: 'Girlish Star Shaped Gold Stud Earrings',
-    price: '23796',
-    image: mangalsutra,
-    hoverImage: mangalsutraWhite,
-    tag: 'BESTSELLERS',
-  },
-  {
-    id: 3,
-    title: 'Sunbeam Bloom Gold Mangalsutra',
-    price: '72049',
-    image: star,
-    hoverImage: starWhite,
-    tag: null,
-  },
-];
+import { useHomepageStore } from '@/lib/data/mainStore/homepageStore';
 type Product = {
   _id: string;
   name: string;
   price: number;
   discountPrice?: number;
-  thumbnail: string;
   images?: string[];
   tags?: string[];
   slug: string;
@@ -56,22 +22,29 @@ export default function AnimatedCards() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [cardsPerPage, setCardsPerPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const { data, fetchHomepage } = useHomepageStore();
   const [products, setProducts] = useState<Product[]>([]);
+  
   useEffect(() => {
-    const load = async () => {
-      try {
-        const res = await fetch('/api/main/dashboard/best-sellers', {
-          cache: 'no-store',
-        });
-        const data = await res.json();
-        setProducts(data.products || []);
-      } catch (err) {
-        console.error('Failed to fetch best sellers:', err);
-      }
-      // Global loader will handle loading state
-    };
-    load();
-  }, []);
+    fetchHomepage();
+  }, [fetchHomepage]);
+
+  useEffect(() => {
+    if (data?.bestsellers && data.bestsellers.length > 0) {
+      const mappedProducts: Product[] = data.bestsellers.map(p => ({
+        _id: p._id,
+        name: p.name,
+        price: p.price,
+        discountPrice: p.discountPrice,
+        images: p.images || [],
+        tags: p.tags || [],
+        slug: p.slug,
+      }));
+      setProducts(mappedProducts);
+    } else {
+      setProducts([]);
+    }
+  }, [data?.bestsellers]);
 
   useEffect(() => {
     const container = sliderRef.current;
@@ -84,7 +57,7 @@ export default function AnimatedCards() {
       const visibleWidth = container.clientWidth;
       const cardWidth = card.offsetWidth + 16; // include gap
       const cardsFit = Math.floor(visibleWidth / cardWidth) || 1;
-      const pages = Math.ceil(savedItems.length / cardsFit);
+      const pages = Math.ceil(products.length / cardsFit);
 
       setCardsPerPage(cardsFit);
       setTotalPages(pages);
@@ -128,6 +101,8 @@ export default function AnimatedCards() {
   const ImageCard = ({ item }: { item: Product }) => {
     const [isHovered, setIsHovered] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
+    const primaryImage = item.images?.[0] ?? '/favicon.ico';
+    const hoverImage = item.images?.[1] ?? primaryImage;
 
     // Detect screen size
     useEffect(() => {
@@ -160,7 +135,7 @@ export default function AnimatedCards() {
               className="w-full h-full relative"
             >
               <Image
-                src={isHovered ? item.thumbnail || '' : item.images?.[0] || ''}
+                src={isHovered ? hoverImage : primaryImage}
                 alt={item.name}
                 fill
                 className="object-cover rounded-xl"
@@ -185,14 +160,9 @@ export default function AnimatedCards() {
       </div>
     );
   };
-  // Global loader will handle loading state
-
+  // Don't render if no products
   if (!products.length) {
-    return (
-      <div className="text-center py-8 text-gray-500">
-        No best sellers found.
-      </div>
-    );
+    return null;
   }
   return (
     <section>

@@ -9,8 +9,13 @@ import {
   Suspense,
 } from 'react';
 import { Search, Grid3X3, List, ArrowLeft } from 'lucide-react';
+import dynamic from 'next/dynamic';
 import Container from '@/app/(main)/components/layouts/Container';
-import ProductFilters from '@/app/(main)/components/filters/ProductFilters';
+
+// Lazy load ProductFilters to reduce initial bundle size
+const ProductFilters = dynamic(() => import('@/app/(main)/components/filters/ProductFilters'), {
+  ssr: false, // Filters are interactive, can be client-only
+});
 import {
   FilterOptions,
   SortOption,
@@ -97,7 +102,6 @@ function SearchPageInner() {
     description?: string;
     price?: number | null;
     discountPrice?: number | null;
-    thumbnail?: string;
     images?: string[];
     categories?: Array<{ _id?: string; name?: string; slug?: string }>;
     material?: string;
@@ -114,6 +118,8 @@ function SearchPageInner() {
           p.discountPrice != null &&
           p.price != null &&
           p.discountPrice < p.price;
+        const primaryImage = p.images?.[0] ?? '/favicon.ico';
+        const secondaryImage = p.images?.[1];
         return {
           id: p.slug,
           name: p.name,
@@ -121,8 +127,10 @@ function SearchPageInner() {
           price: hasDiscount ? p.discountPrice : p.price ?? null,
           originalPrice: hasDiscount ? p.price : null,
           currency: 'INR',
-          images: [p.thumbnail || p.images?.[0] || '/favicon.ico'],
-          hoverImage: p.images?.[1],
+          images: secondaryImage
+            ? [primaryImage, secondaryImage]
+            : [primaryImage],
+          hoverImage: secondaryImage,
           category: {
             id: p.categories?.[0]?._id || p.categories?.[0]?.slug || '',
             name: p.categories?.[0]?.name || '',
@@ -223,7 +231,6 @@ function SearchPageInner() {
         price: product.price ?? 0,
         discountPrice: product.price ?? 0,
         images: product.images as string[],
-        thumbnail: (product.images?.[0] as string) || undefined,
         stockQuantity: product.stockCount ?? 1,
       };
 

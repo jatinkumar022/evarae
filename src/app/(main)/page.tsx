@@ -1,14 +1,24 @@
-import Hero from './components/home/Hero';
+import dynamic from 'next/dynamic';
 import Container from './components/layouts/Container';
-import ImageGrid from './components/home/ImageGrid';
-import CategoryGrid from './components/home/CategoryGrid';
-import Trending from './components/home/Trending';
-import AnimatedCards from './components/home/AnimatedCards';
-import EvaraeWorld from './components/home/EvaraeWorld';
-import NewArrival from './components/home/NewArrival';
-import OurPromise from './components/home/Assurance';
+import Hero from './components/home/Hero';
 import CircleCategories from './components/home/Category';
 import { Devider } from './assets/Common';
+
+// Dynamically import heavy components to improve initial page load
+// These will be code-split and loaded on demand, while still supporting SSR
+const CategoryGrid = dynamic(() => import('./components/home/CategoryGrid'));
+
+const AnimatedCards = dynamic(() => import('./components/home/AnimatedCards'));
+
+const ImageGrid = dynamic(() => import('./components/home/ImageGrid'));
+
+const Trending = dynamic(() => import('./components/home/Trending'));
+
+const NewArrival = dynamic(() => import('./components/home/NewArrival'));
+
+const EvaraeWorld = dynamic(() => import('./components/home/EvaraeWorld'));
+
+const OurPromise = dynamic(() => import('./components/home/Assurance'));
 
 export default function Home() {
   return (

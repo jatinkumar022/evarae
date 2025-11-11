@@ -42,48 +42,45 @@ export default function CartPage() {
             slug?: string;
             name?: string;
             images?: string[];
-            thumbnail?: string;
             price?: number;
             discountPrice?: number;
           }>;
         };
-        const mapped: Product[] = (data.products || []).map(p => ({
-          id: String(p.slug || p._id || ''),
-          name: p.name || '',
-          description: '',
-          price: (p.discountPrice ?? p.price ?? 0) || 0,
-          originalPrice: p.price ?? null,
-          currency: 'INR',
-          images: (p.images && p.images.length
-            ? p.images
-            : [p.thumbnail || '']
-          ).filter(Boolean) as string[],
-          hoverImage:
-            (p.images && p.images.length > 1 ? p.images[1] : p.thumbnail) ||
-            undefined,
-          category: {
-            id: '',
-            name: '',
-            slug: '',
-            productCount: 0,
-            isActive: true,
-          },
-          brand: '',
-          material: '',
-          inStock: true,
-          stockCount: 1,
-          rating: 0,
-          reviews: 0,
-          isNew: false,
-          isSale: false,
-          isWishlisted: false,
-          isFeatured: false,
-          tags: [],
-          sku: '',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          thumbnail: p.thumbnail,
-        }));
+        const mapped: Product[] = (data.products || []).map(p => {
+          const images =
+            p.images && p.images.length ? p.images : ['/favicon.ico'];
+          return {
+            id: String(p.slug || p._id || ''),
+            name: p.name || '',
+            description: '',
+            price: (p.discountPrice ?? p.price ?? 0) || 0,
+            originalPrice: p.price ?? null,
+            currency: 'INR',
+            images,
+            hoverImage: images[1],
+            category: {
+              id: '',
+              name: '',
+              slug: '',
+              productCount: 0,
+              isActive: true,
+            },
+            brand: '',
+            material: '',
+            inStock: true,
+            stockCount: 1,
+            rating: 0,
+            reviews: 0,
+            isNew: false,
+            isSale: false,
+            isWishlisted: false,
+            isFeatured: false,
+            tags: [],
+            sku: '',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          } as Product;
+        });
         setRecommended(mapped);
       } catch {
         setRecommended([]);
@@ -210,9 +207,11 @@ export default function CartPage() {
     product: {
       id: String(ci?.product?._id || ci?.product?.id || ''),
       name: (ci?.product as Product | undefined)?.name || '',
-      images:
-        (ci?.product?.images?.length ? ci.product.images : []) ||
-        ([ci?.product?.thumbnail].filter(Boolean) as string[]),
+      images: ((
+        ci?.product?.images && ci.product.images.length
+          ? ci.product.images
+          : ['/favicon.ico']
+      ) as string[]),
       price: ci?.product?.discountPrice ?? ci?.product?.price ?? 0,
       originalPrice:
         (ci?.product as Product | undefined)?.price ??
@@ -228,9 +227,11 @@ export default function CartPage() {
     product: {
       id: String(si?.product?._id || si?.product?.id || ''),
       name: (si?.product as Product | undefined)?.name || '',
-      images:
-        (si?.product?.images?.length ? si.product.images : []) ||
-        ([si?.product?.thumbnail].filter(Boolean) as string[]),
+      images: ((
+        si?.product?.images && si.product.images.length
+          ? si.product.images
+          : ['/favicon.ico']
+      ) as string[]),
       price: si?.product?.discountPrice ?? si?.product?.price ?? 0,
     } as Product,
     quantity: 1,
