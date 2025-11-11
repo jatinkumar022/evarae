@@ -8,6 +8,8 @@ import { useTheme } from "../context/ThemeContext";
 import { Menu, X, Search, Bell, Settings, LogOut, Package, ShoppingBag, Users, AlertCircle } from "lucide-react";
 import Modal from "./Modal";
 import { useAdminAuth } from "@/lib/data/store/adminAuth";
+import { toastApi } from '@/lib/toast';
+import { Spinner } from '@/app/(main)/components/ui/ScaleLoader';
 
 // Search Component
 function SearchBar() {
@@ -56,6 +58,7 @@ export default function AppHeader() {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+  const [isConfirmingLogout, setIsConfirmingLogout] = useState(false);
   const [notificationPosition, setNotificationPosition] = useState<{ top: number; right: number } | null>(null);
   const notificationButtonRef = useRef<HTMLButtonElement>(null);
   const router = useRouter();
@@ -242,6 +245,8 @@ export default function AppHeader() {
   };
 
   const confirmLogout = async () => {
+    if (isConfirmingLogout) return;
+    setIsConfirmingLogout(true);
     try {
       // Reset theme to light mode before logout
       resetTheme();
@@ -257,14 +262,11 @@ export default function AppHeader() {
       
       setIsLogoutModalOpen(false);
       router.push('/admin/login');
-    } catch (error) {
-      console.error('Logout failed:', error);
-      // Still clear cookies, reset theme and navigate to login even if logout API fails
-      clearAllTokenCookies();
-      resetTheme();
-      localStorage.removeItem("admin-theme");
-      setIsLogoutModalOpen(false);
-      router.push('/admin/login');
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Please try again';
+      toastApi.error('Logout failed', message);
+    } finally {
+      setIsConfirmingLogout(false);
     }
   };
 
@@ -529,12 +531,22 @@ export default function AppHeader() {
             <button
               type="button"
               onClick={confirmLogout}
-              className="w-full sm:w-auto inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 text-sm font-medium text-white transition-colors"
-              style={{ backgroundColor: '#d92d20' }}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#c0231a'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#d92d20'}
+              disabled={isConfirmingLogout}
+              className="relative w-full sm:w-auto inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 text-sm font-medium text-white transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              style={{ backgroundColor: isConfirmingLogout ? '#c0231a' : '#d92d20' }}
+              onMouseEnter={(e) => {
+                if (!isConfirmingLogout) e.currentTarget.style.backgroundColor = '#c0231a';
+              }}
+              onMouseLeave={(e) => {
+                if (!isConfirmingLogout) e.currentTarget.style.backgroundColor = '#d92d20';
+              }}
             >
-              Logout
+              <span className={isConfirmingLogout ? 'opacity-0' : ''}>Logout</span>
+              {isConfirmingLogout && (
+                <span className="absolute inset-0 flex items-center justify-center">
+                  <Spinner className="text-white" />
+                </span>
+              )}
             </button>
             <button
               type="button"

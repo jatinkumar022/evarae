@@ -15,6 +15,7 @@ import {
 import { Visa, Mastercard, Paypal, Maestro } from '@/app/(main)/assets/Footer';
 import { useRouter } from 'next/navigation';
 import toastApi from '@/lib/toast';
+import { Spinner } from '@/app/(main)/components/ui/ScaleLoader';
 
 type Address = {
   id?: string;
@@ -75,6 +76,8 @@ export default function CheckoutPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [razorpayAvailable, setRazorpayAvailable] = useState(true);
+  const [couponApplying, setCouponApplying] = useState(false);
+  const [addressSaving, setAddressSaving] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -162,6 +165,7 @@ export default function CheckoutPage() {
   };
 
   const initiatePayment = async () => {
+    if (loading) return;
     try {
       setLoading(true);
       setError(null);
@@ -263,8 +267,26 @@ export default function CheckoutPage() {
     }
   };
 
+  const handleApplyCoupon = () => {
+    if (couponApplying) return;
+    setCouponApplying(true);
+    const code = coupon.trim().toUpperCase();
+    if (code === 'SAVE10') {
+      toastApi.success('Coupon applied', '10% discount applied');
+    } else if (code === 'SAVE5') {
+      toastApi.success('Coupon applied', '5% discount applied');
+    } else if (code) {
+      toastApi.error('Invalid coupon', 'Please enter a valid code');
+    }
+    setTimeout(() => {
+      setCouponApplying(false);
+    }, 400);
+  };
+
   const addAddress = async () => {
+    if (addressSaving) return;
     try {
+      setAddressSaving(true);
       setError(null);
 
       // Client-side validation
@@ -496,6 +518,8 @@ export default function CheckoutPage() {
           : 'Failed to add address';
       setError(message);
       toastApi.error('Address save failed', message);
+    } finally {
+      setAddressSaving(false);
     }
   };
 
@@ -784,10 +808,16 @@ export default function CheckoutPage() {
                 className="flex-1 rounded-md border border-primary/20 px-3 py-2 text-sm outline-none focus:border-primary"
               />
               <button
-                className="p-1 px-2 rounded-md flex gap-2 items-center btn-outline btn-animated text-xs"
-                onClick={() => {}}
+                className="relative inline-flex items-center justify-center gap-2 rounded-md btn-outline btn-animated text-xs disabled:opacity-60 disabled:cursor-not-allowed"
+                onClick={handleApplyCoupon}
+                disabled={couponApplying}
               >
-                Apply
+                <span className={couponApplying ? 'opacity-0' : ''}>Apply</span>
+                {couponApplying && (
+                  <span className="absolute inset-0 flex items-center justify-center">
+                    <Spinner className="text-current" />
+                  </span>
+                )}
               </button>
               <div className="text-[11px] text-primary-dark/60 w-full">
                 Tip: Use SAVE10 for 10% off select items
@@ -872,19 +902,17 @@ export default function CheckoutPage() {
                 loading ||
                 !razorpayAvailable
               }
-              className="mt-4 sm:mt-5 w-full btn btn-filled btn-animated text-sm sm:text-base flex items-center justify-center gap-2"
+              className="relative mt-4 sm:mt-5 w-full btn btn-filled btn-animated text-sm sm:text-base flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
               onClick={initiatePayment}
             >
-              {loading ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  Processing...
-                </>
-              ) : (
-                <>
-                  <Shield className="w-4 h-4" />
-                  Pay Securely with Razorpay
-                </>
+              <span className={loading ? 'opacity-0 flex items-center gap-2' : 'flex items-center gap-2'}>
+                <Shield className="w-4 h-4" />
+                Pay Securely with Razorpay
+              </span>
+              {loading && (
+                <span className="absolute inset-0 flex items-center justify-center">
+                  <Spinner className="text-white" />
+                </span>
               )}
             </button>
 
@@ -1065,14 +1093,21 @@ export default function CheckoutPage() {
 
               <div className="md:col-span-2 flex gap-2 pt-1">
                 <button
-                  className="btn btn-filled btn-animated text-sm"
+                  className="relative btn btn-filled btn-animated text-sm disabled:opacity-70 disabled:cursor-not-allowed"
                   onClick={addAddress}
+                  disabled={addressSaving}
                 >
-                  Save Address
+                  <span className={addressSaving ? 'opacity-0' : ''}>Save Address</span>
+                  {addressSaving && (
+                    <span className="absolute inset-0 flex items-center justify-center">
+                      <Spinner className="text-white" />
+                    </span>
+                  )}
                 </button>
                 <button
                   className="btn btn-outline btn-animated text-sm"
                   onClick={() => setAdding(false)}
+                  disabled={addressSaving}
                 >
                   Cancel
                 </button>

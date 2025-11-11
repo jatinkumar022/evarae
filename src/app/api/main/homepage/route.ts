@@ -5,6 +5,19 @@ import Collection from '@/models/collectionModel';
 import Category from '@/models/categoryModel';
 import Product from '@/models/productModel';
 import Order from '@/models/orderModel';
+import mongoose from 'mongoose';
+
+type LeanCollection = {
+  _id: mongoose.Types.ObjectId | string;
+  name: string;
+  slug: string;
+  image?: string;
+  description?: string;
+};
+
+type RecentOrder = {
+  items: Array<{ product?: mongoose.Types.ObjectId | string }>;
+};
 
 export async function GET() {
   try {
@@ -46,7 +59,7 @@ export async function GET() {
     });
 
     // Fetch Signature Collections
-    const signatureCollections = await Collection.find({
+    const signatureCollections = await Collection.find<LeanCollection>({
       _id: { $in: homepage.signatureCollections || [] },
       isActive: true,
     })
@@ -54,7 +67,7 @@ export async function GET() {
       .lean();
 
     // Fetch World of Caelvi Collections
-    const worldOfCaelviCollections = await Collection.find({
+    const worldOfCaelviCollections = await Collection.find<LeanCollection>({
       _id: { $in: homepage.worldOfCaelviCollections || [] },
       isActive: true,
     })
@@ -67,7 +80,7 @@ export async function GET() {
     dateThreshold.setDate(dateThreshold.getDate() - daysBack);
 
     // Get collections with products sold in the last N days
-    const recentOrders = await Order.find({
+    const recentOrders = await Order.find<RecentOrder>({
       createdAt: { $gte: dateThreshold },
       orderStatus: { $ne: 'cancelled' },
     })
@@ -77,7 +90,7 @@ export async function GET() {
     // Extract product IDs from recent orders
     const soldProductIds = new Set<string>();
     recentOrders.forEach(order => {
-      order.items.forEach((item: any) => {
+      order.items.forEach(item => {
         if (item.product) {
           soldProductIds.add(item.product.toString());
         }
@@ -91,7 +104,7 @@ export async function GET() {
     });
 
     // Fetch trending collections
-    let trendingCollections = await Collection.find({
+    let trendingCollections = await Collection.find<LeanCollection>({
       _id: { $in: trendingCollectionIds },
       isActive: true,
     })
@@ -101,8 +114,12 @@ export async function GET() {
 
     // If less than 3 trending collections, fill with random ones
     if (trendingCollections.length < 3) {
-      const existingIds = trendingCollections.map(c => c._id.toString());
-      const randomCollections = await Collection.find({
+      const existingIds = trendingCollections.map(collection =>
+        collection._id instanceof mongoose.Types.ObjectId
+          ? collection._id.toString()
+          : String(collection._id)
+      );
+      const randomCollections = await Collection.find<LeanCollection>({
         _id: { $nin: existingIds },
         isActive: true,
       })

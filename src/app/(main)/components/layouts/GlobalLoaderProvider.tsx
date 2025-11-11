@@ -17,9 +17,15 @@ export default function GlobalLoaderProvider({
   const [inFlightCount, setInFlightCount] = useState(0);
   const originalFetchRef = useRef<typeof window.fetch | null>(null);
 
-  // Path prefixes to consider "main" API calls
-  const trackedPrefixes = useRef<string[]>(['/api/']);
-
+  // Only treat content/data GET requests from public "main" APIs as global loader candidates
+  const trackedPrefixes = useRef<string[]>(['/api/main/']);
+  const excludedPrefixes = useRef<string[]>([
+    '/api/main/wishlist',
+    '/api/main/cart',
+    '/api/account/',
+    '/api/auth/',
+    '/api/upload',
+  ]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -30,28 +36,32 @@ export default function GlobalLoaderProvider({
     originalFetchRef.current = window.fetch.bind(window);
 
     window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
-      const url =
-        typeof input === 'string' ? input : String((input as URL).toString());
-      const isTracked = trackedPrefixes.current.some(prefix =>
-        url.includes(prefix)
-      );
+      const request = new Request(input, init);
+      const method = request.method?.toUpperCase() || 'GET';
+      const skipGlobalLoader =
+        request.headers.get('x-skip-global-loader') === 'true';
 
-      if (isTracked) {
+      if (skipGlobalLoader) {
+        request.headers.delete('x-skip-global-loader');
+      }
+
+      const url = request.url;
+      const isTrackedRequest =
+        method === 'GET' &&
+        trackedPrefixes.current.some(prefix => url.includes(prefix)) &&
+        !excludedPrefixes.current.some(prefix => url.includes(prefix)) &&
+        !skipGlobalLoader;
+
+      if (isTrackedRequest) {
         setInFlightCount(count => count + 1);
       }
 
       try {
-        const res = await originalFetchRef.current!(input as RequestInfo, init);
+        const res = await originalFetchRef.current!(request);
         return res;
       } finally {
-        if (isTracked) {
+        if (isTrackedRequest) {
           setInFlightCount(count => Math.max(0, count - 1));
-          // Reset message after a short delay to avoid flickering
-          setTimeout(() => {
-            setInFlightCount(current => { 
-              return current;
-            });
-          }, 100);
         }
       }
     };
@@ -63,7 +73,7 @@ export default function GlobalLoaderProvider({
       }
     };
   }, []);
- 
+
   return (
     <>
       {children}

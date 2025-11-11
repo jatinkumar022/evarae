@@ -7,6 +7,18 @@ import { GiCrystalShine } from 'react-icons/gi';
 import { Heart } from '@/app/(main)/assets/Navbar';
 import { Cart } from '@/app/(main)/assets/Common';
 import { Product, Category } from '@/lib/types/product';
+import dynamic from 'next/dynamic';
+
+type ProductOptionsModalProps = {
+  isOpen: boolean;
+  onClose: () => void;
+  product: Product | null;
+};
+
+const ProductOptionsModal = dynamic<ProductOptionsModalProps>(
+  () => import('@/app/(main)/components/ui/ProductOptionsModal'),
+  { ssr: false }
+);
 
 interface RelatedProductsProps {
   currentProduct: Product;
@@ -22,6 +34,8 @@ export function RelatedProducts({
   const [cardsPerPage, setCardsPerPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [items, setItems] = useState<Product[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -152,115 +166,149 @@ export function RelatedProducts({
     });
   };
 
+  const handleAddToCart = (product: Product) => (event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setSelectedProduct(product);
+    setIsModalOpen(true);
+  };
+
+  const handleWishlistClick = (event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+  };
+
   if (items.length === 0) return null;
 
   return (
-    <section className="space-y-8">
-      <div>
-        <h2 className="text-lg lg:text-2xl flex items-center justify-between font-heading font-semibold text-primary-dark mb-1 lg:mb-2">
-          You Might Also Like
-          <Link
-            href={`/shop/${category.slug}`}
-            className="inline-block max-md:underline md:bg-primary text-primary-dark md:!text-white px-3 py-2 md:px-5  whitespace-nowrap rounded-md hover:bg-primary-dark transition-colors font-medium text-xs md:text-sm lg:text-base"
-          >
-            View All
-          </Link>
-        </h2>
-        <p className="text-primary-dark/70 text-sm">
-          Discover more beautiful pieces from our {category.name} collection
-        </p>
-      </div>
-      <div className="relative">
-        <div
-          ref={sliderRef}
-          className="flex gap-4 overflow-x-auto pb-4 scroll-smooth snap-x snap-mandatory scrollbar-hide"
-        >
-          {items.map(product => (
-            <div
-              key={product.id}
-              className="flex-shrink-0 w-64 snap-start scroll-item"
+    <>
+      <section className="space-y-8">
+        <div>
+          <h2 className="text-lg lg:text-2xl flex items-center justify-between font-heading font-semibold text-primary-dark mb-1 lg:mb-2">
+            You Might Also Like
+            <Link
+              href={`/shop/${category.slug}`}
+              className="inline-block max-md:underline md:bg-primary text-primary-dark md:!text-white px-3 py-2 md:px-5  whitespace-nowrap rounded-md hover:bg-primary-dark transition-colors font-medium text-xs md:text-sm lg:text-base"
             >
-              <Link
-                href={`/product/${product.id}`}
-                className="group relative flex flex-col rounded-lg border border-primary/10 overflow-hidden hover:shadow-md transition-all"
-              >
-                <div className="relative aspect-square w-full overflow-hidden">
-                  <Image
-                    src={product.images[0]}
-                    alt={product.name}
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <button className="absolute top-2 right-2 bg-white/70 backdrop-blur-sm rounded-full p-1.5 hover:bg-primary hover:text-white transition">
-                    <Heart className="w-4 h-4" />
-                  </button>
-                  {product.isNew && (
-                    <span className="absolute top-2 left-2 bg-primary text-white text-[10px] px-2 py-1 rounded-md font-semibold flex items-center gap-1">
-                      <GiCrystalShine size={12} /> NEW
-                    </span>
-                  )}
-                  {product.isSale && (
-                    <span className="absolute top-2 left-2 bg-accent text-white text-[10px] px-2 py-1 rounded-md font-semibold flex items-center gap-1">
-                      <GiCrystalShine size={12} /> SALE
-                    </span>
-                  )}
-                </div>
-                <div className="flex flex-col flex-1 p-3 sm:p-4 gap-2">
-                  <p className="font-medium text-primary-dark text-sm truncate">
-                    {product.name}
-                  </p>
-                  {product.price ? (
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-sm font-bold text-accent">
-                        ₹{product.price.toLocaleString()}
-                      </span>
-                      {product.originalPrice &&
-                        product.originalPrice > product.price && (
-                          <>
-                            <span className="text-xs text-primary-dark line-through">
-                              ₹{product.originalPrice.toLocaleString()}
-                            </span>
-                            <span className="text-xs text-primary font-semibold">
-                              {Math.round(
-                                ((product.originalPrice - product.price) /
-                                  product.originalPrice) *
-                                  100
-                              )}
-                              % off
-                            </span>
-                          </>
-                        )}
-                    </div>
-                  ) : (
-                    <button className="w-full bg-primary text-white py-2 px-3 rounded-md text-xs font-medium hover:bg-primary-dark transition-colors">
-                      REQUEST STORE AVAILABILITY
-                    </button>
-                  )}
-                  {product.price && (
-                    <button className="w-full bg-primary text-white py-2 rounded-md text-xs sm:text-sm font-medium flex items-center justify-center gap-1 hover:bg-primary-dark transition-colors">
-                      <Cart className="w-4 h-4" />
-                      Add to Cart
-                    </button>
-                  )}
-                </div>
-              </Link>
-            </div>
-          ))}
+              View All
+            </Link>
+          </h2>
+          <p className="text-primary-dark/70 text-sm">
+            Discover more beautiful pieces from our {category.name} collection
+          </p>
         </div>
-        {totalPages > 1 && (
-          <div className="flex justify-center items-center gap-2 mt-4">
-            {Array.from({ length: totalPages }).map((_, i) => (
+        <div className="relative">
+          <div
+            ref={sliderRef}
+            className="flex gap-4 overflow-x-auto pb-4 scroll-smooth snap-x snap-mandatory scrollbar-hide"
+          >
+            {items.map(product => (
+              <div
+                key={product.id}
+                className="flex-shrink-0 w-64 snap-start scroll-item"
+              >
+                <Link
+                  href={`/product/${product.id}`}
+                  className="group relative flex flex-col rounded-lg border border-primary/10 overflow-hidden hover:shadow-md transition-all"
+                >
+                  <div className="relative aspect-square w-full overflow-hidden">
+                    <Image
+                      src={product.images[0]}
+                      alt={product.name}
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleWishlistClick}
+                      className="absolute top-2 right-2 bg-white/70 backdrop-blur-sm rounded-full p-1.5 hover:bg-primary hover:text-white transition"
+                    >
+                      <Heart className="w-4 h-4" />
+                    </button>
+                    {product.isNew && (
+                      <span className="absolute top-2 left-2 bg-primary text-white text-[10px] px-2 py-1 rounded-md font-semibold flex items-center gap-1">
+                        <GiCrystalShine size={12} /> NEW
+                      </span>
+                    )}
+                    {product.isSale && (
+                      <span className="absolute top-2 left-2 bg-accent text-white text-[10px] px-2 py-1 rounded-md font-semibold flex items-center gap-1">
+                        <GiCrystalShine size={12} /> SALE
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col flex-1 p-3 gap-2">
+                    <p className="font-medium text-primary-dark text-sm truncate">
+                      {product.name}
+                    </p>
+
+                    {product.price ? (
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-sm font-bold text-accent">
+                          ₹{product.price.toLocaleString()}
+                        </span>
+                        {product.originalPrice &&
+                          product.originalPrice > product.price && (
+                            <>
+                              <span className="text-xs text-primary-dark line-through">
+                                ₹{product.originalPrice.toLocaleString()}
+                              </span>
+                              <span className="text-xs text-primary font-semibold">
+                                {Math.round(
+                                  ((product.originalPrice - product.price) /
+                                    product.originalPrice) *
+                                    100
+                                )}
+                                % off
+                              </span>
+                            </>
+                          )}
+                      </div>
+                    ) : (
+                      <button className="w-full bg-primary text-white py-2 px-3 rounded-md text-xs font-medium hover:bg-primary-dark transition-colors" type="button">
+                        REQUEST STORE AVAILABILITY
+                      </button>
+                    )}
+
+                    {product.price && (
+                      <button
+                        type="button"
+                        onClick={handleAddToCart(product)}
+                        className="w-full bg-primary text-white py-2 rounded-md text-xs sm:text-sm font-medium flex items-center justify-center gap-1 hover:bg-primary-dark transition-colors"
+                      >
+                        <Cart className="w-4 h-4" />
+                        Add to Cart
+                      </button>
+                    )}
+                  </div>
+                </Link>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex justify-center gap-2 mt-4">
+            {Array.from({ length: totalPages }).map((_, index) => (
               <button
-                key={i}
-                onClick={() => scrollToPage(i)}
-                className={`h-1.5 rounded-full transition-all duration-300 ease-in-out ${
-                  activeIndex === i ? 'w-6 bg-primary' : 'w-2.5 bg-primary/30'
+                key={index}
+                className={`h-2 w-2 rounded-full transition-all ${
+                  index === activeIndex
+                    ? 'bg-primary scale-110'
+                    : 'bg-primary/30 hover:bg-primary/60'
                 }`}
+                onClick={() => scrollToPage(index)}
+                aria-label={`Go to page ${index + 1}`}
+                type="button"
               />
             ))}
           </div>
-        )}
-      </div>
-    </section>
+        </div>
+      </section>
+
+      <ProductOptionsModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        product={selectedProduct}
+      />
+    </>
   );
 }

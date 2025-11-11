@@ -9,12 +9,23 @@ export async function apiFetch<T>(
   input: RequestInfo,
   init?: RequestInit
 ): Promise<T> {
+  const method = (init?.method || (input instanceof Request ? input.method : 'GET'))
+    ?.toUpperCase?.() || 'GET';
+
+  const headers = new Headers(init?.headers as HeadersInit);
+
+  if (!(init?.body instanceof FormData) && !headers.has('Content-Type')) {
+    headers.set('Content-Type', 'application/json');
+  }
+
+  if (method !== 'GET') {
+    headers.set('x-skip-global-loader', 'true');
+  }
+
   const res = await fetch(input, {
     ...init,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(init?.headers || {}),
-    },
+    method,
+    headers,
     credentials: 'include',
   });
   const data = await res.json().catch(() => ({}));

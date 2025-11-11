@@ -19,6 +19,7 @@ import { useCartStore } from '@/lib/data/mainStore/cartStore';
 import { useWishlistStore } from '@/lib/data/mainStore/wishlistStore';
 import CartNotification from '@/app/(main)/components/ui/CartNotification';
 import toastApi from '@/lib/toast';
+import { Spinner } from '@/app/(main)/components/ui/ScaleLoader';
 
 interface ProductInfoProps {
   product: Product;
@@ -30,6 +31,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
   const [isStickyVisible, setIsStickyVisible] = useState(false);
   const [showNotification, setShowNotification] = useState(false);
   const [isWishlistLoading, setIsWishlistLoading] = useState(false);
+  const [isCartLoading, setIsCartLoading] = useState(false);
   const addToCart = useCartStore(s => s.add);
   const { load: loadWishlist, add: addToWishlist, remove: removeFromWishlist, isWishlisted } = useWishlistStore();
 
@@ -92,6 +94,8 @@ export function ProductInfo({ product }: ProductInfoProps) {
   };
 
   const onAddToCart = async () => {
+    if (isCartLoading) return;
+
     const optimisticProduct = {
       _id: product.id,
       id: product.id,
@@ -102,6 +106,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
       stockQuantity: product.stockCount ?? 1,
     };
     try {
+      setIsCartLoading(true);
       await addToCart({
         productSlug: String(product.id),
         quantity,
@@ -112,6 +117,8 @@ export function ProductInfo({ product }: ProductInfoProps) {
       setShowNotification(true);
     } catch (error) {
       console.error('Failed to add to cart:', error);
+    } finally {
+      setIsCartLoading(false);
     }
   };
 
@@ -255,24 +262,41 @@ export function ProductInfo({ product }: ProductInfoProps) {
             {/* Primary CTA - Add to Cart */}
               <button
                 onClick={onAddToCart}
-              className="w-full bg-primary border border-primary text-white py-2 px-5 rounded-sm text-sm lg:text-base font-medium hover:bg-primary-dark transition-colors flex items-center justify-center gap-2"
+              className={`relative w-full items-center justify-center rounded-sm bg-primary border border-primary text-white py-2 px-5 text-sm lg:text-base font-medium transition-colors flex ${
+                isCartLoading ? 'opacity-80 cursor-wait' : 'hover:bg-primary-dark'
+              }`}
+              disabled={isCartLoading}
               >
-                <Cart className="w-4 h-4" />
-                Add to Cart
+                <span className={`flex items-center gap-2 ${isCartLoading ? 'opacity-0' : ''}`}>
+                  <Cart className="w-4 h-4" />
+                  Add to Cart
+                </span>
+                {isCartLoading && (
+                  <span className="absolute inset-0 flex items-center justify-center">
+                    <Spinner className="text-white" />
+                  </span>
+                )}
               </button>
 
             {/* Secondary action - Wishlist */}
             <button 
               onClick={handleWishlistToggle}
               disabled={isWishlistLoading}
-              className={`w-full border py-2 px-5 rounded-sm text-sm lg:text-base font-medium transition-colors flex items-center justify-center gap-2 ${
+              className={`relative w-full border py-2 px-5 rounded-sm text-sm lg:text-base font-medium transition-colors flex items-center justify-center gap-2 ${
                 isProductWishlisted
                   ? 'border-primary bg-primary text-white hover:bg-primary-dark'
                   : 'border-primary/40 text-primary hover:bg-primary hover:!text-white'
-              } ${isWishlistLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+              }`}
             >
-              <Heart className={`w-4 h-4 ${isProductWishlisted ? 'fill-current' : ''}`} />
-              {isProductWishlisted ? 'Remove from Wishlist' : 'Add to Wishlist'}
+              <span className={isWishlistLoading ? 'opacity-0 flex items-center gap-2' : 'flex items-center gap-2'}>
+                <Heart className={`w-4 h-4 ${isProductWishlisted ? 'fill-current' : ''}`} />
+                {isProductWishlisted ? 'Remove from Wishlist' : 'Add to Wishlist'}
+              </span>
+              {isWishlistLoading && (
+                <span className="absolute inset-0 flex items-center justify-center">
+                  <Spinner className="text-current" />
+                </span>
+              )}
             </button>
           </div>
         )}

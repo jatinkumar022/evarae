@@ -10,6 +10,7 @@ import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { useWishlistStore } from '@/lib/data/mainStore/wishlistStore';
 import toastApi from '@/lib/toast';
+import { Spinner } from '@/app/(main)/components/ui/ScaleLoader';
 
 // Dynamically import ProductOptionsModal to reduce initial bundle size
 const ProductOptionsModal = dynamic(() => import('@/app/(main)/components/ui/ProductOptionsModal'), {
@@ -45,9 +46,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     exit: { opacity: 0 },
   };
 
-  const handleAddToCart = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleAddToCart = () => {
     setIsModalOpen(true);
   };
 
@@ -69,7 +68,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         await addToWishlist(productId);
         toastApi.success('Added to wishlist', 'Product added to your wishlist');
       }
-    } catch (error) {
+    } catch {
       toastApi.error('Error', 'Failed to update wishlist. Please try again.');
     } finally {
       setIsWishlistLoading(false);
@@ -79,77 +78,86 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const isProductWishlisted = isWishlisted(product.id);
 
   return (
-    <Link href={`/product/${product.id}`} className="block h-full">
-      <div
-        className="relative w-full h-full rounded-lg overflow-hidden cursor-pointer border border-primary/10 flex flex-col group"
-        onMouseEnter={() => !isMobile && setIsHovered(true)}
-        onMouseLeave={() => !isMobile && setIsHovered(false)}
-      >
-        <div className="relative aspect-square w-full flex-shrink-0 overflow-hidden">
-          <motion.div layout className="relative w-full h-full">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={isHovered ? 'hover' : 'default'}
-                variants={variants}
-                initial="initial"
-                animate="animate"
-                exit="exit"
-                transition={{ duration: 0.2, ease: 'easeInOut' }}
-                className="w-full h-full"
-              >
-                <Image
-                  src={
-                    isHovered && product.hoverImage
-                      ? product.hoverImage
-                      : product.images[0]
-                  }
-                  alt={product.name}
-                  className="w-full h-full object-cover aspect-square rounded-t-lg"
-                  fill
-                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                  loading="lazy"
-                  priority={false}
-                />
-              </motion.div>
-            </AnimatePresence>
-          </motion.div>
+    <>
+      <article className="relative w-full h-full rounded-lg overflow-hidden border border-primary/10 flex flex-col">
+        <div
+          className="relative aspect-square w-full flex-shrink-0 overflow-hidden"
+          onMouseEnter={() => !isMobile && setIsHovered(true)}
+          onMouseLeave={() => !isMobile && setIsHovered(false)}
+        >
+          <Link href={`/product/${product.id}`} className="block h-full">
+            <motion.div layout className="relative w-full h-full">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={isHovered ? 'hover' : 'default'}
+                  variants={variants}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  transition={{ duration: 0.2, ease: 'easeInOut' }}
+                  className="w-full h-full"
+                >
+                  <Image
+                    src={
+                      isHovered && product.hoverImage
+                        ? product.hoverImage
+                        : product.images[0]
+                    }
+                    alt={product.name}
+                    className="w-full h-full object-cover aspect-square rounded-t-lg"
+                    fill
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                    loading="lazy"
+                    priority={false}
+                  />
+                </motion.div>
+              </AnimatePresence>
+            </motion.div>
+          </Link>
+
+          {product.tags?.includes('best-seller') && (
+            <span className="absolute top-0 left-0 best-seller-tag text-white text-[9px] sm:text-[11px] px-3 py-1 sm:py-1.5 rounded-tr-lg rounded-bl-lg uppercase font-semibold tracking-wide">
+              <div className="flex items-center gap-1">
+                <GiCrystalShine size={15} /> BEST SELLER
+              </div>
+            </span>
+          )}
 
           <button
-            className={`absolute bottom-3 right-3 backdrop-blur-sm cursor-pointer rounded-full sm:p-2 p-1.5 transition-all duration-300 z-10 ${
+            className={`absolute bottom-3 right-3 flex items-center justify-center rounded-full sm:p-2 p-1.5 transition-all duration-300 z-10 ${
               isProductWishlisted
                 ? 'bg-primary text-white hover:bg-primary-dark'
                 : 'bg-white/50 hover:bg-primary hover:text-white'
-            } ${isWishlistLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+            } ${isWishlistLoading ? 'opacity-80 cursor-wait' : ''}`}
             aria-label={isProductWishlisted ? `Remove ${product.name} from wishlist` : `Add ${product.name} to wishlist`}
             onClick={handleWishlistToggle}
             disabled={isWishlistLoading}
+            type="button"
           >
-            <Heart 
-              className={`sm:w-4 sm:h-4 w-3 h-3 ${isProductWishlisted ? 'fill-current' : ''}`} 
-            />
+            <span className="relative flex items-center justify-center">
+              <span className={isWishlistLoading ? 'opacity-0' : ''}>
+                <Heart
+                  className={`sm:w-4 sm:h-4 w-3 h-3 ${
+                    isProductWishlisted ? 'fill-current' : ''
+                  }`}
+                />
+              </span>
+              {isWishlistLoading && (
+                <span className="absolute inset-0 flex items-center justify-center">
+                  <Spinner className="text-current" />
+                </span>
+              )}
+            </span>
           </button>
         </div>
 
-        {product.isNew && (
-          <span className="absolute top-0 right-0 best-seller-tag text-white text-[9px] sm:text-[11px] px-3 py-1 sm:py-1.5 rounded-tr-lg rounded-bl-lg uppercase font-semibold tracking-wide">
-            <div className="flex items-center gap-1">
-              <GiCrystalShine size={15} /> NEW
-            </div>
-          </span>
-        )}
-        {product.isSale && (
-          <span className="absolute top-0 right-0 best-seller-tag text-white text-[9px] sm:text-[11px] px-3 py-1.5 rounded-tr-lg rounded-bl-lg uppercase font-semibold tracking-wide">
-            <div className="flex items-center gap-1">
-              <GiCrystalShine size={15} /> BEST SELLER
-            </div>
-          </span>
-        )}
-
         <div className="flex-1 flex flex-col p-3 sm:p-4 gap-3">
-          <div className="flex flex-col gap-1">
+          <Link href={`/product/${product.id}`} className="flex flex-col gap-1">
             <p className="font-semibold text-primary-dark truncate text-xs sm:text-sm leading-tight mb-1">
               {product.name}
             </p>
+          </Link>
+          <div className="flex flex-col gap-1">
             <div className="flex items-center gap-3 flex-wrap">
               {product.price ? (
                 <div className="flex items-center gap-2 ">
@@ -164,7 +172,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                     )}
                 </div>
               ) : (
-                <button className="w-full bg-primary text-white py-2 px-3 rounded-md text-xs sm:text-sm font-medium hover:bg-primary-dark transition-colors">
+                <button
+                  type="button"
+                  className="w-full bg-primary text-white py-2 px-3 rounded-md text-xs sm:text-sm font-medium hover:bg-primary-dark transition-colors"
+                >
                   REQUEST STORE AVAILABILITY
                 </button>
               )}
@@ -185,8 +196,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             </div>
           </div>
           <button
+            type="button"
             onClick={handleAddToCart}
-            className="w-full bg-primary text-white py-2 px-3 rounded-md text-xs sm:text-sm  hover:bg-primary-dark transition-colors flex items-center justify-center gap-1"
+            className="w-full bg-primary text-white py-2 px-3 rounded-md text-xs sm:text-sm hover:bg-primary-dark transition-colors flex items-center justify-center gap-1"
           >
             <span className="text-accent">
               <Cart className="w-4 h-4 text-white" />
@@ -201,14 +213,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           )}
           <p className="text-xs text-primary font-medium text-center flex items-center gap-1 animate-caret-blink "></p>
         </div>
-      </div>
-      
+      </article>
+
       {/* Product Options Modal */}
       <ProductOptionsModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         product={product}
       />
-    </Link>
+    </>
   );
 };

@@ -5,6 +5,7 @@ import { X, Plus, Minus, ShoppingCart } from 'lucide-react';
 import { Product } from '@/lib/types/product';
 import { useCartStore } from '@/lib/data/mainStore/cartStore';
 import CartNotification from './CartNotification';
+import { Spinner } from '@/app/(main)/components/ui/ScaleLoader';
 
 interface ProductOptionsModalProps {
   isOpen: boolean;
@@ -20,6 +21,7 @@ export default function ProductOptionsModal({
   const [selectedColor, setSelectedColor] = useState<string>('');
   const [quantity, setQuantity] = useState(1);
   const [showNotification, setShowNotification] = useState(false);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
   const addToCart = useCartStore(s => s.add);
 
   // Reset state when modal opens/closes or product changes
@@ -43,7 +45,7 @@ export default function ProductOptionsModal({
   const maxQuantity = Math.min(product.stockCount || 10, 10); // Limit to 10 or available stock
 
   const handleAddToCart = async () => {
-    if (!product?.id) return;
+    if (!product?.id || isAddingToCart) return;
 
     const optimisticProduct = {
       _id: product.id,
@@ -51,11 +53,12 @@ export default function ProductOptionsModal({
       name: product.name,
       price: product.price ?? 0,
       discountPrice: product.price ?? 0,
-    images: product.images as string[],
+      images: product.images as string[],
       stockQuantity: product.stockCount ?? 1,
     };
 
     try {
+      setIsAddingToCart(true);
       await addToCart({
         productSlug: String(product.id),
         quantity,
@@ -67,6 +70,8 @@ export default function ProductOptionsModal({
       setShowNotification(true);
     } catch (error) {
       console.error('Failed to add to cart:', error);
+    } finally {
+      setIsAddingToCart(false);
     }
   };
 
@@ -204,11 +209,20 @@ export default function ProductOptionsModal({
               <div className="p-4 border-t space-y-2">
           <button
             onClick={handleAddToCart}
-            disabled={!canAddToCart}
-            className="w-full bg-primary text-white py-2.5 px-4 rounded-lg text-sm font-medium hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+            disabled={!canAddToCart || isAddingToCart}
+            className={`relative w-full bg-primary text-white py-2.5 px-4 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
+              isAddingToCart ? 'opacity-80 cursor-wait' : 'hover:bg-primary-dark'
+            }`}
           >
-            <ShoppingCart className="w-4 h-4" />
-            Add to Cart
+            <span className={isAddingToCart ? 'opacity-0 flex items-center gap-2' : 'flex items-center gap-2'}>
+              <ShoppingCart className="w-4 h-4" />
+              Add to Cart
+            </span>
+            {isAddingToCart && (
+              <span className="absolute inset-0 flex items-center justify-center">
+                <Spinner className="text-white" />
+              </span>
+            )}
           </button>
           
           <button

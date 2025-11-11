@@ -21,6 +21,7 @@ import CustomDatePicker from '@/app/(main)/components/ui/customDatePicker';
 import { useProfileForm } from '@/app/(main)/hooks/useProfileForm';
 import { useProfileData } from '@/app/(main)/hooks/useProfileData';
 import toastApi from '@/lib/toast';
+import { Spinner } from '@/app/(main)/components/ui/ScaleLoader';
 
 function AccountPageInner() {
   const searchParams = useSearchParams();
@@ -750,19 +751,17 @@ function AccountPageInner() {
                                   }
                                 }}
                                 disabled={!isValid || isSubmitting}
-                                className={`px-4 sm:px-6 py-2 sm:py-3 text-white text-xs sm:text-sm font-medium rounded-xl transition-all ${
+                                className={`relative inline-flex items-center justify-center px-4 sm:px-6 py-2 sm:py-3 text-white text-xs sm:text-sm font-medium rounded-xl transition-all ${
                                   !isValid || isSubmitting
                                     ? 'bg-gray-300 cursor-not-allowed'
                                     : 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] hover:shadow-lg hover:shadow-[oklch(0.66_0.14_358.91)]/25'
                                 }`}
                               >
-                                {isSubmitting ? (
-                                  <div className="flex items-center gap-1.5 sm:gap-2">
-                                    <div className="w-3 h-3 sm:w-4 sm:h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                    <span className="text-xs sm:text-sm">Saving...</span>
-                                  </div>
-                                ) : (
-                                  <span className="text-xs sm:text-sm">Save Changes</span>
+                                <span className={isSubmitting ? 'opacity-0' : ''}>Save Changes</span>
+                                {isSubmitting && (
+                                  <span className="absolute inset-0 flex items-center justify-center">
+                                    <Spinner className="text-white" />
+                                  </span>
                                 )}
                               </button>
 
@@ -901,9 +900,14 @@ function AccountPageInner() {
                       <button
                         onClick={handleRequestOtp}
                         disabled={isRequestingOtp}
-                        className="text-xs text-[oklch(0.66_0.14_358.91)] hover:underline disabled:opacity-50"
+                        className="relative inline-flex items-center justify-center text-xs text-[oklch(0.66_0.14_358.91)] hover:underline disabled:opacity-50"
                       >
-                        {isRequestingOtp ? 'Sending...' : 'Resend OTP'}
+                        <span className={isRequestingOtp ? 'opacity-0' : ''}>Resend OTP</span>
+                        {isRequestingOtp && (
+                          <span className="absolute inset-0 flex items-center justify-center">
+                            <Spinner className="h-3 w-3 text-current" />
+                          </span>
+                        )}
                       </button>
                     </div>
                     <input
@@ -995,15 +999,13 @@ function AccountPageInner() {
                 <button
                   onClick={handleChangePassword}
                   disabled={isChangingPassword}
-                  className="px-4 py-2 bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] text-white text-xs sm:text-sm font-normal rounded-lg hover:shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="relative px-4 py-2 bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] text-white text-xs sm:text-sm font-normal rounded-md hover:shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isChangingPassword ? (
-                    <span className="flex items-center gap-2">
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      Changing...
+                  <span className={isChangingPassword ? 'opacity-0' : ''}>Change Password</span>
+                  {isChangingPassword && (
+                    <span className="absolute inset-0 flex items-center justify-center">
+                      <Spinner className="text-white" />
                     </span>
-                  ) : (
-                    'Change Password'
                   )}
                 </button>
               </div>

@@ -18,13 +18,13 @@ import Link from 'next/link';
 import { BsInboxes } from 'react-icons/bs';
 import dynamic from 'next/dynamic';
 import { usePathname, useRouter } from 'next/navigation';
+import { Spinner } from '@/app/(main)/components/ui/ScaleLoader';
 
 // Dynamically import MobileNavMenu to reduce initial bundle size
 const MobileNavMenu = dynamic(() => import('./MobileNavMenu'), {
   ssr: false,
 });
 // import { LogoCaelvi } from '@/app/(main)/assets';
-import { Philosopher } from 'next/font/google';
 import { Eye, EyeOff } from 'lucide-react';
 import { userAuthApi } from '@/lib/utils';
 import { accountApi } from '@/lib/utils';
@@ -57,10 +57,6 @@ const Cross =({className}: {className: string})=>{
   )
 }
 
-const philosopher = Philosopher({
-  subsets: ['latin'],
-  weight: ['400', '700'],
-});
 const NavLink = React.memo(({
   href,
   children,
@@ -206,6 +202,8 @@ export default function Navbar() {
     null
   );
   const [loginOtpError, setLoginOtpError] = useState<string | null>(null);
+  const [loginLoading, setLoginLoading] = useState(false);
+  const [cartRedirecting, setCartRedirecting] = useState(false);
   const pathname = usePathname();
 
   const isCartPage = pathname === '/cart';
@@ -299,7 +297,8 @@ export default function Navbar() {
   };
 
   const continueFromEmail = async () => {
-    if (!isValidLoginEmail) return;
+    if (!isValidLoginEmail || loginLoading) return;
+    setLoginLoading(true);
     setLoginEmailError(null);
     try {
       const { exists } = await userAuthApi.checkEmail(loginEmail);
@@ -315,12 +314,15 @@ export default function Navbar() {
     } catch (e) {
       const message = e instanceof Error ? e.message : 'Unable to continue';
       setLoginEmailError(message);
+    } finally {
+      setLoginLoading(false);
     }
   };
 
   const handleNavbarPasswordLogin = async () => {
+    if (!isValidLoginEmail || !isValidLoginPassword || loginLoading) return;
     setLoginPasswordError(null);
-    if (!isValidLoginEmail || !isValidLoginPassword) return;
+    setLoginLoading(true);
     try {
       await userAuthApi.loginWithPassword(loginEmail, loginPassword);
       setLoginStep('done');
@@ -331,12 +333,15 @@ export default function Navbar() {
     } catch (e) {
       const message = e instanceof Error ? e.message : 'Invalid credentials';
       setLoginPasswordError(message);
+    } finally {
+      setLoginLoading(false);
     }
   };
 
   const handleNavbarVerifyOtp = async () => {
+    if (!isValidLoginOtp || loginLoading) return;
     setLoginOtpError(null);
-    if (!isValidLoginOtp) return;
+    setLoginLoading(true);
     try {
       await userAuthApi.loginVerifyOtp(loginEmail, loginOtp.join(''));
       setLoginStep('done');
@@ -347,6 +352,23 @@ export default function Navbar() {
     } catch (e) {
       const message = e instanceof Error ? e.message : 'Invalid OTP';
       setLoginOtpError(message);
+    } finally {
+      setLoginLoading(false);
+    }
+  };
+
+  const handleNavbarResendOtp = async () => {
+    if (loginResendIn > 0 || loginLoading) return;
+    setLoginLoading(true);
+    try {
+      await userAuthApi.loginRequestOtp(loginEmail);
+      setLoginResendIn(30);
+    } catch (e) {
+      setLoginOtpError(
+        e instanceof Error ? e.message : 'Failed to resend OTP'
+      );
+    } finally {
+      setLoginLoading(false);
     }
   };
 
@@ -812,14 +834,18 @@ export default function Navbar() {
                           <div className="mt-3 flex justify-end">
                             <button
                               onClick={continueFromEmail}
-                              disabled={!isValidLoginEmail}
+                              disabled={!isValidLoginEmail || loginLoading}
                               className={`rounded-lg px-4 py-2.5 text-white text-sm font-medium transition-all duration-200 ${
-                                isValidLoginEmail
+                                isValidLoginEmail && !loginLoading
                                   ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] hover:shadow-md'
                                   : 'bg-[oklch(0.84_0.04_10.35)] cursor-not-allowed'
                               }`}
                             >
-                              Continue
+                              {loginLoading ? (
+                                <Spinner className="text-white" />
+                              ) : (
+                                'Continue'
+                              )}
                             </button>
                           </div>
                         </div>
@@ -873,14 +899,18 @@ export default function Navbar() {
                                 </button>
                                 <button
                                   onClick={handleNavbarPasswordLogin}
-                                  disabled={!isValidLoginPassword}
+                                  disabled={!isValidLoginPassword || loginLoading}
                                   className={`rounded-lg px-4 py-2.5 text-white text-sm font-medium transition-all duration-200 ${
-                                    isValidLoginPassword
+                                    isValidLoginPassword && !loginLoading
                                       ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] hover:shadow-md'
                                       : 'bg-[oklch(0.84_0.04_10.35)] cursor-not-allowed'
                                   }`}
                                 >
-                                  Login
+                                  {loginLoading ? (
+                                    <Spinner className="text-white" />
+                                  ) : (
+                                    'Login'
+                                  )}
                                 </button>
                               </div>
                             </>
@@ -926,43 +956,34 @@ export default function Navbar() {
                                 <div className="flex items-center gap-3">
                                   <button
                                     type="button"
-                                    disabled={loginResendIn > 0}
-                                    onClick={async () => {
-                                      try {
-                                        await userAuthApi.loginRequestOtp(
-                                          loginEmail
-                                        );
-                                        setLoginResendIn(30);
-                                      } catch (e) {
-                                        setLoginOtpError(
-                                          e instanceof Error
-                                            ? e.message
-                                            : 'Failed to resend OTP'
-                                        );
-                                      }
-                                    }}
+                                    disabled={loginResendIn > 0 || loginLoading}
+                                    onClick={handleNavbarResendOtp}
                                     className={`text-xs ${
-                                      loginResendIn > 0
+                                      loginResendIn > 0 || loginLoading
                                         ? 'text-[oklch(0.7_0.04_12)] cursor-not-allowed'
                                         : 'text-[oklch(0.66_0.14_358.91)] hover:text-[oklch(0.58_0.16_8)]'
                                     }`}
                                   >
                                     {loginResendIn > 0
-                                      ? `Resend in 00:${String(
-                                          loginResendIn
-                                        ).padStart(2, '0')}`
+                                      ? `Resend in 00:${String(loginResendIn).padStart(2, '0')}`
+                                      : loginLoading
+                                      ? <Spinner className="h-3 w-3" />
                                       : 'Resend OTP'}
                                   </button>
                                   <button
                                     onClick={handleNavbarVerifyOtp}
-                                    disabled={!isValidLoginOtp}
+                                    disabled={!isValidLoginOtp || loginLoading}
                                     className={`rounded-lg px-4 py-2.5 text-white text-sm font-medium transition-all duration-200 ${
-                                      isValidLoginOtp
+                                      isValidLoginOtp && !loginLoading
                                         ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] hover:shadow-md'
                                         : 'bg-[oklch(0.84_0.04_10.35)] cursor-not-allowed'
                                     }`}
                                   >
-                                    Verify
+                                    {loginLoading ? (
+                                      <Spinner className="text-white" />
+                                    ) : (
+                                      'Verify'
+                                    )}
                                   </button>
                                 </div>
                               </div>
@@ -1095,12 +1116,22 @@ export default function Navbar() {
                               >
                                 View Cart
                               </Link>
-                              <Link
-                                href="/checkout"
-                                className="flex-1 rounded-md bg-primary px-3 py-2 text-center text-sm text-white transition-colors hover:bg-primary/90"
+                              <button
+                                className="flex-1 relative rounded-md bg-primary px-3 py-2 text-center text-sm text-white transition-colors hover:bg-primary/90 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center"
+                                onClick={() => {
+                                  if (cartRedirecting) return;
+                                  setCartRedirecting(true);
+                                  router.push('/cart');
+                                  setTimeout(() => setCartRedirecting(false), 800);
+                                }}
+                                disabled={cartRedirecting}
                               >
-                                Checkout
-                              </Link>
+                                {cartRedirecting ? (
+                                  <Spinner className="text-white" />
+                                ) : (
+                                  'View Cart & Checkout'
+                                )}
+                              </button>
                             </div>
                           </div>
                         </div>
@@ -1380,15 +1411,13 @@ export default function Navbar() {
                   type="button"
                   onClick={handleLogout}
                   disabled={isLoggingOut}
-                  className="px-5 py-2.5 bg-[#d92d20] text-white text-sm font-normal rounded-md hover:bg-[#c0231a] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isLoggingOut ? (
-                    <span className="flex items-center gap-2 justify-center">
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      Signing out...
+                  className="relative px-5 py-2.5 bg-[#d92d20] text-white text-sm font-normal rounded-md hover:bg-[#c0231a] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                 >
+                  <span className={isLoggingOut ? 'opacity-0' : ''}>Sign Out</span>
+                  {isLoggingOut && (
+                    <span className="absolute inset-0 flex items-center justify-center">
+                      <Spinner className="text-white" />
                     </span>
-                  ) : (
-                    'Sign Out'
                   )}
                 </button>
               </div>

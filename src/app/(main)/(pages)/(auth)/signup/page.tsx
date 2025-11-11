@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Container from '@/app/(main)/components/layouts/Container';
 import { Eye, EyeOff } from 'lucide-react';
 import { useUserAuth } from '@/lib/data/mainStore/userAuth';
+import { Spinner } from '@/app/(main)/components/ui/ScaleLoader';
 
 export default function SignupPage() {
   type Step = 'email' | 'auth' | 'details' | 'done';
@@ -29,6 +30,8 @@ export default function SignupPage() {
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isEmailLoading, setIsEmailLoading] = useState(false);
+  const [isOtpLoading, setIsOtpLoading] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
   const [otpError, setOtpError] = useState<string | null>(null);
 
@@ -118,8 +121,9 @@ export default function SignupPage() {
   };
 
   const goToAuth = async () => {
-    if (!isValidEmail) return;
+    if (!isValidEmail || isEmailLoading) return;
     setStoreEmail(email);
+    setIsEmailLoading(true);
     try {
       setEmailError(null);
       const { userAuthApi } = await import('@/lib/utils');
@@ -135,24 +139,29 @@ export default function SignupPage() {
     } catch (e) {
       const message = e instanceof Error ? e.message : 'Unable to send OTP';
       setEmailError(message);
+    } finally {
+      setIsEmailLoading(false);
     }
   };
 
   const completeAuth = async () => {
-    if (!isValidOtp) return;
+    if (!isValidOtp || isOtpLoading) return;
     try {
+      setIsOtpLoading(true);
       setOtpError(null);
       await verifySignupOtp(otp.join(''));
       setStep('details');
     } catch (e) {
       const message = e instanceof Error ? e.message : 'Invalid OTP';
       setOtpError(message);
+    } finally {
+      setIsOtpLoading(false);
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!fullName.trim() || !/^\d{10}$/.test(phone)) return;
+    if (!fullName.trim() || !/^[\d]{10}$/.test(phone) || isSubmitting) return;
     setIsSubmitting(true);
     try {
       const { userAuthApi } = await import('@/lib/utils');
@@ -337,14 +346,19 @@ export default function SignupPage() {
                     <div className="gap-3 flex sm:items-center justify-end">
                       <button
                         type="submit"
-                        disabled={!isValidEmail}
-                        className={`rounded-lg px-4 py-2.5 min-w-40 text-white text-sm font-medium transition-all duration-200 ${
-                          isValidEmail
+                        disabled={!isValidEmail || isEmailLoading}
+                        className={`relative inline-flex min-w-40 justify-center rounded-lg px-4 py-2.5 text-white text-sm font-medium transition-all duration-200 ${
+                          isValidEmail && !isEmailLoading
                             ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] hover:shadow-lg hover:scale-105 shadow-md'
                             : 'bg-[oklch(0.84_0.04_10.35)] cursor-not-allowed'
                         }`}
                       >
-                        Continue
+                        <span className={isEmailLoading ? 'opacity-0' : ''}>Continue</span>
+                        {isEmailLoading && (
+                          <span className="absolute inset-0 flex items-center justify-center">
+                            <Spinner className="text-white" />
+                          </span>
+                        )}
                       </button>
                     </div>
                   </form>
@@ -431,14 +445,19 @@ export default function SignupPage() {
                           </button>
                           <button
                             type="submit"
-                            disabled={!isValidOtp}
-                            className={`rounded-lg px-4 py-2.5 text-white text-sm font-medium transition-all duration-200 ${
-                              isValidOtp
+                            disabled={!isValidOtp || isOtpLoading}
+                            className={`relative inline-flex min-w-32 justify-center rounded-lg px-4 py-2.5 text-white text-sm font-medium transition-all duration-200 ${
+                              isValidOtp && !isOtpLoading
                                 ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] hover:shadow-lg hover:scale-105 shadow-md'
                                 : 'bg-[oklch(0.84_0.04_10.35)] cursor-not-allowed'
                             }`}
                           >
-                            Continue
+                            <span className={isOtpLoading ? 'opacity-0' : ''}>Continue</span>
+                            {isOtpLoading && (
+                              <span className="absolute inset-0 flex items-center justify-center">
+                                <Spinner className="text-white" />
+                              </span>
+                            )}
                           </button>
                         </div>
                       </div>
@@ -560,7 +579,7 @@ export default function SignupPage() {
                           !/^\d{10}$/.test(phone) ||
                           !isValidPassword
                         }
-                        className={`rounded-lg px-4 py-2.5 text-white text-sm font-medium transition-all duration-200 ${
+                        className={`relative inline-flex min-w-40 justify-center rounded-lg px-4 py-2.5 text-white text-sm font-medium transition-all duration-200 ${
                           isSubmitting ||
                           !fullName.trim() ||
                           !/^\d{10}$/.test(phone) ||
@@ -569,9 +588,12 @@ export default function SignupPage() {
                             : 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] hover:shadow-lg hover:scale-105 shadow-md'
                         }`}
                       >
-                        {isSubmitting
-                          ? 'Creating account...'
-                          : 'Create account'}
+                        <span className={isSubmitting ? 'opacity-0' : ''}>Create account</span>
+                        {isSubmitting && (
+                          <span className="absolute inset-0 flex items-center justify-center">
+                            <Spinner className="text-white" />
+                          </span>
+                        )}
                       </button>
                     </div>
                   </form>

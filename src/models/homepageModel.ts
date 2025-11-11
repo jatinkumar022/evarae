@@ -1,6 +1,35 @@
-import mongoose from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
 
-const homepageSchema = new mongoose.Schema(
+interface FreshlyMintedConfig {
+  backgroundImage: string;
+  topImage1: string;
+  topImage2: string;
+  topImage1Title: string;
+  topImage2Title: string;
+  topImage1Link: string;
+  topImage2Link: string;
+}
+
+interface TrendingConfig {
+  enabled: boolean;
+  daysBack: number;
+}
+
+export interface HomepageDocument extends mongoose.Document {
+  heroImages: string[];
+  signatureCollections: mongoose.Types.ObjectId[];
+  freshlyMinted: FreshlyMintedConfig;
+  worldOfCaelviCollections: mongoose.Types.ObjectId[];
+  trendingConfig: TrendingConfig;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface HomepageModel extends mongoose.Model<HomepageDocument> {
+  getHomepage(): Promise<HomepageDocument>;
+}
+
+const homepageSchema = new Schema<HomepageDocument, HomepageModel>(
   {
     // Hero Section - Array of image URLs
     heroImages: {
@@ -56,14 +85,12 @@ const homepageSchema = new mongoose.Schema(
       },
     ],
 
-    // Currently Trending - This will be auto-calculated based on recent sales
-    // We'll store the logic preference here, but actual data comes from orders
+    // Currently Trending - configuration only
     trendingConfig: {
       enabled: {
         type: Boolean,
         default: true,
       },
-      // Number of days to look back for trending
       daysBack: {
         type: Number,
         default: 30,
@@ -82,7 +109,9 @@ homepageSchema.statics.getHomepage = async function () {
   return homepage;
 };
 
-const Homepage =
-  mongoose.models.Homepage || mongoose.model('Homepage', homepageSchema);
-export default Homepage;
+const HomepageModelInstance =
+  (mongoose.models.Homepage as HomepageModel | undefined) ||
+  mongoose.model<HomepageDocument, HomepageModel>('Homepage', homepageSchema);
+
+export default HomepageModelInstance;
 

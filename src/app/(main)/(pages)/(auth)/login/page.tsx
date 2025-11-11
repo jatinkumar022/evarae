@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Container from '@/app/(main)/components/layouts/Container';
 import { Eye, EyeOff } from 'lucide-react';
 import { useUserAuth } from '@/lib/data/mainStore/userAuth';
+import { Spinner } from '@/app/(main)/components/ui/ScaleLoader';
 
 export default function LoginPage() {
   type Step = 'phone' | 'otp' | 'done';
@@ -26,6 +27,9 @@ export default function LoginPage() {
     resendInSec,
   } = useUserAuth();
   const inputsRef = useRef<Array<HTMLInputElement | null>>([]);
+  const [isContinueLoading, setIsContinueLoading] = useState(false);
+  const [isPasswordLoading, setIsPasswordLoading] = useState(false);
+  const [isOtpLoading, setIsOtpLoading] = useState(false);
 
   const isValidEmail = useMemo(
     () => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email),
@@ -115,7 +119,8 @@ export default function LoginPage() {
   };
 
   const goToNext = async () => {
-    if (!isValidEmail) return;
+    if (!isValidEmail || isContinueLoading) return;
+    setIsContinueLoading(true);
     setStoreEmail(email);
     setEmailError(null);
     try {
@@ -132,12 +137,15 @@ export default function LoginPage() {
     } catch (e) {
       const message = e instanceof Error ? e.message : 'Unable to continue';
       setEmailError(message);
+    } finally {
+      setIsContinueLoading(false);
     }
   };
 
   const handlePasswordLogin = async () => {
+    if (!isValidEmail || !isValidPassword || isPasswordLoading) return;
     setError(null);
-    if (!isValidEmail || !isValidPassword) return;
+    setIsPasswordLoading(true);
     try {
       const res = await (
         await import('@/lib/utils')
@@ -146,11 +154,14 @@ export default function LoginPage() {
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : 'Invalid credentials';
       setError(message);
+    } finally {
+      setIsPasswordLoading(false);
     }
   };
 
   const handleVerify = async () => {
-    if (!isValidOtp) return;
+    if (!isValidOtp || isOtpLoading) return;
+    setIsOtpLoading(true);
     try {
       setOtpError(null);
       await verifyLoginOtp(otp.join(''));
@@ -158,6 +169,8 @@ export default function LoginPage() {
     } catch (e) {
       const message = e instanceof Error ? e.message : 'Invalid OTP';
       setOtpError(message);
+    } finally {
+      setIsOtpLoading(false);
     }
   };
   const handleOtpPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
@@ -356,14 +369,19 @@ export default function LoginPage() {
                       </p>
                       <button
                         type="submit"
-                        disabled={!isValidEmail}
-                        className={`rounded-lg px-4 py-2.5 min-w-40 text-white text-sm font-medium transition-all duration-200 ${
-                          isValidEmail
+                        disabled={!isValidEmail || isContinueLoading}
+                        className={`relative inline-flex min-w-40 justify-center rounded-lg px-4 py-2.5 text-white text-sm font-medium transition-all duration-200 ${
+                          isValidEmail && !isContinueLoading
                             ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] hover:shadow-lg hover:scale-105 shadow-md'
                             : 'bg-[oklch(0.84_0.04_10.35)] cursor-not-allowed'
                         }`}
                       >
-                        Continue
+                        <span className={isContinueLoading ? 'opacity-0' : ''}>Continue</span>
+                        {isContinueLoading && (
+                          <span className="absolute inset-0 flex items-center justify-center">
+                            <Spinner className="text-white" />
+                          </span>
+                        )}
                       </button>
                     </div>
                   </form>
@@ -422,14 +440,19 @@ export default function LoginPage() {
                         </button>
                         <button
                           type="submit"
-                          disabled={!isValidPassword}
-                          className={`rounded-lg px-4 py-2.5 text-white text-sm font-medium transition-all duration-200 ${
-                            isValidPassword
+                          disabled={!isValidPassword || isPasswordLoading}
+                          className={`relative inline-flex min-w-32 justify-center rounded-lg px-4 py-2.5 text-white text-sm font-medium transition-all duration-200 ${
+                            isValidPassword && !isPasswordLoading
                               ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] hover:shadow-lg hover:scale-105 shadow-md'
                               : 'bg-[oklch(0.84_0.04_10.35)] cursor-not-allowed'
                           }`}
                         >
-                          Login
+                          <span className={isPasswordLoading ? 'opacity-0' : ''}>Login</span>
+                          {isPasswordLoading && (
+                            <span className="absolute inset-0 flex items-center justify-center">
+                              <Spinner className="text-white" />
+                            </span>
+                          )}
                         </button>
                       </div>
                     </form>
@@ -495,31 +518,33 @@ export default function LoginPage() {
                         <div className="flex items-center gap-4">
                           <button
                             type="button"
-                            disabled={resendInSec > 0}
+                            disabled={resendInSec > 0 || isOtpLoading}
                             onClick={() => requestLoginOtp()}
                             className={`text-sm transition-colors ${
-                              resendInSec > 0
+                              resendInSec > 0 || isOtpLoading
                                 ? 'text-[oklch(0.7_0.04_12)] cursor-not-allowed'
                                 : 'text-[oklch(0.66_0.14_358.91)] hover:text-[oklch(0.58_0.16_8)]'
                             }`}
                           >
                             {resendInSec > 0
-                              ? `Resend in 00:${String(resendInSec).padStart(
-                                  2,
-                                  '0'
-                                )}`
+                              ? `Resend in 00:${String(resendInSec).padStart(2, '0')}`
                               : 'Resend OTP'}
                           </button>
                           <button
                             type="submit"
-                            disabled={!isValidOtp}
-                            className={`rounded-lg px-4 py-2.5 text-white text-sm font-medium transition-all duration-200 ${
-                              isValidOtp
+                            disabled={!isValidOtp || isOtpLoading}
+                            className={`relative inline-flex min-w-28 justify-center rounded-lg px-4 py-2.5 text-white text-sm font-medium transition-all duration-200 ${
+                              isValidOtp && !isOtpLoading
                                 ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] hover:shadow-lg hover:scale-105 shadow-md'
                                 : 'bg-[oklch(0.84_0.04_10.35)] cursor-not-allowed'
                             }`}
                           >
-                            Verify
+                            <span className={isOtpLoading ? 'opacity-0' : ''}>Verify</span>
+                            {isOtpLoading && (
+                              <span className="absolute inset-0 flex items-center justify-center">
+                                <Spinner className="text-white" />
+                              </span>
+                            )}
                           </button>
                         </div>
                       </div>

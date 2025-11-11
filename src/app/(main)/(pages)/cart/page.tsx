@@ -11,6 +11,8 @@ import { Visa, Mastercard, Paypal, Maestro } from '@/app/(main)/assets/Footer';
 import { useCartStore } from '@/lib/data/mainStore/cartStore';
 import type { CartItem, SavedItem } from '@/lib/data/mainStore/cartStore';
 import toastApi from '@/lib/toast';
+import { Spinner } from '@/app/(main)/components/ui/ScaleLoader';
+import { cn } from '@/lib/utils';
 
 export default function CartPage() {
   const { items, savedItems, load, update, remove, save, unsave } =
@@ -19,6 +21,16 @@ export default function CartPage() {
   const [deliveryMsg, setDeliveryMsg] = useState<string>('');
   const [couponCode, setCouponCode] = useState('');
   const [couponRate, setCouponRate] = useState(0);
+  const [quantityLoadingId, setQuantityLoadingId] = useState<string | null>(null);
+  const [moveToWishlistLoadingId, setMoveToWishlistLoadingId] =
+    useState<string | null>(null);
+  const [removeLoadingId, setRemoveLoadingId] = useState<string | null>(null);
+  const [savedMoveToCartLoadingId, setSavedMoveToCartLoadingId] =
+    useState<string | null>(null);
+  const [savedRemoveLoadingId, setSavedRemoveLoadingId] =
+    useState<string | null>(null);
+  const [couponApplying, setCouponApplying] = useState(false);
+  const [checkPincodeLoading, setCheckPincodeLoading] = useState(false);
 
   useEffect(() => {
     load();
@@ -50,35 +62,35 @@ export default function CartPage() {
           const images =
             p.images && p.images.length ? p.images : ['/favicon.ico'];
           return {
-            id: String(p.slug || p._id || ''),
-            name: p.name || '',
-            description: '',
-            price: (p.discountPrice ?? p.price ?? 0) || 0,
-            originalPrice: p.price ?? null,
-            currency: 'INR',
+          id: String(p.slug || p._id || ''),
+          name: p.name || '',
+          description: '',
+          price: (p.discountPrice ?? p.price ?? 0) || 0,
+          originalPrice: p.price ?? null,
+          currency: 'INR',
             images,
             hoverImage: images[1],
-            category: {
-              id: '',
-              name: '',
-              slug: '',
-              productCount: 0,
-              isActive: true,
-            },
-            brand: '',
-            material: '',
-            inStock: true,
-            stockCount: 1,
-            rating: 0,
-            reviews: 0,
-            isNew: false,
-            isSale: false,
-            isWishlisted: false,
-            isFeatured: false,
-            tags: [],
-            sku: '',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
+          category: {
+            id: '',
+            name: '',
+            slug: '',
+            productCount: 0,
+            isActive: true,
+          },
+          brand: '',
+          material: '',
+          inStock: true,
+          stockCount: 1,
+          rating: 0,
+          reviews: 0,
+          isNew: false,
+          isSale: false,
+          isWishlisted: false,
+          isFeatured: false,
+          tags: [],
+          sku: '',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
           } as Product;
         });
         setRecommended(mapped);
@@ -148,58 +160,108 @@ export default function CartPage() {
   }, [items, couponRate]);
 
   const updateQuantity = async (productId: string, delta: number) => {
+    setQuantityLoadingId(productId);
     const current = items.find(
       (ci: CartItem) =>
         String(ci?.product?._id || ci?.product?.id) === productId
     );
     const newQty = Math.max(1, (current?.quantity || 1) + delta);
-    await update(productId, newQty)
-      .then(() => toastApi.success('Quantity updated'))
-      .catch(() => toastApi.error('Failed to update quantity'));
+    try {
+      await update(productId, newQty);
+      toastApi.success('Quantity updated');
+    } catch {
+      toastApi.error('Failed to update quantity');
+    } finally {
+      setQuantityLoadingId(null);
+    }
   };
 
   const removeItem = async (productId: string) => {
-    await remove(productId)
-      .then(() => toastApi.success('Removed from cart'))
-      .catch(() => toastApi.error('Failed to remove item'));
+    setRemoveLoadingId(productId);
+    try {
+      await remove(productId);
+      toastApi.success('Removed from cart');
+    } catch {
+      toastApi.error('Failed to remove item');
+    } finally {
+      setRemoveLoadingId(null);
+    }
   };
 
   const moveToSaved = async (productId: string) => {
-    await save(productId)
-      .then(() => toastApi.success('Moved to wishlist'))
-      .catch(() => toastApi.error('Failed to move to wishlist'));
+    setMoveToWishlistLoadingId(productId);
+    try {
+      await save(productId);
+      toastApi.success('Moved to wishlist');
+    } catch {
+      toastApi.error('Failed to move to wishlist');
+    } finally {
+      setMoveToWishlistLoadingId(null);
+    }
   };
 
   const moveToCart = async (productId: string) => {
-    await unsave(productId)
-      .then(() => toastApi.success('Moved to cart'))
-      .catch(() => toastApi.error('Failed to move to cart'));
+    setSavedMoveToCartLoadingId(productId);
+    try {
+      await unsave(productId);
     await fetch('/api/account/cart', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-skip-global-loader': 'true',
+        },
       credentials: 'include',
       body: JSON.stringify({ productId, quantity: 1 }),
-    }).catch(() => {});
+      });
     await load();
+      toastApi.success('Moved to cart');
+    } catch {
+      toastApi.error('Failed to move to cart');
+    } finally {
+      setSavedMoveToCartLoadingId(null);
+    }
   };
 
-  const checkDelivery = () => {
-    const clean = pincode.replace(/\D/g, '');
-    if (clean.length !== 6) {
-      setDeliveryMsg('Please enter a valid 6-digit pincode.');
-      return;
+  const removeSavedItem = async (productId: string) => {
+    setSavedRemoveLoadingId(productId);
+    try {
+      await unsave(productId);
+      toastApi.success('Removed from saved items');
+    } catch {
+      toastApi.error('Failed to remove saved item');
+    } finally {
+      setSavedRemoveLoadingId(null);
     }
-    setDeliveryMsg(
-      `Delivery available to ${clean}. Estimated: 2-4 business days.`
-    );
   };
 
   const applyCoupon = () => {
+    setCouponApplying(true);
     const code = couponCode.trim().toUpperCase();
     if (code === 'SAVE10') setCouponRate(0.1);
     else if (code === 'SAVE5') setCouponRate(0.05);
     else {
       setCouponRate(0);
+    }
+    setTimeout(() => setCouponApplying(false), 300);
+  };
+
+  const checkDelivery = async () => {
+    setCheckPincodeLoading(true);
+    try {
+      const res = await fetch(`/api/main/pincode/${pincode}`);
+      const data = await res.json();
+      if (data.success) {
+        setDeliveryMsg(data.message);
+        toastApi.success(data.message);
+      } else {
+        setDeliveryMsg(data.message);
+        toastApi.error(data.message);
+      }
+    } catch (error) {
+      setDeliveryMsg('Failed to check delivery');
+      toastApi.error('Failed to check delivery');
+    } finally {
+      setCheckPincodeLoading(false);
     }
   };
 
@@ -316,18 +378,26 @@ export default function CartPage() {
                           <div className="flex items-center gap-2 self-start sm:self-auto">
                             <button
                               aria-label="Decrease quantity"
-                              className="p-1.5 sm:p-2 rounded-md border border-primary/20 hover:bg-primary/10 transition-colors"
+                              className="p-1.5 sm:p-2 rounded-md border border-primary/20 hover:bg-primary/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                               onClick={() => updateQuantity(product.id, -1)}
+                              disabled={
+                                quantityLoadingId === product.id || quantity <= 1
+                              }
                             >
                               <Minus className="w-3 h-3 sm:w-4 sm:h-4" />
                             </button>
-                            <span className="w-6 sm:w-8 text-center text-sm font-medium">
-                              {quantity}
+                            <span className="w-6 sm:w-8 text-center text-sm font-medium flex items-center justify-center">
+                              {quantityLoadingId === product.id ? (
+                                <Spinner className="h-3 w-3 text-amber-600" />
+                              ) : (
+                                quantity
+                              )}
                             </span>
                             <button
                               aria-label="Increase quantity"
-                              className="p-1.5 sm:p-2 rounded-md border border-primary/20 hover:bg-primary/10 transition-colors"
+                              className="p-1.5 sm:p-2 rounded-md border border-primary/20 hover:bg-primary/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                               onClick={() => updateQuantity(product.id, 1)}
+                              disabled={quantityLoadingId === product.id}
                             >
                               <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
                             </button>
@@ -347,23 +417,47 @@ export default function CartPage() {
                         {/* Action Buttons */}
                         <div className="flex items-center gap-2 mt-3 sm:mt-4">
                           <button
-                            className="p-1 px-2 rounded-full flex gap-2 items-center btn-outline btn-animated text-xs"
+                            className="relative inline-flex h-7 items-center justify-center gap-2 rounded-full px-2 btn-outline btn-animated text-xs disabled:opacity-60 disabled:cursor-not-allowed"
                             aria-label="Move to wishlist"
                             onClick={() => moveToSaved(product.id)}
+                            disabled={moveToWishlistLoadingId === product.id}
+                          >
+                            <span
+                              className={cn(
+                                'inline-flex items-center gap-2 transition-opacity',
+                                moveToWishlistLoadingId === product.id && 'opacity-0'
+                              )}
                           >
                             <Heart className="w-3 h-3" />
-                            <span className="hidden sm:inline">
-                              Move to wishlist
+                              <span className="hidden sm:inline">Move to wishlist</span>
+                              <span className="sm:hidden">Wishlist</span>
                             </span>
-                            <span className="sm:hidden">Wishlist</span>
+                            {moveToWishlistLoadingId === product.id && (
+                              <span className="absolute inset-0 flex items-center justify-center">
+                                <Spinner className="h-4 w-4 text-current" />
+                            </span>
+                            )}
                           </button>
                           <button
-                            className="p-1 px-2 rounded-full flex gap-2 items-center btn-outline btn-animated text-xs"
+                            className="relative inline-flex h-7 items-center justify-center gap-2 rounded-full px-2 btn-outline btn-animated text-xs disabled:opacity-60 disabled:cursor-not-allowed"
                             aria-label="Remove item"
                             onClick={() => removeItem(product.id)}
+                            disabled={removeLoadingId === product.id}
+                          >
+                            <span
+                              className={cn(
+                                'inline-flex items-center gap-2 transition-opacity',
+                                removeLoadingId === product.id && 'opacity-0'
+                              )}
                           >
                             <Trash2 className="w-3 h-3" />
                             <span>Remove</span>
+                            </span>
+                            {removeLoadingId === product.id && (
+                              <span className="absolute inset-0 flex items-center justify-center">
+                                <Spinner className="h-4 w-4 text-current" />
+                              </span>
+                            )}
                           </button>
                         </div>
                       </div>
@@ -401,29 +495,32 @@ export default function CartPage() {
         <aside className="lg:col-span-1 space-y-4 md:space-y-6">
           {/* Delivery & Extras */}
           <div className="p-3 sm:p-4 md:p-5 rounded-lg border border-primary/10 bg-white/60 backdrop-blur-xl">
-            <h3 className="text-base sm:text-lg font-semibold text-primary-dark mb-3">
-              Delivery
+            <h3 className="text-base sm:text-lg md:text-xl font-semibold text-primary-dark mb-4">
+              Delivery & Extras
             </h3>
-            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+            <div className="flex gap-2 mb-4 flex-wrap">
               <input
                 value={pincode}
                 onChange={e => setPincode(e.target.value)}
-                placeholder="Enter pincode"
+                placeholder="Enter Pincode"
                 className="flex-1 rounded-md border border-primary/20 px-3 py-2 text-sm outline-none focus:border-primary"
-                maxLength={6}
               />
               <button
-                className="btn btn-filled btn-animated text-sm !py-2.5"
+                className="relative btn btn-filled btn-animated text-sm !py-2.5 disabled:opacity-70 disabled:cursor-not-allowed"
                 onClick={checkDelivery}
+                disabled={checkPincodeLoading}
               >
-                Check
+                <span className={cn(checkPincodeLoading && 'opacity-0')}>Check</span>
+                {checkPincodeLoading && (
+                  <span className="absolute inset-0 flex items-center justify-center">
+                    <Spinner className="text-white" />
+                  </span>
+                )}
               </button>
             </div>
-            {deliveryMsg && (
-              <p className="mt-2 text-xs sm:text-sm text-primary-dark">
+            <p className="text-xs text-primary-dark text-center">
                 {deliveryMsg}
               </p>
-            )}
           </div>
 
           <div className="p-3 sm:p-4 md:p-5 rounded-lg border border-primary/10 bg-white/60 backdrop-blur-xl">
@@ -438,10 +535,16 @@ export default function CartPage() {
                 className="flex-1 rounded-md border border-primary/20 px-3 py-2 text-sm outline-none focus:border-primary"
               />
               <button
-                className="p-1 px-2 rounded-md flex gap-2 items-center btn-outline btn-animated text-xs"
+                className="relative inline-flex items-center justify-center gap-2 rounded-md btn-outline btn-animated text-xs disabled:opacity-60 disabled:cursor-not-allowed"
                 onClick={applyCoupon}
+                disabled={couponApplying}
               >
-                Apply
+                <span className={cn(couponApplying && 'opacity-0')}>Apply</span>
+                {couponApplying && (
+                  <span className="absolute inset-0 flex items-center justify-center">
+                    <Spinner className="h-4 w-4 text-current" />
+                  </span>
+                )}
               </button>
             </div>
             <div className="space-y-2 sm:space-y-3 text-xs sm:text-sm">
@@ -559,16 +662,32 @@ export default function CartPage() {
                   </div>
                   <div className="flex items-center gap-2 self-start sm:self-auto">
                     <button
-                      className=" p-2 rounded-full flex gap-2 items-center btn-outline btn-animated text-xs"
+                      className="relative inline-flex items-center justify-center gap-2 rounded-full btn-outline btn-animated text-xs px-2 disabled:opacity-60 disabled:cursor-not-allowed"
                       onClick={() => moveToCart(product.id)}
+                      disabled={savedMoveToCartLoadingId === product.id}
                     >
+                      <span className={cn(savedMoveToCartLoadingId === product.id && 'opacity-0')}>
                       Move to cart
+                      </span>
+                      {savedMoveToCartLoadingId === product.id && (
+                        <span className="absolute inset-0 flex items-center justify-center">
+                          <Spinner className="h-4 w-4 text-current" />
+                        </span>
+                      )}
                     </button>
                     <button
-                      className="p-2 rounded-full flex gap-2 items-center btn-outline btn-animated text-xs"
-                      onClick={() => unsave(product.id)}
+                      className="relative inline-flex items-center justify-center gap-2 rounded-full btn-outline btn-animated text-xs px-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                      onClick={() => removeSavedItem(product.id)}
+                      disabled={savedRemoveLoadingId === product.id}
                     >
+                      <span className={cn(savedRemoveLoadingId === product.id && 'opacity-0')}>
                       Remove
+                      </span>
+                      {savedRemoveLoadingId === product.id && (
+                        <span className="absolute inset-0 flex items-center justify-center">
+                          <Spinner className="h-4 w-4 text-current" />
+                        </span>
+                      )}
                     </button>
                   </div>
                 </div>

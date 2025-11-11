@@ -9,9 +9,9 @@ import { GiCrystalShine } from 'react-icons/gi';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Cart } from '@/app/(main)/assets/Common';
 import { useWishlistStore } from '@/lib/data/mainStore/wishlistStore';
-import { useCartStore } from '@/lib/data/mainStore/cartStore';
 import toastApi from '@/lib/toast';
 import Link from 'next/link';
+import { Spinner } from '@/app/(main)/components/ui/ScaleLoader';
 
 // Lazy load heavy components to reduce initial bundle size
 const ProductFilters = dynamic(() => import('@/app/(main)/components/filters/ProductFilters'), {
@@ -23,11 +23,9 @@ const ProductOptionsModal = dynamic(() => import('@/app/(main)/components/ui/Pro
 });
 
 export default function WishlistPage() {
-  const { products: wishlistProducts, load: loadWishlist, remove: removeFromWishlist, status } = useWishlistStore();
-  const { add: addToCart } = useCartStore();
+  const { products: wishlistProducts, load: loadWishlist, remove: removeFromWishlist } = useWishlistStore();
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [visibleProducts, setVisibleProducts] = useState(12);
-  const [isMobile, setIsMobile] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isRemoving, setIsRemoving] = useState<string | null>(null);
@@ -36,14 +34,6 @@ export default function WishlistPage() {
   useEffect(() => {
     loadWishlist();
   }, [loadWishlist]);
-
-  // Detect screen size
-  useEffect(() => {
-    const checkScreen = () => setIsMobile(window.innerWidth < 1024);
-    checkScreen();
-    window.addEventListener('resize', checkScreen);
-    return () => window.removeEventListener('resize', checkScreen);
-  }, []);
 
   // Map wishlist products to Product type
   const mappedProducts = useMemo(() => {
@@ -128,7 +118,7 @@ export default function WishlistPage() {
     try {
       await removeFromWishlist(productId);
       toastApi.success('Removed from wishlist', 'Product removed successfully');
-    } catch (error) {
+    } catch {
       toastApi.error('Failed to remove', 'Could not remove product from wishlist');
     } finally {
       setIsRemoving(null);
@@ -237,22 +227,19 @@ export default function WishlistPage() {
             onFiltersChange={setFilteredProducts}
           >
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6 items-center">
-              {displayedProducts.map((product) => (
-                <Link
-                  href={`/product/${product.id}`}
+              {displayedProducts.map(product => (
+                <article
                   key={product.id}
-                  className="block h-full"
+                  className="relative w-full h-full rounded-lg overflow-hidden border border-primary/10 flex flex-col"
+                  onMouseEnter={() => setHoveredProductId(product.id)}
+                  onMouseLeave={() => setHoveredProductId(prev => (prev === product.id ? null : prev))}
                 >
-                  <div
-                    className="relative w-full h-full rounded-lg overflow-hidden cursor-pointer border border-primary/10 flex flex-col group"
-                    onMouseEnter={() => !isMobile && setHoveredProductId(product.id)}
-                    onMouseLeave={() => !isMobile && setHoveredProductId(null)}
-                  >
-                    <div className="relative aspect-square w-full flex-shrink-0 overflow-hidden">
+                  <div className="relative aspect-square w-full flex-shrink-0 overflow-hidden">
+                    <Link href={`/product/${product.id}`} className="block h-full">
                       <motion.div layout className="relative w-full h-full">
                         <AnimatePresence mode="wait">
                           <motion.div
-                            key={hoveredProductId === product.id ? 'hover' : 'default'}
+                            key={hoveredProductId === product.id && product.images?.[1] ? 'hover' : 'default'}
                             variants={variants}
                             initial="initial"
                             animate="animate"
@@ -262,9 +249,9 @@ export default function WishlistPage() {
                           >
                             <Image
                               src={
-                                hoveredProductId === product.id && product.hoverImage
-                                  ? product.hoverImage
-                                  : product.images[0]
+                                hoveredProductId === product.id && product.images?.[1]
+                                  ? product.images[1]
+                                  : product.images?.[0] ?? '/placeholder.png'
                               }
                               alt={product.name}
                               className="w-full h-full object-cover aspect-square rounded-t-lg"
@@ -276,88 +263,97 @@ export default function WishlistPage() {
                           </motion.div>
                         </AnimatePresence>
                       </motion.div>
-
-                      <button
-                        className="absolute bottom-3 right-3 bg-white/50 backdrop-blur-sm cursor-pointer hover:bg-red-500 hover:text-white rounded-full sm:p-2 p-1.5 transition-all duration-300 z-10"
-                        aria-label={`Remove ${product.name} from wishlist`}
-                        onClick={(e) => handleRemoveFromWishlist(product.id, e)}
-                        disabled={isRemoving === product.id}
-                      >
-                        {isRemoving === product.id ? (
-                          <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-current"></div>
-                        ) : (
+                    </Link>
+                    <button
+                      className="absolute bottom-3 right-3 bg-white/50 backdrop-blur-sm cursor-pointer hover:bg-red-500 hover:text-white rounded-full sm:p-2 p-1.5 transition-all duration-300 z-10 flex items-center justify-center"
+                      aria-label={`Remove ${product.name} from wishlist`}
+                      onClick={(e) => handleRemoveFromWishlist(product.id, e)}
+                      disabled={isRemoving === product.id}
+                      type="button"
+                    >
+                      <span className="relative flex items-center justify-center">
+                        <span className={isRemoving === product.id ? 'opacity-0' : ''}>
                           <Trash2 className="sm:w-4 sm:h-4 w-3 h-3" />
-                        )}
-                      </button>
-                    </div>
-
-                    {product.isNew && (
-                      <span className="absolute top-0 right-0 best-seller-tag text-white text-[9px] sm:text-[11px] px-3 py-1 sm:py-1.5 rounded-tr-lg rounded-bl-lg uppercase font-semibold tracking-wide z-10">
-                        <div className="flex items-center gap-1">
-                          <GiCrystalShine size={15} /> NEW
-                        </div>
-                      </span>
-                    )}
-                    {product.isSale && (
-                      <span className="absolute top-0 right-0 best-seller-tag text-white text-[9px] sm:text-[11px] px-3 py-1.5 rounded-tr-lg rounded-bl-lg uppercase font-semibold tracking-wide z-10">
-                        <div className="flex items-center gap-1">
-                          <GiCrystalShine size={15} /> BEST SELLER
-                        </div>
-                      </span>
-                    )}
-
-                    <div className="flex-1 flex flex-col p-3 sm:p-4 gap-3">
-                      <div className="flex flex-col gap-1">
-                        <p className="font-semibold text-primary-dark truncate text-xs sm:text-sm leading-tight mb-1">
-                          {product.name}
-                        </p>
-                        <div className="flex items-center gap-3 flex-wrap">
-                          {product.price ? (
-                            <div className="flex items-center gap-2">
-                              <p className="text-sm sm:text-base font-bold text-accent">
-                                ₹{product.price.toLocaleString()}
-                              </p>
-                              {product.originalPrice && product.originalPrice > product.price && (
-                                <p className="text-xs sm:text-sm text-primary-dark line-through">
-                                  ₹{product.originalPrice.toLocaleString()}
-                                </p>
-                              )}
-                            </div>
-                          ) : (
-                            <button className="w-full bg-primary text-white py-2 px-3 rounded-md text-xs sm:text-sm font-medium hover:bg-primary-dark transition-colors">
-                              REQUEST STORE AVAILABILITY
-                            </button>
-                          )}
-
-                          {product.originalPrice && product.price && product.originalPrice > product.price && (
-                            <div className="text-xs sm:text-sm text-primary-dark">
-                              Flat{' '}
-                              {Math.round(
-                                ((product.originalPrice - product.price) / product.originalPrice) * 100
-                              )}
-                              % off
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      <div
-                        className="w-full bg-primary text-white py-2 px-3 rounded-md text-xs sm:text-sm hover:bg-primary-dark transition-colors flex items-center justify-center gap-1 cursor-pointer"
-                        onClick={(e) => handleAddToCart(product, e)}
-                      >
-                        <span className="text-accent">
-                          <Cart className="w-4 h-4 text-white" />
                         </span>
-                        Add to Cart
+                        {isRemoving === product.id && (
+                          <span className="absolute inset-0 flex items-center justify-center">
+                            <Spinner className="text-current" />
+                          </span>
+                        )}
+                      </span>
+                    </button>
+                  </div>
+
+                  {product.isNew && (
+                    <span className="absolute top-0 right-0 best-seller-tag text-white text-[9px] sm:text-[11px] px-3 py-1 sm:py-1.5 rounded-tr-lg rounded-bl-lg uppercase font-semibold tracking-wide z-10">
+                      <div className="flex items-center gap-1">
+                        <GiCrystalShine size={15} /> NEW
                       </div>
-                      {product.inStock && product.stockCount !== undefined && product.stockCount < 10 && (
-                        <p className="text-xs text-primary font-medium text-center flex items-center gap-1 animate-caret-blink">
-                          <span className="inline-block w-2 h-2 bg-primary rounded-full"></span>
-                          Only {product.stockCount} left!
-                        </p>
+                    </span>
+                  )}
+                  {product.isSale && (
+                    <span className="absolute top-0 right-0 best-seller-tag text-white text-[9px] sm:text-[11px] px-3 py-1.5 rounded-tr-lg rounded-bl-lg uppercase font-semibold tracking-wide z-10">
+                      <div className="flex items-center gap-1">
+                        <GiCrystalShine size={15} /> BEST SELLER
+                      </div>
+                    </span>
+                  )}
+
+                  <div className="flex-1 flex flex-col p-3 sm:p-4 gap-3">
+                    <Link href={`/product/${product.id}`} className="flex flex-col gap-1">
+                      <p className="font-semibold text-primary-dark truncate text-xs sm:text-sm leading-tight">
+                        {product.name}
+                      </p>
+                    </Link>
+                    <div className="flex items-center gap-3 flex-wrap">
+                      {product.price ? (
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm sm:text-base font-bold text-accent">
+                            ₹{product.price.toLocaleString()}
+                          </p>
+                          {product.originalPrice && product.originalPrice > product.price && (
+                            <p className="text-xs sm:text-sm text-primary-dark line-through">
+                              ₹{product.originalPrice.toLocaleString()}
+                            </p>
+                          )}
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          className="w-full bg-primary text-white py-2 px-3 rounded-md text-xs sm:text-sm font-medium hover:bg-primary-dark transition-colors"
+                        >
+                          REQUEST STORE AVAILABILITY
+                        </button>
+                      )}
+
+                      {product.originalPrice && product.price && product.originalPrice > product.price && (
+                        <div className="text-xs sm:text-sm text-primary-dark">
+                          Flat{' '}
+                          {Math.round(
+                            ((product.originalPrice - product.price) / product.originalPrice) * 100
+                          )}
+                          % off
+                        </div>
                       )}
                     </div>
+                    <button
+                      type="button"
+                      className="w-full bg-primary text-white py-2 px-3 rounded-md text-xs sm:text-sm hover:bg-primary-dark transition-colors flex items-center justify-center gap-1"
+                      onClick={(e) => handleAddToCart(product, e)}
+                    >
+                      <span className="text-accent">
+                        <Cart className="w-4 h-4 text-white" />
+                      </span>
+                      Add to Cart
+                    </button>
+                    {product.inStock && product.stockCount !== undefined && product.stockCount < 10 && (
+                      <p className="text-xs text-primary font-medium text-center flex items-center gap-1 animate-caret-blink">
+                        <span className="inline-block w-2 h-2 bg-primary rounded-full"></span>
+                        Only {product.stockCount} left!
+                      </p>
+                    )}
                   </div>
-                </Link>
+                </article>
               ))}
             </div>
 

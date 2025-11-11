@@ -66,7 +66,7 @@ export default function AnimatedCards() {
     calculatePagination();
     window.addEventListener('resize', calculatePagination);
     return () => window.removeEventListener('resize', calculatePagination);
-  }, []);
+  }, [products.length]);
 
   useEffect(() => {
     const container = sliderRef.current;
@@ -154,6 +154,11 @@ export default function AnimatedCards() {
         <button
           className="absolute top-3 right-3 bg-white/50 backdrop-blur-sm text-foreground/70 hover:bg-white hover:text-foreground rounded-full p-2 transition-all duration-300"
           aria-label={`Add ${item.name} to wishlist`}
+          type="button"
+          onClick={event => {
+            event.preventDefault();
+            event.stopPropagation();
+          }}
         >
           <GoHeart size={18} />
         </button>
