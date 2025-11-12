@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
 export interface PublicCollection {
   _id?: string;
@@ -28,6 +29,7 @@ interface PublicCollectionState {
   currentCollection: PublicCollectionWithProducts | null;
   status: Status;
   error: string | null;
+  lastFetched: number | null;
 
   fetchCollections: () => Promise<void>;
   fetchCollection: (slugOrId: string) => Promise<void>;
@@ -35,26 +37,54 @@ interface PublicCollectionState {
   reset: () => void;
 }
 
-export const usePublicCollectionStore = create<PublicCollectionState>(set => ({
-  collections: [],
-  currentCollection: null,
-  status: 'idle',
-  error: null,
+// Cache duration: 5 minutes (same as categories)
+const CACHE_DURATION = 5 * 60 * 1000;
 
-  fetchCollections: async () => {
-    set({ status: 'loading', error: null });
-    try {
-      const res = await fetch('/api/main/collections', { cache: 'no-store' });
-      if (!res.ok) throw new Error('Failed to fetch collections');
-      const data: { collections: PublicCollection[] } = await res.json();
-      set({ collections: data.collections, status: 'success' });
-    } catch (e: unknown) {
-      set({
-        status: 'error',
-        error: e instanceof Error ? e.message : 'Failed to fetch collections',
-      });
-    }
-  },
+export const usePublicCollectionStore = create<PublicCollectionState>()(
+  persist(
+    (set, get) => ({
+      collections: [],
+      currentCollection: null,
+      status: 'idle',
+      error: null,
+      lastFetched: null,
+
+      fetchCollections: async () => {
+        const state = get();
+        const now = Date.now();
+
+        // Return cached data if still valid
+        if (
+          state.collections.length > 0 &&
+          state.lastFetched &&
+          now - state.lastFetched < CACHE_DURATION &&
+          state.status === 'success'
+        ) {
+          return;
+        }
+
+        // If already loading, don't start another request
+        if (state.status === 'loading') {
+          return;
+        }
+
+        set({ status: 'loading', error: null });
+        try {
+          const res = await fetch('/api/main/collections', { cache: 'no-store' });
+          if (!res.ok) throw new Error('Failed to fetch collections');
+          const data: { collections: PublicCollection[] } = await res.json();
+          set({
+            collections: data.collections,
+            status: 'success',
+            lastFetched: now,
+          });
+        } catch (e: unknown) {
+          set({
+            status: 'error',
+            error: e instanceof Error ? e.message : 'Failed to fetch collections',
+          });
+        }
+      },
 
   fetchCollection: async slugOrId => {
     set({ status: 'loading', error: null });
@@ -74,12 +104,22 @@ export const usePublicCollectionStore = create<PublicCollectionState>(set => ({
     }
   },
 
-  clearError: () => set({ error: null }),
-  reset: () =>
-    set({
-      collections: [],
-      currentCollection: null,
-      status: 'idle',
-      error: null,
+      clearError: () => set({ error: null }),
+      reset: () =>
+        set({
+          collections: [],
+          currentCollection: null,
+          status: 'idle',
+          error: null,
+          lastFetched: null,
+        }),
     }),
-}));
+    {
+      name: 'collections-storage',
+      partialize: (state) => ({
+        collections: state.collections,
+        lastFetched: state.lastFetched,
+      }),
+    }
+  )
+);

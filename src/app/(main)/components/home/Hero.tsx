@@ -10,16 +10,12 @@ import Container from '../layouts/Container';
 import { useHomepageStore } from '@/lib/data/mainStore/homepageStore';
 
 export default function HeroCarousel() {
-  const { data, fetchHomepage } = useHomepageStore();
+  const { data } = useHomepageStore();
   const [current, setCurrent] = React.useState(0);
   const [direction, setDirection] = React.useState(0);
   const timerRef = React.useRef<ReturnType<typeof setInterval> | null>(null);
 
-  React.useEffect(() => {
-    fetchHomepage();
-    // Zustand actions are stable, but we only want this to run once on mount
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // Homepage data is loaded centrally in Home page, no need to fetch here
 
   const images = React.useMemo<(string | StaticImageData)[]>(() => {
     return data?.hero?.images || [];

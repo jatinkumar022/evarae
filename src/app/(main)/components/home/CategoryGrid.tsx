@@ -64,10 +64,10 @@ const ViewAllItem = ({ categories }: { categories: PublicCategory[] }) => (
 
 export default function CategoriesGrid() {
   const { categories: storeCategories, status, fetchCategories } = usePublicCategoryStore();
-  const { data, fetchHomepage } = useHomepageStore();
+  const { data } = useHomepageStore();
 
   useEffect(() => {
-    fetchHomepage();
+    // Homepage data is loaded centrally in Home page, no need to fetch here
     if (status === 'idle') fetchCategories();
     // Zustand actions are stable, but we only want this to run once on mount or when status changes
     // eslint-disable-next-line react-hooks/exhaustive-deps

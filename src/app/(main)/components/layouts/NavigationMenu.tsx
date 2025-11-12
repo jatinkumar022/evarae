@@ -11,12 +11,9 @@ const NavigationMenu = memo(() => {
   const [active, setActive] = useState<string | null>(null);
   const scrollDir = useScrollDirection();
 
-  const { categories, status, fetchCategories } = usePublicCategoryStore();
+  const { categories, status } = usePublicCategoryStore();
 
-  useEffect(() => {
-    // Fetch categories once on mount, using cache
-    fetchCategories();
-  }, [fetchCategories]);
+  // Categories are already fetched by Navbar, so we just use them from the store
 
   const topCategories = categories.slice(0, 7);
 

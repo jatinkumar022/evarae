@@ -1,34 +1,22 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { Address } from './useAddressForm';
+import { useAddressesStore } from '@/lib/data/mainStore/addressesStore';
 
 export function useAddressData() {
-  const [addresses, setAddresses] = useState<Address[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { addresses, status, error: storeError, fetchAddresses, refreshAddresses } = useAddressesStore();
   const [error, setError] = useState<string | null>(null);
 
-  const fetchAddresses = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      const res = await fetch('/api/account/addresses', {
-        cache: 'no-store',
-        credentials: 'include',
-      });
-      const data = await res.json();
-      setAddresses(data.addresses || []);
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : 'Failed to load addresses';
-      setError(message);
-      console.error('Failed to fetch addresses:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
+  // Load addresses once on mount
   useEffect(() => {
     fetchAddresses();
-  }, [fetchAddresses]);
+    // Zustand actions are stable, but we only want this to run once on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Sync error state
+  useEffect(() => {
+    setError(storeError);
+  }, [storeError]);
 
   const deleteAddress = async (id: string) => {
     try {
@@ -42,7 +30,7 @@ export function useAddressData() {
         throw new Error(errorData?.error || 'Failed to delete address');
       }
 
-      await fetchAddresses();
+      await refreshAddresses();
       return true;
     } catch (err) {
       const message =
@@ -64,8 +52,7 @@ export function useAddressData() {
         throw new Error(errorData?.error || 'Failed to set default address');
       }
 
-      const data = await res.json();
-      setAddresses(data.addresses || []);
+      await refreshAddresses();
       return true;
     } catch (err) {
       const message =
@@ -77,9 +64,9 @@ export function useAddressData() {
 
   return {
     addresses,
-    isLoading,
+    isLoading: status === 'loading',
     error,
-    refetch: fetchAddresses,
+    refetch: refreshAddresses,
     deleteAddress,
     setDefaultShipping,
   };

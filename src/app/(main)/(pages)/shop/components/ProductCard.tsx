@@ -11,7 +11,7 @@ import dynamic from 'next/dynamic';
 import { useWishlistStore } from '@/lib/data/mainStore/wishlistStore';
 import toastApi from '@/lib/toast';
 import { Spinner } from '@/app/(main)/components/ui/ScaleLoader';
-import { accountApi, UserAccount } from '@/lib/utils';
+import { useUserAccountStore } from '@/lib/data/mainStore/userAccountStore';
 import LoginPromptModal from '@/app/(main)/components/ui/LoginPromptModal';
 
 // Dynamically import ProductOptionsModal to reduce initial bundle size
@@ -28,10 +28,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const [isMobile, setIsMobile] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isWishlistLoading, setIsWishlistLoading] = useState(false);
-  const [currentUser, setCurrentUser] = useState<UserAccount | null>(null);
+  const { user: currentUser } = useUserAccountStore();
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [loginModalAction, setLoginModalAction] = useState<'cart' | 'wishlist'>('cart');
-  const { load: loadWishlist, add: addToWishlist, remove: removeFromWishlist,  products: wishlistProducts } = useWishlistStore();
+  const { add: addToWishlist, remove: removeFromWishlist, products: wishlistProducts } = useWishlistStore();
 
   const hoverMedia = product.hoverImage || (Array.isArray(product.images) ? product.images[1] : undefined);
 
@@ -42,25 +42,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     return () => window.removeEventListener('resize', checkScreen);
   }, []);
 
-  // Check user authentication on mount
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const { user } = await accountApi.me();
-        setCurrentUser(user);
-      } catch {
-        setCurrentUser(null);
-      }
-    };
-    checkAuth();
-  }, []);
-
-  // Load wishlist on mount to check initial state
-  useEffect(() => {
-    if (currentUser) {
-      loadWishlist();
-    }
-  }, [loadWishlist, currentUser]);
+  // User and wishlist are loaded centrally via Navbar, no need to fetch here
 
   // Ensure component re-renders when wishlist changes
   // Using wishlistProducts ensures Zustand subscription

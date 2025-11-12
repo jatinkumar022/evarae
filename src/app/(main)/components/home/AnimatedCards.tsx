@@ -8,7 +8,7 @@ import { GiCrystalShine } from 'react-icons/gi';
 import Link from 'next/link';
 import { useHomepageStore } from '@/lib/data/mainStore/homepageStore';
 import { useWishlistStore } from '@/lib/data/mainStore/wishlistStore';
-import { accountApi, UserAccount } from '@/lib/utils';
+import { useUserAccountStore } from '@/lib/data/mainStore/userAccountStore';
 import LoginPromptModal from '@/app/(main)/components/ui/LoginPromptModal';
 import toastApi from '@/lib/toast';
 import { Spinner } from '@/app/(main)/components/ui/ScaleLoader';
@@ -27,15 +27,11 @@ export default function AnimatedCards() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [cardsPerPage, setCardsPerPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const { data, fetchHomepage } = useHomepageStore();
+  const { data } = useHomepageStore();
   const [products, setProducts] = useState<Product[]>([]);
   const [showLoginModal, setShowLoginModal] = useState(false);
   
-  useEffect(() => {
-    fetchHomepage();
-    // Zustand actions are stable, but we only want this to run once on mount
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // Homepage data is loaded centrally in Home page, no need to fetch here
 
   useEffect(() => {
     if (data?.bestsellers && data.bestsellers.length > 0) {
@@ -110,32 +106,12 @@ export default function AnimatedCards() {
     const [isHovered, setIsHovered] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
     const [isWishlistLoading, setIsWishlistLoading] = useState(false);
-    const [currentUser, setCurrentUser] = useState<UserAccount | null>(null);
-    const { load: loadWishlist, add: addToWishlist, remove: removeFromWishlist, products: wishlistProducts } = useWishlistStore();
+    const { user: currentUser } = useUserAccountStore();
+    const { add: addToWishlist, remove: removeFromWishlist, products: wishlistProducts } = useWishlistStore();
     const primaryImage = item.images?.[0] ?? '/favicon.ico';
     const hoverImage = item.images?.[1] ?? primaryImage;
 
-    // Check user authentication on mount
-    useEffect(() => {
-      const checkAuth = async () => {
-        try {
-          const { user } = await accountApi.me();
-          setCurrentUser(user);
-        } catch {
-          setCurrentUser(null);
-        }
-      };
-      checkAuth();
-    }, []);
-
-    // Load wishlist on mount to check initial state
-    useEffect(() => {
-      if (currentUser) {
-        loadWishlist();
-      }
-      // Zustand actions are stable, but we only want to depend on currentUser
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [currentUser]);
+    // User and wishlist are loaded centrally via Navbar, no need to fetch here
 
     // Check if product is wishlisted
     const isProductWishlisted = wishlistProducts.some(

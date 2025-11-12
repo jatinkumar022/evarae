@@ -159,28 +159,27 @@ export default function OrdersHistoryPage() {
   const [dateFilter, setDateFilter] = useState<string>('all');
   const [showProgress, setShowProgress] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
+  const { orders: storeOrders, fetchOrders, status: ordersStatus } = useOrdersStore();
 
+  // Load orders once on mount
   useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetch('/api/orders', { credentials: 'include' });
-        const data: { orders?: OrderDoc[]; error?: string } = await res.json();
-        if (!res.ok) throw new Error(data?.error || 'Failed to load orders');
-        // Normalize orderNumber fallback
-        const mapped = (data.orders || []).map(o => ({
-          ...o,
-          orderNumber: o.orderNumber || o._id,
-        }));
-        setOrders(mapped);
-        if (mapped.length === 0) {
-          toastApi.info('No orders yet');
-        }
-      } catch (e: unknown) {
-        setError(e instanceof Error ? e.message : 'Failed to load orders');
-        toastApi.error('Failed to load orders');
-      }
-    })();
+    fetchOrders();
+    // Zustand actions are stable, but we only want this to run once on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Update local orders state from store
+  useEffect(() => {
+    if (storeOrders.length > 0) {
+      setOrders(storeOrders as OrderDoc[]);
+    } else if (ordersStatus === 'success' && storeOrders.length === 0) {
+      toastApi.info('No orders yet');
+    }
+    if (ordersStatus === 'error') {
+      setError('Failed to load orders');
+      toastApi.error('Failed to load orders');
+    }
+  }, [storeOrders, ordersStatus]);
 
   const statusOptions = [
     { value: 'all', label: 'All Orders' },

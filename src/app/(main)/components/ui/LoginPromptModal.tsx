@@ -16,11 +16,17 @@ export default function LoginPromptModal({
 }: LoginPromptModalProps) {
   const router = useRouter();
 
+  // Prevent body scrolling when modal is open
   useEffect(() => {
     if (isOpen) {
+      // Save original overflow style
+      const originalStyle = window.getComputedStyle(document.body).overflow;
+      // Disable scrolling
       document.body.style.overflow = 'hidden';
+      
       return () => {
-        document.body.style.overflow = 'auto';
+        // Restore original overflow style on cleanup
+        document.body.style.overflow = originalStyle;
       };
     }
   }, [isOpen]);

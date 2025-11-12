@@ -42,11 +42,9 @@ const MobileNavMenu = ({ isOpen, onClose }: MobileNavMenuProps) => {
   // const [activeSubmenu, setActiveSubmenu] = useState<string | null>(null);
   const [searchValue, setSearchValue] = useState('');
 
-  const { categories, status, fetchCategories } = usePublicCategoryStore();
+  const { categories, status } = usePublicCategoryStore();
 
-  useEffect(() => {
-    if (status === 'idle') fetchCategories();
-  }, [status, fetchCategories]);
+  // Categories are already fetched by Navbar, so we just use them from the store
 
   useEffect(() => {
     if (isOpen) {

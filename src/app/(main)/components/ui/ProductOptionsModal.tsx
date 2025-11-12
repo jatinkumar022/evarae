@@ -6,7 +6,7 @@ import { Product } from '@/lib/types/product';
 import { useCartStore } from '@/lib/data/mainStore/cartStore';
 import CartNotification from './CartNotification';
 import { Spinner } from '@/app/(main)/components/ui/ScaleLoader';
-import { accountApi, UserAccount } from '@/lib/utils';
+import { useUserAccountStore } from '@/lib/data/mainStore/userAccountStore';
 import LoginPromptModal from '@/app/(main)/components/ui/LoginPromptModal';
 
 interface ProductOptionsModalProps {
@@ -24,22 +24,11 @@ export default function ProductOptionsModal({
   const [quantity, setQuantity] = useState(1);
   const [showNotification, setShowNotification] = useState(false);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
-  const [currentUser, setCurrentUser] = useState<UserAccount | null>(null);
+  const { user: currentUser } = useUserAccountStore();
   const [showLoginModal, setShowLoginModal] = useState(false);
   const addToCart = useCartStore(s => s.add);
 
-  // Check user authentication on mount
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const { user } = await accountApi.me();
-        setCurrentUser(user);
-      } catch {
-        setCurrentUser(null);
-      }
-    };
-    checkAuth();
-  }, []);
+  // User is loaded centrally via Navbar, no need to fetch here
 
   // Reset state when modal opens/closes or product changes
   useEffect(() => {
@@ -55,6 +44,37 @@ export default function ProductOptionsModal({
       setQuantity(1);
     }
   }, [isOpen, product]);
+
+  // Prevent body scrolling when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      // Save original overflow style
+      const originalStyle = window.getComputedStyle(document.body).overflow;
+      // Disable scrolling
+      document.body.style.overflow = 'hidden';
+      
+      return () => {
+        // Restore original overflow style on cleanup
+        document.body.style.overflow = originalStyle;
+      };
+    }
+  }, [isOpen]);
+
+  // Handle ESC key to close modal
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && isOpen) {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscape);
+      return () => {
+        document.removeEventListener('keydown', handleEscape);
+      };
+    }
+  }, [isOpen, onClose]);
 
   if (!product) return null;
 

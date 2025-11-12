@@ -33,6 +33,7 @@ interface PublicCategoryState {
   lastFetched: number | null; // Timestamp of last fetch
   fetchCategories: () => Promise<void>;
   fetchCategory: (slugOrId: string, includeProducts?: boolean) => Promise<void>;
+  setCategoriesFromHomepage: (categories: PublicCategory[]) => void;
   clearError: () => void;
   reset: () => void;
 }
@@ -112,6 +113,20 @@ export const usePublicCategoryStore = create<PublicCategoryState>()(
           set({
             status: 'error',
             error: e instanceof Error ? e.message : 'Failed to fetch category',
+          });
+        }
+      },
+
+      setCategoriesFromHomepage: (categories: PublicCategory[]) => {
+        const state = get();
+        // Only set if we don't have categories or if homepage has more recent data
+        // This prevents overwriting if categories were already fetched
+        if (state.categories.length === 0 || categories.length > 0) {
+          set({
+            categories,
+            status: 'success',
+            lastFetched: Date.now(),
+            error: null,
           });
         }
       },

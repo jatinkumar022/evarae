@@ -7,10 +7,10 @@ import Link from 'next/link';
 import { useHomepageStore } from '@/lib/data/mainStore/homepageStore';
 
 function NewArrival() {
-  const { data, fetchHomepage } = useHomepageStore();
+  const { data } = useHomepageStore();
 
   useEffect(() => {
-    fetchHomepage();
+    // Homepage data is loaded centrally in Home page, no need to fetch here
     // Zustand actions are stable, but we only want this to run once on mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

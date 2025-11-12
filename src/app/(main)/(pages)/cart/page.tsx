@@ -9,6 +9,8 @@ import { Plus, Minus, Trash2, Heart } from 'lucide-react';
 import { ProductCard } from '@/app/(main)/(pages)/shop/components/ProductCard';
 import { Visa, Mastercard, Paypal, Maestro } from '@/app/(main)/assets/Footer';
 import { useCartStore } from '@/lib/data/mainStore/cartStore';
+import { useBestSellersStore } from '@/lib/data/mainStore/bestSellersStore';
+import { usePublicCategoryStore } from '@/lib/data/mainStore/categoryStore';
 import type { CartItem, SavedItem } from '@/lib/data/mainStore/cartStore';
 import toastApi from '@/lib/toast';
 import { Spinner } from '@/app/(main)/components/ui/ScaleLoader';
@@ -35,93 +37,73 @@ export default function CartPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Dynamic: "You may also like" products
-  const [recommended, setRecommended] = useState<Product[] | null>(null);
-  // Dynamic: Explore categories tiles
-  const [categoryTiles, setCategoryTiles] = useState<
-    { label: string; href: string; image: string }[] | null
-  >(null);
+  const { products: bestSellersProducts, fetchBestSellers } = useBestSellersStore();
+  const { categories, fetchCategories } = usePublicCategoryStore();
+  
+  // Map categories to tiles format
+  const categoryTiles = useMemo(() => {
+    if (!categories || categories.length === 0) return null;
+    return categories.map(c => ({
+      label: c.name || '',
+      href: `/shop/${c.slug || ''}`,
+      image: (c.image || '') as string,
+    }));
+  }, [categories]);
 
+  // Load best sellers and categories once on mount
   useEffect(() => {
-    // Fetch recommended products
-    (async () => {
-      try {
-        const res = await fetch('/api/main/dashboard/best-sellers');
-        const data = (await res.json()) as {
-          products?: Array<{
-            _id?: string;
-            slug?: string;
-            name?: string;
-            images?: string[];
-            price?: number;
-            discountPrice?: number;
-            stockQuantity?: number;
-            status?: string;
-          }>;
-        };
-        const mapped: Product[] = (data.products || []).map(p => {
-          const images =
-            p.images && p.images.length ? p.images : ['/favicon.ico'];
-          const stockQuantity = p.stockQuantity ?? 0;
-          const status = p.status || 'active';
-          const inStock = status === 'active' && stockQuantity > 0;
-          
-          return {
-            id: String(p.slug || p._id || ''),
-            name: p.name || '',
-            description: '',
-            price: (p.discountPrice ?? p.price ?? 0) || 0,
-            originalPrice: p.price ?? null,
-            currency: 'INR',
-            images,
-            hoverImage: images[1],
-            category: {
-              id: '',
-              name: '',
-              slug: '',
-              productCount: 0,
-              isActive: true,
-            },
-            brand: '',
-            material: '',
-            inStock: inStock,
-            stockCount: stockQuantity,
-            rating: 0,
-            reviews: 0,
-            isNew: false,
-            isSale: false,
-            isWishlisted: false,
-            isFeatured: false,
-            tags: [],
-            sku: '',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          } as Product;
-        });
-        setRecommended(mapped);
-      } catch {
-        setRecommended([]);
-      }
-    })();
-
-    // Fetch categories
-    (async () => {
-      try {
-        const res = await fetch('/api/main/categories');
-        const data = (await res.json()) as {
-          categories?: Array<{ name?: string; slug?: string; image?: string }>;
-        };
-        const mapped = (data.categories || []).map(c => ({
-          label: c.name || '',
-          href: `/shop/${c.slug || ''}`,
-          image: (c.image || '') as string,
-        }));
-        setCategoryTiles(mapped);
-      } catch {
-        setCategoryTiles([]);
-      }
-    })();
+    fetchBestSellers();
+    fetchCategories(); // Categories are already loaded in Navbar, but this ensures they're available
+    // Zustand actions are stable, but we only want this to run once on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Map best sellers to Product format
+  const recommended = useMemo(() => {
+    if (!bestSellersProducts || bestSellersProducts.length === 0) return null;
+    
+    return bestSellersProducts.map(p => {
+      const images =
+        p.images && p.images.length ? p.images : ['/favicon.ico'];
+      const stockQuantity = p.stockQuantity ?? 0;
+      const status = p.status || 'active';
+      const inStock = status === 'active' && stockQuantity > 0;
+      
+      return {
+        id: String(p.slug || p._id || ''),
+        name: p.name || '',
+        description: '',
+        price: (p.discountPrice ?? p.price ?? 0) || 0,
+        originalPrice: p.price ?? null,
+        currency: 'INR',
+        images,
+        hoverImage: images[1],
+        category: {
+          id: '',
+          name: '',
+          slug: '',
+          productCount: 0,
+          isActive: true,
+        },
+        brand: '',
+        material: '',
+        inStock: inStock,
+        stockCount: stockQuantity,
+        rating: 0,
+        reviews: 0,
+        isNew: false,
+        isSale: false,
+        isWishlisted: false,
+        isFeatured: false,
+        tags: [],
+        sku: '',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      } as Product;
+    });
+  }, [bestSellersProducts]);
+
+  // Categories are now loaded via store, mapped above
 
   const totals = useMemo(() => {
     const subtotal = items.reduce((sum: number, item: CartItem) => {

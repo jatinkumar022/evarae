@@ -74,6 +74,27 @@ export default function GlobalLoaderProvider({
     };
   }, []);
 
+  // Prevent body scrolling when global loader is active
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const isLoaderActive = 
+      inFlightCount > 0 && 
+      !window.location.pathname.startsWith('/admin');
+
+    if (isLoaderActive) {
+      // Save original overflow style
+      const originalStyle = window.getComputedStyle(document.body).overflow;
+      // Disable scrolling
+      document.body.style.overflow = 'hidden';
+      
+      return () => {
+        // Restore original overflow style on cleanup
+        document.body.style.overflow = originalStyle;
+      };
+    }
+  }, [inFlightCount]);
+
   return (
     <>
       {children}

@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   ChevronRight,
   Sparkles,
@@ -50,36 +50,22 @@ export default function EnhancedNewArrivalsPage() {
     return () => clearInterval(timer);
   }, []);
 
-  const [allProducts, setAllProducts] = useState<UiProduct[]>([]);
+  const { products: newArrivalsProducts, fetchNewArrivals } = useNewArrivalsStore();
   const [filteredProducts, setFilteredProducts] = useState<UiProduct[]>([]);
   const [visibleProducts, setVisibleProducts] = useState(12);
 
+  // Load new arrivals once on mount
   useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetch('/api/main/new-arrived', { cache: 'no-store' });
-        const data = await res.json();
-        type ApiProduct = {
-          slug: string;
-          name: string;
-          description?: string;
-          price?: number | null;
-          discountPrice?: number | null;
-          images?: string[];
-          categories?: Array<{
-            _id?: string;
-            name?: string;
-            slug?: string;
-          }>;
-          material?: string;
-          colors?: string[];
-          status?: string;
-          stockQuantity?: number;
-          tags?: string[];
-          sku?: string;
-        };
-        const productsArr = (data.products ?? []) as ApiProduct[];
-        const mapped: UiProduct[] = productsArr.map(p => {
+    fetchNewArrivals();
+    // Zustand actions are stable, but we only want this to run once on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Map new arrivals to UiProduct format
+  const allProducts = useMemo(() => {
+    if (!newArrivalsProducts || newArrivalsProducts.length === 0) return [];
+    
+    return newArrivalsProducts.map(p => {
           const hasDiscount =
             p.discountPrice != null &&
             p.price != null &&
@@ -121,12 +107,13 @@ export default function EnhancedNewArrivalsPage() {
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
           } as UiProduct;
-        });
-        setAllProducts(mapped);
-        setFilteredProducts(mapped);
-      } catch {}
-    })();
-  }, []);
+    });
+  }, [newArrivalsProducts]);
+
+  // Update filtered products when allProducts changes
+  useEffect(() => {
+    setFilteredProducts(allProducts);
+  }, [allProducts]);
 
   const filterOptions: FilterOptions = {
     priceRanges: [

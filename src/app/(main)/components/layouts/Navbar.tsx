@@ -48,6 +48,8 @@ import {
 import { useCartStore } from '@/lib/data/mainStore/cartStore';
 import { usePublicCategoryStore } from '@/lib/data/mainStore/categoryStore';
 import { useCartCountStore } from '@/lib/data/mainStore/cartCountStore';
+import { useUserAccountStore } from '@/lib/data/mainStore/userAccountStore';
+import { useWishlistStore } from '@/lib/data/mainStore/wishlistStore';
 import { CartCount } from './Navbar/CartCount';
 import { NavbarLogo } from './Navbar/NavbarLogo';
 
@@ -154,7 +156,16 @@ export default function Navbar() {
   const { items, load } = useCartStore();
   const { categories, status, fetchCategories } = usePublicCategoryStore();
   const syncCartCount = useCartCountStore((state) => state.syncWithCart);
+  const { user, load: loadUser, refresh: refreshUser, clear: clearUser } = useUserAccountStore();
+  const { load: loadWishlist } = useWishlistStore();
   
+  // Load user account once on mount (centralized - all components will use this)
+  useEffect(() => {
+    loadUser();
+    // Zustand actions are stable, but we only want this to run once on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Load cart and sync count (only once on mount)
   useEffect(() => {
     load().then(() => {
@@ -166,11 +177,24 @@ export default function Navbar() {
   }, []);
 
   // Fetch categories once on mount, using cache
+  // If homepage already loaded categories, this will use cached data
   useEffect(() => {
-    fetchCategories();
+    // Only fetch if we don't have categories yet (homepage might have synced them)
+    if (categories.length === 0 && status !== 'loading') {
+      fetchCategories();
+    }
     // Zustand actions are stable, but we only want this to run once on mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Load wishlist once when user is authenticated
+  useEffect(() => {
+    if (user) {
+      loadWishlist();
+    }
+    // Zustand actions are stable, but we only want this to run when user changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   const placeholders = [
     'Search Gold Jewellery',
@@ -182,7 +206,8 @@ export default function Navbar() {
     'Search Rings, Earrings & more...',
     'Search...',
   ];
-  const [currentUser, setCurrentUser] = useState<UserAccount | null>(null);
+  // Use user from centralized store instead of local state
+  const currentUser = user;
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
   const isLoadingCategories = status === 'loading';
   const [currentPlaceholder, setCurrentPlaceholder] = useState(0);
@@ -219,16 +244,7 @@ export default function Navbar() {
     }
   }, [isSearchOpen]);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const { user } = await accountApi.me();
-        setCurrentUser(user);
-      } catch {
-        setCurrentUser(null);
-      }
-    })();
-  }, []);
+  // User is now loaded via useUserAccountStore in the useEffect above
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentPlaceholder(prev => (prev + 1) % placeholders.length);
@@ -330,10 +346,8 @@ export default function Navbar() {
     try {
       await userAuthApi.loginWithPassword(loginEmail, loginPassword);
       setLoginStep('done');
-      try {
-        const { user } = await accountApi.me();
-        setCurrentUser(user);
-      } catch {}
+      // Refresh user from store after login
+      await refreshUser();
     } catch (e) {
       const message = e instanceof Error ? e.message : 'Invalid credentials';
       setLoginPasswordError(message);
@@ -349,10 +363,8 @@ export default function Navbar() {
     try {
       await userAuthApi.loginVerifyOtp(loginEmail, loginOtp.join(''));
       setLoginStep('done');
-      try {
-        const { user } = await accountApi.me();
-        setCurrentUser(user);
-      } catch {}
+      // Refresh user from store after login
+      await refreshUser();
     } catch (e) {
       const message = e instanceof Error ? e.message : 'Invalid OTP';
       setLoginOtpError(message);
@@ -380,7 +392,7 @@ export default function Navbar() {
     try {
       setIsLoggingOut(true);
       await userAuthApi.logout();
-      setCurrentUser(null);
+      clearUser(); // Clear user from centralized store
       setLoginStep('email');
       setLoginEmail('');
       setLoginPassword('');

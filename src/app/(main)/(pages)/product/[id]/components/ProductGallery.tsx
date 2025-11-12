@@ -30,17 +30,19 @@ export function ProductGallery({
   //   window.addEventListener('resize', checkMobile);
   //   return () => window.removeEventListener('resize', checkMobile);
   // }, []);
+  // Prevent body scrolling when modal is open
   useEffect(() => {
     if (isModalOpen) {
+      // Save original overflow style
+      const originalStyle = window.getComputedStyle(document.body).overflow;
+      // Disable scrolling
       document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
+      
+      return () => {
+        // Restore original overflow style on cleanup
+        document.body.style.overflow = originalStyle;
+      };
     }
-
-    // cleanup in case modal unmounts
-    return () => {
-      document.body.style.overflow = '';
-    };
   }, [isModalOpen]);
   const openModal = (index: number) => {
     setSelectedImage(index);
