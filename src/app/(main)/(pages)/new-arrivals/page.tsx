@@ -15,7 +15,7 @@ import {
   Instagram,
 } from 'lucide-react';
 import { worldOne } from '@/app/(main)/assets/Home/World';
-import Image from 'next/image';
+import Image from '@/app/(main)/components/ui/FallbackImage';
 
 import Link from 'next/link';
 import {

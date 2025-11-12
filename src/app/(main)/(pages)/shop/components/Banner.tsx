@@ -1,7 +1,8 @@
 'use client';
 
 import React from 'react';
-import Image, { StaticImageData } from 'next/image';
+import Image from '@/app/(main)/components/ui/FallbackImage';
+import { StaticImageData } from 'next/image';
 
 interface BannerImageProps {
   desktopSrc: string | StaticImageData;

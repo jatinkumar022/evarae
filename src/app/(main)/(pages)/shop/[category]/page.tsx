@@ -18,7 +18,7 @@ import {
 import BannerImage from '../components/Banner';
 import { ad } from '@/app/(main)/assets/Shop-list';
 import { ProductCard } from '../components/ProductCard';
-import Image from 'next/image';
+import Image from '@/app/(main)/components/ui/FallbackImage';
 import { useParams } from 'next/navigation';
 import { usePublicCategoryStore } from '@/lib/data/mainStore/categoryStore';
 import { List, NoItems } from '@/app/(main)/assets/Common';

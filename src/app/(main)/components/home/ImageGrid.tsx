@@ -1,5 +1,5 @@
 'use client';
-import Image from 'next/image';
+import Image from '@/app/(main)/components/ui/FallbackImage';
 import Link from 'next/link';
 import { useEffect } from 'react';
 import { useHomepageStore } from '@/lib/data/mainStore/homepageStore';

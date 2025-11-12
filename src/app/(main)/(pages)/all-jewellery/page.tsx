@@ -18,7 +18,7 @@ import {
 import BannerImage from '../shop/components/Banner';
 import { ad, Banner, BannerMobile } from '@/app/(main)/assets/Shop-list';
 import { ProductCard } from '../shop/components/ProductCard';
-import Image from 'next/image';
+import Image from '@/app/(main)/components/ui/FallbackImage';
 import { usePublicProductStore } from '@/lib/data/mainStore/productStore';
 
 export default function AllJewelleryPage() {

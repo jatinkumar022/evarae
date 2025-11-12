@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
-import Image, { StaticImageData } from 'next/image';
+import Image from '@/app/(main)/components/ui/FallbackImage';
+import { StaticImageData } from 'next/image';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { one, two, three } from '@/app/(main)/assets/Home/CAROUSEL';
 

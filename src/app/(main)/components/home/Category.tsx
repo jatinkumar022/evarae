@@ -3,7 +3,7 @@
 import React, { useState, MouseEvent, useEffect, memo } from 'react';
 import Container from '../layouts/Container';
 import Link from 'next/link';
-import Image from 'next/image';
+import Image from '@/app/(main)/components/ui/FallbackImage';
 import { usePublicCategoryStore } from '@/lib/data/mainStore/categoryStore';
 
 const CircleCategories = memo(() => {

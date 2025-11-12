@@ -17,7 +17,7 @@ import {
   RotateCcw,
 } from 'lucide-react';
 import CustomDropdown from '@/app/(main)/components/ui/customDropdown';
-import Image from 'next/image';
+import Image from '@/app/(main)/components/ui/FallbackImage';
 import toastApi from '@/lib/toast';
 import Container from '@/app/(main)/components/layouts/Container';
 import Link from 'next/link';

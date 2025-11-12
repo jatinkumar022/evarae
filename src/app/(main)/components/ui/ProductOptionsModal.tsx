@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import Image from 'next/image';
+import Image from '@/app/(main)/components/ui/FallbackImage';
 import { X, Plus, Minus, ShoppingCart } from 'lucide-react';
 import { Product } from '@/lib/types/product';
 import { useCartStore } from '@/lib/data/mainStore/cartStore';

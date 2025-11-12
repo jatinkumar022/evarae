@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import Image from 'next/image';
+import Image from '@/app/(main)/components/ui/FallbackImage';
 import Link from 'next/link';
 import { GiCrystalShine } from 'react-icons/gi';
 import { Heart } from '@/app/(main)/assets/Navbar';

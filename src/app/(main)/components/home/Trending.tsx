@@ -1,7 +1,7 @@
 'use client';
 import React, { useEffect } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
+import Image from '@/app/(main)/components/ui/FallbackImage';
 import { useHomepageStore } from '@/lib/data/mainStore/homepageStore';
 
 const TrendingItem = ({

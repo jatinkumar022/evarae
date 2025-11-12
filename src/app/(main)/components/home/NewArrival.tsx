@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect } from 'react';
-import Image from 'next/image';
+import Image from '@/app/(main)/components/ui/FallbackImage';
 import { FaRegGem } from 'react-icons/fa6';
 import Container from '../layouts/Container';
 import Link from 'next/link';

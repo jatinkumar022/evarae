@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import Image from 'next/image';
+import Image from '@/app/(main)/components/ui/FallbackImage';
 import { ZoomIn, X } from 'lucide-react';
 import { Lens } from '@/app/(main)/components/ui/lens';
 import { Product } from '@/lib/types/product';

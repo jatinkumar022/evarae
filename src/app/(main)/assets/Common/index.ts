@@ -6,6 +6,7 @@ import FlowerCombo from './flower-combo.svg';
 import adsBg from './ads-bg.jpg';
 import Cart from './cart.svg';
 import NoItems from './no-item-icon.svg';
+import NoImagePlaceholder from './no-image-placeholder.svg';
 import List from './list.svg';
 export {
   Devider,
@@ -15,5 +16,6 @@ export {
   adsBg,
   Cart,
   NoItems,
+  NoImagePlaceholder,
   List,
 };

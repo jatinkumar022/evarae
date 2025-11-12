@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { Heart } from 'lucide-react';
 import { Product } from '@/lib/types/product';
-import Image from 'next/image';
+import Image from '@/app/(main)/components/ui/FallbackImage';
 import { GiCrystalShine } from 'react-icons/gi';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Cart } from '@/app/(main)/assets/Common';
@@ -32,6 +32,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [loginModalAction, setLoginModalAction] = useState<'cart' | 'wishlist'>('cart');
   const { load: loadWishlist, add: addToWishlist, remove: removeFromWishlist,  products: wishlistProducts } = useWishlistStore();
+
+  const hoverMedia = product.hoverImage || (Array.isArray(product.images) ? product.images[1] : undefined);
 
   useEffect(() => {
     const checkScreen = () => setIsMobile(window.innerWidth < 1024); // lg breakpoint
@@ -65,6 +67,25 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const isProductWishlisted = wishlistProducts.some(
     p => String(p._id) === product.id || p.slug === product.id
   );
+
+  // Prefetch hover image on desktop to make transition seamless
+  useEffect(() => {
+    if (isMobile) return;
+    const resolvedHoverSrc =
+      typeof hoverMedia === 'string'
+        ? hoverMedia
+        : hoverMedia?.src;
+
+    if (!resolvedHoverSrc) return;
+
+    const prefetchImage = new window.Image();
+    prefetchImage.decoding = 'async';
+    prefetchImage.src = resolvedHoverSrc;
+
+    return () => {
+      prefetchImage.src = '';
+    };
+  }, [hoverMedia, isMobile]);
 
   const variants = {
     initial: { opacity: 0 },
@@ -129,13 +150,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                   initial="initial"
                   animate="animate"
                   exit="exit"
-                  transition={{ duration: 0.2, ease: 'easeInOut' }}
+                  transition={{ duration: 0, ease: 'linear' }}
                   className="w-full h-full"
                 >
                   <Image
                     src={
-                      isHovered && product.hoverImage
-                        ? product.hoverImage
+                      isHovered && hoverMedia
+                        ? hoverMedia
                         : product.images[0]
                     }
                     alt={product.name}

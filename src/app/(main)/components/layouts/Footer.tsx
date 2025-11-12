@@ -86,7 +86,6 @@ export default function Footer() {
   ];
   const aboutLinks = [
     { name: 'Our Story', to: '/our-story' },
-    { name: 'Blog', to: '/blog' },
     { name: 'Sustainability', to: '/sustainability' },
     { name: 'Terms & Conditions', to: '/terms-conditions' },
     { name: 'Privacy Policy', to: '/privacy' },

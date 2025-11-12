@@ -14,7 +14,7 @@ import {
 import { Cart } from '@/app/(main)/assets/Common';
 import CustomSelect from '@/app/(main)/components/filters/CustomSelect';
 import { ringsCat } from '@/app/(main)/assets/CategoryGrid';
-import Image from 'next/image';
+import Image from '@/app/(main)/components/ui/FallbackImage';
 import { useCartStore } from '@/lib/data/mainStore/cartStore';
 import { useWishlistStore } from '@/lib/data/mainStore/wishlistStore';
 import CartNotification from '@/app/(main)/components/ui/CartNotification';

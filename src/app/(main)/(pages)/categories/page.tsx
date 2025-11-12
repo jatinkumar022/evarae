@@ -1,6 +1,6 @@
 'use client';
 
-import Image from 'next/image';
+import Image from '@/app/(main)/components/ui/FallbackImage';
 import Link from 'next/link';
 import React, { useEffect } from 'react';
 import { usePublicCategoryStore } from '@/lib/data/mainStore/categoryStore';

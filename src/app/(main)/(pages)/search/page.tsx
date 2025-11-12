@@ -22,7 +22,7 @@ import {
   Product as UiProduct,
 } from '@/lib/types/product';
 import { ProductCard } from '../shop/components/ProductCard';
-import Image from 'next/image';
+import Image from '@/app/(main)/components/ui/FallbackImage';
 import { useRouter } from 'next/navigation';
 import { useSearchParams } from 'next/navigation';
 import { useCartStore } from '@/lib/data/mainStore/cartStore';

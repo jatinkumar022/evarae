@@ -1,6 +1,6 @@
 'use client';
 
-import Image from 'next/image';
+import Image from '@/app/(main)/components/ui/FallbackImage';
 import Container from '@/app/(main)/components/layouts/Container';
 import { one, two } from '@/app/(main)/assets/Home/CAROUSEL';
 import {

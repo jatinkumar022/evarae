@@ -1,7 +1,8 @@
 'use client';
 
 import * as React from 'react';
-import Image, { type StaticImageData } from 'next/image';
+import Image from '@/app/(main)/components/ui/FallbackImage';
+import { type StaticImageData } from 'next/image';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence, type PanInfo } from 'framer-motion';
 

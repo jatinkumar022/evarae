@@ -1,5 +1,5 @@
 'use client';
-import Image from 'next/image';
+import Image from '@/app/(main)/components/ui/FallbackImage';
 
 interface ManufacturerImagesProps {
   images: string[]; // array of image URLs

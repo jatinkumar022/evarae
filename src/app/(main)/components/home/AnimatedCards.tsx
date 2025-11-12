@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import Image from 'next/image';
+import Image from '@/app/(main)/components/ui/FallbackImage';
 import { GoHeart } from 'react-icons/go';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GiCrystalShine } from 'react-icons/gi';
@@ -145,6 +145,19 @@ export default function AnimatedCards() {
       window.addEventListener('resize', checkScreen);
       return () => window.removeEventListener('resize', checkScreen);
     }, []);
+    useEffect(() => {
+      if (isMobile) return;
+      if (!hoverImage || hoverImage === primaryImage) return;
+
+      const prefetchImage = new window.Image();
+      prefetchImage.decoding = 'async';
+      prefetchImage.src = hoverImage;
+
+      return () => {
+        prefetchImage.src = '';
+      };
+    }, [hoverImage, isMobile, primaryImage]);
+
     const variants = {
       initial: { opacity: 0, y: 20 },
       animate: { opacity: 1, y: 0 },
@@ -165,7 +178,7 @@ export default function AnimatedCards() {
               initial="initial"
               animate="animate"
               exit="exit"
-              transition={{ duration: 0.2, ease: 'easeInOut' }}
+              transition={{ duration: 0, ease: 'linear' }}
               className="w-full h-full relative"
             >
               <Image

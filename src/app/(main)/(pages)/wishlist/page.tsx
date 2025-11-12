@@ -4,7 +4,7 @@ import dynamic from 'next/dynamic';
 import { Heart, Share2, Trash2 } from 'lucide-react';
 import Container from '@/app/(main)/components/layouts/Container';
 import { FilterOptions, SortOption, Product } from '@/lib/types/product';
-import Image from 'next/image';
+import Image from '@/app/(main)/components/ui/FallbackImage';
 import { GiCrystalShine } from 'react-icons/gi';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Cart } from '@/app/(main)/assets/Common';
