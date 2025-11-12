@@ -23,6 +23,8 @@ import toastApi from '@/lib/toast';
 import Container from '@/app/(main)/components/layouts/Container';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
+import { InvoiceDownloadProgress } from '@/app/(main)/components/ui/InvoiceDownloadProgress';
+import { downloadInvoiceWithProgress } from '@/app/(main)/utils/invoiceDownload';
 
 // Strict types for order data
 type OrderItem = {
@@ -177,6 +179,8 @@ export default function OrderDetailsPage() {
   
   const [order, setOrder] = useState<OrderDoc | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showProgress, setShowProgress] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState(0);
 
   useEffect(() => {
     (async () => {
@@ -205,24 +209,24 @@ export default function OrderDetailsPage() {
   };
 
   const handleDownloadInvoice = async (order: OrderDoc) => {
+    const key = order.orderNumber || order._id;
+    if (!key) return;
+
+    setShowProgress(true);
+    setDownloadProgress(0);
+
     try {
-      const key = order.orderNumber || order._id;
-      const res = await fetch(`/api/orders/${key}/invoice`, {
-        method: 'GET',
-        credentials: 'include',
+      await downloadInvoiceWithProgress(key, (progress) => {
+        setDownloadProgress(progress);
       });
-      if (!res.ok) throw new Error('Failed to download invoice');
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `invoice-${key}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
+      setTimeout(() => {
+        setShowProgress(false);
+        setDownloadProgress(0);
+      }, 1500);
     } catch {
-      toastApi.error('Unable to download invoice');
+      toastApi.error('Unable to download invoice', 'Please try again later');
+      setShowProgress(false);
+      setDownloadProgress(0);
     }
   };
 
@@ -244,6 +248,7 @@ export default function OrderDetailsPage() {
   }
 
   return (
+    <>
     <div className="bg-white text-text-primary">
       {/* Header */}
       <div className="bg-white border-b border-primary/10">
@@ -767,5 +772,16 @@ export default function OrderDetailsPage() {
         </div>
       </Container>
     </div>
+    <InvoiceDownloadProgress
+      isOpen={showProgress}
+      onClose={() => {
+        if (downloadProgress >= 100) {
+          setShowProgress(false);
+          setDownloadProgress(0);
+        }
+      }}
+      progress={downloadProgress}
+    />
+    </>
   );
 }

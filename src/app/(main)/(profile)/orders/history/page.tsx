@@ -21,6 +21,8 @@ import Image from 'next/image';
 import toastApi from '@/lib/toast';
 import Container from '@/app/(main)/components/layouts/Container';
 import Link from 'next/link';
+import { InvoiceDownloadProgress } from '@/app/(main)/components/ui/InvoiceDownloadProgress';
+import { downloadInvoiceWithProgress } from '@/app/(main)/utils/invoiceDownload';
 
 // Strict types for order data
 type OrderItem = {
@@ -155,6 +157,8 @@ export default function OrdersHistoryPage() {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [dateFilter, setDateFilter] = useState<string>('all');
+  const [showProgress, setShowProgress] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState(0);
 
   useEffect(() => {
     (async () => {
@@ -247,24 +251,24 @@ export default function OrdersHistoryPage() {
   };
 
   const handleDownloadInvoice = async (order: OrderDoc) => {
+    const key = order.orderNumber || order._id;
+    if (!key) return;
+
+    setShowProgress(true);
+    setDownloadProgress(0);
+
     try {
-      const key = order.orderNumber || order._id;
-      const res = await fetch(`/api/orders/${key}/invoice`, {
-        method: 'GET',
-        credentials: 'include',
+      await downloadInvoiceWithProgress(key, (progress) => {
+        setDownloadProgress(progress);
       });
-      if (!res.ok) throw new Error('Failed to download invoice');
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `invoice-${key}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
+      setTimeout(() => {
+        setShowProgress(false);
+        setDownloadProgress(0);
+      }, 1500);
     } catch {
-      alert('Unable to download invoice');
+      toastApi.error('Unable to download invoice', 'Please try again later');
+      setShowProgress(false);
+      setDownloadProgress(0);
     }
   };
 
@@ -285,9 +289,9 @@ export default function OrdersHistoryPage() {
     );
   }
 
-
   return (
-    <main className="min-h-screen" style={{ backgroundColor: 'var(--bg-primary)' }}>
+    <>
+      <main className="min-h-screen" style={{ backgroundColor: 'var(--bg-primary)' }}>
       <Container className="py-8">
         {/* Header */}
         <div className="mb-6">
@@ -517,5 +521,16 @@ export default function OrdersHistoryPage() {
         )}
       </Container>
     </main>
+    <InvoiceDownloadProgress
+      isOpen={showProgress}
+      onClose={() => {
+        if (downloadProgress >= 100) {
+          setShowProgress(false);
+          setDownloadProgress(0);
+        }
+      }}
+      progress={downloadProgress}
+    />
+    </>
   );
 }

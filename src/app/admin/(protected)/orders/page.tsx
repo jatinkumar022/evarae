@@ -18,6 +18,8 @@ import { useOrderStore, Order } from '@/lib/data/store/orderStore';
 import { CustomSelect } from '@/app/admin/components/CustomSelect';
 import { toastApi } from '@/lib/toast';
 import InlineSpinner from '@/app/admin/components/InlineSpinner';
+import { InvoiceDownloadProgress } from '@/app/(main)/components/ui/InvoiceDownloadProgress';
+import { downloadInvoiceWithProgress } from '@/app/(main)/utils/invoiceDownload';
 
 export default function OrdersPage() {
   const {
@@ -34,6 +36,8 @@ export default function OrdersPage() {
   const [dropdownPosition, setDropdownPosition] = useState<{ top: number; right: number } | null>(null);
   const [downloadingInvoiceId, setDownloadingInvoiceId] = useState<string | null>(null);
   const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null);
+  const [showProgress, setShowProgress] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState(0);
   const buttonRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
 
   // Fetch orders from API
@@ -162,6 +166,7 @@ export default function OrdersPage() {
   };
 
   return (
+    <>
     <div className="space-y-6 mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
       {/* Header */}
       <div className="flex md:items-center gap-4 flex-col md:flex-row justify-between">
@@ -511,50 +516,38 @@ export default function OrdersPage() {
                   }
                   
                   const orderId = order.orderNumber || order._id;
+                  if (!orderId) {
+                    toastApi.error('Invalid order', 'Order ID is missing');
+                    return;
+                  }
+
                   setDownloadingInvoiceId(openDropdownId);
+                  setShowProgress(true);
+                  setDownloadProgress(0);
                   
                   try {
-                    const res = await fetch(`/api/admin/orders/${orderId}/invoice`, {
-                      method: 'GET',
-                      credentials: 'include',
-                    });
-                    
-                    if (!res.ok) {
-                      throw new Error('Failed to download invoice');
-                    }
-                    
-                    const blob = await res.blob();
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `invoice-${orderId}.pdf`;
-                    document.body.appendChild(a);
-                    a.click();
-                    a.remove();
-                    URL.revokeObjectURL(url);
+                    await downloadInvoiceWithProgress(orderId, (progress) => {
+                      setDownloadProgress(progress);
+                    }, true); // isAdmin = true
                     
                     toastApi.success('Invoice downloaded', 'Invoice has been downloaded successfully');
+                    setTimeout(() => {
+                      setShowProgress(false);
+                      setDownloadProgress(0);
+                    }, 1500);
                   } catch (error) {
                     console.error('Failed to download invoice:', error);
                     toastApi.error('Failed to download invoice', 'Please try again');
+                    setShowProgress(false);
+                    setDownloadProgress(0);
                   } finally {
                     setDownloadingInvoiceId(null);
-                    // Keep dropdown open to show the loading state
                   }
                 }}
                 disabled={downloadingInvoiceId === openDropdownId}
                 className="w-full flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#525252] whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {downloadingInvoiceId === openDropdownId ? (
-                  <>
-                    <InlineSpinner size="sm" className="mr-2 flex-shrink-0" />
-                    <span>Downloading...</span>
-                  </>
-                ) : (
-                  <>
-                    <Download className="h-4 w-4 mr-2 flex-shrink-0" /> Download Invoice
-                  </>
-                )}
+                <Download className="h-4 w-4 mr-2 flex-shrink-0" /> Download Invoice
               </button>
               
               {/* Status Change Options */}
@@ -609,5 +602,16 @@ export default function OrdersPage() {
         </>
       )}
     </div>
+    <InvoiceDownloadProgress
+      isOpen={showProgress}
+      onClose={() => {
+        if (downloadProgress >= 100) {
+          setShowProgress(false);
+          setDownloadProgress(0);
+        }
+      }}
+      progress={downloadProgress}
+    />
+    </>
   );
 }

@@ -12,6 +12,8 @@ import {
   AlertCircle,
   Download,
 } from 'lucide-react';
+import { InvoiceDownloadProgress } from '@/app/(main)/components/ui/InvoiceDownloadProgress';
+import { downloadInvoiceWithProgress } from '@/app/(main)/utils/invoiceDownload';
 
 type SuccessOrder = {
   _id: string;
@@ -24,6 +26,8 @@ function PaymentSuccessInner() {
   const searchParams = useSearchParams();
   const [orderDetails, setOrderDetails] = useState<SuccessOrder | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showProgress, setShowProgress] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState(0);
 
   useEffect(() => {
     const orderId = searchParams.get('orderId');
@@ -35,38 +39,41 @@ function PaymentSuccessInner() {
           }
           return res.json();
         })
-        .then((data: SuccessOrder) => {
-          setOrderDetails(data);
-          // Global loader will handle loading state
+        .then((data: { order?: SuccessOrder; error?: string }) => {
+          if (data.error) {
+            throw new Error(data.error);
+          }
+          if (data.order) {
+            setOrderDetails(data.order);
+          } else {
+            throw new Error('Order not found');
+          }
         })
         .catch(() => {
           setError('Unable to load order details');
-          // Global loader will handle loading state
         });
     }
-    // Global loader will handle loading state
   }, [searchParams]);
 
   const downloadInvoice = async () => {
+    const key = orderDetails?.orderNumber || orderDetails?._id;
+    if (!key) return;
+
+    setShowProgress(true);
+    setDownloadProgress(0);
+
     try {
-      const key = orderDetails?.orderNumber || orderDetails?._id;
-      if (!key) return;
-      const res = await fetch(`/api/orders/${key}/invoice`, {
-        method: 'GET',
-        credentials: 'include',
+      await downloadInvoiceWithProgress(key, (progress) => {
+        setDownloadProgress(progress);
       });
-      if (!res.ok) throw new Error('Failed to download invoice');
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `invoice-${key}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
+      setTimeout(() => {
+        setShowProgress(false);
+        setDownloadProgress(0);
+      }, 1500);
     } catch {
       setError('Unable to download invoice');
+      setShowProgress(false);
+      setDownloadProgress(0);
     }
   };
 
@@ -84,7 +91,7 @@ function PaymentSuccessInner() {
         <h1 className="text-2xl md:text-3xl font-bold text-primary-dark mb-4">
           Payment Successful!
         </h1>
-        <p className="text-primary-dark/70 mb-8">
+        <p className="text-gray-600 mb-8">
           Thank you for your purchase. Your order has been confirmed and will be
           processed shortly.
         </p>
@@ -108,19 +115,19 @@ function PaymentSuccessInner() {
             </h2>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-primary-dark/70">Order Number:</span>
-                <span className="font-medium">
+                <span className="text-gray-600">Order Number:</span>
+                <span className="font-medium text-dark">
                   {orderDetails.orderNumber || orderDetails._id}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-primary-dark/70">Total Amount:</span>
+                <span className="text-gray-600">Total Amount:</span>
                 <span className="font-medium text-accent">
                   ₹{(orderDetails.totalAmount || 0).toLocaleString()}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-primary-dark/70">Payment Status:</span>
+                <span className="text-gray-600">Payment Status:</span>
                 <span className="font-medium text-green-600 capitalize">
                   {orderDetails.paymentStatus || 'paid'}
                 </span>
@@ -142,7 +149,7 @@ function PaymentSuccessInner() {
             <h2 className="text-lg font-semibold text-primary-dark mb-4">
               Order Confirmed
             </h2>
-            <p className="text-primary-dark/70 text-sm">
+            <p className="text-gray-600 text-sm">
               Your payment has been processed successfully. You will receive an
               email confirmation shortly.
             </p>
@@ -157,19 +164,19 @@ function PaymentSuccessInner() {
           <div className="space-y-4">
             <div className="flex items-center gap-3 text-sm">
               <Package className="w-5 h-5 text-primary" />
-              <span className="text-primary-dark">
+              <span className="text-dark">
                 Your order is being prepared for shipment
               </span>
             </div>
             <div className="flex items-center gap-3 text-sm">
               <Truck className="w-5 h-5 text-primary" />
-              <span className="text-primary-dark">
+              <span className="text-dark">
                 You&apos;ll receive tracking information via email
               </span>
             </div>
             <div className="flex items-center gap-3 text-sm">
               <Clock className="w-5 h-5 text-primary" />
-              <span className="text-primary-dark">
+              <span className="text-dark">
                 Estimated delivery: 2-4 business days
               </span>
             </div>
@@ -190,7 +197,7 @@ function PaymentSuccessInner() {
         </div>
 
         {/* Support Info */}
-        <div className="mt-8 text-sm text-primary-dark/70">
+        <div className="mt-8 text-sm text-gray-600">
           <p>
             Need help? Contact our support team at{' '}
             <a
@@ -202,6 +209,18 @@ function PaymentSuccessInner() {
           </p>
         </div>
       </div>
+
+      {/* Invoice Download Progress Modal */}
+      <InvoiceDownloadProgress
+        isOpen={showProgress}
+        onClose={() => {
+          if (downloadProgress >= 100) {
+            setShowProgress(false);
+            setDownloadProgress(0);
+          }
+        }}
+        progress={downloadProgress}
+      />
     </Container>
   );
 }

@@ -11,25 +11,15 @@ import {
   AlertCircle,
   CheckCircle,
   X,
+  Phone,
 } from 'lucide-react';
 import { Visa, Mastercard, Paypal, Maestro } from '@/app/(main)/assets/Footer';
 import { useRouter } from 'next/navigation';
 import toastApi from '@/lib/toast';
 import { Spinner } from '@/app/(main)/components/ui/ScaleLoader';
-
-type Address = {
-  id?: string;
-  fullName: string;
-  phone: string;
-  line1: string;
-  line2?: string;
-  city: string;
-  state: string;
-  postalCode: string;
-  country: string;
-  isDefaultShipping?: boolean;
-  savedForFuture?: boolean;
-};
+import { Controller } from 'react-hook-form';
+import { useAddressForm, type Address as AddressType } from '@/app/(main)/hooks/useAddressForm';
+import { useAddressData } from '@/app/(main)/hooks/useAddressData';
 
 type Item = {
   productId: string;
@@ -56,29 +46,59 @@ declare global {
 }
 
 export default function CheckoutPage() {
-  const [addresses, setAddresses] = useState<Address[]>([]);
   const [items, setItems] = useState<Item[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<string>('');
-  const [adding, setAdding] = useState(false);
-  const [newAddress, setNewAddress] = useState<Address>({
-    fullName: '',
-    phone: '',
-    line1: '',
-    line2: '',
-    city: '',
-    state: '',
-    postalCode: '',
-    country: 'IN',
-  });
-  const [saveForFuture, setSaveForFuture] = useState<boolean>(true);
-  const [setAsDefault, setSetAsDefault] = useState<boolean>(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [initialData, setInitialData] = useState<Partial<AddressType>>({});
+  const { addresses, refetch } = useAddressData();
   const [coupon, setCoupon] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [razorpayAvailable, setRazorpayAvailable] = useState(true);
   const [couponApplying, setCouponApplying] = useState(false);
-  const [addressSaving, setAddressSaving] = useState(false);
   const router = useRouter();
+
+  const { form, onSubmit, isSubmitting, isValid } = useAddressForm({
+    initialData,
+    editingId,
+    onSuccess: async () => {
+      setIsModalOpen(false);
+      setEditingId(null);
+      setInitialData({});
+      await refetch();
+      // Address selection will be handled by the useEffect that watches addresses
+    },
+  });
+
+  // Reset modal state when closed
+  useEffect(() => {
+    if (!isModalOpen) {
+      setEditingId(null);
+      setInitialData({});
+      form.reset();
+    }
+  }, [isModalOpen, form]);
+
+  // Handle body scroll lock when modal is open
+  useEffect(() => {
+    if (isModalOpen) {
+      const originalStyle = window.getComputedStyle(document.body).overflow;
+      document.body.style.overflow = 'hidden';
+
+      const handleEscape = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          setIsModalOpen(false);
+        }
+      };
+      document.addEventListener('keydown', handleEscape);
+
+      return () => {
+        document.body.style.overflow = originalStyle;
+        document.removeEventListener('keydown', handleEscape);
+      };
+    }
+  }, [isModalOpen]);
 
   useEffect(() => {
     (async () => {
@@ -86,30 +106,8 @@ export default function CheckoutPage() {
         const res = await fetch('/api/checkout', { credentials: 'include' });
         const data = (await res.json()) as {
           items?: Item[];
-          addresses?: Array<
-            Omit<Address, 'id' | 'savedForFuture'> & {
-              _id?: string;
-              id?: string;
-            }
-          >;
         };
         setItems((data.items || []) as Item[]);
-        const addrs = (data.addresses || []).map(a => ({
-          id: (a as { _id?: string; id?: string })._id || a.id,
-          fullName: a.fullName,
-          phone: a.phone,
-          line1: a.line1,
-          line2: a.line2,
-          city: a.city,
-          state: a.state,
-          postalCode: a.postalCode,
-          country: a.country,
-          isDefaultShipping: a.isDefaultShipping,
-          savedForFuture: true,
-        })) as Address[];
-        setAddresses(addrs);
-        const def = addrs.find(a => a.isDefaultShipping) || addrs[0];
-        if (def?.id) setSelectedAddressId(def.id);
       } catch {
         setError('Failed to load checkout data');
         toastApi.error(
@@ -119,6 +117,14 @@ export default function CheckoutPage() {
       }
     })();
   }, []);
+
+  // Set default address when addresses are loaded
+  useEffect(() => {
+    if (addresses.length > 0 && !selectedAddressId) {
+      const def = addresses.find(a => a.isDefaultShipping) || addresses[0];
+      if (def?._id) setSelectedAddressId(def._id);
+    }
+  }, [addresses, selectedAddressId]);
 
   const totals = useMemo(() => {
     const subtotal = items.reduce(
@@ -240,9 +246,9 @@ export default function CheckoutPage() {
           }
         },
         prefill: {
-          name: addresses.find(a => a.id === selectedAddressId)?.fullName || '',
+          name: addresses.find(a => a._id === selectedAddressId)?.fullName || '',
           email: '',
-          contact: addresses.find(a => a.id === selectedAddressId)?.phone || '',
+          contact: addresses.find(a => a._id === selectedAddressId)?.phone || '',
         },
         theme: {
           color: '#B8860B',
@@ -283,244 +289,10 @@ export default function CheckoutPage() {
     }, 400);
   };
 
-  const addAddress = async () => {
-    if (addressSaving) return;
-    try {
-      setAddressSaving(true);
-      setError(null);
-
-      // Client-side validation
-      const trimmed = {
-        fullName: (newAddress.fullName || '').trim(),
-        phone: (newAddress.phone || '').replace(/\D/g, ''),
-        line1: (newAddress.line1 || '').trim(),
-        line2: (newAddress.line2 || '').trim(),
-        city: (newAddress.city || '').trim(),
-        state: (newAddress.state || '').trim(),
-        postalCode: (newAddress.postalCode || '').replace(/\D/g, ''),
-        country: (newAddress.country || '').trim() || 'IN',
-      };
-      
-      // Full Name validation
-      if (!trimmed.fullName) {
-        toastApi.error('Invalid address', 'Full name is required');
-        return;
-      } else if (trimmed.fullName.length < 2) {
-        toastApi.error('Invalid address', 'Full name must be at least 2 characters');
-        return;
-      } else if (trimmed.fullName.length > 50) {
-        toastApi.error('Invalid address', 'Full name cannot exceed 50 characters');
-        return;
-      }
-      
-      // Phone validation - exactly 10 digits
-      if (!trimmed.phone) {
-        toastApi.error('Invalid address', 'Phone number is required');
-        return;
-      } else if (trimmed.phone.length !== 10) {
-        toastApi.error('Invalid address', 'Phone number must be exactly 10 digits');
-        return;
-      } else if (!/^[6-9]/.test(trimmed.phone)) {
-        toastApi.error('Invalid address', 'Phone number must start with 6, 7, 8, or 9');
-        return;
-      }
-      
-      // Address Line 1 validation
-      if (!trimmed.line1) {
-        toastApi.error('Invalid address', 'Address line 1 is required');
-        return;
-      } else if (trimmed.line1.length < 5) {
-        toastApi.error('Invalid address', 'Address must be at least 5 characters');
-        return;
-      } else if (trimmed.line1.length > 100) {
-        toastApi.error('Invalid address', 'Address cannot exceed 100 characters');
-        return;
-      }
-      
-      // Address Line 2 validation (optional but if provided, should be valid)
-      if (trimmed.line2 && trimmed.line2.length > 100) {
-        toastApi.error('Invalid address', 'Address line 2 cannot exceed 100 characters');
-        return;
-      }
-      
-      // City validation
-      if (!trimmed.city) {
-        toastApi.error('Invalid address', 'City is required');
-        return;
-      } else if (trimmed.city.length < 2) {
-        toastApi.error('Invalid address', 'City name must be at least 2 characters');
-        return;
-      } else if (trimmed.city.length > 50) {
-        toastApi.error('Invalid address', 'City name cannot exceed 50 characters');
-        return;
-      }
-      
-      // State validation
-      if (!trimmed.state) {
-        toastApi.error('Invalid address', 'State is required');
-        return;
-      } else if (trimmed.state.length < 2) {
-        toastApi.error('Invalid address', 'State name must be at least 2 characters');
-        return;
-      } else if (trimmed.state.length > 50) {
-        toastApi.error('Invalid address', 'State name cannot exceed 50 characters');
-        return;
-      }
-      
-      // Postal Code validation - exactly 6 digits
-      if (!trimmed.postalCode) {
-        toastApi.error('Invalid address', 'Postal code is required');
-        return;
-      } else if (trimmed.postalCode.length !== 6) {
-        toastApi.error('Invalid address', 'Postal code must be exactly 6 digits');
-        return;
-      }
-      
-      // Country validation
-      if (!trimmed.country) {
-        toastApi.error('Invalid address', 'Country is required');
-        return;
-      } else if (trimmed.country.length < 2) {
-        toastApi.error('Invalid address', 'Country name must be at least 2 characters');
-        return;
-      }
-
-      if (saveForFuture) {
-        const beforeIds = new Set(
-          addresses.map(a => a.id).filter(Boolean) as string[]
-        );
-        // Persist to server
-        const response = await fetch('/api/account/addresses', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({
-            ...trimmed,
-            isDefaultShipping: false,
-          }),
-        });
-        const data = await response.json();
-        if (!response.ok)
-          throw new Error(data?.error || 'Failed to save address');
-
-        type ApiAddress = {
-          _id?: string;
-          id?: string;
-          fullName: string;
-          phone: string;
-          line1: string;
-          line2?: string;
-          city: string;
-          state: string;
-          postalCode: string;
-          country?: string;
-          isDefaultShipping?: boolean;
-          createdAt?: string | number | Date;
-        };
-        const serverAddrs = (data.addresses || []) as ApiAddress[];
-        const mapped: Address[] = serverAddrs.map(a => ({
-          id: a._id || a.id,
-          fullName: a.fullName,
-          phone: a.phone,
-          line1: a.line1,
-          line2: a.line2,
-          city: a.city,
-          state: a.state,
-          postalCode: a.postalCode,
-          country: a.country || 'IN',
-          isDefaultShipping: a.isDefaultShipping,
-          savedForFuture: true,
-        }));
-        setAddresses(mapped);
-
-        // Find the newly added address id
-        const latest = serverAddrs.reduce<ApiAddress | null>((acc, cur) => {
-          const accTs = acc ? new Date(acc.createdAt || 0).getTime() : 0;
-          const curTs = new Date(cur.createdAt || 0).getTime();
-          return curTs > accTs ? cur : acc;
-        }, null);
-        let newId = (latest && (latest._id || latest.id)) as string | undefined;
-
-        if (!newId) {
-          // Fallback: pick the id that wasn't present before
-          const candidate = serverAddrs.find(
-            a => !beforeIds.has((a._id || a.id) as string)
-          );
-          newId = (candidate && (candidate._id || candidate.id)) as
-            | string
-            | undefined;
-        }
-
-        if (setAsDefault && newId) {
-          const patchResp = await fetch(`/api/account/addresses/${newId}`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-          });
-          const patchData = await patchResp.json();
-          if (!patchResp.ok)
-            throw new Error(patchData?.error || 'Failed to set default');
-          const patchedAddrs = (patchData.addresses || []) as ApiAddress[];
-          const mappedPatched: Address[] = patchedAddrs.map(a => ({
-            id: a._id || a.id,
-            fullName: a.fullName,
-            phone: a.phone,
-            line1: a.line1,
-            line2: a.line2,
-            city: a.city,
-            state: a.state,
-            postalCode: a.postalCode,
-            country: a.country || 'IN',
-            isDefaultShipping: a.isDefaultShipping,
-            savedForFuture: true,
-          }));
-          setAddresses(mappedPatched);
-          setSelectedAddressId(newId);
-          toastApi.success('Address saved', 'Your address has been added.');
-        } else if (newId) {
-          setSelectedAddressId(newId);
-          toastApi.success('Address saved', 'Your address has been added.');
-        }
-      } else {
-        // Local-only add (not persisted)
-        const id = `${Date.now()}`;
-        const isDefault = false;
-        const addr: Address = {
-          ...trimmed,
-          id,
-          savedForFuture: false,
-          isDefaultShipping: isDefault,
-        };
-        setAddresses([addr, ...addresses]);
-        setSelectedAddressId(id);
-        toastApi.success('Address added');
-      }
-
-      setAdding(false);
-
-      // reset form state
-      setNewAddress({
-        fullName: '',
-        phone: '',
-        line1: '',
-        line2: '',
-        city: '',
-        state: '',
-        postalCode: '',
-        country: 'IN',
-      });
-      setSaveForFuture(true);
-      setSetAsDefault(false);
-    } catch (e: unknown) {
-      const message =
-        typeof e === 'object' && e && 'message' in e
-          ? String((e as { message?: unknown }).message)
-          : 'Failed to add address';
-      setError(message);
-      toastApi.error('Address save failed', message);
-    } finally {
-      setAddressSaving(false);
-    }
+  const openAddModal = () => {
+    setEditingId(null);
+    setInitialData({});
+    setIsModalOpen(true);
   };
 
   return (
@@ -531,11 +303,11 @@ export default function CheckoutPage() {
           <h1 className="text-xl sm:text-2xl md:text-3xl font-semibold text-primary-dark font-heading">
             Checkout
           </h1>
-          <p className="text-sm text-primary-dark/70 mt-1">
+          <p className="text-sm text-gray-600 mt-1">
             Review your address and order, then pay securely with Razorpay
           </p>
         </div>
-        <div className="inline-flex items-center gap-2 rounded-full border border-primary/10 bg-white/60 px-3 py-1.5 text-xs text-primary-dark/80">
+        <div className="inline-flex items-center gap-2 rounded-full border border-primary/10 bg-white/60 px-3 py-1.5 text-xs text-dark">
           <Shield className="w-4 h-4 text-primary" />
           <span>Secure checkout</span>
         </div>
@@ -543,7 +315,7 @@ export default function CheckoutPage() {
 
       {/* Progress Steps */}
       <div className="mb-4 -mt-2 hidden sm:block">
-        <ol className="grid grid-cols-3 gap-2 text-xs text-primary-dark/70">
+        <ol className="grid grid-cols-3 gap-2 text-xs text-gray-600">
           <li className="flex items-center gap-2">
             <span className="w-5 h-5 rounded-full bg-primary text-white grid place-items-center">
               1
@@ -570,117 +342,62 @@ export default function CheckoutPage() {
         <div className="lg:col-span-2 space-y-4 md:space-y-6">
           {/* Address Selection */}
           <div className="p-3 sm:p-4 md:p-5 rounded-lg border border-primary/10 bg-white/60 backdrop-blur-xl">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-0 mb-4">
               <h2 className="text-lg sm:text-xl font-semibold text-primary-dark flex items-center gap-2">
                 <MapPin className="w-5 h-5" />
                 Shipping Address
               </h2>
-              {!adding && (
+              {!isModalOpen && (
                 <button
-                  onClick={() => setAdding(true)}
-                  className="btn btn-outline hover:!text-primary btn-animated text-sm"
+                  onClick={openAddModal}
+                  className="w-full sm:w-auto btn btn-outline hover:!text-primary btn-animated text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2"
                 >
                   + Add New
                 </button>
               )}
             </div>
 
-            {!adding ? (
-              <div className="space-y-3">
-                {addresses.length === 0 && (
-                  <p className="text-sm text-primary-dark/70 text-center py-4">
-                    No saved addresses. Add one to continue.
-                  </p>
-                )}
-                {addresses.map(a => (
-                  <label
-                    key={a.id}
-                    className="flex gap-3 items-start p-3 border border-primary/10 rounded-lg cursor-pointer hover:bg-white/30 transition-colors"
-                  >
-                    <input
-                      type="radio"
-                      name="address"
-                      checked={selectedAddressId === a.id}
-                      onChange={() => setSelectedAddressId(a.id || '')}
-                      className="mt-1"
-                    />
-                    <div className="text-sm flex-1">
-                      <div className="font-medium text-primary-dark flex items-center gap-2">
-                        <span>
-                          {a.fullName} · {a.phone}
+            <div className="space-y-3">
+              {addresses.length === 0 && (
+                <p className="text-sm text-gray-600 text-center py-4">
+                  No saved addresses. Add one to continue.
+                </p>
+              )}
+              {addresses.map(a => (
+                <label
+                  key={a._id}
+                  className="flex gap-3 items-start p-3 border border-primary/10 rounded-lg cursor-pointer hover:bg-white/30 transition-colors"
+                >
+                  <input
+                    type="radio"
+                    name="address"
+                    checked={selectedAddressId === a._id}
+                    onChange={() => setSelectedAddressId(a._id || '')}
+                    className="mt-1"
+                  />
+                  <div className="text-sm flex-1">
+                    <div className="font-medium text-dark flex items-center gap-2">
+                      <span>
+                        {a.fullName} · {a.phone}
+                      </span>
+                      {a.isDefaultShipping && (
+                        <span className="inline-flex items-center gap-1 text-green-600 text-xs font-medium">
+                          <CheckCircle className="w-3.5 h-3.5" />
+                          Default
                         </span>
-                        {a.isDefaultShipping && (
-                          <span className="inline-flex items-center gap-1 text-green-600 text-xs font-medium">
-                            <CheckCircle className="w-3.5 h-3.5" />
-                            Default
-                          </span>
-                        )}
-                        {a.savedForFuture && !a.isDefaultShipping && (
-                          <span className="inline-flex items-center gap-1 text-primary text-[11px] font-medium">
-                            Saved
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-primary-dark/70 mt-1">
-                        {a.line1}
-                        {a.line2 ? `, ${a.line2}` : ''}
-                      </div>
-                      <div className="text-primary-dark/70">
-                        {a.city}, {a.state} {a.postalCode}, {a.country}
-                      </div>
+                      )}
                     </div>
-                  </label>
-                ))}
-              </div>
-            ) : (
-              // Inline form replaced by modal. Keep list visible by closing and reopening modal if needed.
-              <div className="space-y-3">
-                {addresses.length === 0 && (
-                  <p className="text-sm text-primary-dark/70 text-center py-4">
-                    Use the form in the modal to add your first address.
-                  </p>
-                )}
-                {addresses.map(a => (
-                  <label
-                    key={a.id}
-                    className="flex gap-3 items-start p-3 border border-primary/10 rounded-lg cursor-pointer hover:bg-white/30 transition-colors"
-                  >
-                    <input
-                      type="radio"
-                      name="address"
-                      checked={selectedAddressId === a.id}
-                      onChange={() => setSelectedAddressId(a.id || '')}
-                      className="mt-1"
-                    />
-                    <div className="text-sm flex-1">
-                      <div className="font-medium text-primary-dark flex items-center gap-2">
-                        <span>
-                          {a.fullName} · {a.phone}
-                        </span>
-                        {a.isDefaultShipping && (
-                          <span className="inline-flex items-center gap-1 text-green-600 text-xs font-medium">
-                            <CheckCircle className="w-3.5 h-3.5" />
-                            Default
-                          </span>
-                        )}
-                        {a.savedForFuture && !a.isDefaultShipping && (
-                          <span className="inline-flex items-center gap-1 text-primary text-[11px] font-medium">
-                            Saved
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-primary-dark/70 mt-1">
-                        {a.line1}
-                        {a.line2 ? `, ${a.line2}` : ''}
-                      </div>
-                      <div className="text-primary-dark/70">
-                        {a.city}, {a.state} {a.postalCode}, {a.country}
-                      </div>
+                    <div className="text-gray-600 mt-1">
+                      {a.line1}
+                      {a.line2 ? `, ${a.line2}` : ''}
                     </div>
-                  </label>
-                ))}
-              </div>
-            )}
+                    <div className="text-gray-600">
+                      {a.city}, {a.state} {a.postalCode}, {a.country}
+                    </div>
+                  </div>
+                </label>
+              ))}
+            </div>
           </div>
 
           {/* Order Items */}
@@ -706,26 +423,26 @@ export default function CheckoutPage() {
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium text-primary-dark line-clamp-2">
+                    <div className="text-sm font-medium text-dark line-clamp-2">
                       {it.name}
                     </div>
                     <div className="mt-1 flex flex-wrap gap-2 items-center text-xs">
-                      <span className="inline-flex items-center rounded-full border border-primary/20 px-2 py-0.5 text-primary-dark/80">
+                      <span className="inline-flex items-center rounded-full border border-primary/20 px-2 py-0.5 text-gray-600">
                         Qty: {it.quantity}
                       </span>
                       {it.selectedColor && (
-                        <span className="inline-flex items-center rounded-full border border-primary/20 px-2 py-0.5 text-primary-dark/80">
+                        <span className="inline-flex items-center rounded-full border border-primary/20 px-2 py-0.5 text-gray-600">
                           {it.selectedColor}
                         </span>
                       )}
                       {it.selectedSize && (
-                        <span className="inline-flex items-center rounded-full border border-primary/20 px-2 py-0.5 text-primary-dark/80">
+                        <span className="inline-flex items-center rounded-full border border-primary/20 px-2 py-0.5 text-gray-600">
                           {it.selectedSize}
                         </span>
                       )}
                     </div>
                     {(it.selectedColor || it.selectedSize) && (
-                      <div className="text-xs text-primary-dark/70">
+                      <div className="text-xs text-gray-600">
                         {it.selectedColor || ''} {it.selectedSize || ''}
                       </div>
                     )}
@@ -736,7 +453,7 @@ export default function CheckoutPage() {
                     </div>
                     {typeof it.originalPrice === 'number' &&
                       it.originalPrice > it.price && (
-                        <div className="text-[11px] text-primary-dark line-through">
+                        <div className="text-[11px] text-gray-500 line-through">
                           ₹{(it.originalPrice * it.quantity).toLocaleString()}
                         </div>
                       )}
@@ -755,7 +472,7 @@ export default function CheckoutPage() {
               ))}
               {items.length === 0 && (
                 <div className="text-center py-8 border border-primary/10 rounded-lg">
-                  <p className="text-sm text-primary-dark/70 mb-3">
+                  <p className="text-sm text-gray-600 mb-3">
                     Your cart is empty.
                   </p>
                   <Link
@@ -771,7 +488,7 @@ export default function CheckoutPage() {
 
           {/* Trust/Assurance */}
           <div className="p-3 sm:p-4 rounded-lg border border-primary/10 bg-white/60 backdrop-blur-xl">
-            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-xs sm:text-sm text-primary-dark">
+            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-xs sm:text-sm text-dark">
               <li className="flex items-center gap-2">
                 <span className="w-1.5 h-1.5 bg-accent rounded-full"></span>
                 Certified diamonds and hallmarked gold
@@ -808,60 +525,60 @@ export default function CheckoutPage() {
                 className="flex-1 rounded-md border border-primary/20 px-3 py-2 text-sm outline-none focus:border-primary"
               />
               <button
-                className="relative inline-flex items-center justify-center gap-2 rounded-md btn-outline btn-animated text-xs disabled:opacity-60 disabled:cursor-not-allowed"
+                className="relative inline-flex items-center justify-center gap-2 rounded-md btn-outline btn-animated text-xs px-4 py-2 disabled:opacity-60 disabled:cursor-not-allowed"
                 onClick={handleApplyCoupon}
                 disabled={couponApplying}
               >
                 <span className={couponApplying ? 'opacity-0' : ''}>Apply</span>
                 {couponApplying && (
                   <span className="absolute inset-0 flex items-center justify-center">
-                    <Spinner className="text-current" />
+                    <Spinner className="h-4 w-4 text-current" />
                   </span>
                 )}
               </button>
-              <div className="text-[11px] text-primary-dark/60 w-full">
+              <div className="text-[11px] text-gray-600 w-full">
                 Tip: Use SAVE10 for 10% off select items
               </div>
             </div>
 
             <div className="space-y-2 sm:space-y-3 text-xs sm:text-sm">
               <div className="flex items-center justify-between">
-                <span className="text-primary-dark">Original Subtotal</span>
-                <span className="text-primary-dark line-through">
+                <span className="text-dark">Original Subtotal</span>
+                <span className="text-gray-500 line-through">
                   ₹{totals.originalSubtotal.toLocaleString()}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-primary-dark">Discounted Subtotal</span>
+                <span className="text-dark">Discounted Subtotal</span>
                 <span className="font-semibold text-accent">
                   ₹{totals.subtotal.toLocaleString()}
                 </span>
               </div>
               {totals.discount > 0 && (
                 <div className="flex items-center justify-between">
-                  <span className="text-primary-dark">Discount</span>
+                  <span className="text-dark">Discount</span>
                   <span className="text-green-600">
                     -₹{totals.discount.toLocaleString()}
                   </span>
                 </div>
               )}
               <div className="flex items-center justify-between">
-                <span className="text-primary-dark">GST (3%)</span>
-                <span className="text-primary-dark">
+                <span className="text-dark">GST (3%)</span>
+                <span className="text-dark">
                   ₹{totals.gst.toLocaleString()}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-primary-dark">
+                <span className="text-dark">
                   Payment Charges (Razorpay + GST)
                 </span>
-                <span className="text-primary-dark">
+                <span className="text-dark">
                   ₹{totals.paymentCharges.toLocaleString()}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-primary-dark">Shipping</span>
-                <span className="text-primary-dark">
+                <span className="text-dark">Shipping</span>
+                <span className="text-dark">
                   ₹{totals.shipping.toLocaleString()}
                 </span>
               </div>
@@ -917,7 +634,7 @@ export default function CheckoutPage() {
             </button>
 
             {/* Terms & Help */}
-            <div className="mt-3 text-[10px] sm:text-xs text-primary-dark/70 text-center">
+            <div className="mt-3 text-[10px] sm:text-xs text-gray-600 text-center">
               By placing your order you agree to our
               <Link
                 href="/terms-conditions"
@@ -941,7 +658,7 @@ export default function CheckoutPage() {
               </div>
             </div>
 
-            <p className="mt-3 text-[10px] sm:text-xs text-primary-dark text-center">
+            <p className="mt-3 text-[10px] sm:text-xs text-gray-600 text-center">
               All taxes included. Free shipping on all orders.
             </p>
           </div>
@@ -956,165 +673,367 @@ export default function CheckoutPage() {
       </div>
 
       {/* Add Address Modal */}
-      {adding && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {isModalOpen && (
+        <>
+          {/* Overlay */}
           <div
-            className="absolute inset-0 bg-black/40"
-            onClick={() => setAdding(false)}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity z-40"
+            onClick={() => setIsModalOpen(false)}
           />
-          <div className="relative z-10 w-[95%] sm:w-[560px] max-h-[85vh] overflow-auto rounded-xl border border-primary/10 bg-white/95 backdrop-blur-xl p-4 sm:p-5 shadow-xl">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-lg font-semibold text-primary-dark">
-                Add New Address
-              </h3>
-              <button
-                className="p-1 rounded-md hover:bg-black/5"
-                onClick={() => setAdding(false)}
-                aria-label="Close"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <input
-                type="text"
-                className="border border-primary/20 rounded-md px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-colors"
-                placeholder="Full Name"
-                value={newAddress.fullName}
-                onChange={e =>
-                  setNewAddress({ ...newAddress, fullName: e.target.value })
-                }
-                maxLength={50}
-              />
-              <input
-                type="tel"
-                className="border border-primary/20 rounded-md px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-colors"
-                placeholder="Phone Number (10 digits)"
-                value={newAddress.phone}
-                onChange={e => {
-                  const value = e.target.value.replace(/\D/g, '').slice(0, 10);
-                  setNewAddress({ ...newAddress, phone: value });
-                }}
-                maxLength={10}
-                pattern="[0-9]{10}"
-                inputMode="numeric"
-              />
-              <input
-                type="text"
-                className="border border-primary/20 rounded-md px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-colors md:col-span-2"
-                placeholder="Address line 1"
-                value={newAddress.line1}
-                onChange={e =>
-                  setNewAddress({ ...newAddress, line1: e.target.value })
-                }
-                maxLength={100}
-              />
-              <input
-                type="text"
-                className="border border-primary/20 rounded-md px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-colors md:col-span-2"
-                placeholder="Address line 2 (Optional)"
-                value={newAddress.line2}
-                onChange={e =>
-                  setNewAddress({ ...newAddress, line2: e.target.value })
-                }
-                maxLength={100}
-              />
-              <input
-                type="text"
-                className="border border-primary/20 rounded-md px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-colors"
-                placeholder="City"
-                value={newAddress.city}
-                onChange={e =>
-                  setNewAddress({ ...newAddress, city: e.target.value })
-                }
-                maxLength={50}
-              />
-              <input
-                type="text"
-                className="border border-primary/20 rounded-md px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-colors"
-                placeholder="State"
-                value={newAddress.state}
-                onChange={e =>
-                  setNewAddress({ ...newAddress, state: e.target.value })
-                }
-                maxLength={50}
-              />
-              <input
-                type="text"
-                className="border border-primary/20 rounded-md px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-colors text-center tracking-widest font-mono"
-                placeholder="123456"
-                value={newAddress.postalCode}
-                onChange={e => {
-                  const value = e.target.value.replace(/\D/g, '').slice(0, 6);
-                  setNewAddress({ ...newAddress, postalCode: value });
-                }}
-                maxLength={6}
-                pattern="[0-9]{6}"
-                inputMode="numeric"
-                style={{ letterSpacing: '0.2em' }}
-              />
-              <input
-                type="text"
-                className="border border-primary/20 rounded-md px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-colors"
-                placeholder="Country"
-                value={newAddress.country}
-                onChange={e =>
-                  setNewAddress({ ...newAddress, country: e.target.value })
-                }
-                maxLength={50}
-              />
-
-              <div className="md:col-span-2 mt-1 space-y-2">
-                <label className="flex items-center gap-2 text-sm text-primary-dark">
-                  <input
-                    type="checkbox"
-                    checked={saveForFuture}
-                    onChange={e => {
-                      const checked = e.target.checked;
-                      setSaveForFuture(checked);
-                      if (!checked) setSetAsDefault(false);
-                    }}
-                  />
-                  <span>Save this address for future use</span>
-                </label>
-                <label className="flex items-center gap-2 text-sm text-primary-dark">
-                  <input
-                    type="checkbox"
-                    checked={setAsDefault}
-                    onChange={e => setSetAsDefault(e.target.checked)}
-                    disabled={!saveForFuture}
-                  />
-                  <span className={!saveForFuture ? 'opacity-50' : ''}>
-                    Set as default shipping address
-                  </span>
-                </label>
+          {/* Modal Container */}
+          <div className="fixed inset-0 flex items-end sm:items-center justify-center p-2 sm:p-4 pointer-events-none z-50">
+            <div
+              className="relative w-full max-w-2xl bg-white rounded-2xl shadow-xl max-h-[90vh] flex flex-col pointer-events-auto border border-primary/10"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header - Fixed */}
+              <div className="flex items-center rounded-t-2xl justify-between p-5 border-b border-primary/10 bg-white flex-shrink-0">
+                <h2 className="text-lg font-medium text-gray-900">
+                  {editingId ? 'Edit Address' : 'Add New Address'}
+                </h2>
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                  aria-label="Close"
+                >
+                  <X className="w-5 h-5 text-gray-500" />
+                </button>
               </div>
 
-              <div className="md:col-span-2 flex gap-2 pt-1">
+              {/* Form Content - Scrollable */}
+              <form
+                id="address-form"
+                onSubmit={onSubmit}
+                className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-5"
+              >
+                {/* Full Name */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-2">
+                    Full Name
+                  </label>
+                  <Controller
+                    name="fullName"
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                      <div>
+                        <input
+                          {...field}
+                          type="text"
+                          autoComplete="name"
+                          className={`w-full rounded-xl border border-primary/20 bg-white px-4 py-2 sm:py-3 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition-colors relative z-10 ${
+                            fieldState.error ? 'border-red-300' : ''
+                          }`}
+                          placeholder="Enter full name"
+                          maxLength={50}
+                          style={{ WebkitAppearance: 'none' }}
+                        />
+                        {fieldState.error && (
+                          <p className="text-xs text-red-600 mt-1.5">
+                            {fieldState.error.message}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  />
+                </div>
+
+                {/* Phone Number */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-2">
+                    Phone Number
+                  </label>
+                  <Controller
+                    name="phone"
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                      <div className="relative">
+                        <div className="relative">
+                          <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 z-10 pointer-events-none" />
+                          <input
+                            {...field}
+                            type="tel"
+                            onChange={(e) => {
+                              const value = e.target.value
+                                .replace(/\D/g, '')
+                                .slice(0, 10);
+                              field.onChange(value);
+                            }}
+                            maxLength={10}
+                            className={`w-full rounded-xl border border-primary/20 bg-white px-10 py-2 sm:py-3 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition-colors relative z-10 ${
+                              fieldState.error ? 'border-red-300' : ''
+                            }`}
+                            placeholder="Enter 10 digit phone number"
+                            autoComplete="tel"
+                            inputMode="numeric"
+                            style={{ WebkitAppearance: 'none' }}
+                          />
+                        </div>
+                        {fieldState.error && (
+                          <div className="mt-1.5 min-h-[20px]">
+                            <p className="text-xs text-red-600 relative z-20">
+                              {fieldState.error.message}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  />
+                </div>
+
+                {/* Address Line 1 */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-2">
+                    Address Line 1
+                  </label>
+                  <Controller
+                    name="line1"
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                      <div>
+                        <input
+                          {...field}
+                          type="text"
+                          autoComplete="street-address"
+                          className={`w-full rounded-xl border border-primary/20 bg-white px-4 py-2 sm:py-3 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition-colors relative z-10 ${
+                            fieldState.error ? 'border-red-300' : ''
+                          }`}
+                          placeholder="Street address, P.O. box"
+                          maxLength={100}
+                          style={{ WebkitAppearance: 'none' }}
+                        />
+                        {fieldState.error && (
+                          <p className="text-xs text-red-600 mt-1.5">
+                            {fieldState.error.message}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  />
+                </div>
+
+                {/* Address Line 2 */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-2">
+                    Address Line 2 (Optional)
+                  </label>
+                  <Controller
+                    name="line2"
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                      <div>
+                        <input
+                          {...field}
+                          type="text"
+                          autoComplete="address-line2"
+                          className={`w-full rounded-xl border border-primary/20 bg-white px-4 py-2 sm:py-3 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition-colors relative z-10 ${
+                            fieldState.error ? 'border-red-300' : ''
+                          }`}
+                          placeholder="Apartment, suite, unit, building, floor"
+                          maxLength={100}
+                          style={{ WebkitAppearance: 'none' }}
+                        />
+                        {fieldState.error && (
+                          <p className="text-xs text-red-600 mt-1.5">
+                            {fieldState.error.message}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  />
+                </div>
+
+                {/* City and State */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-2">
+                      City
+                    </label>
+                    <Controller
+                      name="city"
+                      control={form.control}
+                      render={({ field, fieldState }) => (
+                        <div>
+                          <input
+                            {...field}
+                            type="text"
+                            autoComplete="address-level2"
+                            className={`w-full rounded-xl border border-primary/20 bg-white px-4 py-2 sm:py-3 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition-colors relative z-10 ${
+                              fieldState.error ? 'border-red-300' : ''
+                            }`}
+                            placeholder="City"
+                            maxLength={50}
+                            style={{ WebkitAppearance: 'none' }}
+                          />
+                          {fieldState.error && (
+                            <p className="text-xs text-red-600 mt-1.5">
+                              {fieldState.error.message}
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-2">
+                      State
+                    </label>
+                    <Controller
+                      name="state"
+                      control={form.control}
+                      render={({ field, fieldState }) => (
+                        <div>
+                          <input
+                            {...field}
+                            type="text"
+                            autoComplete="address-level1"
+                            className={`w-full rounded-xl border border-primary/20 bg-white px-4 py-2 sm:py-3 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition-colors relative z-10 ${
+                              fieldState.error ? 'border-red-300' : ''
+                            }`}
+                            placeholder="State"
+                            maxLength={50}
+                            style={{ WebkitAppearance: 'none' }}
+                          />
+                          {fieldState.error && (
+                            <p className="text-xs text-red-600 mt-1.5">
+                              {fieldState.error.message}
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    />
+                  </div>
+                </div>
+
+                {/* Postal Code and Country */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-2">
+                      Postal Code
+                    </label>
+                    <Controller
+                      name="postalCode"
+                      control={form.control}
+                      render={({ field, fieldState }) => (
+                        <div>
+                          <input
+                            {...field}
+                            type="text"
+                            onChange={(e) => {
+                              const value = e.target.value
+                                .replace(/\D/g, '')
+                                .slice(0, 6);
+                              field.onChange(value);
+                            }}
+                            maxLength={6}
+                            autoComplete="postal-code"
+                            className={`w-full rounded-xl border border-primary/20 bg-white px-4 py-2 sm:py-3 text-sm text-left tracking-widest font-mono focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition-colors relative z-10 ${
+                              fieldState.error ? 'border-red-300' : ''
+                            }`}
+                            placeholder="123456"
+                            inputMode="numeric"
+                            style={{ WebkitAppearance: 'none' }}
+                          />
+                          {fieldState.error && (
+                            <p className="text-xs text-red-600 mt-1.5">
+                              {fieldState.error.message}
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-2">
+                      Country
+                    </label>
+                    <Controller
+                      name="country"
+                      control={form.control}
+                      render={({ field, fieldState }) => (
+                        <div>
+                          <input
+                            {...field}
+                            type="text"
+                            autoComplete="country"
+                            className={`w-full rounded-xl border border-primary/20 bg-white px-4 py-2 sm:py-3 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition-colors relative z-10 ${
+                              fieldState.error ? 'border-red-300' : ''
+                            }`}
+                            placeholder="Country"
+                            maxLength={50}
+                            style={{ WebkitAppearance: 'none' }}
+                          />
+                          {fieldState.error && (
+                            <p className="text-xs text-red-600 mt-1.5">
+                              {fieldState.error.message}
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    />
+                  </div>
+                </div>
+
+                {/* Default Checkboxes */}
+                <div className="flex flex-col sm:flex-row gap-4 pt-2">
+                  <Controller
+                    name="isDefaultShipping"
+                    control={form.control}
+                    render={({ field }) => (
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={field.value}
+                          onChange={field.onChange}
+                          className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary/20"
+                        />
+                        <span className="text-xs sm:text-sm text-gray-700">
+                          Set as default shipping address
+                        </span>
+                      </label>
+                    )}
+                  />
+                </div>
+
+              </form>
+
+              {/* Footer Buttons - Fixed at Bottom */}
+              <div className="rounded-b-2xl border-t border-primary/10 bg-gray-50 p-5 flex flex-col-reverse sm:flex-row gap-3 sm:justify-end flex-shrink-0">
                 <button
-                  className="relative btn btn-filled btn-animated text-sm disabled:opacity-70 disabled:cursor-not-allowed"
-                  onClick={addAddress}
-                  disabled={addressSaving}
-                >
-                  <span className={addressSaving ? 'opacity-0' : ''}>Save Address</span>
-                  {addressSaving && (
-                    <span className="absolute inset-0 flex items-center justify-center">
-                      <Spinner className="text-white" />
-                    </span>
-                  )}
-                </button>
-                <button
-                  className="btn btn-outline btn-animated text-sm"
-                  onClick={() => setAdding(false)}
-                  disabled={addressSaving}
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  disabled={isSubmitting}
+                  className="px-5 py-2.5 border border-gray-300 text-gray-700 text-sm font-normal rounded-md hover:bg-white transition-colors disabled:opacity-50"
                 >
                   Cancel
+                </button>
+                <button
+                  type="submit"
+                  form="address-form"
+                  disabled={!isValid || isSubmitting}
+                  className={`px-5 py-2.5 text-white text-sm font-normal rounded-md transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                    !isValid || isSubmitting
+                      ? 'bg-gray-300 cursor-not-allowed'
+                      : 'bg-gradient-to-r from-primary to-primary-dark hover:shadow-lg hover:shadow-primary/25'
+                  }`}
+                >
+                  {isSubmitting ? (
+                    <span className="flex items-center gap-2 justify-center">
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Saving...
+                    </span>
+                  ) : editingId ? (
+                    'Update Address'
+                  ) : (
+                    'Save Address'
+                  )}
                 </button>
               </div>
             </div>
           </div>
-        </div>
+        </>
       )}
     </Container>
   );

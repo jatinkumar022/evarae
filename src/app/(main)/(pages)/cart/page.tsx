@@ -62,35 +62,35 @@ export default function CartPage() {
           const images =
             p.images && p.images.length ? p.images : ['/favicon.ico'];
           return {
-          id: String(p.slug || p._id || ''),
-          name: p.name || '',
-          description: '',
-          price: (p.discountPrice ?? p.price ?? 0) || 0,
-          originalPrice: p.price ?? null,
-          currency: 'INR',
+            id: String(p.slug || p._id || ''),
+            name: p.name || '',
+            description: '',
+            price: (p.discountPrice ?? p.price ?? 0) || 0,
+            originalPrice: p.price ?? null,
+            currency: 'INR',
             images,
             hoverImage: images[1],
-          category: {
-            id: '',
-            name: '',
-            slug: '',
-            productCount: 0,
-            isActive: true,
-          },
-          brand: '',
-          material: '',
-          inStock: true,
-          stockCount: 1,
-          rating: 0,
-          reviews: 0,
-          isNew: false,
-          isSale: false,
-          isWishlisted: false,
-          isFeatured: false,
-          tags: [],
-          sku: '',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
+            category: {
+              id: '',
+              name: '',
+              slug: '',
+              productCount: 0,
+              isActive: true,
+            },
+            brand: '',
+            material: '',
+            inStock: true,
+            stockCount: 1,
+            rating: 0,
+            reviews: 0,
+            isNew: false,
+            isSale: false,
+            isWishlisted: false,
+            isFeatured: false,
+            tags: [],
+            sku: '',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
           } as Product;
         });
         setRecommended(mapped);
@@ -192,9 +192,9 @@ export default function CartPage() {
     setMoveToWishlistLoadingId(productId);
     try {
       await save(productId);
-      toastApi.success('Moved to wishlist');
+      toastApi.success('Moved to buy later');
     } catch {
-      toastApi.error('Failed to move to wishlist');
+      toastApi.error('Failed to move to buy later');
     } finally {
       setMoveToWishlistLoadingId(null);
     }
@@ -204,16 +204,16 @@ export default function CartPage() {
     setSavedMoveToCartLoadingId(productId);
     try {
       await unsave(productId);
-    await fetch('/api/account/cart', {
-      method: 'POST',
+      await fetch('/api/account/cart', {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'x-skip-global-loader': 'true',
         },
-      credentials: 'include',
-      body: JSON.stringify({ productId, quantity: 1 }),
+        credentials: 'include',
+        body: JSON.stringify({ productId, quantity: 1 }),
       });
-    await load();
+      await load();
       toastApi.success('Moved to cart');
     } catch {
       toastApi.error('Failed to move to cart');
@@ -315,7 +315,7 @@ export default function CartPage() {
 
             {cartItems.length === 0 ? (
               <div className="text-center py-8 md:py-12 border border-primary/10 rounded-lg">
-                <p className="text-primary-dark text-sm md:text-base">
+                <p className="text-dark text-sm md:text-base">
                   Your cart is empty.
                 </p>
                 <Link
@@ -351,7 +351,7 @@ export default function CartPage() {
                       <div className="flex-1 min-w-0 w-full sm:w-auto ">
                         <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm sm:text-base font-semibold text-primary-dark line-clamp-2">
+                            <p className="text-sm sm:text-base font-semibold text-dark line-clamp-2">
                               {product.name}
                             </p>
                             <div className="mt-1 flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm">
@@ -360,8 +360,8 @@ export default function CartPage() {
                               </p>
                               {product.originalPrice &&
                                 product.originalPrice >
-                                  (product.price ?? 0) && (
-                                  <p className="text-primary-dark line-through">
+                                (product.price ?? 0) && (
+                                  <p className="text-gray-500 line-through">
                                     ₹{product.originalPrice.toLocaleString()}
                                   </p>
                                 )}
@@ -369,7 +369,7 @@ export default function CartPage() {
                             {product.inStock &&
                               product.stockCount !== undefined &&
                               product.stockCount < 10 && (
-                                <p className="text-xs text-primary mt-1">
+                                <p className="text-xs text-gray-600 mt-1">
                                   Only {product.stockCount} left!
                                 </p>
                               )}
@@ -415,11 +415,11 @@ export default function CartPage() {
                           </div>
                         </div>
 
-                        {/* Action Buttons */}
-                        <div className="flex items-center gap-2 mt-3 sm:mt-4">
+                        {/* Action Buttons - Desktop */}
+                        <div className="hidden sm:flex items-center gap-2 mt-3 sm:mt-4">
                           <button
                             className="relative inline-flex h-7 items-center justify-center gap-2 rounded-full px-2 btn-outline btn-animated text-xs disabled:opacity-60 disabled:cursor-not-allowed"
-                            aria-label="Move to wishlist"
+                            aria-label="Buy later"
                             onClick={() => moveToSaved(product.id)}
                             disabled={moveToWishlistLoadingId === product.id}
                           >
@@ -428,15 +428,15 @@ export default function CartPage() {
                                 'inline-flex items-center gap-2 transition-opacity',
                                 moveToWishlistLoadingId === product.id && 'opacity-0'
                               )}
-                          >
-                            <Heart className="w-3 h-3" />
-                              <span className="hidden sm:inline">Move to wishlist</span>
-                              <span className="sm:hidden">Wishlist</span>
+                            >
+                              <Heart className="w-3 h-3" />
+                              <span className="hidden sm:inline">Buy later</span>
+                              <span className="sm:hidden">Buy later</span>
                             </span>
                             {moveToWishlistLoadingId === product.id && (
                               <span className="absolute inset-0 flex items-center justify-center">
                                 <Spinner className="h-4 w-4 text-current" />
-                            </span>
+                              </span>
                             )}
                           </button>
                           <button
@@ -450,9 +450,55 @@ export default function CartPage() {
                                 'inline-flex items-center gap-2 transition-opacity',
                                 removeLoadingId === product.id && 'opacity-0'
                               )}
+                            >
+                              <Trash2 className="w-3 h-3" />
+                              <span>Remove</span>
+                            </span>
+                            {removeLoadingId === product.id && (
+                              <span className="absolute inset-0 flex items-center justify-center">
+                                <Spinner className="h-4 w-4 text-current" />
+                              </span>
+                            )}
+                          </button>
+                        </div>
+
+                        {/* Action Buttons - Mobile (below product details, inside border) */}
+                        <div className="flex flex-col sm:hidden gap-2 mt-3 pt-3 border-t border-primary/10">
+                          <button
+                            className="relative w-full inline-flex h-9 items-center justify-center gap-2 rounded-full px-4 btn-outline btn-animated text-xs disabled:opacity-60 disabled:cursor-not-allowed"
+                            aria-label="Buy later"
+                            onClick={() => moveToSaved(product.id)}
+                            disabled={moveToWishlistLoadingId === product.id}
                           >
-                            <Trash2 className="w-3 h-3" />
-                            <span>Remove</span>
+                            <span
+                              className={cn(
+                                'inline-flex items-center gap-2 transition-opacity',
+                                moveToWishlistLoadingId === product.id && 'opacity-0'
+                              )}
+                            >
+                              <Heart className="w-3 h-3" />
+                              <span>Buy later</span>
+                            </span>
+                            {moveToWishlistLoadingId === product.id && (
+                              <span className="absolute inset-0 flex items-center justify-center">
+                                <Spinner className="h-4 w-4 text-current" />
+                              </span>
+                            )}
+                          </button>
+                          <button
+                            className="relative w-full inline-flex h-9 items-center justify-center gap-2 rounded-full px-4 btn-outline btn-animated text-xs disabled:opacity-60 disabled:cursor-not-allowed"
+                            aria-label="Remove item"
+                            onClick={() => removeItem(product.id)}
+                            disabled={removeLoadingId === product.id}
+                          >
+                            <span
+                              className={cn(
+                                'inline-flex items-center gap-2 transition-opacity',
+                                removeLoadingId === product.id && 'opacity-0'
+                              )}
+                            >
+                              <Trash2 className="w-3 h-3" />
+                              <span>Remove</span>
                             </span>
                             {removeLoadingId === product.id && (
                               <span className="absolute inset-0 flex items-center justify-center">
@@ -471,7 +517,7 @@ export default function CartPage() {
 
           {/* Trust/Assurance */}
           <div className="p-3 sm:p-4 rounded-lg border border-primary/10 bg-white/60 backdrop-blur-xl">
-            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-xs sm:text-sm text-primary-dark">
+            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-xs sm:text-sm text-dark">
               <li className="flex items-center gap-2">
                 <span className="w-1.5 h-1.5 bg-accent rounded-full"></span>
                 Certified diamonds and hallmarked gold
@@ -519,9 +565,9 @@ export default function CartPage() {
                 )}
               </button>
             </div>
-            <p className="text-xs text-primary-dark text-center">
-                {deliveryMsg}
-              </p>
+            <p className="text-xs text-gray-600 text-center">
+              {deliveryMsg}
+            </p>
           </div>
 
           <div className="p-3 sm:p-4 md:p-5 rounded-lg border border-primary/10 bg-white/60 backdrop-blur-xl">
@@ -550,20 +596,20 @@ export default function CartPage() {
             </div>
             <div className="space-y-2 sm:space-y-3 text-xs sm:text-sm">
               <div className="flex items-center justify-between">
-                <span className="text-primary-dark">Original Subtotal</span>
-                <span className="text-primary-dark line-through">
+                <span className="text-dark">Original Subtotal</span>
+                <span className="text-gray-500 line-through">
                   ₹{totals.originalSubtotal.toLocaleString()}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-primary-dark">Discounted Subtotal</span>
+                <span className="text-dark">Discounted Subtotal</span>
                 <span className="font-semibold text-accent">
                   ₹{totals.subtotal.toLocaleString()}
                 </span>
               </div>
               {totals.savings > 0 && (
                 <div className="flex items-center justify-between">
-                  <span className="text-primary-dark">Savings</span>
+                  <span className="text-dark">Savings</span>
                   <span className="text-green-600">
                     - ₹{totals.savings.toLocaleString()}
                   </span>
@@ -571,29 +617,29 @@ export default function CartPage() {
               )}
               {totals.couponDiscount > 0 && (
                 <div className="flex items-center justify-between">
-                  <span className="text-primary-dark">Coupon</span>
+                  <span className="text-dark">Coupon</span>
                   <span className="text-green-600">
                     - ₹{totals.couponDiscount.toLocaleString()}
                   </span>
                 </div>
               )}
               <div className="flex items-center justify-between">
-                <span className="text-primary-dark">GST (3%)</span>
-                <span className="text-primary-dark">
+                <span className="text-dark">GST (3%)</span>
+                <span className="text-dark">
                   ₹{totals.gst.toLocaleString()}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-primary-dark">
+                <span className="text-dark">
                   Payment Charges (Razorpay + GST)
                 </span>
-                <span className="text-primary-dark">
+                <span className="text-dark">
                   ₹{totals.paymentCharges.toLocaleString()}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-primary-dark">Shipping</span>
-                <span className="text-primary-dark">
+                <span className="text-dark">Shipping</span>
+                <span className="text-dark">
                   ₹{totals.shipping.toLocaleString()}
                 </span>
               </div>
@@ -612,7 +658,7 @@ export default function CartPage() {
             >
               Proceed to Checkout
             </Link>
-            <p className="mt-3 text-[10px] sm:text-xs text-primary-dark text-center">
+            <p className="mt-3 text-[10px] sm:text-xs text-gray-600 text-center">
               All taxes included. Free shipping on all orders.
             </p>
           </div>
@@ -632,7 +678,7 @@ export default function CartPage() {
             <h3 className="text-base sm:text-lg font-semibold text-primary-dark">
               Saved for later
             </h3>
-            <span className="text-xs text-primary-dark self-start sm:self-auto">
+            <span className="text-xs text-gray-600 self-start sm:self-auto">
               {savedLocal.length} item(s)
             </span>
           </div>
@@ -654,7 +700,7 @@ export default function CartPage() {
                     />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-primary-dark line-clamp-2">
+                    <p className="text-sm font-semibold text-dark line-clamp-2">
                       {product.name}
                     </p>
                     <p className="text-xs mt-1 text-accent font-semibold">
@@ -668,7 +714,7 @@ export default function CartPage() {
                       disabled={savedMoveToCartLoadingId === product.id}
                     >
                       <span className={cn(savedMoveToCartLoadingId === product.id && 'opacity-0')}>
-                      Move to cart
+                        Move to cart
                       </span>
                       {savedMoveToCartLoadingId === product.id && (
                         <span className="absolute inset-0 flex items-center justify-center">
@@ -682,7 +728,7 @@ export default function CartPage() {
                       disabled={savedRemoveLoadingId === product.id}
                     >
                       <span className={cn(savedRemoveLoadingId === product.id && 'opacity-0')}>
-                      Remove
+                        Remove
                       </span>
                       {savedRemoveLoadingId === product.id && (
                         <span className="absolute inset-0 flex items-center justify-center">

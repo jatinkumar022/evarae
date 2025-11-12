@@ -198,7 +198,8 @@ function buildHtml(order: HtmlOrder) {
 </html>`;
 }
 
-function escapeHtml(str: string) {
+function escapeHtml(str: string | null | undefined) {
+  if (!str) return '';
   return String(str)
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -233,23 +234,58 @@ export async function GET(
       return NextResponse.json({ error: 'Order not found' }, { status: 404 });
     }
 
-    const html = buildHtml(order);
+    // Ensure all required fields have default values
+    const normalizedOrder: HtmlOrder = {
+      _id: order._id,
+      orderNumber: order.orderNumber,
+      items: order.items || [],
+      subtotalAmount: order.subtotalAmount || 0,
+      taxAmount: order.taxAmount || 0,
+      shippingAmount: order.shippingAmount || 0,
+      discountAmount: order.discountAmount || 0,
+      paymentChargesAmount: order.paymentChargesAmount || 0,
+      totalAmount: order.totalAmount || 0,
+      orderStatus: order.orderStatus || 'pending',
+      paymentStatus: order.paymentStatus || 'pending',
+      shippingAddress: order.shippingAddress,
+      createdAt: order.createdAt,
+      courierName: order.courierName,
+      trackingNumber: order.trackingNumber,
+      paidAt: order.paidAt,
+    };
 
+    const html = buildHtml(normalizedOrder);
+
+    // Optimize browser launch with faster settings
     const browser = await puppeteer.launch({
       headless: 'new',
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-gpu',
+        '--disable-software-rasterizer',
+        '--disable-extensions',
+      ],
     });
     const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: 'networkidle0' });
+    
+    // Optimize page settings for faster rendering
+    await page.setViewport({ width: 1200, height: 1600 });
+    await page.setContent(html, { waitUntil: 'domcontentloaded' }); // Faster than networkidle0
+    
     const pdfBuffer = await page.pdf({
       format: 'A4',
       margin: { top: '20mm', right: '15mm', bottom: '20mm', left: '15mm' },
       printBackground: true,
+      preferCSSPageSize: false, // Faster rendering
     });
+    
+    await page.close();
     await browser.close();
 
-    const fileName = `invoice-${order.orderNumber || order._id}.pdf`;
-    return new NextResponse(pdfBuffer, {
+    const fileName = `invoice-${normalizedOrder.orderNumber || normalizedOrder._id}.pdf`;
+    return new NextResponse(pdfBuffer as unknown as BodyInit, {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',

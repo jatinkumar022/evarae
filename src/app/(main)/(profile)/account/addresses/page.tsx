@@ -318,11 +318,14 @@ function AddressesPageInner() {
                         <div>
                           <input
                             {...field}
-                            className={`w-full rounded-xl border border-[oklch(0.84_0.04_10.35)]/40 bg-white px-4 py-2 sm:py-3 text-sm focus:border-[oklch(0.66_0.14_358.91)] focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/20 focus:outline-none transition-colors ${
+                            type="text"
+                            autoComplete="name"
+                            className={`w-full rounded-xl border border-[oklch(0.84_0.04_10.35)]/40 bg-white px-4 py-2 sm:py-3 text-sm focus:border-[oklch(0.66_0.14_358.91)] focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/20 focus:outline-none transition-colors relative z-10 ${
                               fieldState.error ? 'border-red-300' : ''
                             }`}
                             placeholder="Enter full name"
                             maxLength={50}
+                            style={{ WebkitAppearance: 'none' }}
                           />
                           {fieldState.error && (
                             <p className="text-xs text-red-600 mt-1.5">
@@ -348,6 +351,7 @@ function AddressesPageInner() {
                             <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 z-10 pointer-events-none" />
                             <input
                               {...field}
+                              type="tel"
                               onChange={(e) => {
                                 const value = e.target.value
                                   .replace(/\D/g, '')
@@ -355,12 +359,13 @@ function AddressesPageInner() {
                                 field.onChange(value);
                               }}
                               maxLength={10}
-                              className={`w-full rounded-xl border border-[oklch(0.84_0.04_10.35)]/40 bg-white px-10 py-2 sm:py-3 text-sm focus:border-[oklch(0.66_0.14_358.91)] focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/20 focus:outline-none transition-colors ${
+                              className={`w-full rounded-xl border border-[oklch(0.84_0.04_10.35)]/40 bg-white px-10 py-2 sm:py-3 text-sm focus:border-[oklch(0.66_0.14_358.91)] focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/20 focus:outline-none transition-colors relative z-10 ${
                                 fieldState.error ? 'border-red-300' : ''
                               }`}
                               placeholder="Enter 10 digit phone number"
                               autoComplete="tel"
                               inputMode="numeric"
+                              style={{ WebkitAppearance: 'none' }}
                             />
                           </div>
                           {fieldState.error && (
@@ -387,11 +392,14 @@ function AddressesPageInner() {
                         <div>
                           <input
                             {...field}
-                            className={`w-full rounded-xl border border-[oklch(0.84_0.04_10.35)]/40 bg-white px-4 py-2 sm:py-3 text-sm focus:border-[oklch(0.66_0.14_358.91)] focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/20 focus:outline-none transition-colors ${
+                            type="text"
+                            autoComplete="street-address"
+                            className={`w-full rounded-xl border border-[oklch(0.84_0.04_10.35)]/40 bg-white px-4 py-2 sm:py-3 text-sm focus:border-[oklch(0.66_0.14_358.91)] focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/20 focus:outline-none transition-colors relative z-10 ${
                               fieldState.error ? 'border-red-300' : ''
                             }`}
                             placeholder="Street address, P.O. box"
                             maxLength={100}
+                            style={{ WebkitAppearance: 'none' }}
                           />
                           {fieldState.error && (
                             <p className="text-xs text-red-600 mt-1.5">
@@ -415,11 +423,14 @@ function AddressesPageInner() {
                         <div>
                           <input
                             {...field}
-                            className={`w-full rounded-xl border border-[oklch(0.84_0.04_10.35)]/40 bg-white px-4 py-2 sm:py-3 text-sm focus:border-[oklch(0.66_0.14_358.91)] focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/20 focus:outline-none transition-colors ${
+                            type="text"
+                            autoComplete="address-line2"
+                            className={`w-full rounded-xl border border-[oklch(0.84_0.04_10.35)]/40 bg-white px-4 py-2 sm:py-3 text-sm focus:border-[oklch(0.66_0.14_358.91)] focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/20 focus:outline-none transition-colors relative z-10 ${
                               fieldState.error ? 'border-red-300' : ''
                             }`}
                             placeholder="Apartment, suite, unit, building, floor"
                             maxLength={100}
+                            style={{ WebkitAppearance: 'none' }}
                           />
                           {fieldState.error && (
                             <p className="text-xs text-red-600 mt-1.5">
@@ -444,11 +455,14 @@ function AddressesPageInner() {
                           <div>
                             <input
                               {...field}
-                              className={`w-full rounded-xl border border-[oklch(0.84_0.04_10.35)]/40 bg-white px-4 py-2 sm:py-3 text-sm focus:border-[oklch(0.66_0.14_358.91)] focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/20 focus:outline-none transition-colors ${
+                              type="text"
+                              autoComplete="address-level2"
+                              className={`w-full rounded-xl border border-[oklch(0.84_0.04_10.35)]/40 bg-white px-4 py-2 sm:py-3 text-sm focus:border-[oklch(0.66_0.14_358.91)] focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/20 focus:outline-none transition-colors relative z-10 ${
                                 fieldState.error ? 'border-red-300' : ''
                               }`}
                               placeholder="City"
                               maxLength={50}
+                              style={{ WebkitAppearance: 'none' }}
                             />
                             {fieldState.error && (
                               <p className="text-xs text-red-600 mt-1.5">
@@ -471,11 +485,14 @@ function AddressesPageInner() {
                           <div>
                             <input
                               {...field}
-                              className={`w-full rounded-xl border border-[oklch(0.84_0.04_10.35)]/40 bg-white px-4 py-2 sm:py-3 text-sm focus:border-[oklch(0.66_0.14_358.91)] focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/20 focus:outline-none transition-colors ${
+                              type="text"
+                              autoComplete="address-level1"
+                              className={`w-full rounded-xl border border-[oklch(0.84_0.04_10.35)]/40 bg-white px-4 py-2 sm:py-3 text-sm focus:border-[oklch(0.66_0.14_358.91)] focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/20 focus:outline-none transition-colors relative z-10 ${
                                 fieldState.error ? 'border-red-300' : ''
                               }`}
                               placeholder="State"
                               maxLength={50}
+                              style={{ WebkitAppearance: 'none' }}
                             />
                             {fieldState.error && (
                               <p className="text-xs text-red-600 mt-1.5">
@@ -501,6 +518,7 @@ function AddressesPageInner() {
                           <div>
                             <input
                               {...field}
+                              type="text"
                               onChange={(e) => {
                                 const value = e.target.value
                                   .replace(/\D/g, '')
@@ -508,11 +526,13 @@ function AddressesPageInner() {
                                 field.onChange(value);
                               }}
                               maxLength={6}
-                              className={`w-full rounded-xl border border-[oklch(0.84_0.04_10.35)]/40 bg-white px-4 py-2 sm:py-3 text-sm text-left tracking-widest font-mono focus:border-[oklch(0.66_0.14_358.91)] focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/20 focus:outline-none transition-colors ${
+                              autoComplete="postal-code"
+                              className={`w-full rounded-xl border border-[oklch(0.84_0.04_10.35)]/40 bg-white px-4 py-2 sm:py-3 text-sm text-left tracking-widest font-mono focus:border-[oklch(0.66_0.14_358.91)] focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/20 focus:outline-none transition-colors relative z-10 ${
                                 fieldState.error ? 'border-red-300' : ''
                               }`}
                               placeholder="123456"
                               inputMode="numeric"
+                              style={{ WebkitAppearance: 'none' }}
                             />
                             {fieldState.error && (
                               <p className="text-xs text-red-600 mt-1.5">
@@ -535,11 +555,14 @@ function AddressesPageInner() {
                           <div>
                             <input
                               {...field}
-                              className={`w-full rounded-xl border border-[oklch(0.84_0.04_10.35)]/40 bg-white px-4 py-2 sm:py-3 text-sm focus:border-[oklch(0.66_0.14_358.91)] focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/20 focus:outline-none transition-colors ${
+                              type="text"
+                              autoComplete="country"
+                              className={`w-full rounded-xl border border-[oklch(0.84_0.04_10.35)]/40 bg-white px-4 py-2 sm:py-3 text-sm focus:border-[oklch(0.66_0.14_358.91)] focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/20 focus:outline-none transition-colors relative z-10 ${
                                 fieldState.error ? 'border-red-300' : ''
                               }`}
                               placeholder="Country"
                               maxLength={50}
+                              style={{ WebkitAppearance: 'none' }}
                             />
                             {fieldState.error && (
                               <p className="text-xs text-red-600 mt-1.5">
