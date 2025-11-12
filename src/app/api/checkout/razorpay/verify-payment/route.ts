@@ -77,8 +77,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Order not found' }, { status: 404 });
     }
 
-    // Update order status
-    await Order.findByIdAndUpdate(order._id, {
+    // Update order status - only if payment is successfully verified
+    const updatedOrder = await Order.findByIdAndUpdate(order._id, {
       paymentStatus: 'completed',
       orderStatus: 'confirmed',
       paymentProviderPaymentId: razorpay_payment_id,
@@ -86,8 +86,11 @@ export async function POST(request: Request) {
       paidAt: new Date(),
     });
 
-    // Clear user's cart
-    await Cart.findOneAndUpdate({ user: uid }, { $set: { items: [] } });
+    // Only clear cart if order was successfully updated and payment is completed
+    // This ensures cart is NOT cleared if payment fails
+    if (updatedOrder) {
+      await Cart.findOneAndUpdate({ user: uid }, { $set: { items: [] } });
+    }
 
     return NextResponse.json({
       success: true,

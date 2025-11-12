@@ -188,23 +188,35 @@ export default function CheckoutPage() {
       });
 
       const data = await response.json();
-      if (!response.ok)
-        throw new Error(data?.error || 'Failed to create payment order');
+      if (!response.ok) {
+        const errorMsg = data?.error || 'Failed to create payment order';
+        toastApi.error('Payment initiation failed', errorMsg);
+        router.push(
+          `/checkout/payment-failure?error=order_creation_failed&error_description=${encodeURIComponent(errorMsg)}`
+        );
+        setLoading(false);
+        return;
+      }
 
       // Check if Razorpay is available
       if (data.fallback) {
         setRazorpayAvailable(false);
-        setError(
-          data?.message ||
-            'Payment gateway is temporarily unavailable. Please try again later or contact support.'
-        );
+        const errorMsg = data?.message ||
+          'Payment gateway is temporarily unavailable. Please try again later or contact support.';
+        setError(errorMsg);
         toastApi.warning('Gateway unavailable', 'Please try again later.');
+        router.push(
+          `/checkout/payment-failure?error=gateway_unavailable&error_description=${encodeURIComponent(errorMsg)}`
+        );
         setLoading(false);
         return;
       }
 
       // Load Razorpay script
-      await loadRazorpay();
+      const razorpayLoaded = await loadRazorpay();
+      if (!razorpayLoaded) {
+        throw new Error('Failed to load payment gateway. Please refresh and try again.');
+      }
 
       const options = {
         key: data.key,
@@ -218,30 +230,37 @@ export default function CheckoutPage() {
           razorpay_payment_id: string;
           razorpay_signature: string;
         }) {
-          // Verify payment
-          const verifyResponse = await fetch(
-            '/api/checkout/razorpay/verify-payment',
-            {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              credentials: 'include',
-              body: JSON.stringify({
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-              }),
-            }
-          );
-          const verifyData = await verifyResponse.json();
-          if (verifyData.success) {
-            toastApi.success('Payment successful');
-            router.push(
-              `/checkout/payment-success?orderId=${verifyData.orderId}`
+          try {
+            // Verify payment
+            const verifyResponse = await fetch(
+              '/api/checkout/razorpay/verify-payment',
+              {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_signature: response.razorpay_signature,
+                }),
+              }
             );
-          } else {
-            toastApi.error('Payment verification failed');
+            const verifyData = await verifyResponse.json();
+            if (verifyData.success) {
+              toastApi.success('Payment successful');
+              router.push(
+                `/checkout/payment-success?orderId=${verifyData.orderId}`
+              );
+            } else {
+              toastApi.error('Payment verification failed');
+              router.push(
+                '/checkout/payment-failure?error=verification_failed&error_description=Payment verification failed. Please try again.'
+              );
+            }
+          } catch (error) {
+            console.error('Payment verification error:', error);
             router.push(
-              '/checkout/payment-failure?error=verification_failed&error_description=Payment verification failed'
+              '/checkout/payment-failure?error=verification_error&error_description=An error occurred while verifying your payment. Please contact support.'
             );
           }
         },
@@ -256,11 +275,29 @@ export default function CheckoutPage() {
         modal: {
           ondismiss: function () {
             setLoading(false);
+            // Redirect to payment failure when user dismisses the modal
+            router.push(
+              '/checkout/payment-failure?error=payment_cancelled&error_description=Payment was cancelled. No charges have been made.'
+            );
           },
         },
       };
 
       const rzp = new window.Razorpay(options);
+      
+      // Handle payment failure events
+      if (rzp.on) {
+        rzp.on('payment.failed', function (...args: unknown[]) {
+          setLoading(false);
+          const response = args[0] as { error?: { description?: string; reason?: string } };
+          const errorMsg = response?.error?.description || response?.error?.reason || 'Payment failed';
+          toastApi.error('Payment failed', errorMsg);
+          router.push(
+            `/checkout/payment-failure?error=payment_failed&error_description=${encodeURIComponent(errorMsg)}`
+          );
+        });
+      }
+
       rzp.open();
     } catch (e: unknown) {
       const message =
@@ -269,6 +306,9 @@ export default function CheckoutPage() {
           : 'Failed to initiate payment';
       setError(message);
       toastApi.error('Payment initiation failed', message);
+      router.push(
+        `/checkout/payment-failure?error=payment_initiation_failed&error_description=${encodeURIComponent(message)}`
+      );
       setLoading(false);
     }
   };
