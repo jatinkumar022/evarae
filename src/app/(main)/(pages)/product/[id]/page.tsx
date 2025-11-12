@@ -73,7 +73,7 @@ function mapApiToUiProduct(api: ApiProduct): UiProduct {
       : undefined,
     dimensions: {},
     inStock:
-      typeof api.stockQuantity === 'number' ? api.stockQuantity > 0 : true,
+      typeof api.stockQuantity === 'number' && api.stockQuantity > 0,
     stockCount: typeof api.stockQuantity === 'number' ? api.stockQuantity : 0,
     rating: typeof api.rating === 'number' ? api.rating : 0,
     reviews: typeof api.reviewsCount === 'number' ? api.reviewsCount : 0,

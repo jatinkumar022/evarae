@@ -38,7 +38,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [loginModalAction, setLoginModalAction] = useState<'cart' | 'wishlist'>('cart');
   const addToCart = useCartStore(s => s.add);
-  const { load: loadWishlist, add: addToWishlist, remove: removeFromWishlist, isWishlisted } = useWishlistStore();
+  const { load: loadWishlist, add: addToWishlist, remove: removeFromWishlist, products: wishlistProducts } = useWishlistStore();
 
   // Check user authentication on mount
   useEffect(() => {
@@ -148,6 +148,12 @@ export function ProductInfo({ product }: ProductInfoProps) {
     }
   };
 
+  // Ensure component re-renders when wishlist changes
+  // Using wishlistProducts ensures Zustand subscription
+  const isProductWishlisted = wishlistProducts.some(
+    p => String(p._id) === product.id || p.slug === product.id
+  );
+
   const handleWishlistToggle = async () => {
     if (!currentUser) {
       setLoginModalAction('wishlist');
@@ -160,7 +166,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
     setIsWishlistLoading(true);
     try {
       const productId = product.id;
-      const isCurrentlyWishlisted = isWishlisted(productId);
+      const isCurrentlyWishlisted = isProductWishlisted;
       
       if (isCurrentlyWishlisted) {
         await removeFromWishlist(productId);
@@ -176,8 +182,6 @@ export function ProductInfo({ product }: ProductInfoProps) {
       setIsWishlistLoading(false);
     }
   };
-
-  const isProductWishlisted = isWishlisted(product.id);
 
   return (
     <>
@@ -274,7 +278,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
             </label>
 
             <CustomSelect
-              options={Array.from({ length: product.stockCount }, (_, i) => ({
+              options={Array.from({ length: Math.max(1, Math.min(product.stockCount || 1, 10)) }, (_, i) => ({
                 label: `${i + 1}`,
                 value: `${i + 1}`,
               }))}
@@ -283,9 +287,10 @@ export function ProductInfo({ product }: ProductInfoProps) {
               placeholder="Select quantity"
             />
 
-            {product.inStock && (
-              <p className="text-xs lg:text-sm text-primary-dark">
-                {product.stockCount} items available
+            {product.inStock && product.stockCount !== undefined && product.stockCount < 10 && (
+              <p className="text-xs lg:text-sm text-primary font-medium flex items-center gap-1 animate-caret-blink">
+                <span className="inline-block w-2 h-2 bg-primary rounded-full"></span>
+                {product.stockCount} left
               </p>
             )}
           </div>
@@ -311,26 +316,24 @@ export function ProductInfo({ product }: ProductInfoProps) {
                 )}
               </button>
 
-            {/* Secondary action - Wishlist */}
-            <button 
-              onClick={handleWishlistToggle}
-              disabled={isWishlistLoading}
-              className={`relative w-full border py-2 px-5 rounded-sm text-sm lg:text-base font-medium transition-colors flex items-center justify-center gap-2 ${
-                isProductWishlisted
-                  ? 'border-primary bg-primary text-white hover:bg-primary-dark'
-                  : 'border-primary/40 text-primary hover:bg-primary hover:!text-white'
-              }`}
-            >
-              <span className={isWishlistLoading ? 'opacity-0 flex items-center gap-2' : 'flex items-center gap-2'}>
-                <Heart className={`w-4 h-4 ${isProductWishlisted ? 'fill-current' : ''}`} />
-                {isProductWishlisted ? 'Remove from Wishlist' : 'Add to Wishlist'}
-              </span>
-              {isWishlistLoading && (
-                <span className="absolute inset-0 flex items-center justify-center">
-                  <Spinner className="text-current" />
+            {/* Secondary action - Wishlist (only show if product is in wishlist) */}
+            {isProductWishlisted && (
+              <button 
+                onClick={handleWishlistToggle}
+                disabled={isWishlistLoading}
+                className="relative w-full border border-primary bg-primary text-white py-2 px-5 rounded-sm text-sm lg:text-base font-medium transition-colors flex items-center justify-center gap-2 hover:bg-primary-dark"
+              >
+                <span className={isWishlistLoading ? 'opacity-0 flex items-center gap-2' : 'flex items-center gap-2'}>
+                  <Heart className="w-4 h-4 fill-current" />
+                  Remove from Wishlist
                 </span>
-              )}
-            </button>
+                {isWishlistLoading && (
+                  <span className="absolute inset-0 flex items-center justify-center">
+                    <Spinner className="text-current" />
+                  </span>
+                )}
+              </button>
+            )}
           </div>
         )}
 

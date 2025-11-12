@@ -17,8 +17,6 @@ import { cn } from '@/lib/utils';
 export default function CartPage() {
   const { items, savedItems, load, update, remove, save, unsave } =
     useCartStore();
-  const [pincode, setPincode] = useState('');
-  const [deliveryMsg, setDeliveryMsg] = useState<string>('');
   const [couponCode, setCouponCode] = useState('');
   const [couponRate, setCouponRate] = useState(0);
   const [quantityLoadingId, setQuantityLoadingId] = useState<string | null>(null);
@@ -30,7 +28,6 @@ export default function CartPage() {
   const [savedRemoveLoadingId, setSavedRemoveLoadingId] =
     useState<string | null>(null);
   const [couponApplying, setCouponApplying] = useState(false);
-  const [checkPincodeLoading, setCheckPincodeLoading] = useState(false);
 
   useEffect(() => {
     load();
@@ -56,11 +53,17 @@ export default function CartPage() {
             images?: string[];
             price?: number;
             discountPrice?: number;
+            stockQuantity?: number;
+            status?: string;
           }>;
         };
         const mapped: Product[] = (data.products || []).map(p => {
           const images =
             p.images && p.images.length ? p.images : ['/favicon.ico'];
+          const stockQuantity = p.stockQuantity ?? 0;
+          const status = p.status || 'active';
+          const inStock = status === 'active' && stockQuantity > 0;
+          
           return {
             id: String(p.slug || p._id || ''),
             name: p.name || '',
@@ -79,8 +82,8 @@ export default function CartPage() {
             },
             brand: '',
             material: '',
-            inStock: true,
-            stockCount: 1,
+            inStock: inStock,
+            stockCount: stockQuantity,
             rating: 0,
             reviews: 0,
             isNew: false,
@@ -245,46 +248,30 @@ export default function CartPage() {
     setTimeout(() => setCouponApplying(false), 300);
   };
 
-  const checkDelivery = async () => {
-    setCheckPincodeLoading(true);
-    try {
-      const res = await fetch(`/api/main/pincode/${pincode}`);
-      const data = await res.json();
-      if (data.success) {
-        setDeliveryMsg(data.message);
-        toastApi.success(data.message);
-      } else {
-        setDeliveryMsg(data.message);
-        toastApi.error(data.message);
-      }
-    } catch (error) {
-      console.error('Check delivery error', error);
-      setDeliveryMsg('Failed to check delivery');
-      toastApi.error('Failed to check delivery');
-    } finally {
-      setCheckPincodeLoading(false);
-    }
-  };
 
-  const cartItems = items.map((ci: CartItem) => ({
-    product: {
-      id: String(ci?.product?._id || ci?.product?.id || ''),
-      name: (ci?.product as Product | undefined)?.name || '',
-      images: ((
-        ci?.product?.images && ci.product.images.length
-          ? ci.product.images
-          : ['/favicon.ico']
-      ) as string[]),
-      price: ci?.product?.discountPrice ?? ci?.product?.price ?? 0,
-      originalPrice:
-        (ci?.product as Product | undefined)?.price ??
-        ci?.product?.price ??
-        null,
-      inStock: true,
-      stockCount: (ci?.product as Product | undefined)?.stockCount ?? 1,
-    } as Product,
-    quantity: ci.quantity || 1,
-  }));
+  const cartItems = items.map((ci: CartItem) => {
+    const productData = ci?.product as any;
+    const stockQuantity = productData?.stockQuantity ?? productData?.stockCount ?? 0;
+    const status = productData?.status || 'active';
+    const inStock = status === 'active' && stockQuantity > 0;
+    
+    return {
+      product: {
+        id: String(productData?._id || productData?.id || ''),
+        name: productData?.name || '',
+        images: ((
+          productData?.images && productData.images.length
+            ? productData.images
+            : ['/favicon.ico']
+        ) as string[]),
+        price: productData?.discountPrice ?? productData?.price ?? 0,
+        originalPrice: productData?.price ?? null,
+        inStock: inStock,
+        stockCount: stockQuantity,
+      } as Product,
+      quantity: ci.quantity || 1,
+    };
+  });
 
   const savedLocal = (savedItems as SavedItem[]).map(si => ({
     product: {
@@ -369,7 +356,8 @@ export default function CartPage() {
                             {product.inStock &&
                               product.stockCount !== undefined &&
                               product.stockCount < 10 && (
-                                <p className="text-xs text-gray-600 mt-1">
+                                <p className="text-xs text-primary font-medium mt-1 flex items-center gap-1 animate-caret-blink">
+                                  <span className="inline-block w-2 h-2 bg-primary rounded-full"></span>
                                   Only {product.stockCount} left!
                                 </p>
                               )}
@@ -540,36 +528,6 @@ export default function CartPage() {
 
         {/* Order Summary */}
         <aside className="lg:col-span-1 space-y-4 md:space-y-6">
-          {/* Delivery & Extras */}
-          <div className="p-3 sm:p-4 md:p-5 rounded-lg border border-primary/10 bg-white/60 backdrop-blur-xl">
-            <h3 className="text-base sm:text-lg md:text-xl font-semibold text-primary-dark mb-4">
-              Delivery & Extras
-            </h3>
-            <div className="flex gap-2 mb-4 flex-wrap">
-              <input
-                value={pincode}
-                onChange={e => setPincode(e.target.value)}
-                placeholder="Enter Pincode"
-                className="flex-1 rounded-md border border-primary/20 px-3 py-2 text-sm outline-none focus:border-primary"
-              />
-              <button
-                className="relative btn btn-filled btn-animated text-sm !py-2.5 disabled:opacity-70 disabled:cursor-not-allowed"
-                onClick={checkDelivery}
-                disabled={checkPincodeLoading}
-              >
-                <span className={cn(checkPincodeLoading && 'opacity-0')}>Check</span>
-                {checkPincodeLoading && (
-                  <span className="absolute inset-0 flex items-center justify-center">
-                    <Spinner className="text-white" />
-                  </span>
-                )}
-              </button>
-            </div>
-            <p className="text-xs text-gray-600 text-center">
-              {deliveryMsg}
-            </p>
-          </div>
-
           <div className="p-3 sm:p-4 md:p-5 rounded-lg border border-primary/10 bg-white/60 backdrop-blur-xl">
             <h3 className="text-base sm:text-lg md:text-xl font-semibold text-primary-dark mb-4">
               Order Summary

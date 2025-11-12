@@ -18,6 +18,7 @@ export async function GET() {
           price: 1,
           discountPrice: 1,
           status: 1,
+          stockQuantity: 1,
           tags: 1,
           material: 1,
           colors: 1,
