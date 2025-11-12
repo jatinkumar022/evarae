@@ -442,7 +442,9 @@ export default function Navbar() {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showProfileDrawer, setShowProfileDrawer]);
+    // State setters are stable, but we only want to depend on showProfileDrawer
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showProfileDrawer]);
 
   // Handle Escape key and body scroll lock for logout modal
   useEffect(() => {

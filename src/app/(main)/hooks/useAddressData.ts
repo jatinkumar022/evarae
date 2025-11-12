@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { Address } from './useAddressForm';
 
 export function useAddressData() {
@@ -6,7 +6,7 @@ export function useAddressData() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchAddresses = async () => {
+  const fetchAddresses = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -24,11 +24,11 @@ export function useAddressData() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchAddresses();
-  }, []);
+  }, [fetchAddresses]);
 
   const deleteAddress = async (id: string) => {
     try {
