@@ -91,7 +91,8 @@ export function useProfileForm({
       form.reset(newValues);
       initialValuesRef.current = newValues;
     }
-  }, [initialData, form]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialData]);
 
   const onSubmit = async (data: ProfileFormData) => {
     try {

@@ -69,7 +69,9 @@ export default function CategoriesGrid() {
   useEffect(() => {
     fetchHomepage();
     if (status === 'idle') fetchCategories();
-  }, [status, fetchCategories, fetchHomepage]);
+    // Zustand actions are stable, but we only want this to run once on mount or when status changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status]);
 
   // Use categories from homepage if available, otherwise use store
   const categories = data?.categories && data.categories.length > 0 

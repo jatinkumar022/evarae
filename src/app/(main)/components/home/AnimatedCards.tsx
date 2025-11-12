@@ -33,7 +33,9 @@ export default function AnimatedCards() {
   
   useEffect(() => {
     fetchHomepage();
-  }, [fetchHomepage]);
+    // Zustand actions are stable, but we only want this to run once on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (data?.bestsellers && data.bestsellers.length > 0) {
@@ -131,7 +133,9 @@ export default function AnimatedCards() {
       if (currentUser) {
         loadWishlist();
       }
-    }, [loadWishlist, currentUser]);
+      // Zustand actions are stable, but we only want to depend on currentUser
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentUser]);
 
     // Check if product is wishlisted
     const isProductWishlisted = wishlistProducts.some(

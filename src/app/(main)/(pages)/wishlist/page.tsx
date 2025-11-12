@@ -33,7 +33,9 @@ export default function WishlistPage() {
   // Load wishlist on mount
   useEffect(() => {
     loadWishlist();
-  }, [loadWishlist]);
+    // Zustand actions are stable, but we only want this to run once on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Map wishlist products to Product type
   const mappedProducts = useMemo(() => {

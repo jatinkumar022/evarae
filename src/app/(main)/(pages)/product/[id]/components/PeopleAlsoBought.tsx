@@ -56,7 +56,9 @@ export function PeopleAlsoBought({ currentProduct }: PeopleAlsoBoughtProps) {
     if (currentUser) {
       loadWishlist();
     }
-  }, [loadWishlist, currentUser]);
+    // Zustand actions are stable, but we only want to depend on currentUser
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUser]);
 
   useEffect(() => {
     (async () => {

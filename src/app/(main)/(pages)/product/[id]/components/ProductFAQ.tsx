@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown } from 'lucide-react';
 
@@ -94,12 +95,12 @@ export function ProductFAQ() {
       <div className="mt-6 pt-4 border-t border-primary/10">
         <p className="text-sm text-primary-dark/70">
           Still have questions?{' '}
-          <a
+          <Link
             href="/contact-us"
             className="text-primary hover:text-primary-dark font-medium"
           >
             Contact our customer service
-          </a>
+          </Link>
         </p>
       </div>
     </div>

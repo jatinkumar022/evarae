@@ -14,7 +14,9 @@ const CircleCategories = memo(() => {
   useEffect(() => {
     // Fetch categories once on mount, using cache
     fetchCategories();
-  }, [fetchCategories]);
+    // Zustand actions are stable, but we only want this to run once on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleClick = (e: MouseEvent<HTMLAnchorElement>, idx: number) => {
     e.preventDefault();

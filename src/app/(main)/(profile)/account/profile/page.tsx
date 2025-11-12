@@ -42,6 +42,7 @@ function AccountPageInner() {
   const [isRequestingOtp, setIsRequestingOtp] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [passwordError, setPasswordError] = useState('');
+  const lastProfileDataRef = React.useRef<string>('');
 
   // Fetch profile data
   const { profileData, email, hasPassword, ordersPreview,  setProfileData } =
@@ -57,12 +58,17 @@ function AccountPageInner() {
       },
     });
 
-  // Update form when profileData changes
+  // Update form when profileData changes (only if actually different)
   useEffect(() => {
     if (profileData && Object.keys(profileData).length > 0) {
-      form.reset(profileData);
+      const profileDataStr = JSON.stringify(profileData);
+      if (lastProfileDataRef.current !== profileDataStr) {
+        form.reset(profileData);
+        lastProfileDataRef.current = profileDataStr;
+      }
     }
-  }, [profileData, form]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profileData]);
 
   // Pick tab from query
   useEffect(() => {

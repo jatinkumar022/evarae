@@ -51,7 +51,9 @@ const ImageGrid = () => {
 
   useEffect(() => {
     fetchHomepage();
-  }, [fetchHomepage]);
+    // Zustand actions are stable, but we only want this to run once on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const collections = data?.signatureCollections || [];
 

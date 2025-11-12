@@ -79,7 +79,8 @@ export default function CheckoutPage() {
       setInitialData({});
       form.reset();
     }
-  }, [isModalOpen, form]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isModalOpen]);
 
   // Handle body scroll lock when modal is open
   useEffect(() => {

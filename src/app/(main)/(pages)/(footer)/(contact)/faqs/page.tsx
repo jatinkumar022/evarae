@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import Link from 'next/link';
 import Container from '@/app/(main)/components/layouts/Container';
 import { AnimatePresence, motion } from 'framer-motion';
 type FAQCategory =
@@ -229,18 +230,18 @@ export default function FAQPage() {
           Reach out to our support team for personalized assistance.
         </p>
         <div className="flex justify-center gap-4">
-          <a
+          <Link
             href="/contact-us"
             className="px-6 py-2 bg-primary text-white rounded-full shadow-md"
           >
             Contact Us
-          </a>
-          <a
+          </Link>
+          <Link
             href="/track"
             className="px-6 py-2 bg-primary/10 text-primary rounded-full"
           >
             Track Order
-          </a>
+          </Link>
         </div>
       </div>
     </Container>

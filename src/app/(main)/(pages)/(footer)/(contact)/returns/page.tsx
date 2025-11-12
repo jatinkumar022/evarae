@@ -1,4 +1,5 @@
 'use client';
+import Link from 'next/link';
 import Container from '@/app/(main)/components/layouts/Container';
 import { motion } from 'framer-motion';
 import { Truck, RefreshCw, Globe2, ShieldCheck } from 'lucide-react';
@@ -148,18 +149,18 @@ export default function ShippingReturnsPage() {
           Our support team is here to help with shipping or return queries.
         </p>
         <div className="flex justify-center gap-4">
-          <a
+          <Link
             href="/contact-us"
             className="px-6 py-2 bg-primary text-white rounded-full shadow-md"
           >
             Contact Us
-          </a>
-          <a
+          </Link>
+          <Link
             href="/track"
             className="px-6 py-2 bg-primary/10 text-primary rounded-full"
           >
             Track Order
-          </a>
+          </Link>
         </div>
       </section>
     </Container>

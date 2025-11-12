@@ -97,6 +97,7 @@ const FallbackImage = ({
     <Image
       {...rest}
       src={currentSrc}
+      alt={rest.alt || ''}
       onError={handleError}
       onLoadingComplete={handleLoadingComplete}
       className={mergedClassName || undefined}

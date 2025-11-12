@@ -111,7 +111,8 @@ export function useAddressForm({
     } else {
       form.reset(defaultValues);
     }
-  }, [initialData, editingId, form, defaultValues]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialData, editingId]);
 
   const onSubmit = async (data: AddressFormData) => {
     try {

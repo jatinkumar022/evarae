@@ -58,8 +58,8 @@ export default function NotFoundPage() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="text-base sm:text-lg text-text-primary/80 mb-8 sm:mb-12 leading-relaxed max-w-2xl mx-auto px-4"
           >
-            The page you're looking for seems to have wandered away like a lost piece of jewelry. 
-            Let's help you find your way back to our exquisite collection.
+            The page you&apos;re looking for seems to have wandered away like a lost piece of jewelry.
+            Let&apos;s help you find your way back to our exquisite collection.
           </motion.p>
 
           {/* Action Buttons */}

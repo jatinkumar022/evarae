@@ -17,7 +17,9 @@ export default function HeroCarousel() {
 
   React.useEffect(() => {
     fetchHomepage();
-  }, [fetchHomepage]);
+    // Zustand actions are stable, but we only want this to run once on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const images = React.useMemo<(string | StaticImageData)[]>(() => {
     return data?.hero?.images || [];

@@ -31,7 +31,9 @@ export default function CartPage() {
 
   useEffect(() => {
     load();
-  }, [load]);
+    // Zustand actions are stable, but we only want this to run once on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Dynamic: "You may also like" products
   const [recommended, setRecommended] = useState<Product[] | null>(null);

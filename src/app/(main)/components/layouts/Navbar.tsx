@@ -155,18 +155,22 @@ export default function Navbar() {
   const { categories, status, fetchCategories } = usePublicCategoryStore();
   const syncCartCount = useCartCountStore((state) => state.syncWithCart);
   
-  // Load cart and sync count
+  // Load cart and sync count (only once on mount)
   useEffect(() => {
     load().then(() => {
       // Sync count after cart loads
       syncCartCount();
     });
-  }, [load, syncCartCount]);
+    // Zustand actions are stable, but we only want this to run once on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Fetch categories once on mount, using cache
   useEffect(() => {
     fetchCategories();
-  }, [fetchCategories]);
+    // Zustand actions are stable, but we only want this to run once on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const placeholders = [
     'Search Gold Jewellery',
@@ -1002,6 +1006,7 @@ export default function Navbar() {
                       {/* Google Sign-In */}
                       {loginStep !== 'done' && (
                         <div className="mt-3">
+                          {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
                           <a
                             href="/api/auth/google"
                             className="w-full flex items-center justify-center gap-2 rounded-lg border border-[oklch(0.84_0.04_10.35)] bg-white px-3 py-2 text-xs text-[oklch(0.39_0.09_17.83)] hover:bg-[oklch(0.93_0.03_12.01)] transition-all"

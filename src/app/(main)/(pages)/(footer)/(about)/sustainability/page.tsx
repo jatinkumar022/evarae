@@ -1,4 +1,5 @@
 'use client';
+import Link from 'next/link';
 import Container from '@/app/(main)/components/layouts/Container';
 import { motion } from 'framer-motion';
 import {
@@ -264,18 +265,18 @@ export default function SustainabilityPage() {
             protecting our beautiful planet.
           </p>
           <div className="flex justify-center gap-4 flex-wrap">
-            <a
+            <Link
               href="/collections"
               className="px-6 py-2 text-sm bg-primary md:text-base text-white rounded-full shadow-md hover:bg-green-700 transition-colors"
             >
               Shop Sustainable
-            </a>
-            <a
+            </Link>
+            <Link
               href="/sustainability"
               className="px-6 py-2 bg-primary/10 text-sm md:text-base text-primary rounded-full border border-primary/20 hover:bg-primary/10 transition-colors"
             >
               Learn More
-            </a>
+            </Link>
           </div>
         </section>
       </Container>
