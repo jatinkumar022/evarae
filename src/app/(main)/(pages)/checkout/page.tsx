@@ -12,6 +12,7 @@ import {
   CheckCircle,
   X,
   Phone,
+  Plus,
 } from 'lucide-react';
 import { Visa, Mastercard, Paypal, Maestro } from '@/app/(main)/assets/Footer';
 import { useRouter } from 'next/navigation';
@@ -231,29 +232,29 @@ export default function CheckoutPage() {
           razorpay_signature: string;
         }) {
           try {
-          // Verify payment
-          const verifyResponse = await fetch(
-            '/api/checkout/razorpay/verify-payment',
-            {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              credentials: 'include',
-              body: JSON.stringify({
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-              }),
-            }
-          );
-          const verifyData = await verifyResponse.json();
-          if (verifyData.success) {
-            toastApi.success('Payment successful');
-            router.push(
-              `/checkout/payment-success?orderId=${verifyData.orderId}`
+            // Verify payment
+            const verifyResponse = await fetch(
+              '/api/checkout/razorpay/verify-payment',
+              {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_signature: response.razorpay_signature,
+                }),
+              }
             );
-          } else {
-            toastApi.error('Payment verification failed');
-            router.push(
+            const verifyData = await verifyResponse.json();
+            if (verifyData.success) {
+              toastApi.success('Payment successful');
+              router.push(
+                `/checkout/payment-success?orderId=${verifyData.orderId}`
+              );
+            } else {
+              toastApi.error('Payment verification failed');
+              router.push(
                 '/checkout/payment-failure?error=verification_failed&error_description=Payment verification failed. Please try again.'
               );
             }
@@ -284,7 +285,7 @@ export default function CheckoutPage() {
       };
 
       const rzp = new window.Razorpay(options);
-      
+
       // Handle payment failure events
       if (rzp.on) {
         rzp.on('payment.failed', function (...args: unknown[]) {
@@ -390,54 +391,55 @@ export default function CheckoutPage() {
               {!isModalOpen && (
                 <button
                   onClick={openAddModal}
-                  className="w-full sm:w-auto btn btn-outline hover:!text-primary btn-animated text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2"
+                  className="flex items-center justify-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] text-white text-xs sm:text-sm font-medium rounded-xl hover:shadow-lg hover:shadow-[oklch(0.66_0.14_358.91)]/25 transition-all w-full sm:w-auto"
                 >
-                  + Add New
+                  <Plus className="w-4 h-4" />
+                  <span>Add New</span>
                 </button>
               )}
             </div>
 
-              <div className="space-y-3">
-                {addresses.length === 0 && (
+            <div className="space-y-3">
+              {addresses.length === 0 && (
                 <p className="text-sm text-gray-600 text-center py-4">
-                    No saved addresses. Add one to continue.
-                  </p>
-                )}
-                {addresses.map(a => (
-                  <label
+                  No saved addresses. Add one to continue.
+                </p>
+              )}
+              {addresses.map(a => (
+                <label
                   key={a._id}
-                    className="flex gap-3 items-start p-3 border border-primary/10 rounded-lg cursor-pointer hover:bg-white/30 transition-colors"
-                  >
-                    <input
-                      type="radio"
-                      name="address"
+                  className="flex gap-3 items-start p-3 border border-primary/10 rounded-lg cursor-pointer hover:bg-white/30 transition-colors"
+                >
+                  <input
+                    type="radio"
+                    name="address"
                     checked={selectedAddressId === a._id}
                     onChange={() => setSelectedAddressId(a._id || '')}
-                      className="mt-1"
-                    />
-                    <div className="text-sm flex-1">
+                    className="mt-1"
+                  />
+                  <div className="text-sm flex-1">
                     <div className="font-medium text-dark flex items-center gap-2">
-                        <span>
-                          {a.fullName} · {a.phone}
+                      <span>
+                        {a.fullName} · {a.phone}
+                      </span>
+                      {a.isDefaultShipping && (
+                        <span className="inline-flex items-center gap-1 text-green-600 text-xs font-medium">
+                          <CheckCircle className="w-3.5 h-3.5" />
+                          Default
                         </span>
-                        {a.isDefaultShipping && (
-                          <span className="inline-flex items-center gap-1 text-green-600 text-xs font-medium">
-                            <CheckCircle className="w-3.5 h-3.5" />
-                            Default
-                          </span>
-                        )}
-                      </div>
-                    <div className="text-gray-600 mt-1">
-                        {a.line1}
-                        {a.line2 ? `, ${a.line2}` : ''}
-                      </div>
-                    <div className="text-gray-600">
-                        {a.city}, {a.state} {a.postalCode}, {a.country}
-                      </div>
+                      )}
                     </div>
-                  </label>
-                ))}
-              </div>
+                    <div className="text-gray-600 mt-1">
+                      {a.line1}
+                      {a.line2 ? `, ${a.line2}` : ''}
+                    </div>
+                    <div className="text-gray-600">
+                      {a.city}, {a.state} {a.postalCode}, {a.country}
+                    </div>
+                  </div>
+                </label>
+              ))}
+            </div>
           </div>
 
           {/* Order Items */}
@@ -732,14 +734,14 @@ export default function CheckoutPage() {
                 <h2 className="text-lg font-medium text-gray-900">
                   {editingId ? 'Edit Address' : 'Add New Address'}
                 </h2>
-              <button
+                <button
                   onClick={() => setIsModalOpen(false)}
                   className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
-                aria-label="Close"
-              >
+                  aria-label="Close"
+                >
                   <X className="w-5 h-5 text-gray-500" />
-              </button>
-            </div>
+                </button>
+              </div>
 
               {/* Form Content - Scrollable */}
               <form
@@ -757,15 +759,14 @@ export default function CheckoutPage() {
                     control={form.control}
                     render={({ field, fieldState }) => (
                       <div>
-              <input
+                        <input
                           {...field}
-                type="text"
+                          type="text"
                           autoComplete="name"
-                          className={`w-full rounded-xl border border-primary/20 bg-white px-4 py-2 sm:py-3 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition-colors relative z-10 ${
-                            fieldState.error ? 'border-red-300' : ''
-                          }`}
+                          className={`w-full rounded-xl border border-primary/20 bg-white px-4 py-2 sm:py-3 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition-colors relative z-10 ${fieldState.error ? 'border-red-300' : ''
+                            }`}
                           placeholder="Enter full name"
-                maxLength={50}
+                          maxLength={50}
                           style={{ WebkitAppearance: 'none' }}
                         />
                         {fieldState.error && (
@@ -789,23 +790,22 @@ export default function CheckoutPage() {
                     render={({ field, fieldState }) => (
                       <div className="relative">
                         <div className="relative">
-                          <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 z-10 pointer-events-none" />
-              <input
+                          <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400  pointer-events-none z-50" />
+                          <input
                             {...field}
-                type="tel"
+                            type="tel"
                             onChange={(e) => {
                               const value = e.target.value
                                 .replace(/\D/g, '')
                                 .slice(0, 10);
                               field.onChange(value);
-                }}
-                maxLength={10}
-                            className={`w-full rounded-xl border border-primary/20 bg-white px-10 py-2 sm:py-3 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition-colors relative z-10 ${
-                              fieldState.error ? 'border-red-300' : ''
-                            }`}
+                            }}
+                            maxLength={10}
+                            className={`w-full rounded-xl border border-primary/20 bg-white pl-10 pr-4 py-2 sm:py-3 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition-colors relative z-10 ${fieldState.error ? 'border-red-300' : ''
+                              }`}
                             placeholder="Enter 10 digit phone number"
                             autoComplete="tel"
-                inputMode="numeric"
+                            inputMode="numeric"
                             style={{ WebkitAppearance: 'none' }}
                           />
                         </div>
@@ -831,15 +831,14 @@ export default function CheckoutPage() {
                     control={form.control}
                     render={({ field, fieldState }) => (
                       <div>
-              <input
+                        <input
                           {...field}
-                type="text"
+                          type="text"
                           autoComplete="street-address"
-                          className={`w-full rounded-xl border border-primary/20 bg-white px-4 py-2 sm:py-3 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition-colors relative z-10 ${
-                            fieldState.error ? 'border-red-300' : ''
-                          }`}
+                          className={`w-full rounded-xl border border-primary/20 bg-white px-4 py-2 sm:py-3 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition-colors relative z-10 ${fieldState.error ? 'border-red-300' : ''
+                            }`}
                           placeholder="Street address, P.O. box"
-                maxLength={100}
+                          maxLength={100}
                           style={{ WebkitAppearance: 'none' }}
                         />
                         {fieldState.error && (
@@ -862,15 +861,14 @@ export default function CheckoutPage() {
                     control={form.control}
                     render={({ field, fieldState }) => (
                       <div>
-              <input
+                        <input
                           {...field}
-                type="text"
+                          type="text"
                           autoComplete="address-line2"
-                          className={`w-full rounded-xl border border-primary/20 bg-white px-4 py-2 sm:py-3 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition-colors relative z-10 ${
-                            fieldState.error ? 'border-red-300' : ''
-                          }`}
+                          className={`w-full rounded-xl border border-primary/20 bg-white px-4 py-2 sm:py-3 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition-colors relative z-10 ${fieldState.error ? 'border-red-300' : ''
+                            }`}
                           placeholder="Apartment, suite, unit, building, floor"
-                maxLength={100}
+                          maxLength={100}
                           style={{ WebkitAppearance: 'none' }}
                         />
                         {fieldState.error && (
@@ -894,15 +892,14 @@ export default function CheckoutPage() {
                       control={form.control}
                       render={({ field, fieldState }) => (
                         <div>
-              <input
+                          <input
                             {...field}
-                type="text"
+                            type="text"
                             autoComplete="address-level2"
-                            className={`w-full rounded-xl border border-primary/20 bg-white px-4 py-2 sm:py-3 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition-colors relative z-10 ${
-                              fieldState.error ? 'border-red-300' : ''
-                            }`}
-                placeholder="City"
-                maxLength={50}
+                            className={`w-full rounded-xl border border-primary/20 bg-white px-4 py-2 sm:py-3 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition-colors relative z-10 ${fieldState.error ? 'border-red-300' : ''
+                              }`}
+                            placeholder="City"
+                            maxLength={50}
                             style={{ WebkitAppearance: 'none' }}
                           />
                           {fieldState.error && (
@@ -924,15 +921,14 @@ export default function CheckoutPage() {
                       control={form.control}
                       render={({ field, fieldState }) => (
                         <div>
-              <input
+                          <input
                             {...field}
-                type="text"
+                            type="text"
                             autoComplete="address-level1"
-                            className={`w-full rounded-xl border border-primary/20 bg-white px-4 py-2 sm:py-3 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition-colors relative z-10 ${
-                              fieldState.error ? 'border-red-300' : ''
-                            }`}
-                placeholder="State"
-                maxLength={50}
+                            className={`w-full rounded-xl border border-primary/20 bg-white px-4 py-2 sm:py-3 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition-colors relative z-10 ${fieldState.error ? 'border-red-300' : ''
+                              }`}
+                            placeholder="State"
+                            maxLength={50}
                             style={{ WebkitAppearance: 'none' }}
                           />
                           {fieldState.error && (
@@ -957,22 +953,21 @@ export default function CheckoutPage() {
                       control={form.control}
                       render={({ field, fieldState }) => (
                         <div>
-              <input
+                          <input
                             {...field}
-                type="text"
+                            type="text"
                             onChange={(e) => {
                               const value = e.target.value
                                 .replace(/\D/g, '')
                                 .slice(0, 6);
                               field.onChange(value);
-                }}
-                maxLength={6}
+                            }}
+                            maxLength={6}
                             autoComplete="postal-code"
-                            className={`w-full rounded-xl border border-primary/20 bg-white px-4 py-2 sm:py-3 text-sm text-left tracking-widest font-mono focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition-colors relative z-10 ${
-                              fieldState.error ? 'border-red-300' : ''
-                            }`}
+                            className={`w-full rounded-xl border border-primary/20 bg-white px-4 py-2 sm:py-3 text-sm text-left tracking-widest font-mono focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition-colors relative z-10 ${fieldState.error ? 'border-red-300' : ''
+                              }`}
                             placeholder="123456"
-                inputMode="numeric"
+                            inputMode="numeric"
                             style={{ WebkitAppearance: 'none' }}
                           />
                           {fieldState.error && (
@@ -994,15 +989,14 @@ export default function CheckoutPage() {
                       control={form.control}
                       render={({ field, fieldState }) => (
                         <div>
-              <input
+                          <input
                             {...field}
-                type="text"
+                            type="text"
                             autoComplete="country"
-                            className={`w-full rounded-xl border border-primary/20 bg-white px-4 py-2 sm:py-3 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition-colors relative z-10 ${
-                              fieldState.error ? 'border-red-300' : ''
-                            }`}
-                placeholder="Country"
-                maxLength={50}
+                            className={`w-full rounded-xl border border-primary/20 bg-white px-4 py-2 sm:py-3 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition-colors relative z-10 ${fieldState.error ? 'border-red-300' : ''
+                              }`}
+                            placeholder="Country"
+                            maxLength={50}
                             style={{ WebkitAppearance: 'none' }}
                           />
                           {fieldState.error && (
@@ -1023,19 +1017,19 @@ export default function CheckoutPage() {
                     control={form.control}
                     render={({ field }) => (
                       <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
+                        <input
+                          type="checkbox"
                           checked={field.value}
                           onChange={field.onChange}
                           className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary/20"
                         />
                         <span className="text-xs sm:text-sm text-gray-700">
-                    Set as default shipping address
-                  </span>
-                </label>
+                          Set as default shipping address
+                        </span>
+                      </label>
                     )}
                   />
-              </div>
+                </div>
 
               </form>
 
@@ -1053,11 +1047,10 @@ export default function CheckoutPage() {
                   type="submit"
                   form="address-form"
                   disabled={!isValid || isSubmitting}
-                  className={`px-5 py-2.5 text-white text-sm font-normal rounded-md transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
-                    !isValid || isSubmitting
+                  className={`px-5 py-2.5 text-white text-sm font-normal rounded-md transition-all disabled:opacity-50 disabled:cursor-not-allowed ${!isValid || isSubmitting
                       ? 'bg-gray-300 cursor-not-allowed'
-                      : 'bg-gradient-to-r from-primary to-primary-dark hover:shadow-lg hover:shadow-primary/25'
-                  }`}
+                      : 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] hover:shadow-lg hover:shadow-[oklch(0.66_0.14_358.91)]/25'
+                    }`}
                 >
                   {isSubmitting ? (
                     <span className="flex items-center gap-2 justify-center">

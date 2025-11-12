@@ -718,7 +718,7 @@ export default function Navbar() {
                     {/* Footer */}
                     <div className="bg-gray-50 px-4 py-3 rounded-b-md border-t border-gray-200">
                       <div className="flex items-center justify-between text-xs text-gray-500">
-                        <span>Version 2.1.0</span>
+                        <span>Version 1.0.0</span>
                         <span>© 2025 Caelvi Jewellery</span>
                       </div>
                     </div>

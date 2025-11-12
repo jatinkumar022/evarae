@@ -81,8 +81,7 @@ export default function Footer() {
     { name: 'All Jewellery', to: '/all-jewellery' },
     { name: 'New Arrivals', to: '/new-arrivals' },
     { name: 'Collections', to: '/collections' },
-    { name: 'Wedding Collection', to: '/wedding-collection' },
-    { name: 'Daily Wear', to: '/daily-wear' },
+    { name: 'Categories', to: '/categories' },
   ];
   const aboutLinks = [
     { name: 'Our Story', to: '/our-story' },

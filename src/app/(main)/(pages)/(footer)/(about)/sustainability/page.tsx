@@ -271,10 +271,10 @@ export default function SustainabilityPage() {
               Shop Sustainable
             </a>
             <a
-              href="/sustainability-report"
+              href="/sustainability"
               className="px-6 py-2 bg-primary/10 text-sm md:text-base text-primary rounded-full border border-primary/20 hover:bg-primary/10 transition-colors"
             >
-              Read Full Report
+              Learn More
             </a>
           </div>
         </section>

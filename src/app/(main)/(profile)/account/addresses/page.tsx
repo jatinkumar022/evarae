@@ -348,7 +348,7 @@ function AddressesPageInner() {
                       render={({ field, fieldState }) => (
                         <div className="relative">
                           <div className="relative">
-                            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 z-10 pointer-events-none" />
+                            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 z-10 pointer-events-none z-50" />
                             <input
                               {...field}
                               type="tel"
@@ -359,7 +359,7 @@ function AddressesPageInner() {
                                 field.onChange(value);
                               }}
                               maxLength={10}
-                              className={`w-full rounded-xl border border-[oklch(0.84_0.04_10.35)]/40 bg-white px-10 py-2 sm:py-3 text-sm focus:border-[oklch(0.66_0.14_358.91)] focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/20 focus:outline-none transition-colors relative z-10 ${
+                              className={`w-full rounded-xl border border-[oklch(0.84_0.04_10.35)]/40 bg-white pl-10 pr-4 py-2 sm:py-3 text-sm focus:border-[oklch(0.66_0.14_358.91)] focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/20 focus:outline-none transition-colors relative z-10 ${
                                 fieldState.error ? 'border-red-300' : ''
                               }`}
                               placeholder="Enter 10 digit phone number"

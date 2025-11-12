@@ -133,21 +133,36 @@ const ContactInfo = () => {
           Helpful Resources
         </h3>
         <div className="space-y-3">
-          {[
-            'Size Guide & Measurements',
-            'Care & Maintenance',
-            'Return & Exchange Policy',
-            'Custom Design Services',
-            'Frequently Asked Questions',
-          ].map((link, index) => (
-            <Link
-              key={index}
-              href="#"
-              className="block text-text-primary/80 hover:text-primary  duration-300 text-sm py-1 hover:translate-x-1 transform transition-transform"
-            >
-              {link} →
-            </Link>
-          ))}
+          <Link
+            href="/faqs"
+            className="block text-text-primary/80 hover:text-primary  duration-300 text-sm py-1 hover:translate-x-1 transform transition-transform"
+          >
+            Size Guide & Measurements →
+          </Link>
+          <Link
+            href="/faqs"
+            className="block text-text-primary/80 hover:text-primary  duration-300 text-sm py-1 hover:translate-x-1 transform transition-transform"
+          >
+            Care & Maintenance →
+          </Link>
+          <Link
+            href="/returns"
+            className="block text-text-primary/80 hover:text-primary  duration-300 text-sm py-1 hover:translate-x-1 transform transition-transform"
+          >
+            Return & Exchange Policy →
+          </Link>
+          <Link
+            href="/contact-us"
+            className="block text-text-primary/80 hover:text-primary  duration-300 text-sm py-1 hover:translate-x-1 transform transition-transform"
+          >
+            Custom Design Services →
+          </Link>
+          <Link
+            href="/faqs"
+            className="block text-text-primary/80 hover:text-primary  duration-300 text-sm py-1 hover:translate-x-1 transform transition-transform"
+          >
+            Frequently Asked Questions →
+          </Link>
         </div>
       </motion.div>
     </div>

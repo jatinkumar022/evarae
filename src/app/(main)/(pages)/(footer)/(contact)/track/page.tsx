@@ -346,7 +346,13 @@ export default function TrackOrderPage() {
                     {card.description}
                   </p>
                   <Link
-                    href="#"
+                    href={
+                      card.action === 'Track as Guest'
+                        ? '/track'
+                        : card.action === 'Contact Support'
+                        ? '/contact-us'
+                        : '/orders/history'
+                    }
                     className="text-sm text-primary hover:underline font-medium"
                   >
                     {card.action} →
@@ -905,7 +911,7 @@ export default function TrackOrderPage() {
                 Contact Support
               </Link>
               <Link
-                href="/help-faq"
+                href="/faqs"
                 className="px-8 py-2 sm:py-3 text-sm sm:text-base bg-white text-primary border border-primary/20 rounded-full hover:bg-primary/5 hover:border-primary/40 transition-all duration-300 font-medium"
               >
                 View FAQ

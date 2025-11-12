@@ -236,7 +236,7 @@ export default function FAQPage() {
             Contact Us
           </a>
           <a
-            href="/track-order"
+            href="/track"
             className="px-6 py-2 bg-primary/10 text-primary rounded-full"
           >
             Track Order
