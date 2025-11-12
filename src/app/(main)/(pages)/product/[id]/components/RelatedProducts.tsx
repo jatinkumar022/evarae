@@ -8,6 +8,11 @@ import { Heart } from '@/app/(main)/assets/Navbar';
 import { Cart } from '@/app/(main)/assets/Common';
 import { Product, Category } from '@/lib/types/product';
 import dynamic from 'next/dynamic';
+import { useWishlistStore } from '@/lib/data/mainStore/wishlistStore';
+import { accountApi, UserAccount } from '@/lib/utils';
+import LoginPromptModal from '@/app/(main)/components/ui/LoginPromptModal';
+import toastApi from '@/lib/toast';
+import { Spinner } from '@/app/(main)/components/ui/ScaleLoader';
 
 type ProductOptionsModalProps = {
   isOpen: boolean;
@@ -36,6 +41,30 @@ export function RelatedProducts({
   const [items, setItems] = useState<Product[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [currentUser, setCurrentUser] = useState<UserAccount | null>(null);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [isWishlistLoading, setIsWishlistLoading] = useState<string | null>(null);
+  const { load: loadWishlist, add: addToWishlist, remove: removeFromWishlist, products: wishlistProducts } = useWishlistStore();
+
+  // Check user authentication on mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const { user } = await accountApi.me();
+        setCurrentUser(user);
+      } catch {
+        setCurrentUser(null);
+      }
+    };
+    checkAuth();
+  }, []);
+
+  // Load wishlist on mount to check initial state
+  useEffect(() => {
+    if (currentUser) {
+      loadWishlist();
+    }
+  }, [loadWishlist, currentUser]);
 
   useEffect(() => {
     (async () => {
@@ -173,9 +202,42 @@ export function RelatedProducts({
     setIsModalOpen(true);
   };
 
-  const handleWishlistClick = (event: React.MouseEvent) => {
+  const handleWishlistClick = async (product: Product, event: React.MouseEvent) => {
     event.preventDefault();
     event.stopPropagation();
+    
+    if (!currentUser) {
+      setShowLoginModal(true);
+      return;
+    }
+    
+    if (isWishlistLoading) return;
+    
+    setIsWishlistLoading(product.id);
+    try {
+      const productId = product.id;
+      const isProductWishlisted = wishlistProducts.some(
+        p => String(p._id) === productId || p.slug === productId
+      );
+      
+      if (isProductWishlisted) {
+        await removeFromWishlist(productId);
+        toastApi.success('Removed from wishlist', 'Product removed from your wishlist');
+      } else {
+        await addToWishlist(productId);
+        toastApi.success('Added to wishlist', 'Product added to your wishlist');
+      }
+    } catch {
+      toastApi.error('Error', 'Failed to update wishlist. Please try again.');
+    } finally {
+      setIsWishlistLoading(null);
+    }
+  };
+
+  const isProductWishlisted = (productId: string) => {
+    return wishlistProducts.some(
+      p => String(p._id) === productId || p.slug === productId
+    );
   };
 
   if (items.length === 0) return null;
@@ -220,10 +282,24 @@ export function RelatedProducts({
                     />
                     <button
                       type="button"
-                      onClick={handleWishlistClick}
-                      className="absolute top-2 right-2 bg-white/70 backdrop-blur-sm rounded-full p-1.5 hover:bg-primary hover:text-white transition"
+                      onClick={(e) => handleWishlistClick(product, e)}
+                      disabled={isWishlistLoading === product.id}
+                      className={`absolute top-2 right-2 backdrop-blur-sm rounded-full p-1.5 transition ${
+                        isProductWishlisted(product.id)
+                          ? 'bg-primary text-white hover:bg-primary-dark'
+                          : 'bg-white/70 hover:bg-primary hover:text-white'
+                      } ${isWishlistLoading === product.id ? 'opacity-80 cursor-wait' : ''}`}
                     >
-                      <Heart className="w-4 h-4" />
+                      <span className="relative flex items-center justify-center">
+                        <span className={isWishlistLoading === product.id ? 'opacity-0' : ''}>
+                          <Heart className={`w-4 h-4 ${isProductWishlisted(product.id) ? 'fill-current' : ''}`} />
+                        </span>
+                        {isWishlistLoading === product.id && (
+                          <span className="absolute inset-0 flex items-center justify-center">
+                            <Spinner className="text-current" />
+                          </span>
+                        )}
+                      </span>
                     </button>
                     {product.isNew && (
                       <span className="absolute top-2 left-2 bg-primary text-white text-[10px] px-2 py-1 rounded-md font-semibold flex items-center gap-1">
@@ -308,6 +384,13 @@ export function RelatedProducts({
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         product={selectedProduct}
+      />
+
+      {/* Login Prompt Modal */}
+      <LoginPromptModal
+        isOpen={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+        action="wishlist"
       />
     </>
   );

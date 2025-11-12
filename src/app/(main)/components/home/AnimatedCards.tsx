@@ -7,7 +7,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { GiCrystalShine } from 'react-icons/gi';
 import Link from 'next/link';
 import { useHomepageStore } from '@/lib/data/mainStore/homepageStore';
-type Product = {
+import { useWishlistStore } from '@/lib/data/mainStore/wishlistStore';
+import { accountApi, UserAccount } from '@/lib/utils';
+import LoginPromptModal from '@/app/(main)/components/ui/LoginPromptModal';
+import toastApi from '@/lib/toast';
+import { Spinner } from '@/app/(main)/components/ui/ScaleLoader';
+                                    type Product = {
   _id: string;
   name: string;
   price: number;
@@ -24,6 +29,7 @@ export default function AnimatedCards() {
   const [totalPages, setTotalPages] = useState(1);
   const { data, fetchHomepage } = useHomepageStore();
   const [products, setProducts] = useState<Product[]>([]);
+  const [showLoginModal, setShowLoginModal] = useState(false);
   
   useEffect(() => {
     fetchHomepage();
@@ -98,11 +104,39 @@ export default function AnimatedCards() {
     });
   };
 
-  const ImageCard = ({ item }: { item: Product }) => {
+  const ImageCard = ({ item, onShowLogin }: { item: Product; onShowLogin: () => void }) => {
     const [isHovered, setIsHovered] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
+    const [isWishlistLoading, setIsWishlistLoading] = useState(false);
+    const [currentUser, setCurrentUser] = useState<UserAccount | null>(null);
+    const { load: loadWishlist, add: addToWishlist, remove: removeFromWishlist, products: wishlistProducts } = useWishlistStore();
     const primaryImage = item.images?.[0] ?? '/favicon.ico';
     const hoverImage = item.images?.[1] ?? primaryImage;
+
+    // Check user authentication on mount
+    useEffect(() => {
+      const checkAuth = async () => {
+        try {
+          const { user } = await accountApi.me();
+          setCurrentUser(user);
+        } catch {
+          setCurrentUser(null);
+        }
+      };
+      checkAuth();
+    }, []);
+
+    // Load wishlist on mount to check initial state
+    useEffect(() => {
+      if (currentUser) {
+        loadWishlist();
+      }
+    }, [loadWishlist, currentUser]);
+
+    // Check if product is wishlisted
+    const isProductWishlisted = wishlistProducts.some(
+      p => String(p._id) === item.slug || p.slug === item.slug
+    );
 
     // Detect screen size
     useEffect(() => {
@@ -152,15 +186,54 @@ export default function AnimatedCards() {
         )}
 
         <button
-          className="absolute top-3 right-3 bg-white/50 backdrop-blur-sm text-foreground/70 hover:bg-white hover:text-foreground rounded-full p-2 transition-all duration-300"
-          aria-label={`Add ${item.name} to wishlist`}
+          className={`absolute top-3 right-3 backdrop-blur-sm rounded-full p-2 transition-all duration-300 ${
+            isProductWishlisted
+              ? 'bg-primary text-white hover:bg-primary-dark'
+              : 'bg-white/50 text-foreground/70 hover:bg-white hover:text-foreground'
+          } ${isWishlistLoading ? 'opacity-80 cursor-wait' : ''}`}
+          aria-label={isProductWishlisted ? `Remove ${item.name} from wishlist` : `Add ${item.name} to wishlist`}
           type="button"
-          onClick={event => {
+          onClick={async (event) => {
             event.preventDefault();
             event.stopPropagation();
+            
+            if (!currentUser) {
+              onShowLogin();
+              return;
+            }
+            
+            if (isWishlistLoading) return;
+            
+            setIsWishlistLoading(true);
+            try {
+              const productId = item.slug;
+              const isCurrentlyWishlisted = isProductWishlisted;
+              
+              if (isCurrentlyWishlisted) {
+                await removeFromWishlist(productId);
+                toastApi.success('Removed from wishlist', 'Product removed from your wishlist');
+              } else {
+                await addToWishlist(productId);
+                toastApi.success('Added to wishlist', 'Product added to your wishlist');
+              }
+            } catch {
+              toastApi.error('Error', 'Failed to update wishlist. Please try again.');
+            } finally {
+              setIsWishlistLoading(false);
+            }
           }}
+          disabled={isWishlistLoading}
         >
-          <GoHeart size={18} />
+          <span className="relative flex items-center justify-center">
+            <span className={isWishlistLoading ? 'opacity-0' : ''}>
+              <GoHeart size={18} className={isProductWishlisted ? 'fill-current' : ''} />
+            </span>
+            {isWishlistLoading && (
+              <span className="absolute inset-0 flex items-center justify-center">
+                <Spinner className="text-current" />
+              </span>
+            )}
+          </span>
         </button>
       </div>
     );
@@ -192,7 +265,7 @@ export default function AnimatedCards() {
               key={item._id + index}
               className="flex-shrink-0 w-64 snap-start scroll-item cursor-pointer"
             >
-              <ImageCard item={item} />
+              <ImageCard item={item} onShowLogin={() => setShowLoginModal(true)} />
               <div className="mt-4 text-center">
                 <p className="text-sm font-medium text-foreground truncate">
                   {item.name}
@@ -233,7 +306,7 @@ export default function AnimatedCards() {
             key={item._id + '-desktop'}
             className="flex flex-col cursor-pointer"
           >
-            <ImageCard item={item} />
+            <ImageCard item={item} onShowLogin={() => setShowLoginModal(true)} />
             <div className="mt-4 text-center">
               <p className="text-sm font-medium text-foreground truncate">
                 {item.name}
@@ -245,6 +318,13 @@ export default function AnimatedCards() {
           </Link>
         ))}
       </div>
+
+      {/* Login Prompt Modal */}
+      <LoginPromptModal
+        isOpen={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+        action="wishlist"
+      />
     </section>
   );
 }

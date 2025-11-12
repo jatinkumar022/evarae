@@ -20,6 +20,8 @@ import { useWishlistStore } from '@/lib/data/mainStore/wishlistStore';
 import CartNotification from '@/app/(main)/components/ui/CartNotification';
 import toastApi from '@/lib/toast';
 import { Spinner } from '@/app/(main)/components/ui/ScaleLoader';
+import { accountApi, UserAccount } from '@/lib/utils';
+import LoginPromptModal from '@/app/(main)/components/ui/LoginPromptModal';
 
 interface ProductInfoProps {
   product: Product;
@@ -32,13 +34,31 @@ export function ProductInfo({ product }: ProductInfoProps) {
   const [showNotification, setShowNotification] = useState(false);
   const [isWishlistLoading, setIsWishlistLoading] = useState(false);
   const [isCartLoading, setIsCartLoading] = useState(false);
+  const [currentUser, setCurrentUser] = useState<UserAccount | null>(null);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [loginModalAction, setLoginModalAction] = useState<'cart' | 'wishlist'>('cart');
   const addToCart = useCartStore(s => s.add);
   const { load: loadWishlist, add: addToWishlist, remove: removeFromWishlist, isWishlisted } = useWishlistStore();
 
+  // Check user authentication on mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const { user } = await accountApi.me();
+        setCurrentUser(user);
+      } catch {
+        setCurrentUser(null);
+      }
+    };
+    checkAuth();
+  }, []);
+
   // Load wishlist on mount to check initial state
   useEffect(() => {
-    loadWishlist();
-  }, [loadWishlist]);
+    if (currentUser) {
+      loadWishlist();
+    }
+  }, [loadWishlist, currentUser]);
 
   // Mock variants - in real app, this would come from product data
   const variants = [
@@ -94,6 +114,12 @@ export function ProductInfo({ product }: ProductInfoProps) {
   };
 
   const onAddToCart = async () => {
+    if (!currentUser) {
+      setLoginModalAction('cart');
+      setShowLoginModal(true);
+      return;
+    }
+
     if (isCartLoading) return;
 
     const optimisticProduct = {
@@ -123,6 +149,12 @@ export function ProductInfo({ product }: ProductInfoProps) {
   };
 
   const handleWishlistToggle = async () => {
+    if (!currentUser) {
+      setLoginModalAction('wishlist');
+      setShowLoginModal(true);
+      return;
+    }
+
     if (isWishlistLoading) return;
     
     setIsWishlistLoading(true);
@@ -368,6 +400,13 @@ export function ProductInfo({ product }: ProductInfoProps) {
         isVisible={showNotification}
         onClose={() => setShowNotification(false)}
         productName={product.name}
+      />
+
+      {/* Login Prompt Modal */}
+      <LoginPromptModal
+        isOpen={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+        action={loginModalAction}
       />
     </>
   );

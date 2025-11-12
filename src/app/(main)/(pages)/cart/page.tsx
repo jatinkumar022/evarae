@@ -536,7 +536,7 @@ export default function CartPage() {
                 className="flex-1 rounded-md border border-primary/20 px-3 py-2 text-sm outline-none focus:border-primary"
               />
               <button
-                className="relative inline-flex items-center justify-center gap-2 rounded-md btn-outline btn-animated text-xs disabled:opacity-60 disabled:cursor-not-allowed"
+                className="relative inline-flex items-center px-4 py-2 justify-center gap-2 rounded-md btn-outline btn-animated text-xs disabled:opacity-60 disabled:cursor-not-allowed"
                 onClick={applyCoupon}
                 disabled={couponApplying}
               >

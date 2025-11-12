@@ -11,6 +11,8 @@ import dynamic from 'next/dynamic';
 import { useWishlistStore } from '@/lib/data/mainStore/wishlistStore';
 import toastApi from '@/lib/toast';
 import { Spinner } from '@/app/(main)/components/ui/ScaleLoader';
+import { accountApi, UserAccount } from '@/lib/utils';
+import LoginPromptModal from '@/app/(main)/components/ui/LoginPromptModal';
 
 // Dynamically import ProductOptionsModal to reduce initial bundle size
 const ProductOptionsModal = dynamic(() => import('@/app/(main)/components/ui/ProductOptionsModal'), {
@@ -26,7 +28,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const [isMobile, setIsMobile] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isWishlistLoading, setIsWishlistLoading] = useState(false);
-  const { load: loadWishlist, add: addToWishlist, remove: removeFromWishlist, isWishlisted } = useWishlistStore();
+  const [currentUser, setCurrentUser] = useState<UserAccount | null>(null);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [loginModalAction, setLoginModalAction] = useState<'cart' | 'wishlist'>('cart');
+  const { load: loadWishlist, add: addToWishlist, remove: removeFromWishlist, isWishlisted, products: wishlistProducts } = useWishlistStore();
 
   useEffect(() => {
     const checkScreen = () => setIsMobile(window.innerWidth < 1024); // lg breakpoint
@@ -35,10 +40,31 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     return () => window.removeEventListener('resize', checkScreen);
   }, []);
 
+  // Check user authentication on mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const { user } = await accountApi.me();
+        setCurrentUser(user);
+      } catch {
+        setCurrentUser(null);
+      }
+    };
+    checkAuth();
+  }, []);
+
   // Load wishlist on mount to check initial state
   useEffect(() => {
-    loadWishlist();
-  }, [loadWishlist]);
+    if (currentUser) {
+      loadWishlist();
+    }
+  }, [loadWishlist, currentUser]);
+
+  // Ensure component re-renders when wishlist changes
+  // Using wishlistProducts ensures Zustand subscription
+  const isProductWishlisted = wishlistProducts.some(
+    p => String(p._id) === product.id || p.slug === product.id
+  );
 
   const variants = {
     initial: { opacity: 0 },
@@ -47,6 +73,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   };
 
   const handleAddToCart = () => {
+    if (!currentUser) {
+      setLoginModalAction('cart');
+      setShowLoginModal(true);
+      return;
+    }
     setIsModalOpen(true);
   };
 
@@ -54,12 +85,18 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     e.preventDefault();
     e.stopPropagation();
     
+    if (!currentUser) {
+      setLoginModalAction('wishlist');
+      setShowLoginModal(true);
+      return;
+    }
+    
     if (isWishlistLoading) return;
     
     setIsWishlistLoading(true);
     try {
       const productId = product.id;
-      const isCurrentlyWishlisted = isWishlisted(productId);
+      const isCurrentlyWishlisted = isProductWishlisted;
       
       if (isCurrentlyWishlisted) {
         await removeFromWishlist(productId);
@@ -74,8 +111,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       setIsWishlistLoading(false);
     }
   };
-
-  const isProductWishlisted = isWishlisted(product.id);
 
   return (
     <>
@@ -126,9 +161,15 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           <button
             className={`absolute bottom-3 right-3 flex items-center justify-center rounded-full sm:p-2 p-1.5 transition-all duration-300 z-10 ${
               isProductWishlisted
-                ? 'bg-primary text-white hover:bg-primary-dark'
-                : 'bg-white/50 hover:bg-primary hover:text-white'
+                ? 'bg-primary text-white hover:bg-primary-dark active:bg-primary-dark'
+                : 'bg-white/50 hover:bg-primary hover:text-white active:bg-primary active:text-white'
             } ${isWishlistLoading ? 'opacity-80 cursor-wait' : ''}`}
+            style={{
+              WebkitTapHighlightColor: 'transparent',
+              touchAction: 'manipulation',
+              WebkitTouchCallout: 'none',
+              userSelect: 'none',
+            }}
             aria-label={isProductWishlisted ? `Remove ${product.name} from wishlist` : `Add ${product.name} to wishlist`}
             onClick={handleWishlistToggle}
             disabled={isWishlistLoading}
@@ -220,6 +261,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         product={product}
+      />
+
+      {/* Login Prompt Modal */}
+      <LoginPromptModal
+        isOpen={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+        action={loginModalAction}
       />
     </>
   );

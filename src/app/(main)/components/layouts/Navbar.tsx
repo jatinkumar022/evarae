@@ -1109,13 +1109,8 @@ export default function Navbar() {
                               <span>Subtotal</span>
                               <span>{formatINR(subtotal)}</span>
                             </div>
-                            <div className="mt-3 flex gap-2">
-                              <Link
-                                href="/cart"
-                                className="flex-1 rounded-md border border-gray-200 px-3 py-2 text-center text-sm text-gray-700 transition-colors hover:bg-gray-100 hover:text-gray-900"
-                              >
-                                View Cart
-                              </Link>
+                            <div className="mt-3 flex justify-end">
+                              
                               <button
                                 className="flex-1 relative rounded-md bg-primary px-3 py-2 text-center text-sm text-white transition-colors hover:bg-primary/90 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center"
                                 onClick={() => {

@@ -6,6 +6,8 @@ import { Product } from '@/lib/types/product';
 import { useCartStore } from '@/lib/data/mainStore/cartStore';
 import CartNotification from './CartNotification';
 import { Spinner } from '@/app/(main)/components/ui/ScaleLoader';
+import { accountApi, UserAccount } from '@/lib/utils';
+import LoginPromptModal from '@/app/(main)/components/ui/LoginPromptModal';
 
 interface ProductOptionsModalProps {
   isOpen: boolean;
@@ -22,7 +24,22 @@ export default function ProductOptionsModal({
   const [quantity, setQuantity] = useState(1);
   const [showNotification, setShowNotification] = useState(false);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [currentUser, setCurrentUser] = useState<UserAccount | null>(null);
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const addToCart = useCartStore(s => s.add);
+
+  // Check user authentication on mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const { user } = await accountApi.me();
+        setCurrentUser(user);
+      } catch {
+        setCurrentUser(null);
+      }
+    };
+    checkAuth();
+  }, []);
 
   // Reset state when modal opens/closes or product changes
   useEffect(() => {
@@ -46,6 +63,12 @@ export default function ProductOptionsModal({
 
   const handleAddToCart = async () => {
     if (!product?.id || isAddingToCart) return;
+
+    if (!currentUser) {
+      onClose();
+      setShowLoginModal(true);
+      return;
+    }
 
     const optimisticProduct = {
       _id: product.id,
@@ -245,6 +268,13 @@ export default function ProductOptionsModal({
           productName={product.name}
         />
       )}
+
+      {/* Login Prompt Modal */}
+      <LoginPromptModal
+        isOpen={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+        action="cart"
+      />
     </>
   );
 }
