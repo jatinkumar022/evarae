@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { X, Download } from 'lucide-react';
 
 interface InvoiceDownloadProgressProps {

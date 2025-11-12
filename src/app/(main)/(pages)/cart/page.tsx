@@ -249,8 +249,19 @@ export default function CartPage() {
   };
 
 
+  type CartProductData = Partial<Product> & {
+    _id?: string;
+    id?: string;
+    status?: string;
+    stockQuantity?: number;
+    stockCount?: number;
+    images?: string[];
+    discountPrice?: number;
+    price?: number;
+  };
+
   const cartItems = items.map((ci: CartItem) => {
-    const productData = ci?.product as any;
+    const productData = ci?.product as CartProductData;
     const stockQuantity = productData?.stockQuantity ?? productData?.stockCount ?? 0;
     const status = productData?.status || 'active';
     const inStock = status === 'active' && stockQuantity > 0;

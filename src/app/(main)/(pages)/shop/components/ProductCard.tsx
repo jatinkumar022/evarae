@@ -31,7 +31,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const [currentUser, setCurrentUser] = useState<UserAccount | null>(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [loginModalAction, setLoginModalAction] = useState<'cart' | 'wishlist'>('cart');
-  const { load: loadWishlist, add: addToWishlist, remove: removeFromWishlist, isWishlisted, products: wishlistProducts } = useWishlistStore();
+  const { load: loadWishlist, add: addToWishlist, remove: removeFromWishlist,  products: wishlistProducts } = useWishlistStore();
 
   useEffect(() => {
     const checkScreen = () => setIsMobile(window.innerWidth < 1024); // lg breakpoint
