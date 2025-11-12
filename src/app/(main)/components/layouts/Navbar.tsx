@@ -177,12 +177,10 @@ export default function Navbar() {
   }, []);
 
   // Fetch categories once on mount, using cache
-  // If homepage already loaded categories, this will use cached data
+  // Always fetch on initial load to ensure categories are available on all pages
+  // Store will use cache if data is still valid
   useEffect(() => {
-    // Only fetch if we don't have categories yet (homepage might have synced them)
-    if (categories.length === 0 && status !== 'loading') {
-      fetchCategories();
-    }
+    fetchCategories();
     // Zustand actions are stable, but we only want this to run once on mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

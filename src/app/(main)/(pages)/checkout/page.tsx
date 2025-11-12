@@ -21,6 +21,7 @@ import { Spinner } from '@/app/(main)/components/ui/ScaleLoader';
 import { Controller } from 'react-hook-form';
 import { useAddressForm, type Address as AddressType } from '@/app/(main)/hooks/useAddressForm';
 import { useAddressData } from '@/app/(main)/hooks/useAddressData';
+import { useCartStore } from '@/lib/data/mainStore/cartStore';
 
 type Item = {
   productId: string;
@@ -47,7 +48,7 @@ declare global {
 }
 
 export default function CheckoutPage() {
-  const [items, setItems] = useState<Item[]>([]);
+  const { items: cartItems } = useCartStore();
   const [selectedAddressId, setSelectedAddressId] = useState<string>('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -59,6 +60,22 @@ export default function CheckoutPage() {
   const [razorpayAvailable, setRazorpayAvailable] = useState(true);
   const [couponApplying, setCouponApplying] = useState(false);
   const router = useRouter();
+
+  // Map cart store items to checkout format
+  const items: Item[] = useMemo(() => {
+    return cartItems.map((cartItem) => ({
+      productId: String(cartItem.product._id || cartItem.product.id || ''),
+      name: cartItem.product.name || '',
+      slug: cartItem.product.slug,
+      sku: cartItem.product.sku,
+      image: cartItem.product.images?.[0],
+      price: cartItem.product.discountPrice ?? cartItem.product.price ?? 0,
+      originalPrice: cartItem.product.price ?? null,
+      quantity: cartItem.quantity,
+      selectedColor: cartItem.selectedColor ?? null,
+      selectedSize: cartItem.selectedSize ?? null,
+    }));
+  }, [cartItems]);
 
   const { form, onSubmit, isSubmitting, isValid } = useAddressForm({
     initialData,
@@ -102,23 +119,8 @@ export default function CheckoutPage() {
     }
   }, [isModalOpen]);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetch('/api/checkout', { credentials: 'include' });
-        const data = (await res.json()) as {
-          items?: Item[];
-        };
-        setItems((data.items || []) as Item[]);
-      } catch {
-        setError('Failed to load checkout data');
-        toastApi.error(
-          'Failed to load checkout',
-          'Please refresh and try again.'
-        );
-      }
-    })();
-  }, []);
+  // Cart items are already loaded in Navbar, no need to fetch separately
+  // Items are mapped from cart store in useMemo above
 
   // Set default address when addresses are loaded
   useEffect(() => {

@@ -9,14 +9,9 @@ import { usePublicCategoryStore } from '@/lib/data/mainStore/categoryStore';
 const CircleCategories = memo(() => {
   const [clickedIndex, setClickedIndex] = useState<number | null>(null);
 
-  const { categories, fetchCategories } = usePublicCategoryStore();
+  const { categories } = usePublicCategoryStore();
 
-  useEffect(() => {
-    // Fetch categories once on mount, using cache
-    fetchCategories();
-    // Zustand actions are stable, but we only want this to run once on mount
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // Categories are already loaded in Navbar on initial load, using store cache
 
   const handleClick = (e: MouseEvent<HTMLAnchorElement>, idx: number) => {
     e.preventDefault();

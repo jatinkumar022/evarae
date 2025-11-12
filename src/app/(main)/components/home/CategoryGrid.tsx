@@ -63,15 +63,11 @@ const ViewAllItem = ({ categories }: { categories: PublicCategory[] }) => (
 );
 
 export default function CategoriesGrid() {
-  const { categories: storeCategories, status, fetchCategories } = usePublicCategoryStore();
+  const { categories: storeCategories } = usePublicCategoryStore();
   const { data } = useHomepageStore();
 
-  useEffect(() => {
-    // Homepage data is loaded centrally in Home page, no need to fetch here
-    if (status === 'idle') fetchCategories();
-    // Zustand actions are stable, but we only want this to run once on mount or when status changes
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status]);
+  // Categories are already loaded in Navbar on initial load, using store cache
+  // Homepage data is loaded centrally in Home page
 
   // Use categories from homepage if available, otherwise use store
   const categories = data?.categories && data.categories.length > 0 

@@ -38,7 +38,7 @@ export default function CartPage() {
   }, []);
 
   const { products: bestSellersProducts, fetchBestSellers } = useBestSellersStore();
-  const { categories, fetchCategories } = usePublicCategoryStore();
+  const { categories } = usePublicCategoryStore();
   
   // Map categories to tiles format
   const categoryTiles = useMemo(() => {
@@ -50,10 +50,10 @@ export default function CartPage() {
     }));
   }, [categories]);
 
-  // Load best sellers and categories once on mount
+  // Load best sellers once on mount
+  // Categories are already loaded in Navbar on initial load, using store cache
   useEffect(() => {
     fetchBestSellers();
-    fetchCategories(); // Categories are already loaded in Navbar, but this ensures they're available
     // Zustand actions are stable, but we only want this to run once on mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
