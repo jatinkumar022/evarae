@@ -1,7 +1,6 @@
 'use client';
 import Image from '@/app/(main)/components/ui/FallbackImage';
 import Link from 'next/link';
-import { useEffect } from 'react';
 import { useHomepageStore } from '@/lib/data/mainStore/homepageStore';
 
 const GridItem = ({
@@ -48,12 +47,6 @@ const GridItem = ({
 
 const ImageGrid = () => {
   const { data } = useHomepageStore();
-
-  useEffect(() => {
-    // Homepage data is loaded centrally in Home page, no need to fetch here
-    // Zustand actions are stable, but we only want this to run once on mount
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const collections = data?.signatureCollections || [];
 

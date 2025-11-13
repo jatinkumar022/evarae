@@ -3,15 +3,16 @@
 import Link, { LinkProps } from 'next/link';
 import { useNavigationStore } from '@/lib/data/mainStore/navigationStore';
 import { useRouter } from 'next/navigation';
-import { MouseEvent } from 'react';
+import React, { MouseEvent } from 'react';
 import type { UrlObject } from 'url';
 
-interface NavigationLinkProps extends LinkProps {
+type AnchorProps = Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, 'href' | 'onClick'>;
+
+type NavigationLinkProps = LinkProps & AnchorProps & {
   children: React.ReactNode;
   className?: string;
   onClick?: (e: MouseEvent<HTMLAnchorElement>) => void;
-  [key: string]: any;
-}
+};
 
 /**
  * NavigationLink - Enhanced Link component that triggers global loader on navigation

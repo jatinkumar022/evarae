@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, memo } from 'react';
+import React, { useState, memo } from 'react';
 import { motion } from 'framer-motion';
 import useScrollDirection from '@/app/(main)/handlers/NavbarVisibilityHandler';
 import Link from 'next/link';

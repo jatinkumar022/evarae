@@ -45,8 +45,7 @@ function AddressesPageInner() {
       setInitialData({});
       form.reset();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isModalOpen]);
+  }, [form, isModalOpen]);
 
   // Handle body scroll lock when modal is open
   useEffect(() => {
@@ -251,14 +250,14 @@ function AddressesPageInner() {
                     )}
                     <div className="flex gap-2">
                       <button
-                        onClick={() => openEditModal(address)}
+                        onClick={() => openEditModal({ ...address, line2: address.line2 ?? '' })}
                         className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 text-xs font-normal text-[oklch(0.66_0.14_358.91)] rounded-lg transition-colors border border-gray-300/50 bg-[#d5d5d51a] hover:bg-[#80808030] active:scale-[0.98]"
                       >
                         <Edit3 className="w-3.5 h-3.5" />
                         Edit
                       </button>
                       <button
-                        onClick={() => handleDeleteClick(address)}
+                        onClick={() => handleDeleteClick({ ...address, line2: address.line2 ?? '' })}
                         className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 text-xs font-normal text-[#d92d20] rounded-lg transition-colors border border-gray-300/50 bg-[#d5d5d51a] hover:bg-[#80808030] active:scale-[0.98]"
                       >
                         <Trash2 className="w-3.5 h-3.5" />

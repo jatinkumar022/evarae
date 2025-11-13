@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { ProfileFormData } from './useProfileForm';
 import { useUserAccountStore } from '@/lib/data/mainStore/userAccountStore';
 import { useOrdersStore } from '@/lib/data/mainStore/ordersStore';
+import type { UserAccountProfile } from '@/lib/utils';
 
 interface ApiOrder {
   _id?: string;
@@ -28,21 +29,33 @@ export function useProfileData() {
   // Update profile data when user changes
   useEffect(() => {
     if (user) {
-      const p = (user as any).profile || {};
+      const profileSource: Partial<UserAccountProfile> =
+        (user.profile ?? {}) as Partial<UserAccountProfile>;
+      const allowedGenders: ProfileFormData['gender'][] = [
+        'male',
+        'female',
+        'other',
+        'prefer_not_to_say',
+      ];
+      const genderValue = allowedGenders.includes(
+        (profileSource.gender as ProfileFormData['gender']) ?? 'prefer_not_to_say'
+      )
+        ? (profileSource.gender as ProfileFormData['gender'])
+        : 'prefer_not_to_say';
       const profile: Partial<ProfileFormData> = {
         name: user.name || '',
-        phone: p.phone || '',
-        gender: p.gender || 'prefer_not_to_say',
-        dob: p.dob
-          ? new Date(p.dob).toISOString().slice(0, 10)
+        phone: profileSource.phone || '',
+        gender: genderValue,
+        dob: profileSource.dob
+          ? new Date(profileSource.dob).toISOString().slice(0, 10)
           : '',
-        newsletterOptIn: !!p.newsletterOptIn,
-        smsNotifications: !!p.smsNotifications,
-        emailNotifications: !!p.emailNotifications,
-        orderUpdates: !!p.orderUpdates,
-        promotionalEmails: !!p.promotionalEmails,
-        language: p.language || 'en',
-        twoFactorEnabled: !!p.twoFactorEnabled,
+        newsletterOptIn: !!profileSource.newsletterOptIn,
+        smsNotifications: !!profileSource.smsNotifications,
+        emailNotifications: !!profileSource.emailNotifications,
+        orderUpdates: !!profileSource.orderUpdates,
+        promotionalEmails: !!profileSource.promotionalEmails,
+        language: profileSource.language || 'en',
+        twoFactorEnabled: !!profileSource.twoFactorEnabled,
       };
       setProfileData(profile);
       setIsLoading(userStatus === 'loading');

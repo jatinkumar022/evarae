@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, MouseEvent, useEffect, memo } from 'react';
+import React, { useState, MouseEvent, memo } from 'react';
 import Container from '../layouts/Container';
 import Link from 'next/link';
 import Image from '@/app/(main)/components/ui/FallbackImage';

@@ -1,7 +1,7 @@
 'use client';
 
 import Image from '@/app/(main)/components/ui/FallbackImage';
-import React, { useEffect } from 'react';
+import React from 'react';
 import Link from 'next/link';
 
 import {

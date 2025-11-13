@@ -17,6 +17,8 @@ export interface NewArrivalProduct {
   colors?: string[];
   status?: string;
   stockQuantity?: number;
+  tags?: string[];
+  sku?: string;
 }
 
 interface NewArrivalsState {

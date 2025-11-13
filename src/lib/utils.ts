@@ -102,6 +102,19 @@ export const userAuthApi = {
   logout: () => apiFetch<{ ok: true }>('/api/auth/logout', { method: 'POST' }),
 };
 
+export type UserAccountProfile = {
+  phone?: string | null;
+  gender?: string | null;
+  dob?: string | null;
+  newsletterOptIn?: boolean;
+  smsNotifications?: boolean;
+  emailNotifications?: boolean;
+  orderUpdates?: boolean;
+  promotionalEmails?: boolean;
+  language?: string | null;
+  twoFactorEnabled?: boolean;
+};
+
 export type UserAccount = {
   id: string;
   name: string | null;
@@ -111,6 +124,8 @@ export type UserAccount = {
   dob?: string | null;
   newsletterOptIn?: boolean;
   membershipTier?: string | null;
+  hasPassword?: boolean;
+  profile?: UserAccountProfile | null;
 };
 
 export type AccountUpdatePayload = {

@@ -452,24 +452,29 @@ export default function ContactUsPage() {
 
       // Reset success message after 5 seconds
       setTimeout(() => setIsSubmitted(false), 5000);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('EmailJS Error:', error);
       setIsSubmitting(false);
       
       // Provide more specific error messages
       let errorMessage = 'Please try again later or contact us directly at contact@caelvi.com';
       
-      if (error?.status === 400) {
-        if (error?.text?.includes('service ID')) {
+      const emailError =
+        typeof error === 'object' && error !== null
+          ? (error as { status?: number; text?: string })
+          : {};
+
+      if (emailError?.status === 400) {
+        if (emailError?.text?.includes('service ID')) {
           errorMessage = 'Service ID not found. Please check your EmailJS configuration in .env.local file.';
-        } else if (error?.text?.includes('template')) {
+        } else if (emailError?.text?.includes('template')) {
           errorMessage = 'Template ID not found. Please check your EmailJS configuration.';
         } else {
           errorMessage = 'Invalid EmailJS configuration. Please verify your service and template IDs.';
         }
-      } else if (error?.status === 403) {
+      } else if (emailError?.status === 403) {
         errorMessage = 'EmailJS access denied. Please check your public key.';
-      } else if (error?.status === 500) {
+      } else if (emailError?.status === 500) {
         errorMessage = 'EmailJS server error. Please try again later.';
       }
       

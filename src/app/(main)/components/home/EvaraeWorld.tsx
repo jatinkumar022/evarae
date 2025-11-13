@@ -1,7 +1,6 @@
 'use client';
 import Link from 'next/link';
 import Image from '@/app/(main)/components/ui/FallbackImage';
-import { useEffect } from 'react';
 import { useHomepageStore } from '@/lib/data/mainStore/homepageStore';
 
 const CategoryCard = ({
@@ -56,12 +55,6 @@ const CategoryCard = ({
 
 export default function CaelviWorld() {
   const { data } = useHomepageStore();
-
-  useEffect(() => {
-    // Homepage data is loaded centrally in Home page, no need to fetch here
-    // Zustand actions are stable, but we only want this to run once on mount
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const collections = data?.worldOfCaelvi || [];
 

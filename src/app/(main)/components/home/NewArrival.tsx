@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect } from 'react';
+import React from 'react';
 import Image from '@/app/(main)/components/ui/FallbackImage';
 import { FaRegGem } from 'react-icons/fa6';
 import Container from '../layouts/Container';
@@ -8,12 +8,6 @@ import { useHomepageStore } from '@/lib/data/mainStore/homepageStore';
 
 function NewArrival() {
   const { data } = useHomepageStore();
-
-  useEffect(() => {
-    // Homepage data is loaded centrally in Home page, no need to fetch here
-    // Zustand actions are stable, but we only want this to run once on mount
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const freshlyMinted = data?.freshlyMinted;
   

@@ -23,6 +23,7 @@ import Container from '@/app/(main)/components/layouts/Container';
 import Link from 'next/link';
 import { InvoiceDownloadProgress } from '@/app/(main)/components/ui/InvoiceDownloadProgress';
 import { downloadInvoiceWithProgress } from '@/app/(main)/utils/invoiceDownload';
+import { useOrdersStore } from '@/lib/data/mainStore/ordersStore';
 
 // Strict types for order data
 type OrderItem = {
@@ -164,9 +165,7 @@ export default function OrdersHistoryPage() {
   // Load orders once on mount
   useEffect(() => {
     fetchOrders();
-    // Zustand actions are stable, but we only want this to run once on mount
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [fetchOrders]);
 
   // Update local orders state from store
   useEffect(() => {

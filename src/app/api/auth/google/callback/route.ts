@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 import { connect } from '@/dbConfig/dbConfig';
 import User from '@/models/userModel';
+import type { Types } from 'mongoose';
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID as string;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET as string;
@@ -83,7 +84,7 @@ export async function GET(request: Request) {
         new: true,
         select: '_id name email' // Select only needed fields
       }
-    ).lean<{ _id: any; name: string; email: string } | null>();
+    ).lean<{ _id: Types.ObjectId; name: string; email: string } | null>();
     
     if (!user) {
       throw new Error('Failed to create or update user');

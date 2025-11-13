@@ -1,5 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
-import type { Address } from './useAddressForm';
+import { useEffect, useState } from 'react';
 import { useAddressesStore } from '@/lib/data/mainStore/addressesStore';
 
 export function useAddressData() {
@@ -9,9 +8,7 @@ export function useAddressData() {
   // Load addresses once on mount
   useEffect(() => {
     fetchAddresses();
-    // Zustand actions are stable, but we only want this to run once on mount
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [fetchAddresses]);
 
   // Sync error state
   useEffect(() => {

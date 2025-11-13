@@ -27,8 +27,6 @@ const MobileNavMenu = dynamic(() => import('./MobileNavMenu'), {
 // import { LogoCaelvi } from '@/app/(main)/assets';
 import { Eye, EyeOff } from 'lucide-react';
 import { userAuthApi } from '@/lib/utils';
-import { accountApi } from '@/lib/utils';
-import type { UserAccount } from '@/lib/utils';
 import {
   ChevronRight,
   Package,
@@ -511,8 +509,6 @@ export default function Navbar() {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-    // State setters are stable, but we only want to depend on showProfileDrawer
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showProfileDrawer]);
 
   // Handle Escape key and body scroll lock for logout modal

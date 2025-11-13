@@ -26,10 +26,17 @@ import {
 import ProductFilters from '@/app/(main)/components/filters/ProductFilters';
 import { ProductCard } from '../shop/components/ProductCard';
 import Container from '@/app/(main)/components/layouts/Container';
+import { useNewArrivalsStore, type NewArrivalProduct } from '@/lib/data/mainStore/newArrivalsStore';
+
+type NewArrivalsTimer = {
+  hours: number;
+  minutes: number;
+  seconds: number;
+};
 
 // Main Component
 export default function EnhancedNewArrivalsPage() {
-  const [timeRemaining, setTimeRemaining] = useState({
+  const [timeRemaining, setTimeRemaining] = useState<NewArrivalsTimer>({
     hours: 23,
     minutes: 45,
     seconds: 30,
@@ -57,15 +64,13 @@ export default function EnhancedNewArrivalsPage() {
   // Load new arrivals once on mount
   useEffect(() => {
     fetchNewArrivals();
-    // Zustand actions are stable, but we only want this to run once on mount
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [fetchNewArrivals]);
 
   // Map new arrivals to UiProduct format
   const allProducts = useMemo(() => {
     if (!newArrivalsProducts || newArrivalsProducts.length === 0) return [];
     
-    return newArrivalsProducts.map(p => {
+    return newArrivalsProducts.map((p: NewArrivalProduct) => {
           const hasDiscount =
             p.discountPrice != null &&
             p.price != null &&
@@ -295,7 +300,7 @@ export default function EnhancedNewArrivalsPage() {
             {/* Right Content - Featured Products Showcase */}
             <div className="relative">
               <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:gap-6">
-                {allProducts.slice(0, 3).map((product, index) => (
+                {allProducts.slice(0, 3).map((product: UiProduct, index: number) => (
                   <div
                     key={product.id}
                     className={`relative group cursor-pointer ${

@@ -162,12 +162,10 @@ export default function SignupPage() {
 
   const handlePhoneChange = (value: string) => {
     // Remove non-digits and limit to 10 digits
-    let cleaned = value.replace(/\D/g, '').slice(0, 10);
-    
-    // Remove leading zeros (including multiple leading zeros)
-    cleaned = cleaned.replace(/^0+/, '');
-    
-    setPhone(cleaned);
+    const digitsOnly = value.replace(/\D/g, '').slice(0, 10);
+    const normalized = digitsOnly.replace(/^0+/, '');
+
+    setPhone(normalized);
     setPhoneError(null);
   };
 
@@ -175,8 +173,9 @@ export default function SignupPage() {
     e.preventDefault();
     const pasted = e.clipboardData.getData('text');
     // Remove non-digits, limit to 10, and remove leading zeros
-    let cleaned = pasted.replace(/\D/g, '').slice(0, 10).replace(/^0+/, '');
-    setPhone(cleaned);
+    const digitsOnly = pasted.replace(/\D/g, '').slice(0, 10);
+    const normalized = digitsOnly.replace(/^0+/, '');
+    setPhone(normalized);
     setPhoneError(null);
   };
 
@@ -199,8 +198,11 @@ export default function SignupPage() {
       const { userAuthApi } = await import('@/lib/utils');
       await userAuthApi.completeProfile(fullName.trim(), normalizedPhone, password);
       setStep('done');
-    } catch (error: any) {
-      const errorMessage = error?.message || 'Unable to complete signup. Please try again.';
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : 'Unable to complete signup. Please try again.';
       if (errorMessage.includes('phone') || errorMessage.includes('mobile') || errorMessage.includes('already')) {
         setPhoneError('This mobile number is already registered. Please use a different number.');
       } else {

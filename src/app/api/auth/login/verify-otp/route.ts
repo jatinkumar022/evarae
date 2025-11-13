@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { connect } from '@/dbConfig/dbConfig';
 import User from '@/models/userModel';
+import type { Types } from 'mongoose';
 
 const USER_JWT_SECRET = process.env.USER_JWT_SECRET as string;
 const SESSION_HOURS = Number(process.env.SESSION_HOURS || 72);
@@ -30,13 +31,13 @@ export async function POST(request: Request) {
     // Optimize: Select only needed fields
     const user = await User.findOne({ email: email.toLowerCase() })
       .select('_id name email loginOtpHash loginOtpExpiry loginOtpAttempts')
-      .lean<{ 
-        _id: any; 
-        name: string; 
-        email: string; 
-        loginOtpHash?: string; 
-        loginOtpExpiry?: Date; 
-        loginOtpAttempts?: number 
+      .lean<{
+        _id: Types.ObjectId;
+        name: string;
+        email: string;
+        loginOtpHash?: string;
+        loginOtpExpiry?: Date;
+        loginOtpAttempts?: number;
       } | null>();
     
     if (!user || !user.loginOtpHash || !user.loginOtpExpiry) {

@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import { connect } from '@/dbConfig/dbConfig';
 import User from '@/models/userModel';
 import { notifyUserOtp } from '@/lib/notify';
+import type { Types } from 'mongoose';
 
 const OTP_EXP_MIN = 10;
 const RESEND_COOLDOWN_SEC = 45;
@@ -25,7 +26,7 @@ export async function POST(request: Request) {
     // Optimize: Select only needed fields
     const user = await User.findOne({ email: normalized })
       .select('_id name email loginOtpLastSentAt')
-      .lean<{ _id: any; name: string; email: string; loginOtpLastSentAt?: Date } | null>();
+      .lean<{ _id: Types.ObjectId; name: string; email: string; loginOtpLastSentAt?: Date } | null>();
     
     if (!user) {
       return NextResponse.json(

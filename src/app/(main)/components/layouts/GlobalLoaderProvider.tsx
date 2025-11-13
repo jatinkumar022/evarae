@@ -49,7 +49,6 @@ export default function GlobalLoaderProvider({
       
       return () => clearTimeout(fallbackTimer);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Run only once on mount
 
   // Track pathname changes to detect navigation completion
@@ -66,8 +65,7 @@ export default function GlobalLoaderProvider({
       // Initial load
       pathnameRef.current = pathname;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname]);
+  }, [isInitialLoad, pathname]);
 
   // Handle initial load completion
   // Only complete initial load when:
@@ -103,31 +101,33 @@ export default function GlobalLoaderProvider({
   // 3. All API calls are complete (inFlightCount === 0)
   // 4. Minimum display time has passed
   useEffect(() => {
-    if (!isNavigating) return; // Early return if not navigating
-    
-    // Only clear if navigation started, API calls are done, and pathname has changed
-    if (inFlightCount === 0) {
-      // Check if pathname has actually changed from when navigation started
-      const hasNavigated = navigationStartPathRef.current !== null && 
-                          pathname !== navigationStartPathRef.current;
-      
-      if (hasNavigated) {
-        const elapsed = navigationStartTimeRef.current 
-          ? Date.now() - navigationStartTimeRef.current 
-          : 0;
-        const remainingTime = Math.max(0, minLoaderTimeRef.current - elapsed);
-        
-        const timer = setTimeout(() => {
-          setNavigating(false);
-          navigationStartTimeRef.current = null;
-          navigationStartPathRef.current = null;
-        }, remainingTime);
-        
-        return () => clearTimeout(timer);
+    if (!isInitialLoad) return; // Early return if already completed
+
+    if (navigationStartTimeRef.current === null) {
+      // No navigation in progress
+      if (inFlightCount === 0 && !isNavigating) {
+        setIsInitialLoad(false);
       }
+      return;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isNavigating, inFlightCount, pathname]);
+
+    const elapsed = Date.now() - navigationStartTimeRef.current;
+    const remainingTime = Math.max(minLoaderTimeRef.current - elapsed, 0);
+
+    if (inFlightCount === 0 && !isNavigating && remainingTime <= 0) {
+      setIsInitialLoad(false);
+      navigationStartTimeRef.current = null;
+      navigationStartPathRef.current = null;
+    } else if (inFlightCount === 0 && !isNavigating) {
+      const timer = setTimeout(() => {
+        setNavigating(false);
+        navigationStartTimeRef.current = null;
+        navigationStartPathRef.current = null;
+      }, remainingTime);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [inFlightCount, isInitialLoad, isNavigating, pathname, setNavigating]);
 
   // Only treat content/data GET requests from public "main" APIs as global loader candidates
   const trackedPrefixes = useRef<string[]>(['/api/main/']);
@@ -244,7 +244,7 @@ export default function GlobalLoaderProvider({
       document.removeEventListener('click', handleLinkClick, true);
       window.history.pushState = originalPush;
     };
-  }, [setNavigating]);
+  }, [pathname, setNavigating]);
 
   // Prevent body scrolling when global loader is active
   useEffect(() => {

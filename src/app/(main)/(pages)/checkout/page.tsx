@@ -70,7 +70,7 @@ export default function CheckoutPage() {
       sku: cartItem.product.sku,
       image: cartItem.product.images?.[0],
       price: cartItem.product.discountPrice ?? cartItem.product.price ?? 0,
-      originalPrice: cartItem.product.price ?? null,
+      originalPrice: cartItem.product.price ?? undefined,
       quantity: cartItem.quantity,
       selectedColor: cartItem.selectedColor ?? null,
       selectedSize: cartItem.selectedSize ?? null,
@@ -96,8 +96,7 @@ export default function CheckoutPage() {
       setInitialData({});
       form.reset();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isModalOpen]);
+  }, [form, isModalOpen]);
 
   // Handle body scroll lock when modal is open
   useEffect(() => {

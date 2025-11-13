@@ -111,10 +111,7 @@ export function useAddressForm({
     } else {
       form.reset(defaultValues);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    // Note: defaultValues is derived from initialData via useMemo, so it's safe to omit from deps
-    // form is intentionally omitted as it's stable from react-hook-form
-  }, [initialData, editingId]);
+  }, [defaultValues, form, initialData, editingId]);
 
   const onSubmit = async (data: AddressFormData) => {
     try {
