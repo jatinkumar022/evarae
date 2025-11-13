@@ -32,7 +32,11 @@ export async function POST(request: Request) {
       );
     }
 
-    const user = await User.findOne({ email: email.toLowerCase() });
+    // Optimize: Select only needed fields and use lean() for better performance
+    const user = await User.findOne({ email: email.toLowerCase() })
+      .select('_id name email passwordHash')
+      .lean<{ _id: any; name: string; email: string; passwordHash: string | null } | null>();
+    
     if (!user || !user.passwordHash) {
       return NextResponse.json(
         { error: 'Invalid email or password. Please check and try again' },
@@ -54,7 +58,7 @@ export async function POST(request: Request) {
 
     const res = NextResponse.json({
       ok: true,
-      user: { id: user._id, name: user.name, email: user.email },
+      user: { id: String(user._id), name: user.name, email: user.email },
     });
     res.cookies.set('token', token, {
       httpOnly: true,

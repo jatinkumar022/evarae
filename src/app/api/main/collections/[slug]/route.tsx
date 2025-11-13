@@ -29,7 +29,10 @@ export async function GET(request: Request, { params }: RouteContext) {
       );
     }
 
-    return NextResponse.json({ collection });
+    const res = NextResponse.json({ collection });
+    // Add cache header for collection details (5 minutes)
+    res.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
+    return res;
   } catch (error) {
     console.error('Public collection GET error:', error);
     return NextResponse.json(

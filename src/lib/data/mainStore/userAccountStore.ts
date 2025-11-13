@@ -12,6 +12,8 @@ interface UserAccountState {
   load: () => Promise<void>;
   // Refresh user account (force reload)
   refresh: () => Promise<void>;
+  // Hydrate user account immediately (used after auth responses)
+  hydrate: (user: UserAccount | null) => void;
   // Clear user account (on logout)
   clear: () => void;
   // Check if user is authenticated
@@ -87,6 +89,15 @@ export const useUserAccountStore = create<UserAccountState>()(
             user: null,
           });
         }
+      },
+
+      hydrate: (user: UserAccount | null) => {
+        set({
+          user,
+          status: user ? 'success' : 'idle',
+          error: null,
+          lastFetched: user ? Date.now() : null,
+        });
       },
 
       clear: () => {

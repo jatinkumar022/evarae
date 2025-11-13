@@ -85,21 +85,39 @@ function extractProductKey(body: unknown): string | null {
   return null;
 }
 
+// Optimize: Select only needed product fields to reduce data transfer
+const PRODUCT_SELECT_FIELDS = 'name slug sku price discountPrice stockQuantity images material weight colors rating reviewsCount status';
+
 export async function GET(request: Request) {
   try {
     await connect();
     const uid = getUserIdFromRequest(request);
-    if (!uid) return NextResponse.json({ items: [], savedItems: [] });
+    if (!uid) {
+      const response = NextResponse.json({ items: [], savedItems: [] });
+      response.headers.set('Cache-Control', 'private, max-age=60');
+      return response;
+    }
 
     const cart = await Cart.findOne({ user: uid })
-      .populate('items.product')
-      .populate('savedItems.product')
+      .populate({
+        path: 'items.product',
+        select: PRODUCT_SELECT_FIELDS,
+      })
+      .populate({
+        path: 'savedItems.product',
+        select: PRODUCT_SELECT_FIELDS,
+      })
       .lean<CartDoc | null>();
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       items: cart?.items ?? [],
       savedItems: cart?.savedItems ?? [],
     });
+
+    // Add cache headers (1 minute for cart data)
+    response.headers.set('Cache-Control', 'private, max-age=60, stale-while-revalidate=30');
+
+    return response;
   } catch (error) {
     console.error('[account/cart GET] Error:', error);
     return NextResponse.json({
@@ -189,14 +207,27 @@ export async function POST(request: Request) {
       }
     }
 
+    // Optimize: Select only needed product fields
     const cart = await Cart.findOne({ user: uid })
-      .populate('items.product')
-      .populate('savedItems.product')
+      .populate({
+        path: 'items.product',
+        select: PRODUCT_SELECT_FIELDS,
+      })
+      .populate({
+        path: 'savedItems.product',
+        select: PRODUCT_SELECT_FIELDS,
+      })
       .lean<CartDoc | null>();
-    return NextResponse.json({
+    
+    const response = NextResponse.json({
       items: cart?.items ?? [],
       savedItems: cart?.savedItems ?? [],
     });
+    
+    // No cache for POST requests (data just changed)
+    response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    
+    return response;
   } catch (error) {
     console.error('[account/cart POST] Error:', error);
     const errorMessage =
@@ -274,14 +305,27 @@ export async function PATCH(request: Request) {
       );
     }
 
+    // Optimize: Select only needed product fields
     const cart = await Cart.findOne({ user: uid })
-      .populate('items.product')
-      .populate('savedItems.product')
+      .populate({
+        path: 'items.product',
+        select: PRODUCT_SELECT_FIELDS,
+      })
+      .populate({
+        path: 'savedItems.product',
+        select: PRODUCT_SELECT_FIELDS,
+      })
       .lean<CartDoc | null>();
-    return NextResponse.json({
+    
+    const response = NextResponse.json({
       items: cart?.items ?? [],
       savedItems: cart?.savedItems ?? [],
     });
+    
+    // No cache for POST requests (data just changed)
+    response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    
+    return response;
   } catch (error) {
     console.error('[account/cart PATCH] Error:', error);
     const errorMessage =
@@ -353,14 +397,27 @@ export async function DELETE(request: Request) {
       await Cart.updateOne({ user: uid }, { $pull: { items: pullCriteria } });
     }
 
+    // Optimize: Select only needed product fields
     const cart = await Cart.findOne({ user: uid })
-      .populate('items.product')
-      .populate('savedItems.product')
+      .populate({
+        path: 'items.product',
+        select: PRODUCT_SELECT_FIELDS,
+      })
+      .populate({
+        path: 'savedItems.product',
+        select: PRODUCT_SELECT_FIELDS,
+      })
       .lean<CartDoc | null>();
-    return NextResponse.json({
+    
+    const response = NextResponse.json({
       items: cart?.items ?? [],
       savedItems: cart?.savedItems ?? [],
     });
+    
+    // No cache for POST requests (data just changed)
+    response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    
+    return response;
   } catch (error) {
     console.error('[account/cart DELETE] Error:', error);
     const errorMessage =

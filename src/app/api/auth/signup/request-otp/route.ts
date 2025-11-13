@@ -21,16 +21,22 @@ export async function POST(request: Request) {
     }
     const normalized = email.toLowerCase();
 
-    const exists = await User.exists({ email: normalized });
+    // Optimize: Check existence and fetch pending in parallel
+    const [exists, pending] = await Promise.all([
+      User.exists({ email: normalized }).lean(),
+      PendingSignup.findOne({ email: normalized })
+        .select('lastSentAt')
+        .lean<{ lastSentAt?: Date } | null>(),
+    ]);
+    
     if (exists) {
       return NextResponse.json(
         { error: 'This email is already registered. Please log in instead' },
         { status: 400 }
       );
     }
-
-    let pending = await PendingSignup.findOne({ email: normalized });
-    if (pending && pending.lastSentAt) {
+    
+    if (pending?.lastSentAt) {
       const diff = (Date.now() - new Date(pending.lastSentAt).getTime()) / 1000;
       if (diff < RESEND_COOLDOWN_SEC) {
         return NextResponse.json(
@@ -43,23 +49,18 @@ export async function POST(request: Request) {
     const otp = generateOtp();
     const hash = await bcrypt.hash(otp, 10);
 
-    if (!pending) {
-      pending = await PendingSignup.create({
+    // Optimize: Use findOneAndUpdate with upsert for atomic operation
+    await PendingSignup.findOneAndUpdate(
+      { email: normalized },
+      {
         email: normalized,
         otpHash: hash,
         otpExpiry: new Date(Date.now() + OTP_EXP_MIN * 60 * 1000),
         attempts: 0,
         lastSentAt: new Date(),
-      });
-    } else {
-      pending.otpHash = hash as unknown as string;
-      pending.otpExpiry = new Date(
-        Date.now() + OTP_EXP_MIN * 60 * 1000
-      ) as unknown as Date;
-      pending.attempts = 0 as unknown as number;
-      pending.lastSentAt = new Date() as unknown as Date;
-      await pending.save();
-    }
+      },
+      { upsert: true, new: true }
+    );
 
     await notifyUserOtp({ email: normalized, name: 'User' }, otp);
 

@@ -64,11 +64,15 @@ export async function POST(request: Request) {
       couponCode?: string;
     };
 
+    // Optimize: Select only needed fields
     const [cart, profile] = await Promise.all([
       Cart.findOne({ user: uid })
-        .populate('items.product')
+        .populate('items.product', 'name slug sku images price discountPrice')
+        .select('items')
         .lean<PopulatedCart | null>(),
-      UserProfile.findOne({ user: uid }).lean<UserProfileLean | null>(),
+      UserProfile.findOne({ user: uid })
+        .select('addresses')
+        .lean<UserProfileLean | null>(),
     ]);
 
     if (!cart || !cart.items || cart.items.length === 0) {
@@ -118,24 +122,35 @@ export async function POST(request: Request) {
 
     const total = Math.max(0, subtotal + gst + shipping + paymentCharges);
 
-    // Generate human-friendly unique order number
+    // Optimize: Generate human-friendly unique order number
+    // Use timestamp-based approach to reduce database queries
     const now = new Date();
     const ymd = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(
       2,
       '0'
     )}${String(now.getDate()).padStart(2, '0')}`;
     let orderNumber = '';
-    for (let i = 0; i < 5; i++) {
-      const rand = Math.floor(1000 + Math.random() * 9000);
-      const candidate = `ORD-${ymd}-${rand}`;
-      const exists = await Order.exists({ orderNumber: candidate });
-      if (!exists) {
-        orderNumber = candidate;
-        break;
+    // Optimize: Try timestamp-based first (most likely to be unique)
+    const timestampSuffix = Date.now().toString().slice(-5);
+    const candidate = `ORD-${ymd}-${timestampSuffix}`;
+    const exists = await Order.exists({ orderNumber: candidate }).lean();
+    if (!exists) {
+      orderNumber = candidate;
+    } else {
+      // Fallback: try random numbers (max 3 attempts)
+      for (let i = 0; i < 3; i++) {
+        const rand = Math.floor(1000 + Math.random() * 9000);
+        const fallbackCandidate = `ORD-${ymd}-${rand}`;
+        const fallbackExists = await Order.exists({ orderNumber: fallbackCandidate }).lean();
+        if (!fallbackExists) {
+          orderNumber = fallbackCandidate;
+          break;
+        }
       }
-    }
-    if (!orderNumber) {
-      orderNumber = `ORD-${ymd}-${Date.now().toString().slice(-5)}`;
+      // Final fallback with microsecond precision
+      if (!orderNumber) {
+        orderNumber = `ORD-${ymd}-${Date.now().toString().slice(-5)}-${Math.floor(Math.random() * 100)}`;
+      }
     }
 
     const order = await Order.create({
@@ -169,7 +184,7 @@ export async function POST(request: Request) {
     const paymentLink = `/checkout/payment?orderId=${order._id}`;
 
     return NextResponse.json({
-      orderId: order._id,
+      orderId: String(order._id),
       orderNumber: order.orderNumber,
       paymentLink,
       amount: total,

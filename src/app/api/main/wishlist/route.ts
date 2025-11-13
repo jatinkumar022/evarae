@@ -95,8 +95,10 @@ async function resolveProductObjectId(
   if (/^[a-f0-9]{24}$/i.test(idOrSlug))
     return new mongoose.Types.ObjectId(idOrSlug);
 
+  // Optimize: Use single query with $or instead of separate queries
   const doc = await Product.findOne({
     $or: [{ slug: idOrSlug }, { sku: idOrSlug }],
+    status: 'active', // Only match active products
   })
     .select('_id')
     .lean<{ _id: mongoose.Types.ObjectId } | null>();
@@ -165,25 +167,19 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Product not found' }, { status: 404 });
     }
 
-    // Get or create user profile
-    let profile = await UserProfile.findOne({ user: uid });
-    if (!profile) {
-      profile = await UserProfile.create({ user: uid, wishlist: [] });
-    }
-
-    // Add product to wishlist (using $addToSet to prevent duplicates)
-    await UserProfile.findOneAndUpdate(
+    // Optimize: Add product and fetch wishlist in one operation using findOneAndUpdate with returnDocument
+    const updatedProfile = (await UserProfile.findOneAndUpdate(
       { user: uid },
       {
         $addToSet: {
           wishlist: pid,
         },
       },
-      { upsert: true }
-    );
-
-    // Fetch updated wishlist
-    const updatedProfile = (await UserProfile.findOne({ user: uid })
+      {
+        upsert: true,
+        new: true,
+      }
+    )
       .populate({
         path: 'wishlist',
         select:
@@ -233,18 +229,18 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'Product not found' }, { status: 404 });
     }
 
-    // Remove product from wishlist
-    await UserProfile.findOneAndUpdate(
+    // Optimize: Remove product and fetch wishlist in one operation
+    const profile = (await UserProfile.findOneAndUpdate(
       { user: uid },
       {
         $pull: {
           wishlist: pid,
         },
+      },
+      {
+        new: true,
       }
-    );
-
-    // Fetch updated wishlist
-    const profile = (await UserProfile.findOne({ user: uid })
+    )
       .populate({
         path: 'wishlist',
         select:

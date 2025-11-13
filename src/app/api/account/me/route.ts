@@ -42,18 +42,22 @@ export async function GET(request: Request) {
       return NextResponse.json({ user: null });
     }
 
-    const userDoc = await User.findById(payload.uid)
-      .select({ name: 1, email: 1, passwordHash: 1 })
-      .lean<BasicUser & { passwordHash?: string | null } | null>();
-    
+    // Optimize: Fetch user and profile in parallel for better performance
+    const [userDoc, profile] = await Promise.all([
+      User.findById(payload.uid)
+        .select({ name: 1, email: 1, passwordHash: 1 })
+        .lean<BasicUser & { passwordHash?: string | null } | null>(),
+      UserProfile.findOne({ user: payload.uid })
+        .select('-__v -createdAt -updatedAt')
+        .lean(),
+    ]);
+
     if (!userDoc) {
       console.error('[account/me] User not found:', payload.uid);
       return NextResponse.json({ user: null });
     }
 
-    const profile = await UserProfile.findOne({ user: payload.uid }).lean();
-
-    return NextResponse.json({
+    const response = NextResponse.json({
       user: {
         id: payload.uid,
         name: userDoc.name,
@@ -62,6 +66,11 @@ export async function GET(request: Request) {
         profile: profile || null,
       },
     });
+
+    // Add cache headers for client-side caching (2 minutes)
+    response.headers.set('Cache-Control', 'private, max-age=120, stale-while-revalidate=60');
+
+    return response;
   } catch (error) {
     console.error('[account/me] Unexpected error:', error);
     return NextResponse.json({ user: null });

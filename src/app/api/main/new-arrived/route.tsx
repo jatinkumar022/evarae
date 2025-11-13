@@ -16,7 +16,10 @@ export async function GET() {
       .limit(30)
       .lean();
 
-    return NextResponse.json({ products });
+    const res = NextResponse.json({ products });
+    // Add cache header for new arrivals (2 minutes)
+    res.headers.set('Cache-Control', 'public, s-maxage=120, stale-while-revalidate=300');
+    return res;
   } catch (error) {
     console.error('Latest products GET error:', error);
     return NextResponse.json(

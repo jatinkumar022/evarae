@@ -29,9 +29,12 @@ export async function POST(request: Request) {
     if (!name || typeof name !== 'string') {
       return NextResponse.json({ error: 'Name is required' }, { status: 400 });
     }
-    if (!phone || typeof phone !== 'string' || !/^\d{10}$/.test(phone)) {
+    // Normalize phone: remove non-digits and leading zeros
+    const normalizedPhone = phone.replace(/\D/g, '').replace(/^0+/, '');
+    
+    if (!phone || typeof phone !== 'string' || !/^[6-9]\d{9}$/.test(normalizedPhone)) {
       return NextResponse.json(
-        { error: 'Valid 10-digit phone is required' },
+        { error: 'Valid 10-digit Indian mobile number is required' },
         { status: 400 }
       );
     }
@@ -59,25 +62,36 @@ export async function POST(request: Request) {
         );
       }
 
-      const user = await User.findById(payload.uid);
-      if (!user) {
+      // Optimize: Check phone and hash password in parallel
+      const [passwordHash, existingProfile] = await Promise.all([
+        bcrypt.hash(password, 10),
+        UserProfile.findOne({
+          phone: normalizedPhone,
+          user: { $ne: payload.uid },
+        })
+          .select('_id')
+          .lean(),
+      ]);
+
+      if (existingProfile) {
         return NextResponse.json(
-          { error: 'Account not found. Please sign up again' },
-          { status: 404 }
+          { error: 'This mobile number is already registered with another account' },
+          { status: 409 }
         );
       }
 
-      user.name = name;
-      user.passwordHash = await bcrypt.hash(password, 10);
-      await user.save();
-
-      // Save phone number to UserProfile
-      const normalizedPhone = phone.replace(/\D/g, '').slice(0, 10);
-      await UserProfile.findOneAndUpdate(
-        { user: user._id },
-        { $set: { user: user._id, phone: normalizedPhone } },
-        { new: true, upsert: true }
-      );
+      // Optimize: Update user and profile in parallel
+      await Promise.all([
+        User.findByIdAndUpdate(payload.uid, {
+          name,
+          passwordHash,
+        }),
+        UserProfile.findOneAndUpdate(
+          { user: payload.uid },
+          { $set: { user: payload.uid, phone: normalizedPhone } },
+          { upsert: true }
+        ),
+      ]);
 
       return NextResponse.json({ ok: true });
     }
@@ -95,29 +109,43 @@ export async function POST(request: Request) {
       }
 
       const email = payload.email.toLowerCase();
-      const exists = await User.exists({ email });
-      if (exists)
+      
+      // Optimize: Check email, phone, and hash password in parallel
+      const [exists, existingProfile, passwordHash] = await Promise.all([
+        User.exists({ email }).lean(),
+        UserProfile.findOne({ phone: normalizedPhone }).select('_id').lean(),
+        bcrypt.hash(password, 10),
+      ]);
+      
+      if (exists) {
         return NextResponse.json(
           { error: 'Email already registered' },
           { status: 400 }
         );
+      }
 
+      if (existingProfile) {
+        return NextResponse.json(
+          { error: 'This mobile number is already registered. Please use a different number.' },
+          { status: 409 }
+        );
+      }
+
+      // Optimize: Create user and profile, delete pending signup in parallel
       const user = await User.create({
         name,
         email,
         isVerified: true,
-        passwordHash: await bcrypt.hash(password, 10),
+        passwordHash,
       });
 
-      // Save phone number to UserProfile
-      const normalizedPhone = phone.replace(/\D/g, '').slice(0, 10);
-      await UserProfile.create({
-        user: user._id,
-        phone: normalizedPhone,
-      });
-
-      // Remove pending signup
-      await PendingSignup.deleteOne({ email });
+      await Promise.all([
+        UserProfile.create({
+          user: user._id,
+          phone: normalizedPhone,
+        }),
+        PendingSignup.deleteOne({ email }),
+      ]);
 
       // Issue login token
       const token = jwt.sign({ uid: user._id, role: 'user' }, USER_JWT_SECRET, {
@@ -126,7 +154,7 @@ export async function POST(request: Request) {
 
       const res = NextResponse.json({
         ok: true,
-        user: { id: user._id, name: user.name, email: user.email },
+        user: { id: String(user._id), name: user.name, email: user.email },
       });
 
       // Set real login cookie

@@ -28,7 +28,13 @@ export default function GlobalLoaderProvider({
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const initialLoadStartTimeRef = useRef<number | null>(null);
   const hasSeenApiCallRef = useRef(false); // Track if we've seen any API calls
+  const [mounted, setMounted] = useState(false);
   
+  // Track mount state to prevent hydration mismatch
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   // Track initial load - run only once on mount
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -214,7 +220,8 @@ export default function GlobalLoaderProvider({
         // Show loader immediately and track navigation start time and path
         navigationStartTimeRef.current = Date.now();
         navigationStartPathRef.current = pathnameRef.current || pathname;
-        setNavigating(true);
+        // Use setTimeout to defer state update and avoid useInsertionEffect error
+        setTimeout(() => setNavigating(true), 0);
       }
     };
 
@@ -226,7 +233,8 @@ export default function GlobalLoaderProvider({
       if (url && typeof url === 'string' && url.startsWith('/')) {
         navigationStartTimeRef.current = Date.now();
         navigationStartPathRef.current = pathnameRef.current || pathname;
-        setNavigating(true);
+        // Use setTimeout to defer state update and avoid useInsertionEffect error
+        setTimeout(() => setNavigating(true), 0);
       }
       return originalPush.apply(window.history, args);
     };
@@ -263,7 +271,9 @@ export default function GlobalLoaderProvider({
   // 1. Initial load is in progress
   // 2. Navigating between pages
   // 3. API calls are in flight
+  // Only calculate shouldShowLoader after mount to prevent hydration mismatch
   const shouldShowLoader = 
+    mounted &&
     typeof window !== 'undefined' &&
     !window.location.pathname.startsWith('/admin') &&
     (isInitialLoad || isNavigating || inFlightCount > 0);

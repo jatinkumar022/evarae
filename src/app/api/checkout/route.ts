@@ -49,13 +49,17 @@ export async function GET(request: Request) {
     const uid = getUid(request);
     if (!uid) return NextResponse.json({ items: [], addresses: [] });
 
+    // Optimize: Select only needed fields and use lean() for better performance
     const [cart, profile] = await Promise.all([
       Cart.findOne({ user: uid })
-        .populate('items.product')
+        .populate('items.product', 'name slug sku images price discountPrice')
+        .select('items')
         .lean<PopulatedCart | null>(),
-      UserProfile.findOne({ user: uid }).lean<{
-        addresses: Address[];
-      } | null>(),
+      UserProfile.findOne({ user: uid })
+        .select('addresses')
+        .lean<{
+          addresses: Address[];
+        } | null>(),
     ]);
 
     const items = (cart?.items || []).map(ci => ({

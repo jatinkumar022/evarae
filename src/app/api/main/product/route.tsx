@@ -29,20 +29,23 @@ export async function GET(request: Request) {
     const sort: Record<string, 1 | -1> = {};
     sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
 
-    const products = await Product.find(filter)
-      .select(
-        'name slug images price discountPrice status tags material colors stockQuantity'
-      )
-      .populate('categories', 'name slug')
-      .sort(sort)
-      .skip(skip)
-      .limit(limit)
-      .lean();
+    // Optimize: Run product query and count in parallel
+    const [products, total] = await Promise.all([
+      Product.find(filter)
+        .select(
+          'name slug images price discountPrice status tags material colors stockQuantity'
+        )
+        .populate('categories', 'name slug')
+        .sort(sort)
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      Product.countDocuments(filter),
+    ]);
 
-    const total = await Product.countDocuments(filter);
     const totalPages = Math.ceil(total / limit);
 
-    return NextResponse.json({
+    const res = NextResponse.json({
       products,
       pagination: {
         page,
@@ -53,6 +56,9 @@ export async function GET(request: Request) {
         hasPrev: page > 1,
       },
     });
+    // Add cache header for product lists (1 minute)
+    res.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=120');
+    return res;
   } catch (error) {
     console.error('Public products GET error:', error);
     return NextResponse.json(

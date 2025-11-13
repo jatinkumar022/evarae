@@ -17,7 +17,10 @@ export async function GET() {
       .sort({ sortOrder: 1, name: 1 })
       .lean();
 
-    return NextResponse.json({ collections });
+    const res = NextResponse.json({ collections });
+    // Add cache header for collections (5 minutes)
+    res.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
+    return res;
   } catch (error) {
     console.error('Public collections GET error:', error);
     return NextResponse.json(

@@ -21,7 +21,12 @@ export async function POST(request: Request) {
     }
 
     const normalized = email.toLowerCase();
-    const user = await User.findOne({ email: normalized });
+    
+    // Optimize: Select only needed fields
+    const user = await User.findOne({ email: normalized })
+      .select('_id name email loginOtpLastSentAt')
+      .lean<{ _id: any; name: string; email: string; loginOtpLastSentAt?: Date } | null>();
+    
     if (!user) {
       return NextResponse.json(
         { error: 'No account found with this email. Please sign up first' },
@@ -42,13 +47,17 @@ export async function POST(request: Request) {
 
     const otp = generateOtp();
     const hash = await bcrypt.hash(otp, 10);
-    user.loginOtpHash = hash as unknown as string;
-    user.loginOtpExpiry = new Date(
-      Date.now() + OTP_EXP_MIN * 60 * 1000
-    ) as unknown as Date;
-    user.loginOtpAttempts = 0 as unknown as number;
-    user.loginOtpLastSentAt = new Date() as unknown as Date;
-    await user.save();
+    
+    // Optimize: Use updateOne instead of save for better performance
+    await User.updateOne(
+      { email: normalized },
+      {
+        loginOtpHash: hash,
+        loginOtpExpiry: new Date(Date.now() + OTP_EXP_MIN * 60 * 1000),
+        loginOtpAttempts: 0,
+        loginOtpLastSentAt: new Date(),
+      }
+    );
 
     await notifyUserOtp({ email: normalized, name: user.name }, otp);
 

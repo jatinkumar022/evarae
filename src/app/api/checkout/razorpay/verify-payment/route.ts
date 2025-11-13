@@ -67,34 +67,34 @@ export async function POST(request: Request) {
       );
     }
 
-    // Find and update order
-    const order = await Order.findOne({
-      paymentProviderOrderId: razorpay_order_id,
-      user: uid,
-    });
+    // Optimize: Find and update order in one operation
+    const order = await Order.findOneAndUpdate(
+      {
+        paymentProviderOrderId: razorpay_order_id,
+        user: uid,
+      },
+      {
+        paymentStatus: 'completed',
+        orderStatus: 'confirmed',
+        paymentProviderPaymentId: razorpay_payment_id,
+        paymentProviderSignature: razorpay_signature,
+        paidAt: new Date(),
+      },
+      { new: true }
+    ).select('_id orderNumber').lean<{ _id: unknown; orderNumber: string } | null>();
 
     if (!order) {
       return NextResponse.json({ error: 'Order not found' }, { status: 404 });
     }
 
-    // Update order status - only if payment is successfully verified
-    const updatedOrder = await Order.findByIdAndUpdate(order._id, {
-      paymentStatus: 'completed',
-      orderStatus: 'confirmed',
-      paymentProviderPaymentId: razorpay_payment_id,
-      paymentProviderSignature: razorpay_signature,
-      paidAt: new Date(),
+    // Optimize: Clear cart using updateOne (non-blocking, don't wait for result)
+    Cart.updateOne({ user: uid }, { $set: { items: [] } }).catch(err => {
+      console.error('[verify-payment] Failed to clear cart:', err);
     });
-
-    // Only clear cart if order was successfully updated and payment is completed
-    // This ensures cart is NOT cleared if payment fails
-    if (updatedOrder) {
-      await Cart.findOneAndUpdate({ user: uid }, { $set: { items: [] } });
-    }
 
     return NextResponse.json({
       success: true,
-      orderId: order._id,
+      orderId: String(order._id),
       orderNumber: order.orderNumber,
       message: 'Payment verified successfully',
     });

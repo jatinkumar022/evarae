@@ -30,20 +30,23 @@ export async function GET(request: Request) {
       ],
     };
 
-    const products = await Product.find(filter)
-      .select(
-        'name slug images price discountPrice status tags material colors stockQuantity'
-      )
-      .populate('categories', 'name slug')
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .lean();
+    // Optimize: Run product query and count in parallel
+    const [products, total] = await Promise.all([
+      Product.find(filter)
+        .select(
+          'name slug images price discountPrice status tags material colors stockQuantity'
+        )
+        .populate('categories', 'name slug')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      Product.countDocuments(filter),
+    ]);
 
-    const total = await Product.countDocuments(filter);
     const totalPages = Math.ceil(total / limit);
 
-    return NextResponse.json({
+    const res = NextResponse.json({
       products,
       pagination: {
         page,
@@ -54,6 +57,9 @@ export async function GET(request: Request) {
         hasPrev: page > 1,
       },
     });
+    // Add cache header for search results (30 seconds)
+    res.headers.set('Cache-Control', 'public, s-maxage=30, stale-while-revalidate=60');
+    return res;
   } catch (error) {
     console.error('Search products GET error:', error);
     return NextResponse.json(

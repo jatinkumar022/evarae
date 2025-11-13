@@ -34,6 +34,7 @@ export default function SignupPage() {
   const [isOtpLoading, setIsOtpLoading] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
   const [otpError, setOtpError] = useState<string | null>(null);
+  const [phoneError, setPhoneError] = useState<string | null>(null);
 
   const isValidEmail = useMemo(
     () => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email),
@@ -159,14 +160,52 @@ export default function SignupPage() {
     }
   };
 
+  const handlePhoneChange = (value: string) => {
+    // Remove non-digits and limit to 10 digits
+    let cleaned = value.replace(/\D/g, '').slice(0, 10);
+    
+    // Remove leading zeros (including multiple leading zeros)
+    cleaned = cleaned.replace(/^0+/, '');
+    
+    setPhone(cleaned);
+    setPhoneError(null);
+  };
+
+  const handlePhonePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData('text');
+    // Remove non-digits, limit to 10, and remove leading zeros
+    let cleaned = pasted.replace(/\D/g, '').slice(0, 10).replace(/^0+/, '');
+    setPhone(cleaned);
+    setPhoneError(null);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!fullName.trim() || !/^[\d]{10}$/.test(phone) || isSubmitting) return;
+    
+    // Normalize phone: remove non-digits and leading zeros
+    const normalizedPhone = phone.replace(/\D/g, '').replace(/^0+/, '');
+    
+    if (!fullName.trim() || !/^[6-9]\d{9}$/.test(normalizedPhone) || isSubmitting || phoneError) {
+      if (!/^[6-9]\d{9}$/.test(normalizedPhone) && normalizedPhone.length === 10) {
+        setPhoneError('Please enter a valid 10-digit Indian mobile number');
+      }
+      return;
+    }
+    
     setIsSubmitting(true);
+    setPhoneError(null);
     try {
       const { userAuthApi } = await import('@/lib/utils');
-      await userAuthApi.completeProfile(fullName.trim(), phone, password);
+      await userAuthApi.completeProfile(fullName.trim(), normalizedPhone, password);
       setStep('done');
+    } catch (error: any) {
+      const errorMessage = error?.message || 'Unable to complete signup. Please try again.';
+      if (errorMessage.includes('phone') || errorMessage.includes('mobile') || errorMessage.includes('already')) {
+        setPhoneError('This mobile number is already registered. Please use a different number.');
+      } else {
+        setPhoneError(errorMessage);
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -496,16 +535,31 @@ export default function SignupPage() {
                       </label>
                       <input
                         value={phone}
-                        onChange={e =>
-                          setPhone(
-                            e.target.value.replace(/\D/g, '').slice(0, 10)
-                          )
-                        }
+                        onChange={e => handlePhoneChange(e.target.value)}
+                        onPaste={handlePhonePaste}
+                        onBlur={() => {
+                          // Ensure leading zeros are removed on blur as well
+                          const cleaned = phone.replace(/\D/g, '').replace(/^0+/, '');
+                          if (cleaned !== phone) {
+                            setPhone(cleaned);
+                          }
+                        }}
                         inputMode="numeric"
                         pattern="[0-9]*"
                         placeholder="Enter 10-digit mobile number"
-                        className="w-full rounded-xl border border-[oklch(0.84_0.04_10.35)] bg-white px-4 py-3 text-sm"
+                        className={`w-full rounded-xl border ${
+                          phoneError
+                            ? 'border-red-500'
+                            : 'border-[oklch(0.84_0.04_10.35)]'
+                        } bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 ${
+                          phoneError
+                            ? 'focus:ring-red-500/30 focus:border-red-500'
+                            : 'focus:ring-[oklch(0.66_0.14_358.91)]/30 focus:border-[oklch(0.66_0.14_358.91)]'
+                        } transition-all`}
                       />
+                      {phoneError && (
+                        <p className="text-xs text-red-600 mt-1.5">{phoneError}</p>
+                      )}
                     </div>
                     <div>
                       <label
@@ -577,14 +631,16 @@ export default function SignupPage() {
                         disabled={
                           isSubmitting ||
                           !fullName.trim() ||
-                          !/^\d{10}$/.test(phone) ||
-                          !isValidPassword
+                          !/^[6-9]\d{9}$/.test(phone.replace(/\D/g, '').replace(/^0+/, '')) ||
+                          !isValidPassword ||
+                          !!phoneError
                         }
                         className={`relative inline-flex min-w-40 justify-center rounded-lg px-4 py-2.5 text-white text-sm font-medium transition-all duration-200 ${
                           isSubmitting ||
                           !fullName.trim() ||
-                          !/^\d{10}$/.test(phone) ||
-                          !isValidPassword
+                          !/^[6-9]\d{9}$/.test(phone.replace(/\D/g, '').replace(/^0+/, '')) ||
+                          !isValidPassword ||
+                          !!phoneError
                             ? 'bg-[oklch(0.84_0.04_10.35)] cursor-not-allowed'
                             : 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] hover:shadow-lg hover:scale-105 shadow-md'
                         }`}

@@ -68,20 +68,25 @@ export async function GET(request: Request) {
 
     await connect();
 
-    let user = await User.findOne({ email });
-    try {
-      if (!user) {
-        console.log('Creating new user:', { name, email });
-        user = await User.create({ name, email, isVerified: true });
-        console.log('User created:', user);
-      } else if (!user.isVerified) {
-        user.isVerified = true;
-        await user.save();
-        console.log('User verified:', user);
+    // Optimize: Use findOneAndUpdate with upsert for atomic operation
+    const user = await User.findOneAndUpdate(
+      { email },
+      { 
+        $set: { 
+          name, 
+          isVerified: true 
+        },
+        $setOnInsert: { email, isVerified: true } // Only set on insert
+      },
+      { 
+        upsert: true, 
+        new: true,
+        select: '_id name email' // Select only needed fields
       }
-    } catch (err) {
-      console.error('User save error:', err);
-      throw err;
+    ).lean<{ _id: any; name: string; email: string } | null>();
+    
+    if (!user) {
+      throw new Error('Failed to create or update user');
     }
 
     const token = jwt.sign({ uid: user._id, role: 'user' }, USER_JWT_SECRET, {
@@ -92,7 +97,7 @@ export async function GET(request: Request) {
     res.cookies.set('token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       path: '/',
       maxAge: SESSION_HOURS * 60 * 60,
     });

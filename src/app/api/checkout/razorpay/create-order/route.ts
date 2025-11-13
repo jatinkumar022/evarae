@@ -106,11 +106,15 @@ export async function POST(request: Request) {
       couponCode?: string;
     };
 
+    // Optimize: Select only needed fields
     const [cart, profile] = await Promise.all([
       Cart.findOne({ user: uid })
-        .populate('items.product')
+        .populate('items.product', 'name slug sku images price discountPrice')
+        .select('items')
         .lean<PopulatedCart | null>(),
-      UserProfile.findOne({ user: uid }).lean<UserProfileLean | null>(),
+      UserProfile.findOne({ user: uid })
+        .select('addresses')
+        .lean<UserProfileLean | null>(),
     ]);
 
     if (!cart || !cart.items || cart.items.length === 0)
@@ -174,25 +178,35 @@ export async function POST(request: Request) {
     // Amount must be integer paise for Razorpay
     const amountPaise = Math.round(total * 100);
 
-    // Generate human-friendly order number: ORD-<YYYYMMDD>-<XXXX> and ensure uniqueness
+    // Optimize: Generate human-friendly order number
+    // Use timestamp-based approach to reduce database queries
     const now = new Date();
     const ymd = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(
       2,
       '0'
     )}${String(now.getDate()).padStart(2, '0')}`;
     let orderNumber = '';
-    for (let i = 0; i < 5; i++) {
-      const rand = Math.floor(1000 + Math.random() * 9000);
-      const candidate = `ORD-${ymd}-${rand}`;
-      const exists = await Order.exists({ orderNumber: candidate });
-      if (!exists) {
-        orderNumber = candidate;
-        break;
+    // Optimize: Try timestamp-based first (most likely to be unique)
+    const timestampSuffix = Date.now().toString().slice(-5);
+    const candidate = `ORD-${ymd}-${timestampSuffix}`;
+    const exists = await Order.exists({ orderNumber: candidate }).lean();
+    if (!exists) {
+      orderNumber = candidate;
+    } else {
+      // Fallback: try random numbers (max 3 attempts)
+      for (let i = 0; i < 3; i++) {
+        const rand = Math.floor(1000 + Math.random() * 9000);
+        const fallbackCandidate = `ORD-${ymd}-${rand}`;
+        const fallbackExists = await Order.exists({ orderNumber: fallbackCandidate }).lean();
+        if (!fallbackExists) {
+          orderNumber = fallbackCandidate;
+          break;
+        }
       }
-    }
-    if (!orderNumber) {
-      // Fallback with timestamp fragment to avoid collision
-      orderNumber = `ORD-${ymd}-${Date.now().toString().slice(-5)}`;
+      // Final fallback with microsecond precision
+      if (!orderNumber) {
+        orderNumber = `ORD-${ymd}-${Date.now().toString().slice(-5)}-${Math.floor(Math.random() * 100)}`;
+      }
     }
 
     if (amountPaise < 100) {
@@ -254,13 +268,14 @@ export async function POST(request: Request) {
         },
       });
 
-      // Update order with Razorpay order ID
-      await Order.findByIdAndUpdate(order._id, {
-        paymentProviderOrderId: razorpayOrder.id,
-      });
+      // Optimize: Update order with Razorpay order ID using updateOne
+      await Order.updateOne(
+        { _id: order._id },
+        { paymentProviderOrderId: razorpayOrder.id }
+      );
 
       return NextResponse.json({
-        orderId: order._id,
+        orderId: String(order._id),
         orderNumber: order.orderNumber,
         razorpayOrderId: razorpayOrder.id,
         amount: total,
@@ -293,7 +308,7 @@ export async function POST(request: Request) {
 
       return NextResponse.json(
         {
-          orderId: order._id,
+          orderId: String(order._id),
           fallback: true,
           reason: authFailed ? 'RAZORPAY_AUTH_FAILED' : 'RAZORPAY_UNAVAILABLE',
           message: authFailed

@@ -1,4 +1,5 @@
 // components/Loader.tsx
+'use client';
 import React from 'react';
 
 interface LoaderProps {
@@ -56,7 +57,6 @@ const Loader = ({ text = 'Loading...', fullscreen = false, showLogo = false }: L
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/95 backdrop-blur-sm">
         <div className="text-center">
           {showLogo ? logoSpinner : spinner}
-      
         </div>
       </div>
     );

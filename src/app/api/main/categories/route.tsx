@@ -11,7 +11,10 @@ export async function GET() {
       .sort({ sortOrder: 1, name: 1 })
       .lean();
 
-    return NextResponse.json({ categories });
+    const res = NextResponse.json({ categories });
+    // Add cache header for categories (5 minutes)
+    res.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
+    return res;
   } catch (error) {
     console.error('Public categories GET error:', error);
     return NextResponse.json(

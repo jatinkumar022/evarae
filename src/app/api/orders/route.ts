@@ -34,7 +34,9 @@ export async function GET(request: Request) {
       );
     }
 
+    // Optimize: Select only needed fields for order list
     const orders = await Order.find({ user: uid })
+      .select('-__v')
       .sort({ createdAt: -1 })
       .lean();
 

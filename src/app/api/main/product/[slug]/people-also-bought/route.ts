@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { connect } from '@/dbConfig/dbConfig';
 import Product from '@/models/productModel';
+import mongoose from 'mongoose';
 
 type RouteContext = { params: Promise<{ slug: string }> };
 
@@ -9,13 +10,20 @@ export async function GET(request: Request, { params }: RouteContext) {
     await connect();
     const { slug } = await params;
 
+    // Optimize: Use select with minimal fields for existence check
     const current = await Product.findOne({ status: 'active', slug })
-      .select({ _id: 1, slug: 1 })
-      .lean();
+      .select('_id')
+      .lean<{ _id: mongoose.Types.ObjectId | string } | null>();
 
     const filter: Record<string, unknown> = { status: 'active' };
-    if (current)
-      filter['slug'] = { $ne: (current as unknown as { slug: string }).slug };
+    if (current) {
+      // MongoDB can handle both ObjectId and string comparisons automatically
+      // Convert to ObjectId for consistent comparison
+      const currentId = current._id instanceof mongoose.Types.ObjectId 
+        ? current._id 
+        : new mongoose.Types.ObjectId(String(current._id));
+      filter['_id'] = { $ne: currentId };
+    }
 
     // sample 8 random products
     const products = await Product.aggregate([
@@ -42,7 +50,10 @@ export async function GET(request: Request, { params }: RouteContext) {
       },
     ]);
 
-    return NextResponse.json({ products });
+    const res = NextResponse.json({ products });
+    // Add cache header for people-also-bought (2 minutes)
+    res.headers.set('Cache-Control', 'public, s-maxage=120, stale-while-revalidate=300');
+    return res;
   } catch (error) {
     console.error('people-also-bought route error', error);
     return NextResponse.json({ products: [] }, { status: 200 });

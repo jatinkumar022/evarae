@@ -29,7 +29,10 @@ export async function GET(request: Request, { params }: RouteContext) {
     const includeProducts = searchParams.get('includeProducts') === 'true';
 
     if (!includeProducts) {
-      return NextResponse.json({ category });
+      const res = NextResponse.json({ category });
+      // Add cache header for category details (5 minutes)
+      res.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
+      return res;
     }
 
     // ✅ Safely convert ObjectId to string
@@ -43,7 +46,10 @@ export async function GET(request: Request, { params }: RouteContext) {
       .limit(24)
       .lean();
 
-    return NextResponse.json({ category, products });
+    const res = NextResponse.json({ category, products });
+    // Add cache header for category with products (2 minutes)
+    res.headers.set('Cache-Control', 'public, s-maxage=120, stale-while-revalidate=300');
+    return res;
   } catch (error) {
     console.error('Public category GET error:', error);
     return NextResponse.json(

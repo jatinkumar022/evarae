@@ -31,9 +31,19 @@ export async function GET(request: Request, { params }: RouteContext) {
     const { slug } = await params;
     const isObjectId = /^[a-f0-9]{24}$/i.test(slug);
 
-    // Try find by sku first, then by _id or slug
-    const baseQuery: Record<string, unknown> = { status: 'active' };
-    let product = await Product.findOne({ ...baseQuery, sku: slug })
+    // Optimize: Use single $or query instead of sequential queries
+    const queryConditions: Record<string, unknown>[] = [
+      { sku: slug },
+      { slug },
+    ];
+    if (isObjectId) {
+      queryConditions.push({ _id: slug });
+    }
+
+    const product = await Product.findOne({
+      status: 'active',
+      $or: queryConditions,
+    })
       .select(
         'name slug description images price discountPrice status tags material colors stockQuantity video metaTitle metaDescription sku'
       )
@@ -41,20 +51,13 @@ export async function GET(request: Request, { params }: RouteContext) {
       .lean<PublicProduct | null>();
 
     if (!product) {
-      const which = isObjectId ? { _id: slug } : { slug };
-      product = await Product.findOne({ ...which, status: 'active' })
-        .select(
-          'name slug description images price discountPrice status tags material colors stockQuantity video metaTitle metaDescription sku'
-        )
-        .populate('categories', 'name slug')
-        .lean<PublicProduct | null>();
-    }
-
-    if (!product) {
       return NextResponse.json({ error: 'Product not found' }, { status: 404 });
     }
 
-    return NextResponse.json({ product });
+    const res = NextResponse.json({ product });
+    // Add cache header for product details (5 minutes)
+    res.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
+    return res;
   } catch (error) {
     console.error('Public product GET error:', error);
     return NextResponse.json(

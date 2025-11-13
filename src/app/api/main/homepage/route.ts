@@ -26,53 +26,57 @@ export async function GET() {
     // Get homepage configuration
     const homepage = await Homepage.getHomepage();
 
-    // Fetch categories (for Explore by Category section)
-    const categories = await Category.find({ isActive: true })
-      .select('name slug image description banner mobileBanner')
-      .sort({ sortOrder: 1, name: 1 })
-      .lean();
-
-    // Fetch bestsellers (for Our Bestsellers section)
-    const bestsellers = await Product.aggregate([
-      { $match: { status: 'active' } },
-      { $sample: { size: 10 } },
-      {
-        $project: {
-          name: 1,
-          slug: 1,
-          images: 1,
-          price: 1,
-          discountPrice: 1,
-          status: 1,
-          tags: 1,
-          material: 1,
-          colors: 1,
-          categories: 1,
+    // Optimize: Fetch independent data in parallel
+    const [categories, bestsellersAgg] = await Promise.all([
+      // Fetch categories (for Explore by Category section)
+      Category.find({ isActive: true })
+        .select('name slug image description banner mobileBanner')
+        .sort({ sortOrder: 1, name: 1 })
+        .lean(),
+      // Fetch bestsellers (for Our Bestsellers section)
+      Product.aggregate([
+        { $match: { status: 'active' } },
+        { $sample: { size: 10 } },
+        {
+          $project: {
+            name: 1,
+            slug: 1,
+            images: 1,
+            price: 1,
+            discountPrice: 1,
+            status: 1,
+            tags: 1,
+            material: 1,
+            colors: 1,
+            categories: 1,
+          },
         },
-      },
+      ]),
     ]);
 
     // Populate categories for bestsellers
-    const populatedBestsellers = await Product.populate(bestsellers, {
+    const populatedBestsellers = await Product.populate(bestsellersAgg, {
       path: 'categories',
       select: 'name slug',
     });
 
-    // Fetch Signature Collections
-    const signatureCollections = await Collection.find<LeanCollection>({
-      _id: { $in: homepage.signatureCollections || [] },
-      isActive: true,
-    })
-      .select('name slug image description')
-      .lean();
-
-    // Fetch World of Caelvi Collections
-    const worldOfCaelviCollections = await Collection.find<LeanCollection>({
-      _id: { $in: homepage.worldOfCaelviCollections || [] },
-      isActive: true,
-    })
-      .select('name slug image description')
-      .lean();
+    // Optimize: Fetch collections in parallel
+    const [signatureCollections, worldOfCaelviCollections] = await Promise.all([
+      // Fetch Signature Collections
+      Collection.find<LeanCollection>({
+        _id: { $in: homepage.signatureCollections || [] },
+        isActive: true,
+      })
+        .select('name slug image description')
+        .lean(),
+      // Fetch World of Caelvi Collections
+      Collection.find<LeanCollection>({
+        _id: { $in: homepage.worldOfCaelviCollections || [] },
+        isActive: true,
+      })
+        .select('name slug image description')
+        .lean(),
+    ]);
 
     // Calculate Currently Trending Collections based on recent sales
     const daysBack = homepage.trendingConfig?.daysBack || 30;
@@ -132,7 +136,7 @@ export async function GET() {
     // Limit to 3 collections
     trendingCollections = trendingCollections.slice(0, 3);
 
-    return NextResponse.json({
+    const res = NextResponse.json({
       hero: {
         images: homepage.heroImages || [],
       },
@@ -155,6 +159,9 @@ export async function GET() {
       },
       worldOfCaelvi: worldOfCaelviCollections || [],
     });
+    // Add cache header for homepage (2 minutes)
+    res.headers.set('Cache-Control', 'public, s-maxage=120, stale-while-revalidate=300');
+    return res;
   } catch (error) {
     console.error('Homepage GET error:', error);
     return NextResponse.json(

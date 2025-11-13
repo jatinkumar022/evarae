@@ -6,7 +6,7 @@ import { GiCrystalShine } from 'react-icons/gi';
 import { Heart } from '@/app/(main)/assets/Navbar';
 import { Cart } from '@/app/(main)/assets/Common';
 import { Product } from '@/lib/types/product';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo, useRef, memo } from 'react';
 import dynamic from 'next/dynamic';
 import { useWishlistStore } from '@/lib/data/mainStore/wishlistStore';
 import { useUserAccountStore } from '@/lib/data/mainStore/userAccountStore';
@@ -29,7 +29,7 @@ interface PeopleAlsoBoughtProps {
   currentProduct: Product;
 }
 
-export function PeopleAlsoBought({ currentProduct }: PeopleAlsoBoughtProps) {
+function PeopleAlsoBoughtComponent({ currentProduct }: PeopleAlsoBoughtProps) {
   const [items, setItems] = useState<Product[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -38,14 +38,23 @@ export function PeopleAlsoBought({ currentProduct }: PeopleAlsoBoughtProps) {
   const [isWishlistLoading, setIsWishlistLoading] = useState<string | null>(null);
   const { add: addToWishlist, remove: removeFromWishlist, products: wishlistProducts } = useWishlistStore();
 
+  // Memoize product ID to prevent unnecessary re-fetches
+  const productId = useMemo(() => currentProduct.id, [currentProduct.id]);
+  const fetchedProductIdRef = useRef<string | null>(null);
+
   // User and wishlist are loaded centrally via Navbar, no need to fetch here
 
   useEffect(() => {
+    // Prevent duplicate fetches for the same product
+    if (fetchedProductIdRef.current === productId) return;
+    
+    fetchedProductIdRef.current = productId;
+    
     (async () => {
       try {
+        // Use default cache (browser will cache based on Cache-Control headers from API)
         const res = await fetch(
-          `/api/main/product/${currentProduct.id}/people-also-bought`,
-          { cache: 'no-store' }
+          `/api/main/product/${productId}/people-also-bought`
         );
         if (!res.ok) return;
         const data = await res.json();
@@ -118,10 +127,13 @@ export function PeopleAlsoBought({ currentProduct }: PeopleAlsoBoughtProps) {
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         }));
-        setItems(mapped.filter(p => p.id !== currentProduct.id).slice(0, 8));
-      } catch {}
+        setItems(mapped.filter(p => p.id !== productId).slice(0, 8));
+      } catch {
+        // Reset ref on error so it can retry
+        fetchedProductIdRef.current = null;
+      }
     })();
-  }, [currentProduct.id]);
+  }, [productId]);
 
   const handleAddToCart = (product: Product) => (event: React.MouseEvent) => {
     event.preventDefault();
@@ -293,3 +305,9 @@ export function PeopleAlsoBought({ currentProduct }: PeopleAlsoBoughtProps) {
     </>
   );
 }
+
+// Memoize component to prevent unnecessary re-renders
+export const PeopleAlsoBought = memo(PeopleAlsoBoughtComponent, (prevProps, nextProps) => {
+  // Only re-render if product ID changes
+  return prevProps.currentProduct.id === nextProps.currentProduct.id;
+});

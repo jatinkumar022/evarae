@@ -26,7 +26,11 @@ export async function POST(request: Request) {
       );
     }
 
-    const pending = await PendingSignup.findOne({ email: email.toLowerCase() });
+    // Optimize: Select only needed fields
+    const pending = await PendingSignup.findOne({ email: email.toLowerCase() })
+      .select('email otpHash otpExpiry attempts')
+      .lean<{ email: string; otpHash: string; otpExpiry: Date; attempts: number } | null>();
+    
     if (!pending || !pending.otpHash || !pending.otpExpiry) {
       return NextResponse.json({ error: 'Invalid OTP' }, { status: 400 });
     }
@@ -38,9 +42,12 @@ export async function POST(request: Request) {
     }
 
     const valid = await bcrypt.compare(otp, pending.otpHash);
-    pending.attempts = (pending.attempts || 0) + 1;
     if (!valid) {
-      await pending.save();
+      // Optimize: Use updateOne instead of save for better performance
+      await PendingSignup.updateOne(
+        { email: email.toLowerCase() },
+        { $inc: { attempts: 1 } }
+      );
       return NextResponse.json({ error: 'Invalid OTP' }, { status: 400 });
     }
 

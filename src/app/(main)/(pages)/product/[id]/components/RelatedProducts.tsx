@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo, memo } from 'react';
 import Image from '@/app/(main)/components/ui/FallbackImage';
 import Link from 'next/link';
 import { GiCrystalShine } from 'react-icons/gi';
@@ -30,7 +30,7 @@ interface RelatedProductsProps {
   category: Category;
 }
 
-export function RelatedProducts({
+function RelatedProductsComponent({
   currentProduct,
   category,
 }: RelatedProductsProps) {
@@ -46,14 +46,23 @@ export function RelatedProducts({
   const [isWishlistLoading, setIsWishlistLoading] = useState<string | null>(null);
   const { add: addToWishlist, remove: removeFromWishlist, products: wishlistProducts } = useWishlistStore();
 
+  // Memoize product ID to prevent unnecessary re-fetches
+  const productId = useMemo(() => currentProduct.id, [currentProduct.id]);
+  const fetchedProductIdRef = useRef<string | null>(null);
+
   // User and wishlist are loaded centrally via Navbar, no need to fetch here
 
   useEffect(() => {
+    // Prevent duplicate fetches for the same product
+    if (fetchedProductIdRef.current === productId) return;
+    
+    fetchedProductIdRef.current = productId;
+    
     (async () => {
       try {
+        // Use default cache (browser will cache based on Cache-Control headers from API)
         const res = await fetch(
-          `/api/main/product/${currentProduct.id}/related`,
-          { cache: 'no-store' }
+          `/api/main/product/${productId}/related`
         );
         if (!res.ok) return;
         const data = await res.json();
@@ -126,10 +135,13 @@ export function RelatedProducts({
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         }));
-        setItems(mapped.filter(p => p.id !== currentProduct.id).slice(0, 12));
-      } catch {}
+        setItems(mapped.filter(p => p.id !== productId).slice(0, 12));
+      } catch {
+        // Reset ref on error so it can retry
+        fetchedProductIdRef.current = null;
+      }
     })();
-  }, [currentProduct.id]);
+  }, [productId]);
 
   useEffect(() => {
     const container = sliderRef.current;
@@ -377,3 +389,9 @@ export function RelatedProducts({
     </>
   );
 }
+
+// Memoize component to prevent unnecessary re-renders
+export const RelatedProducts = memo(RelatedProductsComponent, (prevProps, nextProps) => {
+  // Only re-render if product ID changes
+  return prevProps.currentProduct.id === nextProps.currentProduct.id;
+});

@@ -156,7 +156,13 @@ export default function Navbar() {
   const { items, load } = useCartStore();
   const { categories, status, fetchCategories } = usePublicCategoryStore();
   const syncCartCount = useCartCountStore((state) => state.syncWithCart);
-  const { user, load: loadUser, refresh: refreshUser, clear: clearUser } = useUserAccountStore();
+  const {
+    user,
+    load: loadUser,
+    refresh: refreshUser,
+    clear: clearUser,
+    hydrate: hydrateUser,
+  } = useUserAccountStore();
   const { load: loadWishlist } = useWishlistStore();
   
   // Load user account once on mount (centralized - all components will use this)
@@ -342,10 +348,27 @@ export default function Navbar() {
     setLoginPasswordError(null);
     setLoginLoading(true);
     try {
-      await userAuthApi.loginWithPassword(loginEmail, loginPassword);
+      const { user: authUser } = await userAuthApi.loginWithPassword(
+        loginEmail,
+        loginPassword
+      );
+      // Immediately hydrate with basic user data from login response
+      // This will automatically hide the login dropdown since currentUser will be truthy
+      hydrateUser({
+        id: authUser.id,
+        name: authUser.name,
+        email: authUser.email,
+      });
       setLoginStep('done');
-      // Refresh user from store after login
-      await refreshUser();
+      // Reset form after a brief delay to show success state
+      setTimeout(() => {
+        setLoginStep('email');
+        setLoginEmail('');
+        setLoginPassword('');
+        setLoginOtp(['', '', '', '', '', '']);
+      }, 500);
+      // Refresh full user profile from store (async, don't block UI)
+      void refreshUser();
     } catch (e) {
       const message = e instanceof Error ? e.message : 'Invalid credentials';
       setLoginPasswordError(message);
@@ -359,10 +382,27 @@ export default function Navbar() {
     setLoginOtpError(null);
     setLoginLoading(true);
     try {
-      await userAuthApi.loginVerifyOtp(loginEmail, loginOtp.join(''));
+      const { user: authUser } = await userAuthApi.loginVerifyOtp(
+        loginEmail,
+        loginOtp.join('')
+      );
+      // Immediately hydrate with basic user data from login response
+      // This will automatically hide the login dropdown since currentUser will be truthy
+      hydrateUser({
+        id: authUser.id,
+        name: authUser.name,
+        email: authUser.email,
+      });
       setLoginStep('done');
-      // Refresh user from store after login
-      await refreshUser();
+      // Reset form after a brief delay to show success state
+      setTimeout(() => {
+        setLoginStep('email');
+        setLoginEmail('');
+        setLoginPassword('');
+        setLoginOtp(['', '', '', '', '', '']);
+      }, 500);
+      // Refresh full user profile from store (async, don't block UI)
+      void refreshUser();
     } catch (e) {
       const message = e instanceof Error ? e.message : 'Invalid OTP';
       setLoginOtpError(message);
@@ -389,6 +429,21 @@ export default function Navbar() {
   const handleLogout = async () => {
     try {
       setIsLoggingOut(true);
+      
+      // Define protected paths that require authentication
+      const PROTECTED_PATHS = [
+        '/checkout',
+        '/account',
+        '/orders',
+        '/wishlist',
+        '/cart',
+      ];
+      
+      // Check if current path is a protected path
+      const isOnProtectedPath = PROTECTED_PATHS.some(path => 
+        pathname.startsWith(path)
+      );
+      
       await userAuthApi.logout();
       clearUser(); // Clear user from centralized store
       setLoginStep('email');
@@ -396,7 +451,11 @@ export default function Navbar() {
       setLoginPassword('');
       setLoginOtp(Array(6).fill(''));
       setShowLogoutModal(false);
-      router.push('/');
+     if (isOnProtectedPath) {
+       router.push('/');
+
+     }
+      // Redirect to dashboard (home) when logging out, especially from protected pages
     } catch (error) {
       console.error('Logout error:', error);
     } finally {

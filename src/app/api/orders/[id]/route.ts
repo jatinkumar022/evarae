@@ -36,11 +36,14 @@ export async function GET(
     }
 
     const { id: key } = await ctx.params;
+    // Optimize: Select only needed fields
     const order = await Order.findOne(
       key.startsWith('ORD-')
         ? { orderNumber: key, user: uid }
         : { _id: key, user: uid }
-    ).lean();
+    )
+      .select('-__v')
+      .lean();
 
     if (!order) {
       return NextResponse.json(

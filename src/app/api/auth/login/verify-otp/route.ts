@@ -27,7 +27,18 @@ export async function POST(request: Request) {
       );
     }
 
-    const user = await User.findOne({ email: email.toLowerCase() });
+    // Optimize: Select only needed fields
+    const user = await User.findOne({ email: email.toLowerCase() })
+      .select('_id name email loginOtpHash loginOtpExpiry loginOtpAttempts')
+      .lean<{ 
+        _id: any; 
+        name: string; 
+        email: string; 
+        loginOtpHash?: string; 
+        loginOtpExpiry?: Date; 
+        loginOtpAttempts?: number 
+      } | null>();
+    
     if (!user || !user.loginOtpHash || !user.loginOtpExpiry) {
       return NextResponse.json({ error: 'Invalid OTP' }, { status: 400 });
     }
@@ -36,7 +47,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'OTP expired' }, { status: 400 });
     }
 
-    if (user.loginOtpAttempts >= 5) {
+    if ((user.loginOtpAttempts || 0) >= 5) {
       return NextResponse.json(
         { error: 'Too many attempts. Request a new OTP.' },
         { status: 429 }
@@ -44,17 +55,24 @@ export async function POST(request: Request) {
     }
 
     const valid = await bcrypt.compare(otp, user.loginOtpHash);
-    user.loginOtpAttempts = (user.loginOtpAttempts || 0) + 1;
 
     if (!valid) {
-      await user.save();
+      // Optimize: Use updateOne instead of save
+      await User.updateOne(
+        { email: email.toLowerCase() },
+        { $inc: { loginOtpAttempts: 1 } }
+      );
       return NextResponse.json({ error: 'Invalid OTP' }, { status: 400 });
     }
 
-    user.loginOtpHash = undefined as unknown as string;
-    user.loginOtpExpiry = undefined as unknown as Date;
-    user.loginOtpAttempts = 0 as unknown as number;
-    await user.save();
+    // Clear OTP fields after successful verification
+    await User.updateOne(
+      { email: email.toLowerCase() },
+      {
+        $unset: { loginOtpHash: '', loginOtpExpiry: '' },
+        $set: { loginOtpAttempts: 0 },
+      }
+    );
 
     const token = jwt.sign({ uid: user._id, role: 'user' }, USER_JWT_SECRET, {
       expiresIn: `${SESSION_HOURS}h`,
@@ -62,7 +80,7 @@ export async function POST(request: Request) {
 
     const res = NextResponse.json({
       ok: true,
-      user: { id: user._id, name: user.name, email: user.email },
+      user: { id: String(user._id), name: user.name, email: user.email },
     });
     res.cookies.set('token', token, {
       httpOnly: true,
