@@ -95,39 +95,46 @@ export default function GlobalLoaderProvider({
     }
   }, [isInitialLoad, inFlightCount]);
 
-  // Clear navigation state only when:
-  // 1. Navigation started (isNavigating = true)
-  // 2. Pathname has changed from when navigation started (navigation completed)
-  // 3. All API calls are complete (inFlightCount === 0)
-  // 4. Minimum display time has passed
+  // Clear navigation state when navigation completes:
+  // 1. Pathname changed from when navigation started
+  // 2. All tracked API calls are complete
+  // 3. Minimum loader display time has elapsed
   useEffect(() => {
-    if (!isInitialLoad) return; // Early return if already completed
-
-    if (navigationStartTimeRef.current === null) {
-      // No navigation in progress
-      if (inFlightCount === 0 && !isNavigating) {
-        setIsInitialLoad(false);
-      }
-      return;
-    }
+    if (navigationStartTimeRef.current === null) return;
 
     const elapsed = Date.now() - navigationStartTimeRef.current;
     const remainingTime = Math.max(minLoaderTimeRef.current - elapsed, 0);
+    const hasPathChanged =
+      navigationStartPathRef.current !== null &&
+      pathnameRef.current !== null &&
+      pathnameRef.current !== navigationStartPathRef.current;
 
-    if (inFlightCount === 0 && !isNavigating && remainingTime <= 0) {
-      setIsInitialLoad(false);
+    if (!hasPathChanged && inFlightCount === 0 && elapsed > 10000) {
+      // Fallback: ensure loader doesn't get stuck if navigation was cancelled
+      setNavigating(false);
       navigationStartTimeRef.current = null;
       navigationStartPathRef.current = null;
-    } else if (inFlightCount === 0 && !isNavigating) {
-      const timer = setTimeout(() => {
+      return;
+    }
+
+    if (hasPathChanged && inFlightCount === 0) {
+      const completeNavigation = () => {
         setNavigating(false);
         navigationStartTimeRef.current = null;
         navigationStartPathRef.current = null;
-      }, remainingTime);
-      
-      return () => clearTimeout(timer);
+        if (isInitialLoad) {
+          setIsInitialLoad(false);
+        }
+      };
+
+      if (remainingTime <= 0) {
+        completeNavigation();
+      } else {
+        const timer = setTimeout(completeNavigation, remainingTime);
+        return () => clearTimeout(timer);
+      }
     }
-  }, [inFlightCount, isInitialLoad, isNavigating, pathname, setNavigating]);
+  }, [inFlightCount, isInitialLoad, pathname, setNavigating]);
 
   // Only treat content/data GET requests from public "main" APIs as global loader candidates
   const trackedPrefixes = useRef<string[]>(['/api/main/']);
@@ -196,6 +203,14 @@ export default function GlobalLoaderProvider({
       const link = target.closest('a[href]') as HTMLAnchorElement;
       
       if (!link) return;
+
+      // Skip if interaction is happening through an embedded button or control inside the link.
+      const interactiveElement = target.closest(
+        'button, [role="button"], input, select, textarea, label'
+      );
+      if (interactiveElement && link.contains(interactiveElement)) {
+        return;
+      }
 
       const href = link.getAttribute('href');
       if (!href) return;

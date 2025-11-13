@@ -7,6 +7,7 @@ import Container from '@/app/(main)/components/layouts/Container';
 import { Eye, EyeOff } from 'lucide-react';
 import { useUserAuth } from '@/lib/data/mainStore/userAuth';
 import { Spinner } from '@/app/(main)/components/ui/ScaleLoader';
+import { useUserAccountStore } from '@/lib/data/mainStore/userAccountStore';
 
 export default function SignupPage() {
   type Step = 'email' | 'auth' | 'details' | 'done';
@@ -21,6 +22,8 @@ export default function SignupPage() {
     verifySignupOtp,
     resendInSec,
   } = useUserAuth();
+  const hydrateAccount = useUserAccountStore(state => state.hydrate);
+  const refreshAccount = useUserAccountStore(state => state.refresh);
 
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -160,33 +163,72 @@ export default function SignupPage() {
     }
   };
 
-  const handlePhoneChange = (value: string) => {
-    // Remove non-digits and limit to 10 digits
-    const digitsOnly = value.replace(/\D/g, '').slice(0, 10);
-    const normalized = digitsOnly.replace(/^0+/, '');
+  const extractPhoneDigits = (value: string) => value.replace(/\D/g, '');
 
+  const normalizePhoneInput = (value: string) => {
+    const digitsOnly = extractPhoneDigits(value);
+    if (!digitsOnly) return '';
+
+    if (digitsOnly.length > 10) {
+      return digitsOnly.slice(-10);
+    }
+
+    return digitsOnly;
+  };
+
+  const normalizePhoneForSubmit = (value: string) => {
+    const digitsOnly = normalizePhoneInput(value);
+    if (!digitsOnly) return '';
+    return digitsOnly;
+  };
+
+  const handlePhoneChange = (value: string) => {
+    const normalized = normalizePhoneInput(value);
     setPhone(normalized);
     setPhoneError(null);
   };
 
   const handlePhonePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
-    e.preventDefault();
-    const pasted = e.clipboardData.getData('text');
-    // Remove non-digits, limit to 10, and remove leading zeros
-    const digitsOnly = pasted.replace(/\D/g, '').slice(0, 10);
-    const normalized = digitsOnly.replace(/^0+/, '');
-    setPhone(normalized);
-    setPhoneError(null);
+    const clipboardText = e.clipboardData?.getData('text');
+    if (clipboardText) {
+      e.preventDefault();
+      setPhone(normalizePhoneInput(clipboardText));
+      setPhoneError(null);
+      return;
+    }
+
+    if (typeof navigator !== 'undefined' && navigator.clipboard?.readText) {
+      e.preventDefault();
+      navigator.clipboard
+        .readText()
+        .then(text => {
+          if (!text) return;
+          setPhone(normalizePhoneInput(text));
+          setPhoneError(null);
+        })
+        .catch(() => {
+          // Ignore errors – allow user to paste manually
+        });
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const normalizedPhone = normalizePhoneForSubmit(phone);
     
-    // Normalize phone: remove non-digits and leading zeros
-    const normalizedPhone = phone.replace(/\D/g, '').replace(/^0+/, '');
-    
-    if (!fullName.trim() || !/^[6-9]\d{9}$/.test(normalizedPhone) || isSubmitting || phoneError) {
-      if (!/^[6-9]\d{9}$/.test(normalizedPhone) && normalizedPhone.length === 10) {
+    const isValidPhone = /^[6-9]\d{9}$/.test(normalizedPhone);
+
+    if (
+      !fullName.trim() ||
+      !isValidPhone ||
+      normalizedPhone.length !== 10 ||
+      isSubmitting ||
+      phoneError
+    ) {
+      if (normalizedPhone.length !== 10) {
+        setPhoneError('Mobile number must be 10 digits');
+      } else if (!isValidPhone) {
         setPhoneError('Please enter a valid 10-digit Indian mobile number');
       }
       return;
@@ -196,7 +238,19 @@ export default function SignupPage() {
     setPhoneError(null);
     try {
       const { userAuthApi } = await import('@/lib/utils');
-      await userAuthApi.completeProfile(fullName.trim(), normalizedPhone, password);
+        const res = await userAuthApi.completeProfile(
+          fullName.trim(),
+          normalizedPhone,
+          password
+        );
+        if (res.user) {
+          hydrateAccount({
+            id: res.user.id,
+            name: res.user.name,
+            email: res.user.email,
+          });
+        }
+        await refreshAccount();
       setStep('done');
     } catch (error: unknown) {
       const errorMessage =
@@ -212,23 +266,38 @@ export default function SignupPage() {
       setIsSubmitting(false);
     }
   };
-  const handleOtpPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
-    e.preventDefault();
-    const pasted = e.clipboardData
-      .getData('text')
-      .replace(/\D/g, '')
-      .slice(0, otp.length);
-    if (!pasted) return;
+
+  const applyOtpFromText = (text: string) => {
+    const digits = text.replace(/\D/g, '').slice(0, otp.length);
+    if (!digits) return;
 
     const next = [...otp];
-    for (let i = 0; i < pasted.length; i++) {
-      next[i] = pasted[i];
+    for (let i = 0; i < digits.length; i++) {
+      next[i] = digits[i];
     }
     setOtp(next);
 
-    // Focus the last filled input
-    const lastIndex = Math.min(pasted.length - 1, otp.length - 1);
+    const lastIndex = Math.min(digits.length - 1, otp.length - 1);
     inputsRef.current[lastIndex]?.focus();
+  };
+
+  const handleOtpPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    const clipboardText = e.clipboardData?.getData('text');
+    if (clipboardText) {
+      e.preventDefault();
+      applyOtpFromText(clipboardText);
+      return;
+    }
+
+    if (typeof navigator !== 'undefined' && navigator.clipboard?.readText) {
+      e.preventDefault();
+      navigator.clipboard
+        .readText()
+        .then(applyOtpFromText)
+        .catch(() => {
+          // Ignore errors to avoid blocking manual input
+        });
+    }
   };
 
   return (
@@ -540,8 +609,7 @@ export default function SignupPage() {
                         onChange={e => handlePhoneChange(e.target.value)}
                         onPaste={handlePhonePaste}
                         onBlur={() => {
-                          // Ensure leading zeros are removed on blur as well
-                          const cleaned = phone.replace(/\D/g, '').replace(/^0+/, '');
+                          const cleaned = normalizePhoneInput(phone);
                           if (cleaned !== phone) {
                             setPhone(cleaned);
                           }

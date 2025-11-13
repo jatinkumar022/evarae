@@ -13,7 +13,7 @@ export const NavbarLogo = memo(function NavbarLogo() {
   return (
     <Link
       href="/"
-      className={`${philosopher.className} text-2xl sm:text-3xl font-bold text-primary-dark hover:text-primary transition-colors`}
+      className={`${philosopher.className} text-2xl sm:text-3xl font-heading text-primary  uppercase`}
     >
       Caelvi
     </Link>

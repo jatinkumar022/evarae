@@ -33,15 +33,18 @@ export async function middleware(request: NextRequest) {
 
     const isProtectedPath = PROTECTED_PATHS.some(p => path.startsWith(p));
 
+  const canVerify = !!USER_JWT_SECRET;
+  const tokenIsPresent = !!token;
+  const tokenIsValid = tokenIsPresent && (!canVerify || (await isValidUserToken(token)));
+
     // If not authenticated and trying to access protected page → redirect to login
-    if ((!token || !(await isValidUserToken(token))) && isProtectedPath) {
+  if (!tokenIsValid && isProtectedPath) {
       return NextResponse.redirect(new URL('/login', request.url));
     }
 
     // If authenticated and trying to access login/signup → redirect to home (or account)
     if (
-      token &&
-      (await isValidUserToken(token)) &&
+      tokenIsValid &&
       (path === '/login' || path === '/signup')
     ) {
       return NextResponse.redirect(new URL('/', request.url));

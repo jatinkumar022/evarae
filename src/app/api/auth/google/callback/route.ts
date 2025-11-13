@@ -6,8 +6,25 @@ import type { Types } from 'mongoose';
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID as string;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET as string;
+const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI?.trim();
 const USER_JWT_SECRET = process.env.USER_JWT_SECRET as string;
 const SESSION_HOURS = Number(process.env.SESSION_HOURS || 72);
+
+function resolveRedirectUri(origin: string) {
+  if (!GOOGLE_REDIRECT_URI) {
+    return `${origin}/api/auth/google/callback`;
+  }
+
+  if (GOOGLE_REDIRECT_URI.startsWith('http')) {
+    return GOOGLE_REDIRECT_URI;
+  }
+
+  const normalizedPath = GOOGLE_REDIRECT_URI.startsWith('/')
+    ? GOOGLE_REDIRECT_URI
+    : `/${GOOGLE_REDIRECT_URI}`;
+
+  return `${origin}${normalizedPath}`;
+}
 
 async function exchangeCodeForTokens(code: string, redirectUri: string) {
   const body = new URLSearchParams({
@@ -48,7 +65,7 @@ export async function GET(request: Request) {
     const url = new URL(request.url);
     const code = url.searchParams.get('code');
     const origin = `${url.protocol}//${url.host}`;
-    const redirectUri = `${origin}/api/auth/google/callback`;
+    const redirectUri = resolveRedirectUri(origin);
 
     if (!code) {
       return NextResponse.redirect(`${origin}/login?error=missing_code`);
@@ -72,17 +89,17 @@ export async function GET(request: Request) {
     // Optimize: Use findOneAndUpdate with upsert for atomic operation
     const user = await User.findOneAndUpdate(
       { email },
-      { 
-        $set: { 
-          name, 
-          isVerified: true 
+      {
+        $set: {
+          name,
+          isVerified: true,
+          email,
         },
-        $setOnInsert: { email, isVerified: true } // Only set on insert
       },
-      { 
-        upsert: true, 
+      {
+        upsert: true,
         new: true,
-        select: '_id name email' // Select only needed fields
+        select: '_id name email', // Select only needed fields
       }
     ).lean<{ _id: Types.ObjectId; name: string; email: string } | null>();
     

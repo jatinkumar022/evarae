@@ -10,6 +10,18 @@ const USER_JWT_SECRET = process.env.USER_JWT_SECRET as string;
 const SIGNUP_JWT_SECRET = process.env.SIGNUP_JWT_SECRET as string;
 const SESSION_HOURS = Number(process.env.SESSION_HOURS || 72);
 
+function normalizeIndianMobile(raw: unknown) {
+  if (typeof raw !== 'string') return '';
+  const digitsOnly = raw.replace(/\D/g, '');
+  if (!digitsOnly) return '';
+
+  if (digitsOnly.length > 10) {
+    return digitsOnly.slice(-10);
+  }
+
+  return digitsOnly;
+}
+
 function getCookie(req: Request, name: string): string | null {
   const cookieHeader = req.headers.get('cookie') || '';
   const token = cookieHeader
@@ -29,8 +41,7 @@ export async function POST(request: Request) {
     if (!name || typeof name !== 'string') {
       return NextResponse.json({ error: 'Name is required' }, { status: 400 });
     }
-    // Normalize phone: remove non-digits and leading zeros
-    const normalizedPhone = phone.replace(/\D/g, '').replace(/^0+/, '');
+    const normalizedPhone = normalizeIndianMobile(phone);
     
     if (!phone || typeof phone !== 'string' || !/^[6-9]\d{9}$/.test(normalizedPhone)) {
       return NextResponse.json(

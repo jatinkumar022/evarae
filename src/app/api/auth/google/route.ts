@@ -1,6 +1,23 @@
 import { NextResponse } from 'next/server';
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID as string;
+const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI?.trim();
+
+function resolveRedirectUri(origin: string) {
+  if (!GOOGLE_REDIRECT_URI) {
+    return `${origin}/api/auth/google/callback`;
+  }
+
+  if (GOOGLE_REDIRECT_URI.startsWith('http')) {
+    return GOOGLE_REDIRECT_URI;
+  }
+
+  const normalizedPath = GOOGLE_REDIRECT_URI.startsWith('/')
+    ? GOOGLE_REDIRECT_URI
+    : `/${GOOGLE_REDIRECT_URI}`;
+
+  return `${origin}${normalizedPath}`;
+}
 
 export async function GET(request: Request) {
   try {
@@ -14,7 +31,7 @@ export async function GET(request: Request) {
 
     const url = new URL(request.url);
     const origin = `${url.protocol}//${url.host}`;
-    const redirectUri = `${origin}/api/auth/google/callback`;
+    const redirectUri = resolveRedirectUri(origin);
 
     const params = new URLSearchParams({
       client_id: GOOGLE_CLIENT_ID,

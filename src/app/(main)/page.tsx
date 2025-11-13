@@ -4,13 +4,15 @@ import { useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import Container from './components/layouts/Container';
 import Hero from './components/home/Hero';
-import CircleCategories from './components/home/Category';
 import { Devider } from './assets/Common';
 import { useHomepageStore } from '@/lib/data/mainStore/homepageStore';
 import { usePublicCategoryStore } from '@/lib/data/mainStore/categoryStore';
 
 // Dynamically import heavy components to improve initial page load
 // These will be code-split and loaded on demand, while still supporting SSR
+
+const Category = dynamic(() => import('./components/home/Category'));
+
 const CategoryGrid = dynamic(() => import('./components/home/CategoryGrid'));
 
 const AnimatedCards = dynamic(() => import('./components/home/AnimatedCards'));
@@ -62,7 +64,7 @@ export default function Home() {
   return (
     <>
       <Container>
-        <CircleCategories />
+        <Category />
       </Container>
 
       <div className="w-full xl:max-w-screen-xl mx-auto md:px-6">

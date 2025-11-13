@@ -189,6 +189,7 @@ export default function Navbar() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+
   // Load wishlist once when user is authenticated
   useEffect(() => {
     if (user) {
@@ -350,23 +351,13 @@ export default function Navbar() {
         loginEmail,
         loginPassword
       );
-      // Immediately hydrate with basic user data from login response
-      // This will automatically hide the login dropdown since currentUser will be truthy
       hydrateUser({
         id: authUser.id,
         name: authUser.name,
         email: authUser.email,
       });
+      await refreshUser();
       setLoginStep('done');
-      // Reset form after a brief delay to show success state
-      setTimeout(() => {
-        setLoginStep('email');
-        setLoginEmail('');
-        setLoginPassword('');
-        setLoginOtp(['', '', '', '', '', '']);
-      }, 500);
-      // Refresh full user profile from store (async, don't block UI)
-      void refreshUser();
     } catch (e) {
       const message = e instanceof Error ? e.message : 'Invalid credentials';
       setLoginPasswordError(message);
@@ -384,23 +375,13 @@ export default function Navbar() {
         loginEmail,
         loginOtp.join('')
       );
-      // Immediately hydrate with basic user data from login response
-      // This will automatically hide the login dropdown since currentUser will be truthy
       hydrateUser({
         id: authUser.id,
         name: authUser.name,
         email: authUser.email,
       });
+      await refreshUser();
       setLoginStep('done');
-      // Reset form after a brief delay to show success state
-      setTimeout(() => {
-        setLoginStep('email');
-        setLoginEmail('');
-        setLoginPassword('');
-        setLoginOtp(['', '', '', '', '', '']);
-      }, 500);
-      // Refresh full user profile from store (async, don't block UI)
-      void refreshUser();
     } catch (e) {
       const message = e instanceof Error ? e.message : 'Invalid OTP';
       setLoginOtpError(message);

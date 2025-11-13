@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Container from '@/app/(main)/components/layouts/Container';
 import { Eye, EyeOff } from 'lucide-react';
 import { useUserAuth } from '@/lib/data/mainStore/userAuth';
+import { useUserAccountStore } from '@/lib/data/mainStore/userAccountStore';
 import { Spinner } from '@/app/(main)/components/ui/ScaleLoader';
 
 export default function LoginPage() {
@@ -26,6 +27,8 @@ export default function LoginPage() {
     verifyLoginOtp,
     resendInSec,
   } = useUserAuth();
+  const hydrateAccount = useUserAccountStore(state => state.hydrate);
+  const refreshAccount = useUserAccountStore(state => state.refresh);
   const inputsRef = useRef<Array<HTMLInputElement | null>>([]);
   const [isContinueLoading, setIsContinueLoading] = useState(false);
   const [isPasswordLoading, setIsPasswordLoading] = useState(false);
@@ -147,10 +150,17 @@ export default function LoginPage() {
     setError(null);
     setIsPasswordLoading(true);
     try {
-      const res = await (
-        await import('@/lib/utils')
-      ).userAuthApi.loginWithPassword(email, password);
-      if (res?.ok) setStep('done');
+      const { userAuthApi } = await import('@/lib/utils');
+      const res = await userAuthApi.loginWithPassword(email, password);
+      if (res?.ok && res.user) {
+        hydrateAccount({
+          id: res.user.id,
+          name: res.user.name,
+          email: res.user.email,
+        });
+        await refreshAccount();
+        setStep('done');
+      }
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : 'Invalid credentials';
       setError(message);
@@ -164,8 +174,16 @@ export default function LoginPage() {
     setIsOtpLoading(true);
     try {
       setOtpError(null);
-      await verifyLoginOtp(otp.join(''));
-      setStep('done');
+      const user = await verifyLoginOtp(otp.join(''));
+      if (user) {
+        hydrateAccount({
+          id: user.id,
+          name: user.name,
+          email: user.email,
+        });
+        await refreshAccount();
+        setStep('done');
+      }
     } catch (e) {
       const message = e instanceof Error ? e.message : 'Invalid OTP';
       setOtpError(message);
@@ -173,23 +191,37 @@ export default function LoginPage() {
       setIsOtpLoading(false);
     }
   };
-  const handleOtpPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
-    e.preventDefault();
-    const pasted = e.clipboardData
-      .getData('text')
-      .replace(/\D/g, '')
-      .slice(0, otp.length);
-    if (!pasted) return;
+  const applyOtpFromText = (text: string) => {
+    const digits = text.replace(/\D/g, '').slice(0, otp.length);
+    if (!digits) return;
 
     const next = [...otp];
-    for (let i = 0; i < pasted.length; i++) {
-      next[i] = pasted[i];
+    for (let i = 0; i < digits.length; i++) {
+      next[i] = digits[i];
     }
     setOtp(next);
 
-    // Focus the last filled input
-    const lastIndex = Math.min(pasted.length - 1, otp.length - 1);
+    const lastIndex = Math.min(digits.length - 1, otp.length - 1);
     inputsRef.current[lastIndex]?.focus();
+  };
+
+  const handleOtpPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    const clipboardText = e.clipboardData?.getData('text');
+    if (clipboardText) {
+      e.preventDefault();
+      applyOtpFromText(clipboardText);
+      return;
+    }
+
+    if (typeof navigator !== 'undefined' && navigator.clipboard?.readText) {
+      e.preventDefault();
+      navigator.clipboard
+        .readText()
+        .then(applyOtpFromText)
+        .catch(() => {
+          // Ignore errors to avoid blocking manual input
+        });
+    }
   };
   return (
     <main className="">

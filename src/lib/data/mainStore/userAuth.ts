@@ -5,6 +5,8 @@ export type UserProfile = { id: string; name: string; email: string } | null;
 
 type Status = 'idle' | 'loading' | 'success' | 'error';
 
+type AuthUser = { id: string; name: string; email: string };
+
 type UserAuthState = {
   email: string;
   profile: UserProfile;
@@ -19,7 +21,7 @@ type UserAuthState = {
   verifySignupOtp: (otp: string) => Promise<void>;
   // Login flow
   requestLoginOtp: () => Promise<void>;
-  verifyLoginOtp: (otp: string) => Promise<void>;
+  verifyLoginOtp: (otp: string) => Promise<AuthUser | null>;
   resendOtp: () => Promise<void>;
   logout: () => Promise<void>;
 };
@@ -106,11 +108,12 @@ export const useUserAuth = create<UserAuthState>((set, get) => ({
 
   verifyLoginOtp: async (otp: string) => {
     const { email } = get();
-    if (!email || !otp) return;
+    if (!email || !otp) return null;
     set({ verifyStatus: 'loading', error: null });
     try {
       const res = await userAuthApi.loginVerifyOtp(email, otp);
       set({ verifyStatus: 'success', profile: res.user });
+      return res.user;
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : 'Invalid OTP';
       set({ verifyStatus: 'error', error: message });

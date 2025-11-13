@@ -155,23 +155,37 @@ export default function AdminLoginPage() {
     await verifyOtp(combinedOtp);
   };
 
-  const handleOtpPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
-    e.preventDefault();
-    const pasted = e.clipboardData
-      .getData('text')
-      .replace(/\D/g, '')
-      .slice(0, otp.length);
-    if (!pasted) return;
+  const applyOtpFromText = (text: string) => {
+    const digits = text.replace(/\D/g, '').slice(0, otp.length);
+    if (!digits) return;
 
     const next = [...otp];
-    for (let i = 0; i < pasted.length; i++) {
-      next[i] = pasted[i];
+    for (let i = 0; i < digits.length; i++) {
+      next[i] = digits[i];
     }
     setOtp(next);
 
-    // Focus the last filled input
-    const lastIndex = Math.min(pasted.length - 1, otp.length - 1);
+    const lastIndex = Math.min(digits.length - 1, otp.length - 1);
     inputsRef.current[lastIndex]?.focus();
+  };
+
+  const handleOtpPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    const clipboardText = e.clipboardData?.getData('text');
+    if (clipboardText) {
+      e.preventDefault();
+      applyOtpFromText(clipboardText);
+      return;
+    }
+
+    if (typeof navigator !== 'undefined' && navigator.clipboard?.readText) {
+      e.preventDefault();
+      navigator.clipboard
+        .readText()
+        .then(applyOtpFromText)
+        .catch(() => {
+          // Ignore errors to avoid blocking manual input
+        });
+    }
   };
 
   useEffect(() => {

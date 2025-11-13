@@ -353,10 +353,19 @@ function AddressesPageInner() {
                               {...field}
                               type="tel"
                               onChange={(e) => {
-                                const value = e.target.value
-                                  .replace(/\D/g, '')
-                                  .slice(0, 10);
-                                field.onChange(value);
+                                const digits = e.target.value.replace(/\D/g, '');
+                                const normalized =
+                                  digits.length > 10 ? digits.slice(-10) : digits;
+                                field.onChange(normalized);
+                              }}
+                              onPaste={(event) => {
+                                const pasted = event.clipboardData?.getData('text');
+                                if (!pasted) return;
+                                event.preventDefault();
+                                const digits = pasted.replace(/\D/g, '');
+                                const normalized =
+                                  digits.length > 10 ? digits.slice(-10) : digits;
+                                field.onChange(normalized);
                               }}
                               maxLength={10}
                               className={`w-full rounded-xl border border-[oklch(0.84_0.04_10.35)]/40 bg-white pl-10 pr-4 py-2 sm:py-3 text-sm focus:border-[oklch(0.66_0.14_358.91)] focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/20 focus:outline-none transition-colors relative z-10 ${
