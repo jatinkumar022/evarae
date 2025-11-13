@@ -358,7 +358,7 @@ export default function ContactUsPage() {
 
   // Initialize EmailJS on mount
   useEffect(() => {
-    const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
+    const publicKey = process.env.EMAILJS_PUBLIC_KEY;
     if (publicKey) {
       emailjs.init(publicKey);
     }
@@ -372,9 +372,9 @@ export default function ContactUsPage() {
       return;
     }
 
-    const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID;
-    const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID;
-    const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
+    const serviceId = process.env.EMAILJS_SERVICE_ID;
+    const templateId = process.env.EMAILJS_TEMPLATE_ID;
+    const publicKey = process.env.EMAILJS_PUBLIC_KEY;
 
     // Debug: Log environment variables (remove in production)
     if (process.env.NODE_ENV !== 'production') {
@@ -387,9 +387,9 @@ export default function ContactUsPage() {
 
     if (!serviceId || !templateId || !publicKey) {
       const missing = [];
-      if (!serviceId) missing.push('NEXT_PUBLIC_EMAILJS_SERVICE_ID');
-      if (!templateId) missing.push('NEXT_PUBLIC_EMAILJS_TEMPLATE_ID');
-      if (!publicKey) missing.push('NEXT_PUBLIC_EMAILJS_PUBLIC_KEY');
+      if (!serviceId) missing.push('EMAILJS_SERVICE_ID');
+      if (!templateId) missing.push('EMAILJS_TEMPLATE_ID');
+      if (!publicKey) missing.push('EMAILJS_PUBLIC_KEY');
       
       toastApi.error(
         'Configuration Error',
