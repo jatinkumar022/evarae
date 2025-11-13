@@ -97,6 +97,9 @@ export const useOrdersStore = create<OrdersState>()(
         orders: state.orders,
         lastFetched: state.lastFetched,
       }),
+      onRehydrateStorage: () => () => {
+        set({ lastFetched: null, status: 'idle' });
+      },
     }
   )
 );

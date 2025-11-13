@@ -179,25 +179,45 @@ export default function OrderDetailsPage() {
   
   const [order, setOrder] = useState<OrderDoc | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [status, setStatus] = useState<'loading' | 'loaded' | 'error'>('loading');
   const [showProgress, setShowProgress] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
 
   useEffect(() => {
+    let isMounted = true;
+    setStatus('loading');
+    setError(null);
+    setOrder(null);
+
     (async () => {
       try {
-        const res = await fetch(`/api/orders/${orderId}`, { 
-          credentials: 'include' 
+        const res = await fetch(`/api/orders/${orderId}`, {
+          credentials: 'include',
         });
         const data: { order?: OrderDoc; error?: string } = await res.json();
-        
-        if (!res.ok) throw new Error(data?.error || 'Failed to load order');
-        
-        setOrder(data.order || null);
+
+        if (!res.ok || !data.order) {
+          throw new Error(data?.error || 'Order not found');
+        }
+
+        if (isMounted) {
+          setOrder(data.order);
+          setStatus('loaded');
+        }
       } catch (e: unknown) {
-        setError(e instanceof Error ? e.message : 'Failed to load order');
+        if (isMounted) {
+          const message =
+            e instanceof Error ? e.message : 'Failed to load order';
+          setError(message);
+          setStatus('error');
+        }
         toastApi.error('Failed to load order');
       }
     })();
+
+    return () => {
+      isMounted = false;
+    };
   }, [orderId]);
 
   const handleTrackOrder = (trackingNumber: string) => {
@@ -237,7 +257,11 @@ export default function OrderDetailsPage() {
 
   // Global loader will handle loading state
 
-  if (error || !order) {
+  if (status === 'loading') {
+    return null;
+  }
+
+  if (status === 'error' || !order) {
     return (
       <div className="bg-white text-text-primary">
         <Container className="py-12 text-center text-red-600">

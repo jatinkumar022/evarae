@@ -12,8 +12,7 @@ export async function GET() {
       .lean();
 
     const res = NextResponse.json({ categories });
-    // Add cache header for categories (5 minutes)
-    res.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
+    res.headers.set('Cache-Control', 'no-store');
     return res;
   } catch (error) {
     console.error('Public categories GET error:', error);

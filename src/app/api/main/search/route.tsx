@@ -58,7 +58,7 @@ export async function GET(request: Request) {
       },
     });
     // Add cache header for search results (30 seconds)
-    res.headers.set('Cache-Control', 'public, s-maxage=30, stale-while-revalidate=60');
+    res.headers.set('Cache-Control', 'no-store');
     return res;
   } catch (error) {
     console.error('Search products GET error:', error);

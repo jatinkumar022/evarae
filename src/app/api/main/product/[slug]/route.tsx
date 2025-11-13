@@ -56,7 +56,7 @@ export async function GET(request: Request, { params }: RouteContext) {
 
     const res = NextResponse.json({ product });
     // Add cache header for product details (5 minutes)
-    res.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
+    res.headers.set('Cache-Control', 'no-store');
     return res;
   } catch (error) {
     console.error('Public product GET error:', error);

@@ -14,6 +14,8 @@ import {
 } from 'lucide-react';
 import { InvoiceDownloadProgress } from '@/app/(main)/components/ui/InvoiceDownloadProgress';
 import { downloadInvoiceWithProgress } from '@/app/(main)/utils/invoiceDownload';
+import { useCartStore } from '@/lib/data/mainStore/cartStore';
+import { useCartCountStore } from '@/lib/data/mainStore/cartCountStore';
 
 type SuccessOrder = {
   _id: string;
@@ -28,6 +30,19 @@ function PaymentSuccessInner() {
   const [error, setError] = useState<string | null>(null);
   const [showProgress, setShowProgress] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
+  const loadCart = useCartStore(state => state.load);
+  const syncCartCount = useCartCountStore(state => state.syncWithCart);
+
+  useEffect(() => {
+    // Ensure cart is cleared client-side after successful payment
+    loadCart()
+      .catch(() => {
+        // Ignore errors – cart API will report auth issues if user logs out
+      })
+      .finally(() => {
+        syncCartCount();
+      });
+  }, [loadCart, syncCartCount]);
 
   useEffect(() => {
     const orderId = searchParams.get('orderId');

@@ -119,6 +119,9 @@ export const useUserAccountStore = create<UserAccountState>()(
         user: state.user,
         lastFetched: state.lastFetched,
       }),
+      onRehydrateStorage: () => () => {
+        set({ lastFetched: null, status: 'idle' });
+      },
     }
   )
 );

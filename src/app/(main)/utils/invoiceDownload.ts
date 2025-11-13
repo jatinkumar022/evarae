@@ -27,6 +27,9 @@ export async function downloadInvoiceWithProgress(
     const res = await fetch(apiPath, {
       method: 'GET',
       credentials: 'include',
+      headers: {
+        'x-skip-global-loader': 'true',
+      },
     });
 
     if (!res.ok) {

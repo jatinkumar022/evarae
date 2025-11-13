@@ -35,7 +35,7 @@ export async function GET() {
 
     const res = NextResponse.json({ products: populatedProducts });
     // Add cache header for best sellers (2 minutes)
-    res.headers.set('Cache-Control', 'public, s-maxage=120, stale-while-revalidate=300');
+    res.headers.set('Cache-Control', 'no-store');
     return res;
   } catch (error) {
     console.error('Random products GET error:', error);

@@ -137,7 +137,7 @@ export default function GlobalLoaderProvider({
   }, [inFlightCount, isInitialLoad, pathname, setNavigating]);
 
   // Only treat content/data GET requests from public "main" APIs as global loader candidates
-  const trackedPrefixes = useRef<string[]>(['/api/main/']);
+  const trackedPrefixes = useRef<string[]>(['/api/main/', '/api/orders/','/api/checkout/']);
   const excludedPrefixes = useRef<string[]>([
     '/api/main/wishlist',
     '/api/main/cart',

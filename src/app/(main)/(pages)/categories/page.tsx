@@ -90,8 +90,16 @@ export default function CategoriesPage() {
                       {/* Content */}
                       <div className="space-y-4">
                         <div className="flex items-center justify-between flex-wrap gap-2">
-                          <span className="text-primary group-hover:!text-amber-600 text-sm tracking-wider uppercase font-medium text-nowrap">
-                            {category.description || 'Explore Now'}
+                          <span
+                            className="text-primary group-hover:!text-amber-600 text-sm tracking-wider uppercase font-medium block leading-snug"
+                            style={{
+                              display: '-webkit-box',
+                              WebkitLineClamp: 1,
+                              WebkitBoxOrient: 'vertical',
+                              overflow: 'hidden',
+                            }}
+                          >
+                            {category.description?.trim() || 'Explore Now'}
                           </span>
                         </div>
 

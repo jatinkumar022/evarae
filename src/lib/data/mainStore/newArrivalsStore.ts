@@ -95,6 +95,9 @@ export const useNewArrivalsStore = create<NewArrivalsState>()(
         products: state.products,
         lastFetched: state.lastFetched,
       }),
+      onRehydrateStorage: () => () => {
+        set({ lastFetched: null, status: 'idle' });
+      },
     }
   )
 );

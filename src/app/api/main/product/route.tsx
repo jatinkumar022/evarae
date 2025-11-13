@@ -57,7 +57,7 @@ export async function GET(request: Request) {
       },
     });
     // Add cache header for product lists (1 minute)
-    res.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=120');
+    res.headers.set('Cache-Control', 'no-store');
     return res;
   } catch (error) {
     console.error('Public products GET error:', error);

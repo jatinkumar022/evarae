@@ -160,7 +160,7 @@ export async function GET() {
       worldOfCaelvi: worldOfCaelviCollections || [],
     });
     // Add cache header for homepage (2 minutes)
-    res.headers.set('Cache-Control', 'public, s-maxage=120, stale-while-revalidate=300');
+    res.headers.set('Cache-Control', 'no-store');
     return res;
   } catch (error) {
     console.error('Homepage GET error:', error);

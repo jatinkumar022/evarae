@@ -31,7 +31,7 @@ export async function GET(request: Request, { params }: RouteContext) {
 
     const res = NextResponse.json({ collection });
     // Add cache header for collection details (5 minutes)
-    res.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
+    res.headers.set('Cache-Control', 'no-store');
     return res;
   } catch (error) {
     console.error('Public collection GET error:', error);

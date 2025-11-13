@@ -31,7 +31,7 @@ export async function GET(request: Request, { params }: RouteContext) {
     if (!includeProducts) {
       const res = NextResponse.json({ category });
       // Add cache header for category details (5 minutes)
-      res.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
+    res.headers.set('Cache-Control', 'no-store');
       return res;
     }
 
@@ -48,7 +48,7 @@ export async function GET(request: Request, { params }: RouteContext) {
 
     const res = NextResponse.json({ category, products });
     // Add cache header for category with products (2 minutes)
-    res.headers.set('Cache-Control', 'public, s-maxage=120, stale-while-revalidate=300');
+      res.headers.set('Cache-Control', 'no-store');
     return res;
   } catch (error) {
     console.error('Public category GET error:', error);

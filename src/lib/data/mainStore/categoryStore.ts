@@ -148,6 +148,10 @@ export const usePublicCategoryStore = create<PublicCategoryState>()(
         lastFetched: state.lastFetched,
         status: state.status,
       }),
+      onRehydrateStorage: () => () => {
+        // Mark data as stale so the next fetch call refetches fresh categories
+        set({ lastFetched: null, status: 'idle' });
+      },
     }
   )
 );

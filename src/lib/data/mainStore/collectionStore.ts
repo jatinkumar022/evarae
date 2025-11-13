@@ -120,6 +120,9 @@ export const usePublicCollectionStore = create<PublicCollectionState>()(
         collections: state.collections,
         lastFetched: state.lastFetched,
       }),
+      onRehydrateStorage: () => () => {
+        set({ lastFetched: null, status: 'idle' });
+      },
     }
   )
 );

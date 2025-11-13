@@ -116,6 +116,9 @@ export const useAddressesStore = create<AddressesState>()(
         addresses: state.addresses,
         lastFetched: state.lastFetched,
       }),
+      onRehydrateStorage: () => () => {
+        set({ lastFetched: null, status: 'idle' });
+      },
     }
   )
 );

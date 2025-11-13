@@ -19,7 +19,7 @@ export async function GET() {
 
     const res = NextResponse.json({ collections });
     // Add cache header for collections (5 minutes)
-    res.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
+    res.headers.set('Cache-Control', 'no-store');
     return res;
   } catch (error) {
     console.error('Public collections GET error:', error);

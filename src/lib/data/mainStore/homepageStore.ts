@@ -140,6 +140,9 @@ export const useHomepageStore = create<HomepageState>()(
         data: state.data,
         lastFetched: state.lastFetched,
       }),
+      onRehydrateStorage: () => () => {
+        set({ lastFetched: null, status: 'idle' });
+      },
     }
   )
 );
