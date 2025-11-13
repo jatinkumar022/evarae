@@ -95,10 +95,13 @@ export const useNewArrivalsStore = create<NewArrivalsState>()(
         products: state.products,
         lastFetched: state.lastFetched,
       }),
-      onRehydrateStorage: () => () => {
-        set({ lastFetched: null, status: 'idle' });
-      },
     }
   )
 );
+
+if (typeof window !== 'undefined') {
+  useNewArrivalsStore.persist.onFinishHydration(() => {
+    useNewArrivalsStore.setState({ lastFetched: null, status: 'idle' });
+  });
+}
 

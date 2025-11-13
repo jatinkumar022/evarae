@@ -116,10 +116,13 @@ export const useAddressesStore = create<AddressesState>()(
         addresses: state.addresses,
         lastFetched: state.lastFetched,
       }),
-      onRehydrateStorage: () => () => {
-        set({ lastFetched: null, status: 'idle' });
-      },
     }
   )
 );
+
+if (typeof window !== 'undefined') {
+  useAddressesStore.persist.onFinishHydration(() => {
+    useAddressesStore.setState({ lastFetched: null, status: 'idle' });
+  });
+}
 

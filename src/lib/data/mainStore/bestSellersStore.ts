@@ -86,10 +86,13 @@ export const useBestSellersStore = create<BestSellersState>()(
         products: state.products,
         lastFetched: state.lastFetched,
       }),
-      onRehydrateStorage: () => () => {
-        set({ lastFetched: null, status: 'idle' });
-      },
     }
   )
 );
+
+if (typeof window !== 'undefined') {
+  useBestSellersStore.persist.onFinishHydration(() => {
+    useBestSellersStore.setState({ lastFetched: null, status: 'idle' });
+  });
+}
 

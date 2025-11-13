@@ -97,10 +97,13 @@ export const useOrdersStore = create<OrdersState>()(
         orders: state.orders,
         lastFetched: state.lastFetched,
       }),
-      onRehydrateStorage: () => () => {
-        set({ lastFetched: null, status: 'idle' });
-      },
     }
   )
 );
+
+if (typeof window !== 'undefined') {
+  useOrdersStore.persist.onFinishHydration(() => {
+    useOrdersStore.setState({ lastFetched: null, status: 'idle' });
+  });
+}
 

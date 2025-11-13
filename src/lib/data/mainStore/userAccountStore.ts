@@ -119,10 +119,13 @@ export const useUserAccountStore = create<UserAccountState>()(
         user: state.user,
         lastFetched: state.lastFetched,
       }),
-      onRehydrateStorage: () => () => {
-        set({ lastFetched: null, status: 'idle' });
-      },
     }
   )
 );
+
+if (typeof window !== 'undefined') {
+  useUserAccountStore.persist.onFinishHydration(() => {
+    useUserAccountStore.setState({ lastFetched: null, status: 'idle' });
+  });
+}
 
