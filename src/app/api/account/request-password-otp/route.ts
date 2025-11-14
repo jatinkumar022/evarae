@@ -100,12 +100,9 @@ export async function POST(request: Request) {
     // Send OTP via email
     await notifyPasswordChangeOtp({ email: user.email, name: user.name }, otp);
 
-    const devOtp = process.env.NODE_ENV !== 'production' ? otp : undefined;
-
     return NextResponse.json({
       ok: true,
       message: 'OTP has been sent to your email',
-      devOtp,
     });
   } catch (error) {
     console.error('[account/request-password-otp] Error:', error);

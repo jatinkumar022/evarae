@@ -67,7 +67,6 @@ export async function POST(request: Request) {
     return NextResponse.json({
       ok: true,
       message: 'OTP sent',
-      devOtp: process.env.NODE_ENV !== 'production' ? otp : undefined,
     });
   } catch (error) {
     console.error('[auth/signup/request-otp] Error:', error);

@@ -93,7 +93,7 @@ export default function Footer() {
     { name: 'Contact Us', to: '/contact-us' },
     { name: 'Help & FAQs', to: '/faqs' },
     { name: 'Shipping & Returns', to: '/returns' },
-    { name: 'Track your Order', to: '/track' },
+   
   ];
 
   return (

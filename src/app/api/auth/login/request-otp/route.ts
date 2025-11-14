@@ -62,12 +62,10 @@ export async function POST(request: Request) {
 
     await notifyUserOtp({ email: normalized, name: user.name }, otp);
 
-    const res = NextResponse.json({
+    return NextResponse.json({
       ok: true,
       message: 'OTP sent',
-      devOtp: process.env.NODE_ENV !== 'production' ? otp : undefined,
     });
-    return res;
   } catch (error) {
     console.error('[auth/login/request-otp] Error:', error);
     return NextResponse.json(

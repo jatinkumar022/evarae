@@ -236,12 +236,7 @@ export default function FAQPage() {
           >
             Contact Us
           </Link>
-          <Link
-            href="/track"
-            className="px-6 py-2 bg-primary/10 text-primary rounded-full"
-          >
-            Track Order
-          </Link>
+         
         </div>
       </div>
     </Container>
