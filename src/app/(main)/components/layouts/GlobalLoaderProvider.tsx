@@ -28,17 +28,68 @@ export default function GlobalLoaderProvider({
   // Track mount state to prevent hydration mismatch
   useEffect(() => {
     setMounted(true);
-  }, []);
-
-  // Track initial load - mark as complete after a short delay
-  useEffect(() => {
-    if (typeof window !== 'undefined' && isInitialLoad) {
+    
+    // Safety: Ensure scroll is unlocked on mount (will be locked again if needed by other effects)
+    if (typeof window !== 'undefined') {
+      // Small delay to ensure DOM is ready
       const timer = setTimeout(() => {
-          setIsInitialLoad(false);
-      }, 500); // Short delay for initial page load
+        // Check current state to decide if we should unlock
+        // This will be overridden by the main scroll lock effect if loader is active
+        const bodyOverflow = window.getComputedStyle(document.body).overflow;
+        if (bodyOverflow === 'hidden') {
+          // Only unlock if page is already loaded
+          if (document.readyState === 'complete' || document.readyState === 'interactive') {
+            document.body.style.overflow = '';
+            document.body.style.height = '';
+            document.documentElement.style.overflow = '';
+          }
+        }
+      }, 100);
       
       return () => clearTimeout(timer);
     }
+  }, []);
+
+  // Track initial load - mark as complete when page is ready
+  useEffect(() => {
+    if (typeof window === 'undefined' || !isInitialLoad) return;
+
+    let timer: NodeJS.Timeout;
+    let isComplete = false;
+
+    const completeInitialLoad = () => {
+      if (!isComplete) {
+        isComplete = true;
+        setIsInitialLoad(false);
+        // Force unlock scroll immediately
+        document.body.style.overflow = '';
+        document.body.style.height = '';
+        document.documentElement.style.overflow = '';
+      }
+    };
+
+    // Check if page is already loaded
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+      // Page is already loaded, complete immediately
+      completeInitialLoad();
+    } else {
+      // Wait for DOMContentLoaded first (faster than load event)
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', completeInitialLoad, { once: true });
+      }
+      
+      // Also wait for load event as backup
+      window.addEventListener('load', completeInitialLoad, { once: true });
+      
+      // Aggressive fallback: complete after max 500ms to prevent stuck scroll
+      timer = setTimeout(completeInitialLoad, 500);
+    }
+    
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener('DOMContentLoaded', completeInitialLoad);
+      window.removeEventListener('load', completeInitialLoad);
+    };
   }, [isInitialLoad]);
 
   // Track pathname changes to detect navigation completion
@@ -135,9 +186,18 @@ export default function GlobalLoaderProvider({
 
       // Only intercept internal Next.js links
       if (href.startsWith('/') || href.startsWith('./') || href.startsWith('../')) {
+        // Normalize the href to compare with current pathname
+        const normalizedHref = href.split('?')[0].split('#')[0]; // Remove query and hash
+        const currentPath = pathnameRef.current || pathname;
+        
+        // Skip if navigating to the same path (prevents infinite loop)
+        if (normalizedHref === currentPath) {
+          return;
+        }
+        
         // Show loader immediately and track navigation start time and path
         navigationStartTimeRef.current = Date.now();
-        navigationStartPathRef.current = pathnameRef.current || pathname;
+        navigationStartPathRef.current = currentPath;
         // Use setTimeout to defer state update and avoid useInsertionEffect error
         setTimeout(() => setNavigating(true), 0);
       }
@@ -149,10 +209,17 @@ export default function GlobalLoaderProvider({
       // Check if it's a navigation (not just state change)
       const url = args[2];
       if (url && typeof url === 'string' && url.startsWith('/')) {
-        navigationStartTimeRef.current = Date.now();
-        navigationStartPathRef.current = pathnameRef.current || pathname;
-        // Use setTimeout to defer state update and avoid useInsertionEffect error
-        setTimeout(() => setNavigating(true), 0);
+        // Normalize the URL to compare with current pathname
+        const normalizedUrl = url.split('?')[0].split('#')[0]; // Remove query and hash
+        const currentPath = pathnameRef.current || pathname;
+        
+        // Skip if navigating to the same path (prevents infinite loop)
+        if (normalizedUrl !== currentPath) {
+          navigationStartTimeRef.current = Date.now();
+          navigationStartPathRef.current = currentPath;
+          // Use setTimeout to defer state update and avoid useInsertionEffect error
+          setTimeout(() => setNavigating(true), 0);
+        }
       }
       return originalPush.apply(window.history, args);
     };
@@ -173,32 +240,110 @@ export default function GlobalLoaderProvider({
       !window.location.pathname.startsWith('/admin');
 
     const resetScroll = () => {
+      // Force unlock scroll - use empty string to reset to default
       document.body.style.overflow = '';
       document.body.style.height = '';
       document.documentElement.style.overflow = '';
     };
 
     if (isLoaderActive) {
-      // Save original styles
-      const originalBodyOverflow = window.getComputedStyle(document.body).overflow;
-      const originalHtmlOverflow = window.getComputedStyle(document.documentElement).overflow;
-      const originalBodyHeight = document.body.style.height;
-
+     
       // Disable scrolling on both body and html (Safari fix)
       document.body.style.overflow = 'hidden';
       document.body.style.height = '100%';
       document.documentElement.style.overflow = 'hidden';
 
       return () => {
-        // Restore original styles on cleanup
-        document.body.style.overflow = originalBodyOverflow || '';
-        document.body.style.height = originalBodyHeight || '';
-        document.documentElement.style.overflow = originalHtmlOverflow || '';
+        // Always reset scroll on cleanup, regardless of original values
+        resetScroll();
       };
     } else {
+      // Ensure scroll is unlocked when loader is not active
       resetScroll();
     }
   }, [isNavigating, isInitialLoad]);
+
+  // Safety mechanism: Ensure scroll is unlocked on pathname change
+  // This handles cases where cleanup might not run properly
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    // Small delay to ensure all cleanup has run
+    const timer = setTimeout(() => {
+      const isLoaderActive =
+        (isInitialLoad || isNavigating) &&
+        !window.location.pathname.startsWith('/admin');
+      
+      if (!isLoaderActive) {
+        // Force unlock scroll if loader is not active
+        document.body.style.overflow = '';
+        document.body.style.height = '';
+        document.documentElement.style.overflow = '';
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [pathname, isNavigating, isInitialLoad]);
+
+  // Aggressive safety mechanism: Periodic check to ensure scroll is never stuck
+  // This runs every 1 second to catch edge cases without interfering with modals
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const checkInterval = setInterval(() => {
+      const isLoaderActive =
+        (isInitialLoad || isNavigating) &&
+        !window.location.pathname.startsWith('/admin');
+      
+      if (!isLoaderActive) {
+        // Check if scroll is locked when it shouldn't be
+        const bodyOverflow = window.getComputedStyle(document.body).overflow;
+        const htmlOverflow = window.getComputedStyle(document.documentElement).overflow;
+        
+        // Only unlock if scroll is locked AND no visible modal/overlay is present
+        // Check for common modal patterns: fixed position elements covering viewport
+        const hasVisibleOverlay = Array.from(document.querySelectorAll('body > *')).some((el) => {
+          if (!(el instanceof HTMLElement)) return false;
+          const styles = window.getComputedStyle(el);
+          const rect = el.getBoundingClientRect();
+          
+          // Check if element is a full-screen overlay/modal
+          return (
+            styles.position === 'fixed' &&
+            parseInt(styles.zIndex || '0') >= 40 &&
+            styles.display !== 'none' &&
+            styles.visibility !== 'hidden' &&
+            styles.opacity !== '0' &&
+            rect.width >= window.innerWidth * 0.9 &&
+            rect.height >= window.innerHeight * 0.9
+          );
+        });
+        
+        // Only unlock if no modal/overlay is visible
+        // This prevents interfering with open modals while still fixing stuck scroll
+        if ((bodyOverflow === 'hidden' || htmlOverflow === 'hidden') && !hasVisibleOverlay) {
+          // Force unlock scroll only when safe to do so
+          document.body.style.overflow = '';
+          document.body.style.height = '';
+          document.documentElement.style.overflow = '';
+        }
+      }
+    }, 1000); // Reduced frequency to 1 second to minimize interference
+
+    return () => clearInterval(checkInterval);
+  }, [isNavigating, isInitialLoad]);
+
+  // Safety mechanism: Ensure scroll is unlocked on component unmount
+  useEffect(() => {
+    return () => {
+      if (typeof window !== 'undefined') {
+        // Force unlock scroll on unmount
+        document.body.style.overflow = '';
+        document.body.style.height = '';
+        document.documentElement.style.overflow = '';
+      }
+    };
+  }, []);
 
   // Show loader if:
   // 1. Initial load is in progress

@@ -33,22 +33,25 @@ const PageLoader = ({ text = 'Loading...', fullscreen = false, showLogo = false 
   // Prevent body scrolling when fullscreen loader is active
   useEffect(() => {
     if (fullscreen && typeof window !== 'undefined') {
-      // Save original styles
-      const originalBodyOverflow = window.getComputedStyle(document.body).overflow;
-      const originalHtmlOverflow = window.getComputedStyle(document.documentElement).overflow;
-      const originalBodyHeight = document.body.style.height;
-      
+     
       // Disable scrolling on both body and html (cross-browser compatibility)
       document.body.style.overflow = 'hidden';
       document.body.style.height = '100%';
       document.documentElement.style.overflow = 'hidden';
       
       return () => {
-        // Restore original styles on cleanup
-        document.body.style.overflow = originalBodyOverflow;
-        document.body.style.height = originalBodyHeight;
-        document.documentElement.style.overflow = originalHtmlOverflow;
+        // Always reset scroll on cleanup to prevent stuck scroll
+        document.body.style.overflow = '';
+        document.body.style.height = '';
+        document.documentElement.style.overflow = '';
       };
+    } else {
+      // Ensure scroll is unlocked when loader is not fullscreen
+      if (typeof window !== 'undefined') {
+        document.body.style.overflow = '';
+        document.body.style.height = '';
+        document.documentElement.style.overflow = '';
+      }
     }
   }, [fullscreen]);
   const spinner = (
