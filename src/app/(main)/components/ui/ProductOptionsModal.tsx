@@ -48,32 +48,39 @@ export default function ProductOptionsModal({
   // Prevent body scrolling when modal is open
   useEffect(() => {
     if (isOpen) {
-      // Save original overflow style
-      const originalStyle = window.getComputedStyle(document.body).overflow;
-      // Disable scrolling
+      // Save original styles
+      const originalBodyOverflow = window.getComputedStyle(document.body).overflow;
+      const originalHtmlOverflow = window.getComputedStyle(document.documentElement).overflow;
+      const originalBodyHeight = document.body.style.height;
+      
+      // Disable scrolling on both body and html (Safari fix)
       document.body.style.overflow = 'hidden';
+      document.body.style.height = '100%';
+      document.documentElement.style.overflow = 'hidden';
       
       return () => {
-        // Restore original overflow style on cleanup
-        document.body.style.overflow = originalStyle;
+        // Restore original styles on cleanup
+        document.body.style.overflow = originalBodyOverflow;
+        document.body.style.height = originalBodyHeight;
+        document.documentElement.style.overflow = originalHtmlOverflow;
       };
     }
   }, [isOpen]);
 
   // Handle ESC key to close modal
   useEffect(() => {
+    if (!isOpen) return;
+    
     const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && isOpen) {
+      if (event.key === 'Escape') {
         onClose();
       }
     };
 
-    if (isOpen) {
-      document.addEventListener('keydown', handleEscape);
-      return () => {
-        document.removeEventListener('keydown', handleEscape);
-      };
-    }
+    document.addEventListener('keydown', handleEscape);
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+    };
   }, [isOpen, onClose]);
 
   if (!product) return null;

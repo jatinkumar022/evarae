@@ -20,6 +20,7 @@ import { ad, Banner, BannerMobile } from '@/app/(main)/assets/Shop-list';
 import { ProductCard } from '../shop/components/ProductCard';
 import Image from '@/app/(main)/components/ui/FallbackImage';
 import { usePublicProductStore } from '@/lib/data/mainStore/productStore';
+import PageLoader from '@/app/(main)/components/layouts/PageLoader';
 
 export default function AllJewelleryPage() {
   const {
@@ -36,6 +37,7 @@ export default function AllJewelleryPage() {
   const [columns, setColumns] = useState(3);
   const [visibleProducts, setVisibleProducts] = useState(12);
 
+  // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
   useEffect(() => {
     if (status === 'idle') {
       // Ensure a reasonable initial page size
@@ -225,6 +227,11 @@ export default function AllJewelleryPage() {
     }
     return items;
   };
+
+  // Show loader while fetching - AFTER all hooks, BEFORE main return
+  if (status === 'loading') {
+    return <PageLoader fullscreen showLogo />;
+  }
 
   return (
     <>

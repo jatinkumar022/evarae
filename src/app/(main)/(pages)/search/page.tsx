@@ -28,6 +28,7 @@ import { useSearchParams } from 'next/navigation';
 import { useCartStore } from '@/lib/data/mainStore/cartStore';
 import { usePublicCategoryStore } from '@/lib/data/mainStore/categoryStore';
 import CartNotification from '@/app/(main)/components/ui/CartNotification';
+import PageLoader from '@/app/(main)/components/layouts/PageLoader';
 const PLACEHOLDER_PHRASES = [
   'Search Gold Jewellery',
   'Search Diamond Jewellery',
@@ -59,6 +60,7 @@ function SearchPageInner() {
   const [viewMode, setViewMode] = useState('grid');
   const [showNotification, setShowNotification] = useState(false);
   const [notificationProductName, setNotificationProductName] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const addToCart = useCartStore(s => s.add);
   const { categories } = usePublicCategoryStore();
@@ -163,8 +165,10 @@ function SearchPageInner() {
       if (!q) {
         setSearchResults([]);
         setResults([]);
+        setIsLoading(false);
         return;
       }
+      setIsLoading(true);
       try {
         const res = await fetch(
           `/api/main/search?q=${encodeURIComponent(q)}&limit=48`,
@@ -178,6 +182,8 @@ function SearchPageInner() {
         console.error('Search error:', error);
         setSearchResults([]);
         setResults([]);
+      } finally {
+        setIsLoading(false);
       }
     },
     [mapApiToUi]
@@ -304,6 +310,11 @@ function SearchPageInner() {
       </div>
     );
   };
+
+  // Show loader while searching
+  if (isLoading && initialQuery) {
+    return <PageLoader fullscreen showLogo />;
+  }
 
   return (
     <Container>

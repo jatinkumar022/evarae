@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { useReturnRequestStore, ReturnRequest } from '@/lib/data/store/returnRequestStore';
 import {
   Package,
   Truck,
@@ -25,6 +26,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { InvoiceDownloadProgress } from '@/app/(main)/components/ui/InvoiceDownloadProgress';
 import { downloadInvoiceWithProgress } from '@/app/(main)/utils/invoiceDownload';
+import PageLoader from '@/app/(main)/components/layouts/PageLoader';
+import ReturnRequestModal from '@/app/(main)/components/ui/ReturnRequestModal';
+import { ReturnStatusModal } from '@/app/(main)/components/ui/ReturnStatusModal';
 
 // Strict types for order data
 type OrderItem = {
@@ -151,7 +155,7 @@ function formatCurrency(n: number): string {
   return `₹${n.toLocaleString()}`;
 }
 
-const statusStages = [
+const baseStatusStages = [
   { key: 'pending', label: 'Order Placed', icon: CreditCard },
   { key: 'confirmed', label: 'Confirmed', icon: CheckCircle2 },
   { key: 'processing', label: 'Processing', icon: Package },
@@ -159,8 +163,46 @@ const statusStages = [
   { key: 'delivered', label: 'Delivered', icon: CheckCircle2 },
 ];
 
-const getStatusIndex = (status: string) => {
-  return statusStages.findIndex(stage => stage.key === status);
+// Return stage - only added when return request exists
+const returnStage = { key: 'return', label: 'Return', icon: RotateCcw };
+
+const getStatusIndex = (status: string, hasReturnStage: boolean = false) => {
+  const stages = hasReturnStage 
+    ? [...baseStatusStages, returnStage]
+    : baseStatusStages;
+  const index = stages.findIndex(stage => stage.key === status);
+  return index >= 0 ? index : 0;
+};
+
+// Map return request status to timeline status
+// Returns the timeline status based on return request status
+const getReturnTimelineStatus = (returnRequests: ReturnRequest[]): { status: string; isCompleted: boolean } | null => {
+  if (!returnRequests || returnRequests.length === 0) return null;
+  
+  // Get the most advanced return request (not rejected)
+  const activeReturns = returnRequests.filter(rr => rr.status !== 'rejected');
+  if (activeReturns.length === 0) return null;
+  
+  // Get the highest priority status
+  const statusPriority: Record<string, number> = {
+    'pending': 1,
+    'approved': 2,
+    'processing': 3,
+    'completed': 4,
+  };
+  
+  const highestReturn = activeReturns.reduce((highest, req) => {
+    const currentPriority = statusPriority[req.status] || 0;
+    const highestPriority = statusPriority[highest?.status || ''] || 0;
+    return currentPriority > highestPriority ? req : highest;
+  }, activeReturns[0]);
+  
+  // If return is completed, mark it as completed in timeline
+  // Otherwise, show it as current (not completed)
+  return {
+    status: 'return',
+    isCompleted: highestReturn.status === 'completed'
+  };
 };
 
 const formatDate = (dateString: string) => {
@@ -170,6 +212,15 @@ const formatDate = (dateString: string) => {
     month: 'long',
     day: 'numeric',
   });
+};
+
+// Check if order is within 7 days return window
+const isWithinReturnWindow = (paidAt: string | null): boolean => {
+  if (!paidAt) return false;
+  const paidDate = new Date(paidAt);
+  const now = new Date();
+  const daysDiff = (now.getTime() - paidDate.getTime()) / (1000 * 60 * 60 * 24);
+  return daysDiff <= 7 && daysDiff >= 0;
 };
 
 export default function OrderDetailsPage() {
@@ -182,12 +233,53 @@ export default function OrderDetailsPage() {
   const [status, setStatus] = useState<'loading' | 'loaded' | 'error'>('loading');
   const [showProgress, setShowProgress] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
+  const [returnModalOpen, setReturnModalOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<OrderItem | null>(null);
+  const [returnStatusModalOpen, setReturnStatusModalOpen] = useState(false);
+  const [selectedItemForStatus, setSelectedItemForStatus] = useState<OrderItem | null>(null);
+  
+  const { returnRequestsMap, checkReturnRequestsForOrder, fetchReturnRequests, returnRequests: storeReturnRequests } = useReturnRequestStore();
+  const hasFetchedReturnRequestsRef = useRef<string | null>(null);
+  const returnRequestsFetchedRef = useRef<boolean>(false);
+  
+  // Filter return requests for this order - use ref to track previous value
+  const returnRequestsRef = useRef<ReturnRequest[]>([]);
+  const returnRequests = useMemo(() => {
+    if (!order?._id) {
+      returnRequestsRef.current = [];
+      return [];
+    }
+    const filtered = storeReturnRequests.filter(rr => rr.order._id === order._id);
+    // Only update if the actual data changed (by comparing IDs and statuses)
+    const prevIds = returnRequestsRef.current.map(r => `${r._id}-${r.status}`).sort().join(',');
+    const newIds = filtered.map(r => `${r._id}-${r.status}`).sort().join(',');
+    if (prevIds !== newIds) {
+      returnRequestsRef.current = filtered;
+    }
+    return returnRequestsRef.current;
+  }, [storeReturnRequests, order?._id]);
+
+  // Ensure body scroll is enabled when component mounts/unmounts
+  useEffect(() => {
+    // Ensure scroll is enabled on mount
+    document.body.style.overflow = '';
+    document.documentElement.style.overflow = '';
+    
+    return () => {
+      // Ensure scroll is enabled on unmount
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    };
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
     setStatus('loading');
     setError(null);
     setOrder(null);
+    // Reset the refs when orderId changes
+    hasFetchedReturnRequestsRef.current = null;
+    returnRequestsFetchedRef.current = false;
 
     (async () => {
       try {
@@ -228,6 +320,73 @@ export default function OrderDetailsPage() {
     toastApi.success(`Adding items from ${order.orderNumber} to cart`);
   };
 
+  // Build dynamic status stages - include return if return requests exist
+  const statusStages = useMemo(() => {
+    const hasReturnRequests = returnRequests.length > 0 && 
+      returnRequests.some(rr => rr.status !== 'rejected');
+    const shouldIncludeReturnStage = hasReturnRequests || order?.orderStatus === 'returned';
+    return shouldIncludeReturnStage 
+      ? [...baseStatusStages, returnStage]
+      : baseStatusStages;
+  }, [returnRequests, order?.orderStatus]);
+
+  // Get current timeline status and completion info - include return if applicable
+  const timelineInfo = useMemo(() => {
+    if (!order) return { status: null, returnCompleted: false };
+    
+    const returnInfo = getReturnTimelineStatus(returnRequests);
+    
+    // If order itself is returned, always show the return stage as completed
+    if (order.orderStatus === 'returned') {
+      return {
+        status: 'return',
+        returnCompleted: returnInfo?.isCompleted ?? true,
+      };
+    }
+    
+    // If order is delivered and return request exists
+    if (order.orderStatus === 'delivered' && returnInfo) {
+      return {
+        status: returnInfo.status, // 'return'
+        returnCompleted: returnInfo.isCompleted
+      };
+    }
+    
+    return {
+      status: order.orderStatus,
+      returnCompleted: false
+    };
+  }, [order, returnRequests]);
+
+  // Separate effect to fetch return requests after order is loaded
+  useEffect(() => {
+    if (!order || !order._id || !order.items || order.items.length === 0) {
+      returnRequestsFetchedRef.current = false;
+      return;
+    }
+    
+    // Only fetch if we haven't fetched for this order ID yet
+    if (hasFetchedReturnRequestsRef.current === order._id && returnRequestsFetchedRef.current) {
+      return;
+    }
+    
+    // Mark as fetched immediately to prevent race conditions
+    hasFetchedReturnRequestsRef.current = order._id;
+    returnRequestsFetchedRef.current = true;
+    
+    // Fetch return requests - use a timeout to debounce and prevent rapid calls
+    const timeoutId = setTimeout(() => {
+      checkReturnRequestsForOrder(order._id, order.items).catch(console.error);
+      fetchReturnRequests(order._id).catch(console.error);
+    }, 100);
+    
+    return () => {
+      clearTimeout(timeoutId);
+    };
+    // Only depend on order._id - functions are stable from Zustand
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [order?._id]);
+
   const handleDownloadInvoice = async (order: OrderDoc) => {
     const key = order.orderNumber || order._id;
     if (!key) return;
@@ -255,25 +414,42 @@ export default function OrderDetailsPage() {
     toastApi.success('Tracking number copied to clipboard!');
   };
 
-  // Global loader will handle loading state
-
+  // Show loader while fetching order details
   if (status === 'loading') {
-    return null;
+    return (
+      <>
+        <PageLoader fullscreen showLogo />
+        <ReturnRequestModal
+          isOpen={false}
+          onClose={() => {}}
+          orderId=""
+          orderItem={null}
+        />
+      </>
+    );
   }
 
   if (status === 'error' || !order) {
     return (
+      <>
       <div className="bg-white text-text-primary">
         <Container className="py-12 text-center text-red-600">
           {error || 'Order not found'}
         </Container>
       </div>
+        <ReturnRequestModal
+          isOpen={false}
+          onClose={() => {}}
+          orderId=""
+          orderItem={null}
+        />
+      </>
     );
   }
 
   return (
     <>
-    <div className="bg-white text-text-primary">
+    <div className="bg-white text-text-primary min-h-screen">
       {/* Header */}
       <div className="bg-white border-b border-primary/10">
         <Container>
@@ -449,9 +625,22 @@ export default function OrderDetailsPage() {
               <div className="hidden md:block relative mb-12">
                 <div className="flex justify-between">
                   {statusStages.map((stage, index) => {
-                    const currentIndex = getStatusIndex(order.orderStatus);
-                    const isCompleted = index <= currentIndex;
-                    const isCurrent = index === currentIndex;
+                    const currentIndex = getStatusIndex(timelineInfo.status || order.orderStatus, statusStages.length > baseStatusStages.length);
+                    // If return is completed, mark all stages including return as completed
+                    // If return is just generated (not completed), mark delivered and before as completed, return as current
+                    // Otherwise, mark stages up to current index as completed
+                    let isCompleted: boolean;
+                    if (timelineInfo.returnCompleted) {
+                      // Return completed: all stages including return are completed
+                      isCompleted = index <= currentIndex;
+                    } else if (stage.key === 'return' && index === currentIndex) {
+                      // Return is current but not completed: show as current (not completed)
+                      isCompleted = false;
+                    } else {
+                      // Normal logic: stages before current are completed
+                      isCompleted = index < currentIndex;
+                    }
+                    const isCurrent = index === currentIndex && !timelineInfo.returnCompleted;
                     const IconComponent = stage.icon;
 
                     return (
@@ -503,16 +692,20 @@ export default function OrderDetailsPage() {
                             <motion.div
                               initial={{ width: 0 }}
                               animate={{
-                                width: index < currentIndex ? '100%' : '0%',
+                                // When return is completed, glow all lines up to and including the line before return
+                                // When return is not completed, glow lines up to (but not including) current stage
+                                width: timelineInfo.returnCompleted 
+                                  ? (index < currentIndex ? '100%' : '0%')  // All lines before return glow when return is completed
+                                  : (index < currentIndex ? '100%' : '0%'), // Normal logic: lines before current stage glow
                               }}
                               transition={{
                                 duration: 2.2,
                                 delay: index * 1.8,
                               }}
                               className={`h-full ${
-                                index < currentIndex
-                                  ? 'bg-primary'
-                                  : 'bg-gray-300'
+                                timelineInfo.returnCompleted 
+                                  ? (index < currentIndex ? 'bg-primary' : 'bg-gray-300')  // All lines glow when return is completed
+                                  : (index < currentIndex ? 'bg-primary' : 'bg-gray-300')  // Normal logic
                               }`}
                             />
                           </div>
@@ -534,7 +727,7 @@ export default function OrderDetailsPage() {
                     initial={{ height: 0 }}
                     animate={{
                       height: `${
-                        (getStatusIndex(order.orderStatus) /
+                        (getStatusIndex(timelineInfo.status || order.orderStatus, statusStages.length > baseStatusStages.length) /
                           (statusStages.length - 1)) *
                         100
                       }%`,
@@ -545,9 +738,22 @@ export default function OrderDetailsPage() {
 
                   {/* Timeline Items */}
                   {statusStages.map((stage, index) => {
-                    const currentIndex = getStatusIndex(order.orderStatus);
-                    const isCompleted = index <= currentIndex;
-                    const isCurrent = index === currentIndex;
+                    const currentIndex = getStatusIndex(timelineInfo.status || order.orderStatus, statusStages.length > baseStatusStages.length);
+                    // If return is completed, mark all stages including return as completed
+                    // If return is just generated (not completed), mark delivered and before as completed, return as current
+                    // Otherwise, mark stages up to current index as completed
+                    let isCompleted: boolean;
+                    if (timelineInfo.returnCompleted) {
+                      // Return completed: all stages including return are completed
+                      isCompleted = index <= currentIndex;
+                    } else if (stage.key === 'return' && index === currentIndex) {
+                      // Return is current but not completed: show as current (not completed)
+                      isCompleted = false;
+                    } else {
+                      // Normal logic: stages before current are completed
+                      isCompleted = index < currentIndex;
+                    }
+                    const isCurrent = index === currentIndex && !timelineInfo.returnCompleted;
                     const IconComponent = stage.icon;
                     const isLast = index === statusStages.length - 1;
 
@@ -736,8 +942,70 @@ export default function OrderDetailsPage() {
                       <Star className="w-4 h-4" />
                       Write Review
                     </button>
+
+                    {/* Return Buttons for each eligible item - only show if delivered */}
+                    {isWithinReturnWindow(order.paidAt) && 
+                     (order.paymentStatus === 'paid' || order.paymentStatus === 'completed') &&
+                     order.items.map((item, index) => {
+                      const hasReturnRequest = returnRequestsMap[item.sku];
+                      return hasReturnRequest ? (
+                        <button
+                          key={`${item.sku}-${index}-status`}
+                          onClick={() => {
+                            setSelectedItemForStatus(item);
+                            setReturnStatusModalOpen(true);
+                          }}
+                          className="px-6 py-3 bg-white text-primary border border-primary/20 rounded-xl hover:bg-primary/5 hover:border-primary/40 transition-all duration-300 font-medium flex items-center gap-2"
+                          title={`View Return Status for ${item.name}`}
+                        >
+                          <CheckCircle2 className="w-4 h-4" />
+                          {order.items.length > 1 ? `Return Status ${index + 1}` : 'Return Status'}
+                        </button>
+                      ) : (
+                        <button
+                          key={`${item.sku}-${index}`}
+                          onClick={() => {
+                            setSelectedItem(item);
+                            setReturnModalOpen(true);
+                          }}
+                          className="px-6 py-3 bg-white text-primary border border-primary/20 rounded-xl hover:bg-primary/5 hover:border-primary/40 transition-all duration-300 font-medium flex items-center gap-2"
+                          title={`Return ${item.name}`}
+                        >
+                          <RotateCcw className="w-4 h-4" />
+                          {order.items.length > 1 ? `Return Item ${index + 1}` : 'Return'}
+                        </button>
+                      );
+                    })}
                   </>
                 )}
+
+                {/* Return Status buttons - show always after return req is generated (not just when delivered) */}
+                {returnRequests.length > 0 && 
+                 returnRequests.some(rr => rr.status !== 'rejected') &&
+                 order.items.map((item, index) => {
+                  const hasReturnRequest = returnRequestsMap[item.sku];
+                  if (!hasReturnRequest) return null;
+                  
+                  // Don't show if already shown in delivered section
+                  if (order.orderStatus === 'delivered' && isWithinReturnWindow(order.paidAt)) {
+                    return null;
+                  }
+                  
+                  return (
+                    <button
+                      key={`${item.sku}-${index}-status-all`}
+                      onClick={() => {
+                        setSelectedItemForStatus(item);
+                        setReturnStatusModalOpen(true);
+                      }}
+                      className="px-6 py-3 bg-white text-primary border border-primary/20 rounded-xl hover:bg-primary/5 hover:border-primary/40 transition-all duration-300 font-medium flex items-center gap-2"
+                      title={`View Return Status for ${item.name}`}
+                    >
+                      <CheckCircle2 className="w-4 h-4" />
+                      {order.items.length > 1 ? `Return Status ${index + 1}` : 'Return Status'}
+                    </button>
+                  );
+                })}
               </div>
             </motion.section>
           </div>
@@ -805,6 +1073,35 @@ export default function OrderDetailsPage() {
         }
       }}
       progress={downloadProgress}
+    />
+    <ReturnRequestModal
+      isOpen={returnModalOpen && !!selectedItem && !!order}
+      onClose={() => {
+        setReturnModalOpen(false);
+        setSelectedItem(null);
+      }}
+      orderId={order?._id || ''}
+      orderItem={selectedItem}
+      onSuccess={() => {
+        // The store's createReturnRequest already updates returnRequestsMap
+        // But we refresh to ensure we have the latest data from server
+        if (order && order.items && order.items.length > 0) {
+          checkReturnRequestsForOrder(order._id, order.items);
+          // Refresh return requests for timeline
+          fetchReturnRequests(order._id);
+        }
+        setReturnModalOpen(false);
+        setSelectedItem(null);
+      }}
+    />
+    <ReturnStatusModal
+      isOpen={returnStatusModalOpen && !!selectedItemForStatus && !!order}
+      onClose={() => {
+        setReturnStatusModalOpen(false);
+        setSelectedItemForStatus(null);
+      }}
+      orderId={order?._id || ''}
+      orderItemSku={selectedItemForStatus?.sku || ''}
     />
     </>
   );

@@ -495,8 +495,15 @@ export default function Navbar() {
   // Handle Escape key and body scroll lock for logout modal
   useEffect(() => {
     if (showLogoutModal) {
-      const originalStyle = window.getComputedStyle(document.body).overflow;
+      // Save original styles
+      const originalBodyOverflow = window.getComputedStyle(document.body).overflow;
+      const originalHtmlOverflow = window.getComputedStyle(document.documentElement).overflow;
+      const originalBodyHeight = document.body.style.height;
+      
+      // Disable scrolling on both body and html (Safari fix)
       document.body.style.overflow = 'hidden';
+      document.body.style.height = '100%';
+      document.documentElement.style.overflow = 'hidden';
 
       const handleEscape = (e: KeyboardEvent) => {
         if (e.key === 'Escape' && !isLoggingOut) {
@@ -506,7 +513,10 @@ export default function Navbar() {
       document.addEventListener('keydown', handleEscape);
       
       return () => {
-        document.body.style.overflow = originalStyle;
+        // Restore original styles
+        document.body.style.overflow = originalBodyOverflow;
+        document.body.style.height = originalBodyHeight;
+        document.documentElement.style.overflow = originalHtmlOverflow;
         document.removeEventListener('keydown', handleEscape);
       };
     }

@@ -24,6 +24,7 @@ import Link from 'next/link';
 import { InvoiceDownloadProgress } from '@/app/(main)/components/ui/InvoiceDownloadProgress';
 import { downloadInvoiceWithProgress } from '@/app/(main)/utils/invoiceDownload';
 import { useOrdersStore } from '@/lib/data/mainStore/ordersStore';
+import PageLoader from '@/app/(main)/components/layouts/PageLoader';
 
 // Strict types for order data
 type OrderItem = {
@@ -164,8 +165,8 @@ export default function OrdersHistoryPage() {
 
   // Load orders once on mount
   useEffect(() => {
-    fetchOrders();
-  }, [fetchOrders]);
+    if (ordersStatus === 'idle') fetchOrders();
+  }, [ordersStatus, fetchOrders]);
 
   // Update local orders state from store
   useEffect(() => {
@@ -275,7 +276,10 @@ export default function OrdersHistoryPage() {
     alert('Tracking number copied to clipboard!');
   };
 
-  // Global loader will handle loading state
+  // Show loader while fetching - AFTER all hooks, BEFORE main return
+  if (ordersStatus === 'loading') {
+    return <PageLoader fullscreen showLogo />;
+  }
 
   if (error) {
     return (

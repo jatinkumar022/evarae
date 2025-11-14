@@ -1,21 +1,25 @@
 'use client';
 
 import { useEffect } from 'react';
-import { X, Download } from 'lucide-react';
+import { X, Upload } from 'lucide-react';
 
-interface InvoiceDownloadProgressProps {
+interface ImageUploadProgressProps {
   isOpen: boolean;
   onClose: () => void;
   progress: number;
+  currentFile: number;
+  totalFiles: number;
   message?: string;
 }
 
-export function InvoiceDownloadProgress({
+export function ImageUploadProgress({
   isOpen,
   onClose,
   progress,
-  message = 'Generating invoice...',
-}: InvoiceDownloadProgressProps) {
+  currentFile,
+  totalFiles,
+  message,
+}: ImageUploadProgressProps) {
   useEffect(() => {
     if (isOpen) {
       // Save original overflow value
@@ -48,6 +52,8 @@ export function InvoiceDownloadProgress({
 
   if (!isOpen) return null;
 
+  const displayMessage = message || `Uploading image ${currentFile} of ${totalFiles}...`;
+
   return (
     <>
       {/* Overlay */}
@@ -66,13 +72,13 @@ export function InvoiceDownloadProgress({
           <div className="flex items-center justify-between p-4 sm:p-5 border-b border-primary/10">
             <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
               <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <Download className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+                <Upload className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
               </div>
               <div className="min-w-0 flex-1">
                 <h3 className="text-base sm:text-lg font-semibold text-gray-900 truncate">
-                  Downloading Invoice
+                  Uploading Images
                 </h3>
-                <p className="text-xs sm:text-sm text-gray-600 truncate">{message}</p>
+                <p className="text-xs sm:text-sm text-gray-600 truncate">{displayMessage}</p>
               </div>
             </div>
             {progress >= 100 && (
@@ -108,34 +114,28 @@ export function InvoiceDownloadProgress({
 
             {/* Status Messages */}
             <div className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm text-gray-600">
-              {progress < 20 && (
+              {progress < 30 && (
                 <p className="flex items-center gap-2">
                   <span className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse flex-shrink-0" />
-                  <span>Fetching order details...</span>
+                  <span>Preparing image for upload...</span>
                 </p>
               )}
-              {progress >= 20 && progress < 50 && (
+              {progress >= 30 && progress < 70 && (
                 <p className="flex items-center gap-2">
                   <span className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse flex-shrink-0" />
-                  <span>Generating PDF...</span>
+                  <span>Uploading to server...</span>
                 </p>
               )}
-              {progress >= 50 && progress < 90 && (
+              {progress >= 70 && progress < 100 && (
                 <p className="flex items-center gap-2">
                   <span className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse flex-shrink-0" />
-                  <span>Rendering invoice...</span>
-                </p>
-              )}
-              {progress >= 90 && progress < 100 && (
-                <p className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse flex-shrink-0" />
-                  <span>Finalizing...</span>
+                  <span>Processing image...</span>
                 </p>
               )}
               {progress >= 100 && (
                 <p className="flex items-center gap-2 text-green-600 font-medium">
                   <span className="w-1.5 h-1.5 bg-green-600 rounded-full flex-shrink-0" />
-                  <span>Invoice downloaded successfully!</span>
+                  <span>All images uploaded successfully!</span>
                 </p>
               )}
             </div>

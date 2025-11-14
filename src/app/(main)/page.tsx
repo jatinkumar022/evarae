@@ -7,6 +7,7 @@ import Hero from './components/home/Hero';
 import { Devider } from './assets/Common';
 import { useHomepageStore } from '@/lib/data/mainStore/homepageStore';
 import { usePublicCategoryStore } from '@/lib/data/mainStore/categoryStore';
+import PageLoader from './components/layouts/PageLoader';
 
 // Dynamically import heavy components to improve initial page load
 // These will be code-split and loaded on demand, while still supporting SSR
@@ -28,15 +29,16 @@ const EvaraeWorld = dynamic(() => import('./components/home/EvaraeWorld'));
 const OurPromise = dynamic(() => import('./components/home/Assurance'));
 
 export default function Home() {
-  const { fetchHomepage, data: homepageData } = useHomepageStore();
+  const { fetchHomepage, data: homepageData, status } = useHomepageStore();
   const { setCategoriesFromHomepage } = usePublicCategoryStore();
 
+  // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
   // Load homepage data once for all child components
   useEffect(() => {
-    fetchHomepage();
+    if (status === 'idle') fetchHomepage();
     // Zustand actions are stable, but we only want this to run once on mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [status]);
 
   // Sync categories from homepage to category store (so navbar can use them)
   useEffect(() => {
@@ -60,6 +62,11 @@ export default function Home() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [homepageData?.categories]);
+
+  // Show loader while fetching homepage data - AFTER all hooks
+  if (status === 'loading') {
+    return <PageLoader fullscreen showLogo />;
+  }
 
   return (
     <>

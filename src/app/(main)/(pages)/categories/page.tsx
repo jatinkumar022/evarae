@@ -4,6 +4,7 @@ import Image from '@/app/(main)/components/ui/FallbackImage';
 import Link from 'next/link';
 import React, { useEffect } from 'react';
 import { usePublicCategoryStore } from '@/lib/data/mainStore/categoryStore';
+import PageLoader from '@/app/(main)/components/layouts/PageLoader';
 
 export default function CategoriesPage() {
   const { categories, status, error, fetchCategories } =
@@ -12,6 +13,11 @@ export default function CategoriesPage() {
   useEffect(() => {
     if (status === 'idle') fetchCategories();
   }, [status, fetchCategories]);
+
+  // Show loader while fetching
+  if (status === 'loading') {
+    return <PageLoader fullscreen showLogo />;
+  }
 
   return (
     <div className=" relative overflow-hidden">
@@ -38,8 +44,6 @@ export default function CategoriesPage() {
             </p>
           </div>
         </section>
-
-        {/* Loading State - Global loader will handle this */}
 
         {/* Error State */}
         {status === 'error' && (

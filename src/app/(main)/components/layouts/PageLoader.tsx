@@ -1,14 +1,19 @@
-// components/Loader.tsx
+// components/PageLoader.tsx
 'use client';
 import React, { useEffect, useRef } from 'react';
 
-interface LoaderProps {
+interface PageLoaderProps {
   text?: string;
   fullscreen?: boolean;
   showLogo?: boolean;
 }
 
-const Loader = ({ text = 'Loading...', fullscreen = false, showLogo = false }: LoaderProps) => {
+/**
+ * PageLoader - Reusable loader component for pages
+ * Matches the exact design of the global Loader component
+ * Use this in individual pages to show loading states during API calls
+ */
+const PageLoader = ({ text = 'Loading...', fullscreen = false, showLogo = false }: PageLoaderProps) => {
   const loaderRef = useRef<HTMLDivElement>(null);
 
   // Set height with cross-browser compatibility (100vh fallback, 100dvh for modern browsers)
@@ -22,6 +27,28 @@ const Loader = ({ text = 'Loading...', fullscreen = false, showLogo = false }: L
         // Fallback to 100vh if CSS.supports is not available
         loaderRef.current.style.height = '100vh';
       }
+    }
+  }, [fullscreen]);
+
+  // Prevent body scrolling when fullscreen loader is active
+  useEffect(() => {
+    if (fullscreen && typeof window !== 'undefined') {
+      // Save original styles
+      const originalBodyOverflow = window.getComputedStyle(document.body).overflow;
+      const originalHtmlOverflow = window.getComputedStyle(document.documentElement).overflow;
+      const originalBodyHeight = document.body.style.height;
+      
+      // Disable scrolling on both body and html (cross-browser compatibility)
+      document.body.style.overflow = 'hidden';
+      document.body.style.height = '100%';
+      document.documentElement.style.overflow = 'hidden';
+      
+      return () => {
+        // Restore original styles on cleanup
+        document.body.style.overflow = originalBodyOverflow;
+        document.body.style.height = originalBodyHeight;
+        document.documentElement.style.overflow = originalHtmlOverflow;
+      };
     }
   }, [fullscreen]);
   const spinner = (
@@ -98,4 +125,5 @@ const Loader = ({ text = 'Loading...', fullscreen = false, showLogo = false }: L
   );
 };
 
-export default Loader;
+export default PageLoader;
+

@@ -133,11 +133,22 @@ export function ProductReviews({ product }: ProductReviewsProps) {
       if (e.key === 'ArrowRight')
         setLightboxIndex(i => (i + 1) % lightboxEntries.length);
     };
-    const original = document.body.style.overflow;
+    // Save original styles
+    const originalBodyOverflow = window.getComputedStyle(document.body).overflow;
+    const originalHtmlOverflow = window.getComputedStyle(document.documentElement).overflow;
+    const originalBodyHeight = document.body.style.height;
+    
+    // Disable scrolling on both body and html (Safari fix)
     document.body.style.overflow = 'hidden';
+    document.body.style.height = '100%';
+    document.documentElement.style.overflow = 'hidden';
+    
     window.addEventListener('keydown', handleKey);
     return () => {
-      document.body.style.overflow = original;
+      // Restore original styles
+      document.body.style.overflow = originalBodyOverflow;
+      document.body.style.height = originalBodyHeight;
+      document.documentElement.style.overflow = originalHtmlOverflow;
       window.removeEventListener('keydown', handleKey);
     };
   }, [isLightboxOpen, lightboxEntries.length]);

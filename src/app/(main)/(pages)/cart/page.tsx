@@ -15,9 +15,10 @@ import type { CartItem, SavedItem } from '@/lib/data/mainStore/cartStore';
 import toastApi from '@/lib/toast';
 import { Spinner } from '@/app/(main)/components/ui/ScaleLoader';
 import { cn } from '@/lib/utils';
+import PageLoader from '@/app/(main)/components/layouts/PageLoader';
 
 export default function CartPage() {
-  const { items, savedItems, load, update, remove, save, unsave } =
+  const { items, savedItems, status, load, update, remove, save, unsave } =
     useCartStore();
   const [couponCode, setCouponCode] = useState('');
   const [couponRate, setCouponRate] = useState(0);
@@ -31,11 +32,12 @@ export default function CartPage() {
     useState<string | null>(null);
   const [couponApplying, setCouponApplying] = useState(false);
 
+  // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
   useEffect(() => {
-    load();
+    if (status === 'idle') load();
     // Zustand actions are stable, but we only want this to run once on mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [status]);
 
   const { products: bestSellersProducts, fetchBestSellers } = useBestSellersStore();
   const { categories } = usePublicCategoryStore();
@@ -281,6 +283,11 @@ export default function CartPage() {
     } as Product,
     quantity: 1,
   }));
+
+  // Show loader while fetching - AFTER all hooks, BEFORE main return
+  if (status === 'loading') {
+    return <PageLoader fullscreen showLogo />;
+  }
 
   return (
     <Container className="py-4 md:py-8 lg:py-12">

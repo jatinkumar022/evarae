@@ -22,6 +22,7 @@ import { Controller } from 'react-hook-form';
 import { useAddressForm, type Address as AddressType } from '@/app/(main)/hooks/useAddressForm';
 import { useAddressData } from '@/app/(main)/hooks/useAddressData';
 import { useCartStore } from '@/lib/data/mainStore/cartStore';
+import PageLoader from '@/app/(main)/components/layouts/PageLoader';
 
 type Item = {
   productId: string;
@@ -53,7 +54,7 @@ export default function CheckoutPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [initialData, setInitialData] = useState<Partial<AddressType>>({});
-  const { addresses, refetch } = useAddressData();
+  const { addresses, isLoading: addressesLoading, refetch } = useAddressData();
   const [coupon, setCoupon] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -101,8 +102,15 @@ export default function CheckoutPage() {
   // Handle body scroll lock when modal is open
   useEffect(() => {
     if (isModalOpen) {
-      const originalStyle = window.getComputedStyle(document.body).overflow;
+      // Save original styles
+      const originalBodyOverflow = window.getComputedStyle(document.body).overflow;
+      const originalHtmlOverflow = window.getComputedStyle(document.documentElement).overflow;
+      const originalBodyHeight = document.body.style.height;
+      
+      // Disable scrolling on both body and html (Safari fix)
       document.body.style.overflow = 'hidden';
+      document.body.style.height = '100%';
+      document.documentElement.style.overflow = 'hidden';
 
       const handleEscape = (e: KeyboardEvent) => {
         if (e.key === 'Escape') {
@@ -112,7 +120,10 @@ export default function CheckoutPage() {
       document.addEventListener('keydown', handleEscape);
 
       return () => {
-        document.body.style.overflow = originalStyle;
+        // Restore original styles
+        document.body.style.overflow = originalBodyOverflow;
+        document.body.style.height = originalBodyHeight;
+        document.documentElement.style.overflow = originalHtmlOverflow;
         document.removeEventListener('keydown', handleEscape);
       };
     }
@@ -337,6 +348,11 @@ export default function CheckoutPage() {
     setInitialData({});
     setIsModalOpen(true);
   };
+
+  // Show loader while fetching addresses - AFTER all hooks, BEFORE main return
+  if (addressesLoading) {
+    return <PageLoader fullscreen showLogo />;
+  }
 
   return (
     <Container className="py-4 md:py-8 lg:py-12">

@@ -27,6 +27,7 @@ import ProductFilters from '@/app/(main)/components/filters/ProductFilters';
 import { ProductCard } from '../shop/components/ProductCard';
 import Container from '@/app/(main)/components/layouts/Container';
 import { useNewArrivalsStore, type NewArrivalProduct } from '@/lib/data/mainStore/newArrivalsStore';
+import PageLoader from '@/app/(main)/components/layouts/PageLoader';
 
 type NewArrivalsTimer = {
   hours: number;
@@ -57,14 +58,15 @@ export default function EnhancedNewArrivalsPage() {
     return () => clearInterval(timer);
   }, []);
 
-  const { products: newArrivalsProducts, fetchNewArrivals } = useNewArrivalsStore();
+  const { products: newArrivalsProducts, status, fetchNewArrivals } = useNewArrivalsStore();
   const [filteredProducts, setFilteredProducts] = useState<UiProduct[]>([]);
   const [visibleProducts, setVisibleProducts] = useState(12);
 
+  // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
   // Load new arrivals once on mount
   useEffect(() => {
-    fetchNewArrivals();
-  }, [fetchNewArrivals]);
+    if (status === 'idle') fetchNewArrivals();
+  }, [status, fetchNewArrivals]);
 
   // Map new arrivals to UiProduct format
   const allProducts = useMemo(() => {
@@ -119,6 +121,11 @@ export default function EnhancedNewArrivalsPage() {
   useEffect(() => {
     setFilteredProducts(allProducts);
   }, [allProducts]);
+
+  // Show loader while fetching - AFTER all hooks
+  if (status === 'loading') {
+    return <PageLoader fullscreen showLogo />;
+  }
 
   const filterOptions: FilterOptions = {
     priceRanges: [

@@ -12,6 +12,7 @@ import { useWishlistStore } from '@/lib/data/mainStore/wishlistStore';
 import toastApi from '@/lib/toast';
 import Link from 'next/link';
 import { Spinner } from '@/app/(main)/components/ui/ScaleLoader';
+import PageLoader from '@/app/(main)/components/layouts/PageLoader';
 
 // Lazy load heavy components to reduce initial bundle size
 const ProductFilters = dynamic(() => import('@/app/(main)/components/filters/ProductFilters'), {
@@ -23,7 +24,7 @@ const ProductOptionsModal = dynamic(() => import('@/app/(main)/components/ui/Pro
 });
 
 export default function WishlistPage() {
-  const { products: wishlistProducts, load: loadWishlist, remove: removeFromWishlist } = useWishlistStore();
+  const { products: wishlistProducts, status, load: loadWishlist, remove: removeFromWishlist } = useWishlistStore();
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [visibleProducts, setVisibleProducts] = useState(12);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -32,10 +33,10 @@ export default function WishlistPage() {
 
   // Load wishlist on mount
   useEffect(() => {
-    loadWishlist();
+    if (status === 'idle') loadWishlist();
     // Zustand actions are stable, but we only want this to run once on mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [status]);
 
   // Map wishlist products to Product type
   const mappedProducts = useMemo(() => {
@@ -145,6 +146,11 @@ export default function WishlistPage() {
     animate: { opacity: 1 },
     exit: { opacity: 0 },
   };
+
+  // Show loader while fetching - AFTER all hooks, BEFORE main return
+  if (status === 'loading') {
+    return <PageLoader fullscreen showLogo />;
+  }
 
   return (
     <>

@@ -11,17 +11,44 @@ import {
   Clock,
   AlertCircle,
   Download,
+  RotateCcw,
 } from 'lucide-react';
 import { InvoiceDownloadProgress } from '@/app/(main)/components/ui/InvoiceDownloadProgress';
 import { downloadInvoiceWithProgress } from '@/app/(main)/utils/invoiceDownload';
 import { useCartStore } from '@/lib/data/mainStore/cartStore';
 import { useCartCountStore } from '@/lib/data/mainStore/cartCountStore';
+import PageLoader from '@/app/(main)/components/layouts/PageLoader';
+import ReturnRequestModal from '@/app/(main)/components/ui/ReturnRequestModal';
+import Image from '@/app/(main)/components/ui/FallbackImage';
+
+type OrderItem = {
+  product: string;
+  name: string;
+  slug: string;
+  sku: string;
+  price: number;
+  quantity: number;
+  image: string | null;
+  selectedColor: string | null;
+  selectedSize: string | null;
+};
 
 type SuccessOrder = {
   _id: string;
   orderNumber?: string;
   totalAmount?: number;
   paymentStatus?: string;
+  paidAt?: string | null;
+  items?: OrderItem[];
+};
+
+// Check if order is within 7 days return window
+const isWithinReturnWindow = (paidAt: string | null | undefined): boolean => {
+  if (!paidAt) return false;
+  const paidDate = new Date(paidAt);
+  const now = new Date();
+  const daysDiff = (now.getTime() - paidDate.getTime()) / (1000 * 60 * 60 * 24);
+  return daysDiff <= 7 && daysDiff >= 0;
 };
 
 function PaymentSuccessInner() {
@@ -30,6 +57,9 @@ function PaymentSuccessInner() {
   const [error, setError] = useState<string | null>(null);
   const [showProgress, setShowProgress] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [returnModalOpen, setReturnModalOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<OrderItem | null>(null);
   const loadCart = useCartStore(state => state.load);
   const syncCartCount = useCartCountStore(state => state.syncWithCart);
 
@@ -47,6 +77,7 @@ function PaymentSuccessInner() {
   useEffect(() => {
     const orderId = searchParams.get('orderId');
     if (orderId) {
+      setIsLoading(true);
       fetch(`/api/orders/${orderId}`)
         .then(res => {
           if (!res.ok) {
@@ -66,7 +97,12 @@ function PaymentSuccessInner() {
         })
         .catch(() => {
           setError('Unable to load order details');
+        })
+        .finally(() => {
+          setIsLoading(false);
         });
+    } else {
+      setIsLoading(false);
     }
   }, [searchParams]);
 
@@ -92,7 +128,20 @@ function PaymentSuccessInner() {
     }
   };
 
-  // Global loader will handle loading state
+  // Show loader while fetching order details
+  if (isLoading) {
+    return (
+      <>
+        <PageLoader fullscreen showLogo />
+        <ReturnRequestModal
+          isOpen={false}
+          onClose={() => {}}
+          orderId=""
+          orderItem={null}
+        />
+      </>
+    );
+  }
 
   return (
     <Container className="py-8 lg:py-12 px-3 sm:px-4">
@@ -148,6 +197,68 @@ function PaymentSuccessInner() {
                 </span>
               </div>
             </div>
+
+            {/* Order Items with Return Buttons */}
+            {orderDetails.items && orderDetails.items.length > 0 && (
+              <div className="mt-4 sm:mt-5 pt-4 sm:pt-5 border-t border-primary/10">
+                <h3 className="text-sm sm:text-base font-semibold text-primary-dark mb-3 sm:mb-4 text-left">
+                  Order Items
+                </h3>
+                <div className="space-y-3">
+                  {orderDetails.items.map((item, index) => (
+                    <div
+                      key={index}
+                      className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-white/40 rounded-lg border border-primary/5"
+                    >
+                      {/* Product Image */}
+                      <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-primary/10 to-accent/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                        {item.image ? (
+                          <Image
+                            src={item.image}
+                            alt={item.name}
+                            width={80}
+                            height={80}
+                            className="w-full h-full object-cover rounded-lg"
+                          />
+                        ) : (
+                          <Package className="w-6 h-6 sm:w-8 sm:h-8 text-primary/60" />
+                        )}
+                      </div>
+
+                      {/* Product Details */}
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-medium text-primary-dark text-sm sm:text-base mb-1">
+                          {item.name}
+                        </h4>
+                        <div className="flex flex-wrap gap-2 text-xs text-gray-600">
+                          <span>Qty: {item.quantity}</span>
+                          {item.selectedColor && <span>• Color: {item.selectedColor}</span>}
+                          {item.selectedSize && <span>• Size: {item.selectedSize}</span>}
+                        </div>
+                        <div className="text-sm font-medium text-primary mt-1">
+                          ₹{(item.price * item.quantity).toLocaleString()}
+                        </div>
+                      </div>
+
+                      {/* Return Button */}
+                      {isWithinReturnWindow(orderDetails.paidAt) && 
+                       (orderDetails.paymentStatus === 'paid' || orderDetails.paymentStatus === 'completed') && (
+                        <button
+                          onClick={() => {
+                            setSelectedItem(item);
+                            setReturnModalOpen(true);
+                          }}
+                          className="flex items-center gap-2 px-3 py-1.5 text-xs sm:text-sm font-medium text-[oklch(0.66_0.14_358.91)] border border-[oklch(0.66_0.14_358.91)] rounded-lg hover:bg-[oklch(0.66_0.14_358.91)]/10 transition-colors whitespace-nowrap"
+                        >
+                          <RotateCcw className="w-4 h-4" />
+                          Return
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Download Invoice */}
             <div className="mt-4 sm:mt-5">
@@ -240,6 +351,21 @@ function PaymentSuccessInner() {
         }}
         progress={downloadProgress}
       />
+
+      {/* Return Request Modal */}
+      <ReturnRequestModal
+        isOpen={returnModalOpen && !!selectedItem && !!orderDetails}
+        onClose={() => {
+          setReturnModalOpen(false);
+          setSelectedItem(null);
+        }}
+        orderId={orderDetails?._id || ''}
+        orderItem={selectedItem}
+        onSuccess={() => {
+          setReturnModalOpen(false);
+          setSelectedItem(null);
+        }}
+      />
     </Container>
   );
 }
@@ -248,9 +374,17 @@ export default function PaymentSuccessPage() {
   return (
     <Suspense
       fallback={
-        <Container className="py-8">
-          <div className="text-center">Loading...</div>
-        </Container>
+        <>
+          <Container className="py-8">
+            <div className="text-center">Loading...</div>
+          </Container>
+          <ReturnRequestModal
+            isOpen={false}
+            onClose={() => {}}
+            orderId=""
+            orderItem={null}
+          />
+        </>
       }
     >
       <PaymentSuccessInner />

@@ -22,6 +22,7 @@ import Image from '@/app/(main)/components/ui/FallbackImage';
 import { useParams } from 'next/navigation';
 import { usePublicCategoryStore } from '@/lib/data/mainStore/categoryStore';
 import { List, NoItems } from '@/app/(main)/assets/Common';
+import PageLoader from '@/app/(main)/components/layouts/PageLoader';
 
 export default function ShopCategoryPage() {
   const params = useParams();
@@ -36,9 +37,13 @@ export default function ShopCategoryPage() {
   const [visibleProducts, setVisibleProducts] = useState(10);
   const [prevPage, setPrevPage] = useState<string | null>(null);
 
+  // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
+  // Fetch category when slug changes (only fetch if slug is different from current category)
   useEffect(() => {
-    if (slug) fetchCategory(slug, true);
-  }, [slug, fetchCategory]);
+    if (slug && (currentCategory?.slug !== slug || status === 'idle')) {
+      fetchCategory(slug, true);
+    }
+  }, [slug, fetchCategory, currentCategory?.slug, status]);
 
   // Map API products to UI Product type
   const mappedProducts: UiProduct[] = useMemo(() => {
@@ -128,6 +133,11 @@ export default function ShopCategoryPage() {
     window.addEventListener('resize', updateColumns);
     return () => window.removeEventListener('resize', updateColumns);
   }, []);
+
+  // Show loader while fetching - AFTER all hooks
+  if (status === 'loading') {
+    return <PageLoader fullscreen showLogo />;
+  }
 
   const filterOptions: FilterOptions = {
     priceRanges: [

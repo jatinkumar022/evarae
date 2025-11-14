@@ -6,28 +6,23 @@ import { useNavigationStore } from '@/lib/data/mainStore/navigationStore';
 import { usePathname } from 'next/navigation';
 
 /**
- * GlobalLoaderProvider
- * - Intercepts window.fetch for selected API routes
- * - Shows fullscreen Loader while any tracked requests are in-flight
- * - Shows loader immediately on navigation
- * - Provides contextual loading messages based on the API endpoint
+ * GlobalLoaderProvider (Navigation Loader Only)
+ * - Shows fullscreen Loader during navigation (when Link is clicked or route changes)
+ * - Loader stays active until the new page is fully loaded and pathname changes
+ * - Does NOT intercept API calls - each page handles its own loading states
  */
 export default function GlobalLoaderProvider({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [inFlightCount, setInFlightCount] = useState(0);
   const { isNavigating, setNavigating } = useNavigationStore();
   const pathname = usePathname();
-  const originalFetchRef = useRef<typeof window.fetch | null>(null);
   const pathnameRef = useRef<string | null>(null);
   const navigationStartTimeRef = useRef<number | null>(null);
   const navigationStartPathRef = useRef<string | null>(null);
   const minLoaderTimeRef = useRef(300); // Minimum 300ms loader display to prevent flickering
   const [isInitialLoad, setIsInitialLoad] = useState(true);
-  const initialLoadStartTimeRef = useRef<number | null>(null);
-  const hasSeenApiCallRef = useRef(false); // Track if we've seen any API calls
   const [mounted, setMounted] = useState(false);
   
   // Track mount state to prevent hydration mismatch
@@ -35,21 +30,16 @@ export default function GlobalLoaderProvider({
     setMounted(true);
   }, []);
 
-  // Track initial load - run only once on mount
+  // Track initial load - mark as complete after a short delay
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      initialLoadStartTimeRef.current = Date.now();
-      // Set a timeout to mark initial load as complete if no API calls happen
-      // This handles cases where page doesn't make API calls
-      const fallbackTimer = setTimeout(() => {
-        if (!hasSeenApiCallRef.current) {
+    if (typeof window !== 'undefined' && isInitialLoad) {
+      const timer = setTimeout(() => {
           setIsInitialLoad(false);
-        }
-      }, 2000); // 2 second fallback - only if no API calls at all
+      }, 500); // Short delay for initial page load
       
-      return () => clearTimeout(fallbackTimer);
+      return () => clearTimeout(timer);
     }
-  }, []); // Run only once on mount
+  }, [isInitialLoad]);
 
   // Track pathname changes to detect navigation completion
   useEffect(() => {
@@ -60,45 +50,15 @@ export default function GlobalLoaderProvider({
       if (isInitialLoad) {
         setIsInitialLoad(false);
       }
-      // Don't clear navigation state here - wait for API calls to complete
     } else if (pathnameRef.current === null) {
       // Initial load
       pathnameRef.current = pathname;
     }
   }, [isInitialLoad, pathname]);
 
-  // Handle initial load completion
-  // Only complete initial load when:
-  // 1. We've seen at least one API call (or waited for fallback timeout)
-  // 2. All API calls are complete
-  // 3. Minimum display time has passed
-  useEffect(() => {
-    if (!isInitialLoad) return; // Early return if already completed
-    
-    // Wait for API calls to complete
-    if (inFlightCount === 0 && initialLoadStartTimeRef.current !== null) {
-      // Only complete if we've seen API calls, or if enough time has passed
-      const elapsed = Date.now() - initialLoadStartTimeRef.current;
-      const hasWaitedEnough = elapsed >= 500; // Wait at least 500ms
-      
-      if (hasSeenApiCallRef.current || hasWaitedEnough) {
-        const remainingTime = Math.max(0, minLoaderTimeRef.current - elapsed);
-        
-        const timer = setTimeout(() => {
-          setIsInitialLoad(false);
-          initialLoadStartTimeRef.current = null;
-          hasSeenApiCallRef.current = false; // Reset for next page load
-        }, remainingTime);
-        
-        return () => clearTimeout(timer);
-      }
-    }
-  }, [isInitialLoad, inFlightCount]);
-
   // Clear navigation state when navigation completes:
   // 1. Pathname changed from when navigation started
-  // 2. All tracked API calls are complete
-  // 3. Minimum loader display time has elapsed
+  // 2. Minimum loader display time has elapsed
   useEffect(() => {
     if (navigationStartTimeRef.current === null) return;
 
@@ -109,15 +69,16 @@ export default function GlobalLoaderProvider({
       pathnameRef.current !== null &&
       pathnameRef.current !== navigationStartPathRef.current;
 
-    if (!hasPathChanged && inFlightCount === 0 && elapsed > 10000) {
       // Fallback: ensure loader doesn't get stuck if navigation was cancelled
+    if (!hasPathChanged && elapsed > 10000) {
       setNavigating(false);
       navigationStartTimeRef.current = null;
       navigationStartPathRef.current = null;
       return;
     }
 
-    if (hasPathChanged && inFlightCount === 0) {
+    // Complete navigation when pathname has changed
+    if (hasPathChanged) {
       const completeNavigation = () => {
         setNavigating(false);
         navigationStartTimeRef.current = null;
@@ -134,65 +95,7 @@ export default function GlobalLoaderProvider({
         return () => clearTimeout(timer);
       }
     }
-  }, [inFlightCount, isInitialLoad, pathname, setNavigating]);
-
-  // Only treat content/data GET requests from public "main" APIs as global loader candidates
-  const trackedPrefixes = useRef<string[]>(['/api/main/', '/api/orders/','/api/checkout/']);
-  const excludedPrefixes = useRef<string[]>([
-    '/api/main/wishlist',
-    '/api/main/cart',
-    '/api/account/',
-    '/api/auth/',
-    '/api/upload',
-  ]);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    // Avoid double-wrapping
-    if (originalFetchRef.current) return;
-
-    originalFetchRef.current = window.fetch.bind(window);
-
-    window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
-      const request = new Request(input, init);
-      const method = request.method?.toUpperCase() || 'GET';
-      const skipGlobalLoader =
-        request.headers.get('x-skip-global-loader') === 'true';
-
-      if (skipGlobalLoader) {
-        request.headers.delete('x-skip-global-loader');
-      }
-
-      const url = request.url;
-      const isTrackedRequest =
-        method === 'GET' &&
-        trackedPrefixes.current.some(prefix => url.includes(prefix)) &&
-        !excludedPrefixes.current.some(prefix => url.includes(prefix)) &&
-        !skipGlobalLoader;
-
-      if (isTrackedRequest) {
-        hasSeenApiCallRef.current = true; // Mark that we've seen an API call
-        setInFlightCount(count => count + 1);
-      }
-
-      try {
-        const res = await originalFetchRef.current!(request);
-        return res;
-      } finally {
-        if (isTrackedRequest) {
-          setInFlightCount(count => Math.max(0, count - 1));
-        }
-      }
-    };
-
-    return () => {
-      if (originalFetchRef.current) {
-        window.fetch = originalFetchRef.current;
-        originalFetchRef.current = null;
-      }
-    };
-  }, []);
+  }, [isInitialLoad, pathname, setNavigating]);
 
   // Intercept all Link clicks globally to show loader immediately
   useEffect(() => {
@@ -261,42 +164,48 @@ export default function GlobalLoaderProvider({
     };
   }, [pathname, setNavigating]);
 
-  // Prevent body scrolling when global loader is active
+  // Prevent body scrolling when navigation loader is active
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
     const isLoaderActive = 
-      (isInitialLoad || isNavigating || inFlightCount > 0) && 
+      (isInitialLoad || isNavigating) && 
       !window.location.pathname.startsWith('/admin');
 
     if (isLoaderActive) {
-      // Save original overflow style
-      const originalStyle = window.getComputedStyle(document.body).overflow;
-      // Disable scrolling
+      // Save original styles
+      const originalBodyOverflow = window.getComputedStyle(document.body).overflow;
+      const originalHtmlOverflow = window.getComputedStyle(document.documentElement).overflow;
+      const originalBodyHeight = document.body.style.height;
+      
+      // Disable scrolling on both body and html (Safari fix)
       document.body.style.overflow = 'hidden';
+      document.body.style.height = '100%';
+      document.documentElement.style.overflow = 'hidden';
       
       return () => {
-        // Restore original overflow style on cleanup
-        document.body.style.overflow = originalStyle;
+        // Restore original styles on cleanup
+        document.body.style.overflow = originalBodyOverflow;
+        document.body.style.height = originalBodyHeight;
+        document.documentElement.style.overflow = originalHtmlOverflow;
       };
     }
-  }, [inFlightCount, isNavigating, isInitialLoad]);
+  }, [isNavigating, isInitialLoad]);
 
   // Show loader if:
   // 1. Initial load is in progress
   // 2. Navigating between pages
-  // 3. API calls are in flight
   // Only calculate shouldShowLoader after mount to prevent hydration mismatch
   const shouldShowLoader = 
     mounted &&
     typeof window !== 'undefined' &&
     !window.location.pathname.startsWith('/admin') &&
-    (isInitialLoad || isNavigating || inFlightCount > 0);
+    (isInitialLoad || isNavigating);
 
   return (
     <>
       {children}
-      {/* Do not show fullscreen global loader on admin routes. Admin pages will handle inline/content loaders themselves. */}
+      {/* Navigation loader - shows during route changes only */}
       {shouldShowLoader && <Loader fullscreen showLogo />}
     </>
   );

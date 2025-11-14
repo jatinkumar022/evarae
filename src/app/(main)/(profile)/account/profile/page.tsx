@@ -22,6 +22,7 @@ import { useProfileForm } from '@/app/(main)/hooks/useProfileForm';
 import { useProfileData } from '@/app/(main)/hooks/useProfileData';
 import toastApi from '@/lib/toast';
 import { Spinner } from '@/app/(main)/components/ui/ScaleLoader';
+import PageLoader from '@/app/(main)/components/layouts/PageLoader';
 
 function AccountPageInner() {
   const searchParams = useSearchParams();
@@ -45,7 +46,7 @@ function AccountPageInner() {
   const lastProfileDataRef = React.useRef<string>('');
 
   // Fetch profile data
-  const { profileData, email, hasPassword, ordersPreview,  setProfileData } =
+  const { profileData, email, hasPassword, ordersPreview, isLoading, setProfileData } =
     useProfileData();
 
   // Initialize form with profile data
@@ -87,9 +88,15 @@ function AccountPageInner() {
   // Reset password modal state when closed and handle body scroll
   useEffect(() => {
     if (isChangePasswordOpen) {
-      // Disable body scroll when modal is open
-      const originalStyle = window.getComputedStyle(document.body).overflow;
+      // Save original styles
+      const originalBodyOverflow = window.getComputedStyle(document.body).overflow;
+      const originalHtmlOverflow = window.getComputedStyle(document.documentElement).overflow;
+      const originalBodyHeight = document.body.style.height;
+      
+      // Disable scrolling on both body and html (Safari fix)
       document.body.style.overflow = 'hidden';
+      document.body.style.height = '100%';
+      document.documentElement.style.overflow = 'hidden';
       
       // Handle ESC key
       const handleEscape = (e: KeyboardEvent) => {
@@ -100,7 +107,10 @@ function AccountPageInner() {
       document.addEventListener('keydown', handleEscape);
       
       return () => {
-        document.body.style.overflow = originalStyle;
+        // Restore original styles
+        document.body.style.overflow = originalBodyOverflow;
+        document.body.style.height = originalBodyHeight;
+        document.documentElement.style.overflow = originalHtmlOverflow;
         document.removeEventListener('keydown', handleEscape);
       };
     } else {
@@ -221,7 +231,10 @@ function AccountPageInner() {
     { id: 'activity', label: 'Activity', icon: ShoppingBag },
   ] as const;
 
-  // Global loader will handle loading state
+  // Show loader while fetching profile data - AFTER all hooks, BEFORE main return
+  if (isLoading) {
+    return <PageLoader fullscreen showLogo />;
+  }
 
   return (
     <main className="">

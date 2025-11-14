@@ -4,6 +4,7 @@ import Image from '@/app/(main)/components/ui/FallbackImage';
 import Link from 'next/link';
 import { useEffect } from 'react';
 import { usePublicCollectionStore } from '@/lib/data/mainStore/collectionStore';
+import PageLoader from '@/app/(main)/components/layouts/PageLoader';
 
 export default function CollectionsPage() {
   const { collections, status, error, fetchCollections } =
@@ -12,6 +13,11 @@ export default function CollectionsPage() {
   useEffect(() => {
     if (status === 'idle') fetchCollections();
   }, [status, fetchCollections]);
+
+  // Show loader while fetching
+  if (status === 'loading') {
+    return <PageLoader fullscreen showLogo />;
+  }
 
   return (
     <>
@@ -110,7 +116,7 @@ export default function CollectionsPage() {
           </p>
         </div>
 
-        {/* Loading State - Global loader will handle this */}
+        {/* Error State */}
         {status === 'error' && (
           <div className="text-center text-red-600">
             {error || 'Failed to load collections'}

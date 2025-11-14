@@ -14,6 +14,7 @@ import { Controller } from 'react-hook-form';
 import toastApi from '@/lib/toast';
 import { useAddressForm, type Address } from '@/app/(main)/hooks/useAddressForm';
 import { useAddressData } from '@/app/(main)/hooks/useAddressData';
+import PageLoader from '@/app/(main)/components/layouts/PageLoader';
 
 function AddressesPageInner() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -21,7 +22,7 @@ function AddressesPageInner() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [addressToDelete, setAddressToDelete] = useState<Address | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const { addresses,  deleteAddress, setDefaultShipping, refetch } =
+  const { addresses, isLoading, deleteAddress, setDefaultShipping, refetch } =
     useAddressData();
 
   const [initialData, setInitialData] = useState<Partial<Address>>({});
@@ -50,8 +51,15 @@ function AddressesPageInner() {
   // Handle body scroll lock when modal is open
   useEffect(() => {
     if (isModalOpen || isDeleteModalOpen) {
-      const originalStyle = window.getComputedStyle(document.body).overflow;
+      // Save original styles
+      const originalBodyOverflow = window.getComputedStyle(document.body).overflow;
+      const originalHtmlOverflow = window.getComputedStyle(document.documentElement).overflow;
+      const originalBodyHeight = document.body.style.height;
+      
+      // Disable scrolling on both body and html (Safari fix)
       document.body.style.overflow = 'hidden';
+      document.body.style.height = '100%';
+      document.documentElement.style.overflow = 'hidden';
 
       const handleEscape = (e: KeyboardEvent) => {
         if (e.key === 'Escape') {
@@ -65,7 +73,10 @@ function AddressesPageInner() {
       document.addEventListener('keydown', handleEscape);
 
       return () => {
-        document.body.style.overflow = originalStyle;
+        // Restore original styles
+        document.body.style.overflow = originalBodyOverflow;
+        document.body.style.height = originalBodyHeight;
+        document.documentElement.style.overflow = originalHtmlOverflow;
         document.removeEventListener('keydown', handleEscape);
       };
     }
@@ -130,6 +141,10 @@ function AddressesPageInner() {
     }
   };
 
+  // Show loader while fetching addresses - AFTER all hooks, BEFORE main return
+  if (isLoading) {
+    return <PageLoader fullscreen showLogo />;
+  }
 
   return (
     <main className="">

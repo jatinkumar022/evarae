@@ -13,6 +13,7 @@ import {
   BarChart3,
   Settings,
   Home,
+  RotateCcw,
 } from "lucide-react";
 
 type NavItem = {
@@ -51,6 +52,11 @@ const navItems: NavItem[] = [
     icon: <ShoppingBag className="w-5 h-5" />,
     name: "Orders",
     path: "/admin/orders",
+  },
+  {
+    icon: <RotateCcw className="w-5 h-5" />,
+    name: "Return Requests",
+    path: "/admin/return-requests",
   },
   {
     icon: <Users className="w-5 h-5" />,
