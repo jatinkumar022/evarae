@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
+import Image from 'next/image';
 
 interface ImageViewerModalProps {
   isOpen: boolean;
@@ -103,11 +104,13 @@ export function ImageViewerModal({
               </>
             )}
 
-            <div className="w-full h-full flex items-center justify-center p-2 sm:p-4">
-              <img
+            <div className="w-full h-full flex items-center justify-center p-2 sm:p-4 relative">
+              <Image
                 src={images[currentIndex]}
                 alt={`Return image ${currentIndex + 1}`}
-                className="max-w-full max-h-full object-contain rounded-lg"
+                fill
+                className="object-contain rounded-lg"
+                unoptimized
               />
             </div>
           </div>
@@ -120,16 +123,18 @@ export function ImageViewerModal({
                   <button
                     key={index}
                     onClick={() => setCurrentIndex(index)}
-                    className={`flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden border-2 transition-all ${
+                    className={`relative flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden border-2 transition-all ${
                       index === currentIndex
                         ? 'border-white scale-110'
                         : 'border-transparent opacity-60 hover:opacity-100'
                     }`}
                   >
-                    <img
+                    <Image
                       src={image}
                       alt={`Thumbnail ${index + 1}`}
-                      className="w-full h-full object-cover"
+                      fill
+                      className="object-cover"
+                      unoptimized
                     />
                   </button>
                 ))}

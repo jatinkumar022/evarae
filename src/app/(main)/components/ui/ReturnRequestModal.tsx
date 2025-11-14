@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { X, Upload, Trash2, AlertCircle } from 'lucide-react';
+import Image from 'next/image';
 import CustomDropdown from './customDropdown';
 import { useUploadStore } from '@/lib/data/store/uploadStore';
 import { useReturnRequestStore } from '@/lib/data/store/returnRequestStore';
@@ -502,11 +503,13 @@ export default function ReturnRequestModal({
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                     {images.map((imageUrl, index) => (
                       <div key={index} className="relative group">
-                        <div className="aspect-square rounded-lg overflow-hidden border border-gray-200 bg-gray-100">
-                          <img
+                        <div className="aspect-square rounded-lg overflow-hidden border border-gray-200 bg-gray-100 relative">
+                          <Image
                             src={imageUrl}
                             alt={`Return image ${index + 1}`}
-                            className="w-full h-full object-cover"
+                            fill
+                            className="object-cover"
+                            unoptimized
                           />
                         </div>
                         {uploadingImages[index] ? (

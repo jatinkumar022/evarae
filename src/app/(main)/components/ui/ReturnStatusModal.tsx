@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { X, Package, CheckCircle2, Clock, XCircle, RotateCcw, AlertCircle } from 'lucide-react';
+import Image from 'next/image';
 
 type ReturnRequestStatus = 'pending' | 'approved' | 'rejected' | 'processing' | 'completed';
 
@@ -293,11 +294,15 @@ export function ReturnStatusModal({
                     <h3 className="font-semibold text-gray-900 dark:text-white mb-3">Item Details</h3>
                     <div className="flex flex-col sm:flex-row gap-4">
                       {returnRequest.orderItem.image && (
-                        <img
-                          src={returnRequest.orderItem.image}
-                          alt={returnRequest.orderItem.name}
-                          className="w-full sm:w-20 h-20 object-cover rounded-lg flex-shrink-0"
-                        />
+                        <div className="relative w-full sm:w-20 h-20 rounded-lg flex-shrink-0 overflow-hidden">
+                          <Image
+                            src={returnRequest.orderItem.image}
+                            alt={returnRequest.orderItem.name}
+                            fill
+                            className="object-cover"
+                            unoptimized
+                          />
+                        </div>
                       )}
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-gray-900 dark:text-white break-words">{returnRequest.orderItem.name}</p>
@@ -421,10 +426,12 @@ export function ReturnStatusModal({
                           key={index}
                           className="relative aspect-square rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800"
                         >
-                          <img
+                          <Image
                             src={image}
                             alt={`Return image ${index + 1}`}
-                            className="w-full h-full object-cover"
+                            fill
+                            className="object-cover"
+                            unoptimized
                           />
                         </div>
                       ))}
