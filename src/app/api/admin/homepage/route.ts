@@ -67,6 +67,9 @@ export async function PUT(request: Request) {
     if (body.signatureCollections !== undefined) {
       homepage.signatureCollections = body.signatureCollections;
     }
+    if (body.storyCollections !== undefined) {
+      homepage.storyCollections = body.storyCollections;
+    }
     if (body.freshlyMinted !== undefined) {
       homepage.freshlyMinted = {
         ...homepage.freshlyMinted,

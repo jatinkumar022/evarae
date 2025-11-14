@@ -18,6 +18,7 @@ interface TrendingConfig {
 export interface HomepageDocument extends mongoose.Document {
   heroImages: string[];
   signatureCollections: mongoose.Types.ObjectId[];
+  storyCollections: mongoose.Types.ObjectId[];
   freshlyMinted: FreshlyMintedConfig;
   worldOfCaelviCollections: mongoose.Types.ObjectId[];
   trendingConfig: TrendingConfig;
@@ -39,6 +40,14 @@ const homepageSchema = new Schema<HomepageDocument, HomepageModel>(
 
     // Signature Collections - Array of collection IDs
     signatureCollections: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Collection',
+      },
+    ],
+
+    // Story Collections - Array of collection IDs for mobile carousel
+    storyCollections: [
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Collection',

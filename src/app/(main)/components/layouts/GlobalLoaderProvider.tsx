@@ -168,27 +168,35 @@ export default function GlobalLoaderProvider({
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    const isLoaderActive = 
-      (isInitialLoad || isNavigating) && 
+    const isLoaderActive =
+      (isInitialLoad || isNavigating) &&
       !window.location.pathname.startsWith('/admin');
+
+    const resetScroll = () => {
+      document.body.style.overflow = '';
+      document.body.style.height = '';
+      document.documentElement.style.overflow = '';
+    };
 
     if (isLoaderActive) {
       // Save original styles
       const originalBodyOverflow = window.getComputedStyle(document.body).overflow;
       const originalHtmlOverflow = window.getComputedStyle(document.documentElement).overflow;
       const originalBodyHeight = document.body.style.height;
-      
+
       // Disable scrolling on both body and html (Safari fix)
       document.body.style.overflow = 'hidden';
       document.body.style.height = '100%';
       document.documentElement.style.overflow = 'hidden';
-      
+
       return () => {
         // Restore original styles on cleanup
-        document.body.style.overflow = originalBodyOverflow;
-        document.body.style.height = originalBodyHeight;
-        document.documentElement.style.overflow = originalHtmlOverflow;
+        document.body.style.overflow = originalBodyOverflow || '';
+        document.body.style.height = originalBodyHeight || '';
+        document.documentElement.style.overflow = originalHtmlOverflow || '';
       };
+    } else {
+      resetScroll();
     }
   }, [isNavigating, isInitialLoad]);
 

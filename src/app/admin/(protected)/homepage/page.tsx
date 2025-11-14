@@ -23,6 +23,7 @@ import { apiFetch } from '@/lib/utils';
 interface HomepageData {
   heroImages: string[];
   signatureCollections: string[];
+  storyCollections: string[];
   freshlyMinted: {
     backgroundImage: string;
     topImage1: string;
@@ -46,6 +47,7 @@ export default function HomepagePage() {
   const [homepageData, setHomepageData] = useState<HomepageData>({
     heroImages: [],
     signatureCollections: [],
+    storyCollections: [],
     freshlyMinted: {
       backgroundImage: '',
       topImage1: '',
@@ -65,6 +67,7 @@ export default function HomepagePage() {
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isSignatureModalOpen, setIsSignatureModalOpen] = useState(false);
+  const [isStoryModalOpen, setIsStoryModalOpen] = useState(false);
   const [isWorldModalOpen, setIsWorldModalOpen] = useState(false);
   const [uploadingImages, setUploadingImages] = useState<{
     [key: string]: boolean;
@@ -82,7 +85,22 @@ export default function HomepagePage() {
         '/api/admin/homepage'
       );
       if (response.homepage) {
-        setHomepageData(response.homepage);
+        setHomepageData(prev => ({
+          ...prev,
+          ...response.homepage,
+          heroImages: response.homepage.heroImages ?? [],
+          signatureCollections: response.homepage.signatureCollections ?? [],
+          storyCollections: response.homepage.storyCollections ?? [],
+          worldOfCaelviCollections: response.homepage.worldOfCaelviCollections ?? [],
+          freshlyMinted: {
+            ...prev.freshlyMinted,
+            ...response.homepage.freshlyMinted,
+          },
+          trendingConfig: {
+            ...prev.trendingConfig,
+            ...response.homepage.trendingConfig,
+          },
+        }));
       }
     } catch (error) {
       console.error('Failed to fetch homepage data:', error);
@@ -178,7 +196,7 @@ export default function HomepagePage() {
 
   const handleCollectionSelection = (
     collectionIds: string[],
-    type: 'signature' | 'world'
+    type: 'signature' | 'world' | 'story'
   ) => {
     if (type === 'signature') {
       setHomepageData(prev => ({
@@ -186,6 +204,12 @@ export default function HomepagePage() {
         signatureCollections: collectionIds,
       }));
       setIsSignatureModalOpen(false);
+    } else if (type === 'story') {
+      setHomepageData(prev => ({
+        ...prev,
+        storyCollections: collectionIds,
+      }));
+      setIsStoryModalOpen(false);
     } else {
       setHomepageData(prev => ({
         ...prev,
@@ -353,6 +377,79 @@ export default function HomepagePage() {
               )}
             </div>
           </div>
+
+        {/* Story Collections */}
+        <div className="bg-white dark:bg-[#191919] shadow-sm rounded-xl border border-gray-200 dark:border-[#3a3a3a] overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-200 dark:border-[#2a2a2a] bg-gray-50 dark:bg-[#1f1f1f]">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <Layers className="h-5 w-5 text-gray-600 dark:text-gray-400 mr-2" />
+                <div>
+                  <h2 className="md:text-lg font-semibold text-gray-900 dark:text-white">
+                    Story Collections (Mobile)
+                  </h2>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    These collections power the circular stories carousel on mobile.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsStoryModalOpen(true)}
+                className="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md text-primary-600 bg-primary-50 hover:bg-primary-100 dark:bg-primary-900/20 dark:text-primary-400 dark:hover:bg-primary-900/30"
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                Select Collections
+              </button>
+            </div>
+          </div>
+          <div className="p-6">
+            {homepageData.storyCollections.length === 0 ? (
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                No collections selected. Click &quot;Select Collections&quot; to add.
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {homepageData.storyCollections.map(id => {
+                  const collection = collections.find(c => c._id === id);
+                  return collection ? (
+                    <div
+                      key={id}
+                      className="flex items-center justify-between p-3 bg-gray-50 dark:bg-[#1f1f1f] rounded-lg"
+                    >
+                      <div className="flex items-center gap-3">
+                        {collection.image && (
+                          <Image
+                            src={collection.image}
+                            alt={collection.name}
+                            width={48}
+                            height={48}
+                            className="w-12 h-12 object-cover rounded"
+                          />
+                        )}
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          {collection.name}
+                        </span>
+                      </div>
+                      <button
+                        onClick={() =>
+                          setHomepageData(prev => ({
+                            ...prev,
+                            storyCollections: prev.storyCollections.filter(
+                              cid => cid !== id
+                            ),
+                          }))
+                        }
+                        className="p-1 text-red-500 hover:text-red-700"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ) : null;
+                })}
+              </div>
+            )}
+          </div>
+        </div>
 
           {/* Freshly Minted */}
           <div className="bg-white dark:bg-[#191919] shadow-sm rounded-xl border border-gray-200 dark:border-[#3a3a3a] overflow-hidden">
@@ -715,6 +812,15 @@ export default function HomepagePage() {
           collections={collections.filter(c => c.isActive)}
           selectedCollections={homepageData.signatureCollections}
           onSave={ids => handleCollectionSelection(ids, 'signature')}
+        />
+
+        <CollectionSelectionModal
+          isOpen={isStoryModalOpen}
+          onClose={() => setIsStoryModalOpen(false)}
+          collections={collections.filter(c => c.isActive)}
+          selectedCollections={homepageData.storyCollections}
+          onSave={ids => handleCollectionSelection(ids, 'story')}
+          maxSelection={8}
         />
 
         <CollectionSelectionModal

@@ -11,8 +11,8 @@ import PageLoader from './components/layouts/PageLoader';
 
 // Dynamically import heavy components to improve initial page load
 // These will be code-split and loaded on demand, while still supporting SSR
+const StoryCollections = dynamic(() => import('./components/home/StoryCollections'));
 
-const Category = dynamic(() => import('./components/home/Category'));
 
 const CategoryGrid = dynamic(() => import('./components/home/CategoryGrid'));
 
@@ -71,7 +71,7 @@ export default function Home() {
   return (
     <>
       <Container>
-        <Category />
+        <StoryCollections />
       </Container>
 
       <div className="w-full xl:max-w-screen-xl mx-auto md:px-6">

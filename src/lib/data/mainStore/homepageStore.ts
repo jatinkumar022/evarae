@@ -53,6 +53,7 @@ export interface HomepageData {
   categories: HomepageCategory[];
   bestsellers: HomepageProduct[];
   signatureCollections: HomepageCollection[];
+  storyCollections: HomepageCollection[];
   trendingCollections: HomepageCollection[];
   trendingConfig?: {
     enabled: boolean;

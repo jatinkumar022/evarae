@@ -61,7 +61,11 @@ export async function GET() {
     });
 
     // Optimize: Fetch collections in parallel
-    const [signatureCollections, worldOfCaelviCollections] = await Promise.all([
+    const [
+      signatureCollections,
+      worldOfCaelviCollections,
+      storyCollections,
+    ] = await Promise.all([
       // Fetch Signature Collections
       Collection.find<LeanCollection>({
         _id: { $in: homepage.signatureCollections || [] },
@@ -72,6 +76,13 @@ export async function GET() {
       // Fetch World of Caelvi Collections
       Collection.find<LeanCollection>({
         _id: { $in: homepage.worldOfCaelviCollections || [] },
+        isActive: true,
+      })
+        .select('name slug image description')
+        .lean(),
+      // Fetch Story Collections (for mobile carousel)
+      Collection.find<LeanCollection>({
+        _id: { $in: homepage.storyCollections || [] },
         isActive: true,
       })
         .select('name slug image description')
@@ -158,6 +169,7 @@ export async function GET() {
         topImage2Link: '',
       },
       worldOfCaelvi: worldOfCaelviCollections || [],
+      storyCollections: storyCollections || [],
     });
     // Add cache header for homepage (2 minutes)
     res.headers.set('Cache-Control', 'no-store');
