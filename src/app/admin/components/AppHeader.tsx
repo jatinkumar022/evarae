@@ -408,21 +408,7 @@ export default function AppHeader() {
                       )}
                     </div>
 
-                    {/* Footer */}
-                    {notifications.length > 0 && (
-                      <div className="p-3 border-t border-gray-200 dark:border-[#404040]">
-                        <Link
-                          href="/admin/notifications"
-                          onClick={() => {
-                            setIsNotificationOpen(false);
-                            setNotificationPosition(null);
-                          }}
-                          className="block text-center text-xs font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300"
-                        >
-                          View all notifications
-                        </Link>
-                      </div>
-                    )}
+                    {/* Footer removed per user request */}
                   </div>
                 </>
               )}
