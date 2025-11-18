@@ -55,7 +55,7 @@ function AddressesPageInner() {
       const originalBodyOverflow = window.getComputedStyle(document.body).overflow;
       const originalHtmlOverflow = window.getComputedStyle(document.documentElement).overflow;
       const originalBodyHeight = document.body.style.height;
-      
+
       // Disable scrolling on both body and html (Safari fix)
       document.body.style.overflow = 'hidden';
       document.body.style.height = '100%';
@@ -143,7 +143,11 @@ function AddressesPageInner() {
 
   // Show loader while fetching addresses - AFTER all hooks, BEFORE main return
   if (isLoading) {
-    return <PageLoader fullscreen showLogo />;
+    return (
+      <div className="h-screen overflow-hidden">
+        <PageLoader fullscreen showLogo />
+      </div>
+    );
   }
 
   return (
@@ -201,22 +205,20 @@ function AddressesPageInner() {
             {addresses.map((address) => (
               <div
                 key={address._id}
-                className={`bg-white rounded-2xl border transition-all hover:shadow-md flex flex-col ${
-                  address.isDefaultShipping
+                className={`bg-white rounded-2xl border transition-all hover:shadow-md flex flex-col ${address.isDefaultShipping
                     ? 'border-[oklch(0.66_0.14_358.91)] ring-2 ring-[oklch(0.66_0.14_358.91)]/20 bg-gradient-to-r from-[oklch(0.66_0.14_358.91)]/5 to-[oklch(0.58_0.16_8)]/5'
                     : 'border-[oklch(0.84_0.04_10.35)]/30 hover:border-[oklch(0.84_0.04_10.35)]/50'
-                }`}
+                  }`}
               >
                 <div className="p-5 flex flex-col h-full min-h-[280px]">
                   {/* Header */}
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-start gap-3 flex-1 min-w-0">
                       <div
-                        className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                          address.isDefaultShipping
+                        className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${address.isDefaultShipping
                             ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] text-white'
                             : 'bg-gray-100 text-gray-600'
-                        }`}
+                          }`}
                       >
                         <MapPin className="w-5 h-5 sm:w-6 sm:h-6" />
                       </div>
@@ -335,9 +337,8 @@ function AddressesPageInner() {
                             {...field}
                             type="text"
                             autoComplete="name"
-                            className={`w-full rounded-xl border border-[oklch(0.84_0.04_10.35)]/40 bg-white px-4 py-2 sm:py-3 text-sm focus:border-[oklch(0.66_0.14_358.91)] focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/20 focus:outline-none transition-colors relative z-10 ${
-                              fieldState.error ? 'border-red-300' : ''
-                            }`}
+                            className={`w-full rounded-xl border border-[oklch(0.84_0.04_10.35)]/40 bg-white px-4 py-2 sm:py-3 text-sm focus:border-[oklch(0.66_0.14_358.91)] focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/20 focus:outline-none transition-colors relative z-10 ${fieldState.error ? 'border-red-300' : ''
+                              }`}
                             placeholder="Enter full name"
                             maxLength={50}
                             style={{ WebkitAppearance: 'none' }}
@@ -383,9 +384,8 @@ function AddressesPageInner() {
                                 field.onChange(normalized);
                               }}
                               maxLength={10}
-                              className={`w-full rounded-xl border border-[oklch(0.84_0.04_10.35)]/40 bg-white pl-10 pr-4 py-2 sm:py-3 text-sm focus:border-[oklch(0.66_0.14_358.91)] focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/20 focus:outline-none transition-colors relative z-10 ${
-                                fieldState.error ? 'border-red-300' : ''
-                              }`}
+                              className={`w-full rounded-xl border border-[oklch(0.84_0.04_10.35)]/40 bg-white pl-10 pr-4 py-2 sm:py-3 text-sm focus:border-[oklch(0.66_0.14_358.91)] focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/20 focus:outline-none transition-colors relative z-10 ${fieldState.error ? 'border-red-300' : ''
+                                }`}
                               placeholder="Enter 10 digit phone number"
                               autoComplete="tel"
                               inputMode="numeric"
@@ -418,9 +418,8 @@ function AddressesPageInner() {
                             {...field}
                             type="text"
                             autoComplete="street-address"
-                            className={`w-full rounded-xl border border-[oklch(0.84_0.04_10.35)]/40 bg-white px-4 py-2 sm:py-3 text-sm focus:border-[oklch(0.66_0.14_358.91)] focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/20 focus:outline-none transition-colors relative z-10 ${
-                              fieldState.error ? 'border-red-300' : ''
-                            }`}
+                            className={`w-full rounded-xl border border-[oklch(0.84_0.04_10.35)]/40 bg-white px-4 py-2 sm:py-3 text-sm focus:border-[oklch(0.66_0.14_358.91)] focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/20 focus:outline-none transition-colors relative z-10 ${fieldState.error ? 'border-red-300' : ''
+                              }`}
                             placeholder="Street address, P.O. box"
                             maxLength={100}
                             style={{ WebkitAppearance: 'none' }}
@@ -449,9 +448,8 @@ function AddressesPageInner() {
                             {...field}
                             type="text"
                             autoComplete="address-line2"
-                            className={`w-full rounded-xl border border-[oklch(0.84_0.04_10.35)]/40 bg-white px-4 py-2 sm:py-3 text-sm focus:border-[oklch(0.66_0.14_358.91)] focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/20 focus:outline-none transition-colors relative z-10 ${
-                              fieldState.error ? 'border-red-300' : ''
-                            }`}
+                            className={`w-full rounded-xl border border-[oklch(0.84_0.04_10.35)]/40 bg-white px-4 py-2 sm:py-3 text-sm focus:border-[oklch(0.66_0.14_358.91)] focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/20 focus:outline-none transition-colors relative z-10 ${fieldState.error ? 'border-red-300' : ''
+                              }`}
                             placeholder="Apartment, suite, unit, building, floor"
                             maxLength={100}
                             style={{ WebkitAppearance: 'none' }}
@@ -481,9 +479,8 @@ function AddressesPageInner() {
                               {...field}
                               type="text"
                               autoComplete="address-level2"
-                              className={`w-full rounded-xl border border-[oklch(0.84_0.04_10.35)]/40 bg-white px-4 py-2 sm:py-3 text-sm focus:border-[oklch(0.66_0.14_358.91)] focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/20 focus:outline-none transition-colors relative z-10 ${
-                                fieldState.error ? 'border-red-300' : ''
-                              }`}
+                              className={`w-full rounded-xl border border-[oklch(0.84_0.04_10.35)]/40 bg-white px-4 py-2 sm:py-3 text-sm focus:border-[oklch(0.66_0.14_358.91)] focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/20 focus:outline-none transition-colors relative z-10 ${fieldState.error ? 'border-red-300' : ''
+                                }`}
                               placeholder="City"
                               maxLength={50}
                               style={{ WebkitAppearance: 'none' }}
@@ -511,9 +508,8 @@ function AddressesPageInner() {
                               {...field}
                               type="text"
                               autoComplete="address-level1"
-                              className={`w-full rounded-xl border border-[oklch(0.84_0.04_10.35)]/40 bg-white px-4 py-2 sm:py-3 text-sm focus:border-[oklch(0.66_0.14_358.91)] focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/20 focus:outline-none transition-colors relative z-10 ${
-                                fieldState.error ? 'border-red-300' : ''
-                              }`}
+                              className={`w-full rounded-xl border border-[oklch(0.84_0.04_10.35)]/40 bg-white px-4 py-2 sm:py-3 text-sm focus:border-[oklch(0.66_0.14_358.91)] focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/20 focus:outline-none transition-colors relative z-10 ${fieldState.error ? 'border-red-300' : ''
+                                }`}
                               placeholder="State"
                               maxLength={50}
                               style={{ WebkitAppearance: 'none' }}
@@ -551,9 +547,8 @@ function AddressesPageInner() {
                               }}
                               maxLength={6}
                               autoComplete="postal-code"
-                              className={`w-full rounded-xl border border-[oklch(0.84_0.04_10.35)]/40 bg-white px-4 py-2 sm:py-3 text-sm text-left tracking-widest font-mono focus:border-[oklch(0.66_0.14_358.91)] focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/20 focus:outline-none transition-colors relative z-10 ${
-                                fieldState.error ? 'border-red-300' : ''
-                              }`}
+                              className={`w-full rounded-xl border border-[oklch(0.84_0.04_10.35)]/40 bg-white px-4 py-2 sm:py-3 text-sm text-left tracking-widest font-mono focus:border-[oklch(0.66_0.14_358.91)] focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/20 focus:outline-none transition-colors relative z-10 ${fieldState.error ? 'border-red-300' : ''
+                                }`}
                               placeholder="123456"
                               inputMode="numeric"
                               style={{ WebkitAppearance: 'none' }}
@@ -581,9 +576,8 @@ function AddressesPageInner() {
                               {...field}
                               type="text"
                               autoComplete="country"
-                              className={`w-full rounded-xl border border-[oklch(0.84_0.04_10.35)]/40 bg-white px-4 py-2 sm:py-3 text-sm focus:border-[oklch(0.66_0.14_358.91)] focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/20 focus:outline-none transition-colors relative z-10 ${
-                                fieldState.error ? 'border-red-300' : ''
-                              }`}
+                              className={`w-full rounded-xl border border-[oklch(0.84_0.04_10.35)]/40 bg-white px-4 py-2 sm:py-3 text-sm focus:border-[oklch(0.66_0.14_358.91)] focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/20 focus:outline-none transition-colors relative z-10 ${fieldState.error ? 'border-red-300' : ''
+                                }`}
                               placeholder="Country"
                               maxLength={50}
                               style={{ WebkitAppearance: 'none' }}
@@ -653,11 +647,10 @@ function AddressesPageInner() {
                     type="submit"
                     form="address-form"
                     disabled={!isValid || isSubmitting}
-                    className={`px-5 py-2.5 text-white text-sm font-normal rounded-md transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
-                      !isValid || isSubmitting
+                    className={`px-5 py-2.5 text-white text-sm font-normal rounded-md transition-all disabled:opacity-50 disabled:cursor-not-allowed ${!isValid || isSubmitting
                         ? 'bg-gray-300 cursor-not-allowed'
                         : 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] hover:shadow-lg hover:shadow-[oklch(0.66_0.14_358.91)]/25'
-                    }`}
+                      }`}
                   >
                     {isSubmitting ? (
                       <span className="flex items-center gap-2 justify-center">

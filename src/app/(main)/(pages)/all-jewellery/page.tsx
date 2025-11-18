@@ -15,8 +15,8 @@ import {
   SortOption,
   Product as UiProduct,
 } from '@/lib/types/product';
-import BannerImage from '../shop/components/Banner';
-import { ad, Banner, BannerMobile } from '@/app/(main)/assets/Shop-list';
+// import BannerImage from '../shop/components/Banner';
+import { ad } from '@/app/(main)/assets/Shop-list';
 import { ProductCard } from '../shop/components/ProductCard';
 import Image from '@/app/(main)/components/ui/FallbackImage';
 import { usePublicProductStore } from '@/lib/data/mainStore/productStore';
@@ -216,14 +216,17 @@ export default function AllJewelleryPage() {
     return items;
   };
 
-  // Show loader while fetching - AFTER all hooks, BEFORE main return
   if (status === 'loading') {
-    return <PageLoader fullscreen showLogo />;
+    return (
+      <div className="h-screen overflow-hidden">
+        <PageLoader fullscreen showLogo />
+      </div>
+    );
   }
 
   return (
     <>
-      <BannerImage desktopSrc={Banner} mobileSrc={BannerMobile} alt="Banner" />
+      {/* <BannerImage desktopSrc={Banner} mobileSrc={BannerMobile} alt="Banner" /> */}
       <Container>
         <nav className="py-4 sm:py-6 text-xs sm:text-sm">
           <div className="flex items-center gap-1 sm:gap-2">

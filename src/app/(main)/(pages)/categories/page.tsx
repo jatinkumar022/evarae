@@ -16,7 +16,11 @@ export default function CategoriesPage() {
 
   // Show loader while fetching
   if (status === 'loading') {
-    return <PageLoader fullscreen showLogo />;
+    return (
+      <div className="h-screen overflow-hidden">
+        <PageLoader fullscreen showLogo />
+      </div>
+    );
   }
 
   return (

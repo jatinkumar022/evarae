@@ -383,7 +383,11 @@ export default function CheckoutPage() {
 
   // Show loader while fetching addresses - AFTER all hooks, BEFORE main return
   if (addressesLoading) {
-    return <PageLoader fullscreen showLogo />;
+    return (
+      <div className="h-screen overflow-hidden">
+        <PageLoader fullscreen showLogo />
+      </div>
+    );
   }
 
   return (

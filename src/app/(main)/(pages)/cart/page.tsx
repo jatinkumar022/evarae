@@ -41,7 +41,7 @@ export default function CartPage() {
 
   const { products: bestSellersProducts, fetchBestSellers } = useBestSellersStore();
   const { categories } = usePublicCategoryStore();
-  
+
   // Map categories to tiles format
   const categoryTiles = useMemo(() => {
     if (!categories || categories.length === 0) return null;
@@ -63,14 +63,14 @@ export default function CartPage() {
   // Map best sellers to Product format
   const recommended = useMemo(() => {
     if (!bestSellersProducts || bestSellersProducts.length === 0) return null;
-    
+
     return bestSellersProducts.map(p => {
       const images =
         p.images && p.images.length ? p.images : ['/favicon.ico'];
       const stockQuantity = p.stockQuantity ?? 0;
       const status = p.status || 'active';
       const inStock = status === 'active' && stockQuantity > 0;
-      
+
       return {
         id: String(p.slug || p._id || ''),
         name: p.name || '',
@@ -250,7 +250,7 @@ export default function CartPage() {
     const stockQuantity = productData?.stockQuantity ?? productData?.stockCount ?? 0;
     const status = productData?.status || 'active';
     const inStock = status === 'active' && stockQuantity > 0;
-    
+
     return {
       product: {
         id: String(productData?._id || productData?.id || ''),
@@ -285,7 +285,11 @@ export default function CartPage() {
 
   // Show loader while fetching - AFTER all hooks, BEFORE main return
   if (status === 'loading') {
-    return <PageLoader fullscreen showLogo />;
+    return (
+      <div className="h-screen overflow-hidden">
+        <PageLoader fullscreen showLogo />
+      </div>
+    );
   }
 
   return (

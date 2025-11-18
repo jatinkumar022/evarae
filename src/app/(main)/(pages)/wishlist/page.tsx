@@ -111,7 +111,7 @@ export default function WishlistPage() {
   const handleRemoveFromWishlist = async (productId: string, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     setIsRemoving(productId);
     try {
       await removeFromWishlist(productId);
@@ -144,7 +144,11 @@ export default function WishlistPage() {
 
   // Show loader while fetching - AFTER all hooks, BEFORE main return
   if (status === 'loading') {
-    return <PageLoader fullscreen showLogo />;
+    return (
+      <div className="h-screen overflow-hidden">
+        <PageLoader fullscreen showLogo />
+      </div>
+    );
   }
 
   return (

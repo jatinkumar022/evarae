@@ -276,7 +276,11 @@ export default function OrdersHistoryPage() {
 
   // Show loader while fetching - AFTER all hooks, BEFORE main return
   if (ordersStatus === 'loading') {
-    return <PageLoader fullscreen showLogo />;
+    return (
+      <div className="h-screen overflow-hidden">
+        <PageLoader fullscreen showLogo />
+      </div>
+    );
   }
 
   if (error) {
@@ -292,245 +296,245 @@ export default function OrdersHistoryPage() {
   return (
     <>
       <main className="min-h-screen" style={{ backgroundColor: 'var(--bg-primary)' }}>
-      <Container className="py-8">
-        {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-3xl md:text-4xl font-heading font-bold text-heading mb-2">
-            My Orders
-          </h1>
-          <p className="text-primary-dark">Track and manage your order history</p>
-        </div>
-
-        {/* Compact Filters */}
-        <div className="bg-white rounded-xl border border-primary/20 shadow-sm p-4 mb-6">
-          <div className="flex flex-col sm:flex-row gap-3">
-            {/* Search */}
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-primary/60" />
-                <input
-                  type="text"
-                  placeholder="Search orders..."
-                  value={searchTerm}
-                  onChange={e => setSearchTerm(e.target.value)}
-                  className="w-full pl-9 pr-3 py-3 text-sm border border-primary/20 rounded-lg focus:border-primary focus:ring-1 focus:ring-primary/20 focus:outline-none transition-colors"
-                />
-              </div>
-            </div>
-
-            {/* Status Filter */}
-            <CustomDropdown
-              value={statusFilter}
-              onChange={setStatusFilter}
-              options={statusOptions}
-              className="w-full sm:w-40"
-            />
-
-            {/* Date Filter */}
-            <CustomDropdown
-              value={dateFilter}
-              onChange={setDateFilter}
-              options={dateOptions}
-              className="w-full sm:w-40"
-            />
+        <Container className="py-8">
+          {/* Header */}
+          <div className="mb-6">
+            <h1 className="text-3xl md:text-4xl font-heading font-bold text-heading mb-2">
+              My Orders
+            </h1>
+            <p className="text-primary-dark">Track and manage your order history</p>
           </div>
-        </div>
 
-        {/* Orders List */}
-        <div className="space-y-4">
-          {filteredOrders.length === 0 ? (
-            <div className="bg-white rounded-2xl border border-primary/20 shadow-sm p-12 text-center">
-              <Package className="w-16 h-16 text-primary/30 mx-auto mb-4" />
-              <h3 className="text-xl font-heading font-semibold text-heading mb-2">
-                No Orders Found
-              </h3>
-              <p className="text-primary-dark mb-6">
-                {searchTerm || statusFilter !== 'all' || dateFilter !== 'all'
-                  ? 'Try adjusting your search or filters.'
-                  : "You haven't placed any orders yet."}
-              </p>
-              <button className="btn btn-filled">
-                Start Shopping
-              </button>
+          {/* Compact Filters */}
+          <div className="bg-white rounded-xl border border-primary/20 shadow-sm p-4 mb-6">
+            <div className="flex flex-col sm:flex-row gap-3">
+              {/* Search */}
+              <div className="flex-1">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-primary/60" />
+                  <input
+                    type="text"
+                    placeholder="Search orders..."
+                    value={searchTerm}
+                    onChange={e => setSearchTerm(e.target.value)}
+                    className="w-full pl-9 pr-3 py-3 text-sm border border-primary/20 rounded-lg focus:border-primary focus:ring-1 focus:ring-primary/20 focus:outline-none transition-colors"
+                  />
+                </div>
+              </div>
+
+              {/* Status Filter */}
+              <CustomDropdown
+                value={statusFilter}
+                onChange={setStatusFilter}
+                options={statusOptions}
+                className="w-full sm:w-40"
+              />
+
+              {/* Date Filter */}
+              <CustomDropdown
+                value={dateFilter}
+                onChange={setDateFilter}
+                options={dateOptions}
+                className="w-full sm:w-40"
+              />
             </div>
-          ) : (
-            filteredOrders.map(order => (
-              <div
-                key={order._id}
-                className="bg-white rounded-2xl border border-primary/20 shadow-sm hover:shadow-md transition-shadow"
-              >
-                <div className="p-6">
-                  {/* Order Header */}
-                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center flex-shrink-0">
-                        <Package className="w-6 h-6 text-white" />
-                      </div>
-                      <div>
-                        <h3 className="text-lg font-heading font-semibold text-heading">
-                          Order {order.orderNumber}
-                        </h3>
-                        <p className="text-sm text-primary-dark">
-                          Placed on{' '}
-                          {new Date(order.createdAt).toLocaleDateString()}
-                        </p>
-                      </div>
-                    </div>
+          </div>
 
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                      <OrderStatus status={order.orderStatus} />
-                      <div className="text-right">
-                        <p className="text-lg font-heading font-semibold text-heading">
-                          {formatCurrency(order.totalAmount)}
-                        </p>
-                        <p className="text-sm text-primary-dark">
-                          {order.items.length} item
-                          {order.items.length > 1 ? 's' : ''}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Order Items Preview */}
-                  <div className="space-y-3 mb-6">
-                    {order.items.slice(0, 2).map((item, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl"
-                      >
-                        <div className="w-12 h-12 bg-gradient-to-br from-gray-200 to-gray-300 rounded-lg flex items-center justify-center flex-shrink-0">
-                          {item.image && (
-                            <Image
-                              src={item.image}
-                              alt={item.name}
-                              width={48}
-                              height={48}
-                            />
-                          )}
+          {/* Orders List */}
+          <div className="space-y-4">
+            {filteredOrders.length === 0 ? (
+              <div className="bg-white rounded-2xl border border-primary/20 shadow-sm p-12 text-center">
+                <Package className="w-16 h-16 text-primary/30 mx-auto mb-4" />
+                <h3 className="text-xl font-heading font-semibold text-heading mb-2">
+                  No Orders Found
+                </h3>
+                <p className="text-primary-dark mb-6">
+                  {searchTerm || statusFilter !== 'all' || dateFilter !== 'all'
+                    ? 'Try adjusting your search or filters.'
+                    : "You haven't placed any orders yet."}
+                </p>
+                <button className="btn btn-filled">
+                  Start Shopping
+                </button>
+              </div>
+            ) : (
+              filteredOrders.map(order => (
+                <div
+                  key={order._id}
+                  className="bg-white rounded-2xl border border-primary/20 shadow-sm hover:shadow-md transition-shadow"
+                >
+                  <div className="p-6">
+                    {/* Order Header */}
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center flex-shrink-0">
+                          <Package className="w-6 h-6 text-white" />
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-heading font-medium text-heading text-sm truncate">
-                            {item.name}
-                          </h4>
-                          <p className="text-xs text-primary-dark">
-                            Qty: {item.quantity} • {formatCurrency(item.price)}
+                        <div>
+                          <h3 className="text-lg font-heading font-semibold text-heading">
+                            Order {order.orderNumber}
+                          </h3>
+                          <p className="text-sm text-primary-dark">
+                            Placed on{' '}
+                            {new Date(order.createdAt).toLocaleDateString()}
                           </p>
                         </div>
                       </div>
-                    ))}
-                    {order.items.length > 2 && (
-                      <p className="text-sm text-primary-dark px-3">
-                        +{order.items.length - 2} more item
-                        {order.items.length > 3 ? 's' : ''}
-                      </p>
-                    )}
-                  </div>
 
-                  {/* Status-specific Information */}
-                  {order.trackingNumber &&
-                    (order.orderStatus === 'shipped' ||
-                      order.orderStatus === 'delivered') && (
-                      <div className="flex items-center justify-between p-3 bg-primary/10 rounded-xl mb-4">
-                        <div className="flex items-center gap-2">
-                          <Truck className="w-4 h-4 text-primary" />
-                          <span className="text-sm text-primary-dark">
-                            Tracking:{' '}
-                            <span className="font-medium font-mono text-primary">
-                              {order.trackingNumber}
-                            </span>
-                          </span>
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                        <OrderStatus status={order.orderStatus} />
+                        <div className="text-right">
+                          <p className="text-lg font-heading font-semibold text-heading">
+                            {formatCurrency(order.totalAmount)}
+                          </p>
+                          <p className="text-sm text-primary-dark">
+                            {order.items.length} item
+                            {order.items.length > 1 ? 's' : ''}
+                          </p>
                         </div>
-                        <button
-                          onClick={() =>
-                            order.trackingNumber &&
-                            handleCopyTrackingNumber(order.trackingNumber)
-                          }
-                          className="p-1 hover:bg-primary/20 rounded transition-colors"
-                        >
-                          <Copy className="w-4 h-4 text-primary" />
-                        </button>
                       </div>
-                    )}
+                    </div>
 
-                  {/* Estimated delivery or return/cancel notes omitted for brevity in real data */}
+                    {/* Order Items Preview */}
+                    <div className="space-y-3 mb-6">
+                      {order.items.slice(0, 2).map((item, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl"
+                        >
+                          <div className="w-12 h-12 bg-gradient-to-br from-gray-200 to-gray-300 rounded-lg flex items-center justify-center flex-shrink-0">
+                            {item.image && (
+                              <Image
+                                src={item.image}
+                                alt={item.name}
+                                width={48}
+                                height={48}
+                              />
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-heading font-medium text-heading text-sm truncate">
+                              {item.name}
+                            </h4>
+                            <p className="text-xs text-primary-dark">
+                              Qty: {item.quantity} • {formatCurrency(item.price)}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                      {order.items.length > 2 && (
+                        <p className="text-sm text-primary-dark px-3">
+                          +{order.items.length - 2} more item
+                          {order.items.length > 3 ? 's' : ''}
+                        </p>
+                      )}
+                    </div>
 
-                  {/* Action Buttons */}
-                  <div className="flex flex-wrap gap-3 pt-4 border-t border-primary/10">
-                    <Link
-                      href={`/orders/${order.orderNumber || order._id}`}
-                      className="btn btn-filled flex items-center gap-2 text-sm"
-                    >
-                      <Eye className="w-4 h-4" />
-                      View Details
-                    </Link>
-
+                    {/* Status-specific Information */}
                     {order.trackingNumber &&
-                      !['delivered', 'cancelled', 'returned'].includes(
-                        order.orderStatus
-                      ) && (
+                      (order.orderStatus === 'shipped' ||
+                        order.orderStatus === 'delivered') && (
+                        <div className="flex items-center justify-between p-3 bg-primary/10 rounded-xl mb-4">
+                          <div className="flex items-center gap-2">
+                            <Truck className="w-4 h-4 text-primary" />
+                            <span className="text-sm text-primary-dark">
+                              Tracking:{' '}
+                              <span className="font-medium font-mono text-primary">
+                                {order.trackingNumber}
+                              </span>
+                            </span>
+                          </div>
+                          <button
+                            onClick={() =>
+                              order.trackingNumber &&
+                              handleCopyTrackingNumber(order.trackingNumber)
+                            }
+                            className="p-1 hover:bg-primary/20 rounded transition-colors"
+                          >
+                            <Copy className="w-4 h-4 text-primary" />
+                          </button>
+                        </div>
+                      )}
+
+                    {/* Estimated delivery or return/cancel notes omitted for brevity in real data */}
+
+                    {/* Action Buttons */}
+                    <div className="flex flex-wrap gap-3 pt-4 border-t border-primary/10">
+                      <Link
+                        href={`/orders/${order.orderNumber || order._id}`}
+                        className="btn btn-filled flex items-center gap-2 text-sm"
+                      >
+                        <Eye className="w-4 h-4" />
+                        View Details
+                      </Link>
+
+                      {order.trackingNumber &&
+                        !['delivered', 'cancelled', 'returned'].includes(
+                          order.orderStatus
+                        ) && (
+                          <button
+                            onClick={() =>
+                              order.trackingNumber &&
+                              handleTrackOrder(order.trackingNumber)
+                            }
+                            className="btn btn-outline flex items-center gap-2 text-sm"
+                          >
+                            <ExternalLink className="w-4 h-4" />
+                            Track Order
+                          </button>
+                        )}
+
+                      <button
+                        onClick={() => handleDownloadInvoice(order)}
+                        className="btn btn-outline flex items-center gap-2 text-sm"
+                      >
+                        <Download className="w-4 h-4" />
+                        Invoice
+                      </button>
+
+                      {['delivered', 'cancelled'].includes(order.orderStatus) && (
                         <button
-                          onClick={() =>
-                            order.trackingNumber &&
-                            handleTrackOrder(order.trackingNumber)
-                          }
+                          onClick={() => handleReorder(order)}
                           className="btn btn-outline flex items-center gap-2 text-sm"
                         >
-                          <ExternalLink className="w-4 h-4" />
-                          Track Order
+                          <RefreshCw className="w-4 h-4" />
+                          Buy Again
                         </button>
                       )}
 
-                    <button
-                      onClick={() => handleDownloadInvoice(order)}
-                      className="btn btn-outline flex items-center gap-2 text-sm"
-                    >
-                      <Download className="w-4 h-4" />
-                      Invoice
-                    </button>
-
-                    {['delivered', 'cancelled'].includes(order.orderStatus) && (
-                      <button
-                        onClick={() => handleReorder(order)}
-                        className="btn btn-outline flex items-center gap-2 text-sm"
-                      >
-                        <RefreshCw className="w-4 h-4" />
-                        Buy Again
-                      </button>
-                    )}
-
-                    {order.orderStatus === 'delivered' && (
-                      <button className="btn btn-outline flex items-center gap-2 text-sm">
-                        <Star className="w-4 h-4" />
-                        Write Review
-                      </button>
-                    )}
+                      {order.orderStatus === 'delivered' && (
+                        <button className="btn btn-outline flex items-center gap-2 text-sm">
+                          <Star className="w-4 h-4" />
+                          Write Review
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))
-          )}
-        </div>
-
-        {/* Load More Button */}
-        {filteredOrders.length > 0 && filteredOrders.length >= 5 && (
-          <div className="text-center mt-8">
-            <button className="btn btn-outline">
-              Load More Orders
-            </button>
+              ))
+            )}
           </div>
-        )}
-      </Container>
-    </main>
-    <InvoiceDownloadProgress
-      isOpen={showProgress}
-      onClose={() => {
-        if (downloadProgress >= 100) {
-          setShowProgress(false);
-          setDownloadProgress(0);
-        }
-      }}
-      progress={downloadProgress}
-    />
+
+          {/* Load More Button */}
+          {filteredOrders.length > 0 && filteredOrders.length >= 5 && (
+            <div className="text-center mt-8">
+              <button className="btn btn-outline">
+                Load More Orders
+              </button>
+            </div>
+          )}
+        </Container>
+      </main>
+      <InvoiceDownloadProgress
+        isOpen={showProgress}
+        onClose={() => {
+          if (downloadProgress >= 100) {
+            setShowProgress(false);
+            setDownloadProgress(0);
+          }
+        }}
+        progress={downloadProgress}
+      />
     </>
   );
 }

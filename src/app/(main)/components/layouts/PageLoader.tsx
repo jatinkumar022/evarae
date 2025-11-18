@@ -15,6 +15,7 @@ interface PageLoaderProps {
  */
 const PageLoader = ({ text = 'Loading...', fullscreen = false, showLogo = false }: PageLoaderProps) => {
   const loaderRef = useRef<HTMLDivElement>(null);
+  const scrollYRef = useRef(0);
 
   // Set height with cross-browser compatibility (100vh fallback, 100dvh for modern browsers)
   useEffect(() => {
@@ -33,25 +34,42 @@ const PageLoader = ({ text = 'Loading...', fullscreen = false, showLogo = false 
   // Prevent body scrolling when fullscreen loader is active
   useEffect(() => {
     if (fullscreen && typeof window !== 'undefined') {
-     
+      const scrollY = window.scrollY || document.documentElement.scrollTop || 0;
+      scrollYRef.current = scrollY;
+
       // Disable scrolling on both body and html (cross-browser compatibility)
-      document.body.style.overflow = 'hidden';
-      document.body.style.height = '100%';
-      document.documentElement.style.overflow = 'hidden';
-      
+      document.body.style.setProperty('overflow', 'hidden', 'important');
+      document.body.style.setProperty('height', '100%', 'important');
+      document.body.style.setProperty('position', 'fixed', 'important');
+      document.body.style.setProperty('width', '100%', 'important');
+      document.body.style.setProperty('top', `-${scrollY}px`, 'important');
+      document.documentElement.style.setProperty('overflow', 'hidden', 'important');
+      document.documentElement.style.setProperty('height', '100%', 'important');
+      document.documentElement.style.setProperty('scrollbar-width', 'none', 'important');
+
       return () => {
         // Always reset scroll on cleanup to prevent stuck scroll
-        document.body.style.overflow = '';
-        document.body.style.height = '';
-        document.documentElement.style.overflow = '';
+        document.body.style.removeProperty('overflow');
+        document.body.style.removeProperty('height');
+        document.body.style.removeProperty('position');
+        document.body.style.removeProperty('width');
+        document.body.style.removeProperty('top');
+        document.documentElement.style.removeProperty('overflow');
+        document.documentElement.style.removeProperty('height');
+        document.documentElement.style.removeProperty('scrollbar-width');
+
+        window.scrollTo(0, scrollYRef.current);
       };
-    } else {
+    } else if (typeof window !== 'undefined') {
       // Ensure scroll is unlocked when loader is not fullscreen
-      if (typeof window !== 'undefined') {
-        document.body.style.overflow = '';
-        document.body.style.height = '';
-        document.documentElement.style.overflow = '';
-      }
+      document.body.style.removeProperty('overflow');
+      document.body.style.removeProperty('height');
+      document.body.style.removeProperty('position');
+      document.body.style.removeProperty('width');
+      document.body.style.removeProperty('top');
+      document.documentElement.style.removeProperty('overflow');
+      document.documentElement.style.removeProperty('height');
+      document.documentElement.style.removeProperty('scrollbar-width');
     }
   }, [fullscreen]);
   const spinner = (
@@ -68,7 +86,7 @@ const PageLoader = ({ text = 'Loading...', fullscreen = false, showLogo = false 
       {/* Logo container */}
       <div className="w-20 h-20 mx-auto mb-6 relative">
         <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 animate-pulse"></div>
-        <div className="absolute inset-2 rounded-full bg-white flex items-center justify-center">
+        <div className="absolute inset-2 rounded-full bg-white/75 flex items-center justify-center">
           <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
             <span className="text-white font-medium text-sm font-heading ">C</span>
           </div>
@@ -99,9 +117,9 @@ const PageLoader = ({ text = 'Loading...', fullscreen = false, showLogo = false 
 
   if (fullscreen) {
     return (
-      <div 
+      <div
         ref={loaderRef}
-        className="fixed inset-0 z-50 flex items-center justify-center bg-white/95 backdrop-blur-sm overflow-hidden"
+        className="fixed inset-0 z-50 flex items-center justify-center bg-white/25 backdrop-blur-xs overflow-y-hidden"
         style={{ height: '100vh' }} // Fallback for older browsers
       >
         <div className="text-center">

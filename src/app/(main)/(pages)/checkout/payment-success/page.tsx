@@ -113,7 +113,11 @@ function PaymentSuccessInner() {
   if (isLoading) {
     return (
       <>
-        <PageLoader fullscreen showLogo />
+        (
+        <div className="h-screen overflow-hidden">
+          <PageLoader fullscreen showLogo />
+        </div>
+        )
         <ReturnRequestModal
           isOpen={false}
           onClose={() => { }}

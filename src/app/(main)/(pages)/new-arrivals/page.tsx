@@ -71,47 +71,47 @@ export default function EnhancedNewArrivalsPage() {
   // Map new arrivals to UiProduct format
   const allProducts = useMemo(() => {
     if (!newArrivalsProducts || newArrivalsProducts.length === 0) return [];
-    
+
     return newArrivalsProducts.map((p: NewArrivalProduct) => {
-          const hasDiscount =
-            p.discountPrice != null &&
-            p.price != null &&
-            p.discountPrice < p.price;
-          const primaryImage = p.images?.[0] || '/favicon.ico';
-          const secondaryImage = p.images?.[1];
-          return {
-            id: p.slug,
-            name: p.name,
-            description: p.description || '',
-            price: hasDiscount ? p.discountPrice : p.price ?? null,
-            originalPrice: hasDiscount ? p.price : null,
-            currency: 'INR',
-            images: secondaryImage
-              ? [primaryImage, secondaryImage]
-              : [primaryImage],
-            hoverImage: secondaryImage,
-            category: {
-              id: p.categories?.[0]?._id || p.categories?.[0]?.slug || '',
-              name: p.categories?.[0]?.name || '',
-              slug: p.categories?.[0]?.slug || '',
-              productCount: 0,
-              isActive: true,
-            },
-            subcategory: '',
-            brand: '',
-            inStock: (p.status || 'active') === 'active',
-            stockCount: p.stockQuantity ?? 0,
-            rating: 0,
-            reviews: 0,
-            isNew: true,
-            isSale: hasDiscount,
-            isWishlisted: false,
-            isFeatured: false,
-            tags: p.tags || [],
-            sku: p.sku || '',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          } as UiProduct;
+      const hasDiscount =
+        p.discountPrice != null &&
+        p.price != null &&
+        p.discountPrice < p.price;
+      const primaryImage = p.images?.[0] || '/favicon.ico';
+      const secondaryImage = p.images?.[1];
+      return {
+        id: p.slug,
+        name: p.name,
+        description: p.description || '',
+        price: hasDiscount ? p.discountPrice : p.price ?? null,
+        originalPrice: hasDiscount ? p.price : null,
+        currency: 'INR',
+        images: secondaryImage
+          ? [primaryImage, secondaryImage]
+          : [primaryImage],
+        hoverImage: secondaryImage,
+        category: {
+          id: p.categories?.[0]?._id || p.categories?.[0]?.slug || '',
+          name: p.categories?.[0]?.name || '',
+          slug: p.categories?.[0]?.slug || '',
+          productCount: 0,
+          isActive: true,
+        },
+        subcategory: '',
+        brand: '',
+        inStock: (p.status || 'active') === 'active',
+        stockCount: p.stockQuantity ?? 0,
+        rating: 0,
+        reviews: 0,
+        isNew: true,
+        isSale: hasDiscount,
+        isWishlisted: false,
+        isFeatured: false,
+        tags: p.tags || [],
+        sku: p.sku || '',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      } as UiProduct;
     });
   }, [newArrivalsProducts]);
 
@@ -122,7 +122,11 @@ export default function EnhancedNewArrivalsPage() {
 
   // Show loader while fetching - AFTER all hooks
   if (status === 'loading') {
-    return <PageLoader fullscreen showLogo />;
+    return (
+      <div className="h-screen overflow-hidden">
+        <PageLoader fullscreen showLogo />
+      </div>
+    );
   }
 
   const filterOptions: FilterOptions = {
@@ -299,9 +303,8 @@ export default function EnhancedNewArrivalsPage() {
                 {allProducts.slice(0, 3).map((product: UiProduct, index: number) => (
                   <div
                     key={product.id}
-                    className={`relative group cursor-pointer ${
-                      index === 0 ? 'col-span-2' : ''
-                    }`}
+                    className={`relative group cursor-pointer ${index === 0 ? 'col-span-2' : ''
+                      }`}
                   >
                     <div className="relative aspect-square overflow-hidden rounded-lg sm:rounded-xl lg:rounded-2xl bg-white shadow-lg hover:shadow-xl transition-all duration-500 border border-gray-100">
                       <Image

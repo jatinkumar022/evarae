@@ -10,6 +10,7 @@ interface LoaderProps {
 
 const Loader = ({ text = 'Loading...', fullscreen = false, showLogo = false }: LoaderProps) => {
   const loaderRef = useRef<HTMLDivElement>(null);
+  const scrollYRef = useRef(0);
 
   // Set height with cross-browser compatibility (100vh fallback, 100dvh for modern browsers)
   useEffect(() => {
@@ -24,6 +25,45 @@ const Loader = ({ text = 'Loading...', fullscreen = false, showLogo = false }: L
       }
     }
   }, [fullscreen]);
+  // Prevent body scrolling when fullscreen loader is active
+  useEffect(() => {
+    if (fullscreen && typeof window !== 'undefined') {
+      const scrollY = window.scrollY || document.documentElement.scrollTop || 0;
+      scrollYRef.current = scrollY;
+
+      document.body.style.setProperty('overflow', 'hidden', 'important');
+      document.body.style.setProperty('height', '100%', 'important');
+      document.body.style.setProperty('position', 'fixed', 'important');
+      document.body.style.setProperty('width', '100%', 'important');
+      document.body.style.setProperty('top', `-${scrollY}px`, 'important');
+      document.documentElement.style.setProperty('overflow', 'hidden', 'important');
+      document.documentElement.style.setProperty('height', '100%', 'important');
+      document.documentElement.style.setProperty('scrollbar-width', 'none', 'important');
+
+      return () => {
+        document.body.style.removeProperty('overflow');
+        document.body.style.removeProperty('height');
+        document.body.style.removeProperty('position');
+        document.body.style.removeProperty('width');
+        document.body.style.removeProperty('top');
+        document.documentElement.style.removeProperty('overflow');
+        document.documentElement.style.removeProperty('height');
+        document.documentElement.style.removeProperty('scrollbar-width');
+
+        window.scrollTo(0, scrollYRef.current);
+      };
+    } else if (typeof window !== 'undefined') {
+      document.body.style.removeProperty('overflow');
+      document.body.style.removeProperty('height');
+      document.body.style.removeProperty('position');
+      document.body.style.removeProperty('width');
+      document.body.style.removeProperty('top');
+      document.documentElement.style.removeProperty('overflow');
+      document.documentElement.style.removeProperty('height');
+      document.documentElement.style.removeProperty('scrollbar-width');
+    }
+  }, [fullscreen]);
+
   const spinner = (
     <div className="relative">
       {/* Outer ring */}
@@ -69,7 +109,7 @@ const Loader = ({ text = 'Loading...', fullscreen = false, showLogo = false }: L
 
   if (fullscreen) {
     return (
-      <div 
+      <div
         ref={loaderRef}
         className="fixed inset-0 z-50 flex items-center justify-center bg-white/95 backdrop-blur-sm overflow-hidden"
         style={{ height: '100vh' }} // Fallback for older browsers

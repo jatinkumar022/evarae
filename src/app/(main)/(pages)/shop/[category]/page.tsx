@@ -145,7 +145,11 @@ export default function ShopCategoryPage() {
 
   // Show loader while fetching - AFTER all hooks
   if (status === 'loading') {
-    return <PageLoader fullscreen showLogo />;
+    return (
+      <div className="h-screen overflow-hidden">
+        <PageLoader fullscreen showLogo />
+      </div>
+    );
   }
 
   const filterOptions: FilterOptions = {

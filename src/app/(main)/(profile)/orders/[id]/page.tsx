@@ -416,7 +416,11 @@ export default function OrderDetailsPage() {
   if (status === 'loading') {
     return (
       <>
-        <PageLoader fullscreen showLogo />
+        (
+        <div className="h-screen overflow-hidden">
+          <PageLoader fullscreen showLogo />
+        </div>
+        )
         <ReturnRequestModal
           isOpen={false}
           onClose={() => { }}

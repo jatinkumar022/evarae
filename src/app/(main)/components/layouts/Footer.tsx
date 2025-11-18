@@ -93,11 +93,11 @@ export default function Footer() {
     { name: 'Contact Us', to: '/contact-us' },
     { name: 'Help & FAQs', to: '/faqs' },
     { name: 'Shipping & Returns', to: '/returns' },
-   
+
   ];
 
   return (
-    <footer className="relative mt-32">
+    <footer className="relative mt-32 xl:mt-56">
       {/* Enhanced Arch SVG */}
       <div className="absolute bottom-full left-0 w-full text-muted">
         <svg

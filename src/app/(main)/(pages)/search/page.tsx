@@ -286,7 +286,7 @@ function SearchPageInner() {
                 )}
             </div>
           </div>
-          <button 
+          <button
             onClick={handleAddToCart}
             className="px-3 py-1.5 sm:px-4 sm:py-2 md:px-5 md:py-2.5 rounded-md bg-primary text-white text-xs sm:text-sm md:text-base font-medium hover:bg-primary-dark transition-colors whitespace-nowrap flex-shrink-0 self-center"
           >
@@ -299,7 +299,11 @@ function SearchPageInner() {
 
   // Show loader while searching
   if (isLoading && initialQuery) {
-    return <PageLoader fullscreen showLogo />;
+    return (
+      <div className="h-screen overflow-hidden">
+        <PageLoader fullscreen showLogo />
+      </div>
+    );
   }
 
   return (
@@ -314,7 +318,7 @@ function SearchPageInner() {
             <ArrowLeft className="w-3 h-3 sm:w-4 sm:h-4" />
             <span className="hidden sm:inline">Back</span>
           </button>
-         
+
           <span className="text-primary-dark cursor-default">Search</span>
         </div>
       </nav>
@@ -356,22 +360,20 @@ function SearchPageInner() {
           <div className="flex items-center bg-gray-100 rounded-lg sm:rounded-xl overflow-hidden shadow-sm">
             <button
               onClick={() => setViewMode('grid')}
-              className={`px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-medium flex items-center gap-1 transition-colors ${
-                viewMode === 'grid'
+              className={`px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-medium flex items-center gap-1 transition-colors ${viewMode === 'grid'
                   ? 'bg-primary text-white'
                   : 'text-gray-600 hover:bg-gray-200'
-              }`}
+                }`}
             >
               <Grid3X3 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               <span className="hidden sm:inline">Grid</span>
             </button>
             <button
               onClick={() => setViewMode('list')}
-              className={`px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-medium flex items-center gap-1 transition-colors ${
-                viewMode === 'list'
+              className={`px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-medium flex items-center gap-1 transition-colors ${viewMode === 'list'
                   ? 'bg-primary text-white'
                   : 'text-gray-600 hover:bg-gray-200'
-              }`}
+                }`}
             >
               <List className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               <span className="hidden sm:inline">List</span>

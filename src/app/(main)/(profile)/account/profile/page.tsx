@@ -92,12 +92,12 @@ function AccountPageInner() {
       const originalBodyOverflow = window.getComputedStyle(document.body).overflow;
       const originalHtmlOverflow = window.getComputedStyle(document.documentElement).overflow;
       const originalBodyHeight = document.body.style.height;
-      
+
       // Disable scrolling on both body and html (Safari fix)
       document.body.style.overflow = 'hidden';
       document.body.style.height = '100%';
       document.documentElement.style.overflow = 'hidden';
-      
+
       // Handle ESC key
       const handleEscape = (e: KeyboardEvent) => {
         if (e.key === 'Escape') {
@@ -105,7 +105,7 @@ function AccountPageInner() {
         }
       };
       document.addEventListener('keydown', handleEscape);
-      
+
       return () => {
         // Restore original styles
         document.body.style.overflow = originalBodyOverflow;
@@ -153,13 +153,13 @@ function AccountPageInner() {
   // Change password handler
   const handleChangePassword = async () => {
     setPasswordError('');
-    
+
     // Validation
     if (!newPassword || newPassword.length < 6) {
       setPasswordError('Password must be at least 6 characters long');
       return;
     }
-    
+
     if (newPassword !== confirmPassword) {
       setPasswordError('New passwords do not match');
       return;
@@ -233,7 +233,11 @@ function AccountPageInner() {
 
   // Show loader while fetching profile data - AFTER all hooks, BEFORE main return
   if (isLoading) {
-    return <PageLoader fullscreen showLogo />;
+    return (
+      <div className="h-screen overflow-hidden">
+        <PageLoader fullscreen showLogo />
+      </div>
+    );
   }
 
   return (
@@ -286,11 +290,10 @@ function AccountPageInner() {
                       `${url.pathname}?${url.searchParams.toString()}`
                     );
                   }}
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition-all duration-200 whitespace-nowrap ${
-                    activeTab === tab.id
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition-all duration-200 whitespace-nowrap ${activeTab === tab.id
                       ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)]/10 to-[oklch(0.58_0.16_8)]/10 text-[oklch(0.66_0.14_358.91)] font-medium'
                       : 'text-gray-600 hover:bg-gray-50'
-                  }`}
+                    }`}
                 >
                   <Icon className={`w-4 h-4 ${activeTab === tab.id ? 'text-[oklch(0.66_0.14_358.91)]' : 'text-gray-600'}`} />
                   <span className="text-xs font-medium">{tab.label}</span>
@@ -307,11 +310,10 @@ function AccountPageInner() {
                   `${url.pathname}?${url.searchParams.toString()}`
                 );
               }}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition-all duration-200 whitespace-nowrap ${
-                activeTab === 'stats'
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition-all duration-200 whitespace-nowrap ${activeTab === 'stats'
                   ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)]/10 to-[oklch(0.58_0.16_8)]/10 text-[oklch(0.66_0.14_358.91)] font-medium'
                   : 'text-gray-600 hover:bg-gray-50'
-              }`}
+                }`}
             >
               <Star className={`w-4 h-4 ${activeTab === 'stats' ? 'text-[oklch(0.66_0.14_358.91)]' : 'text-gray-600'}`} />
               <span className="text-xs font-medium">Stats</span>
@@ -356,11 +358,10 @@ function AccountPageInner() {
                         `${url.pathname}?${url.searchParams.toString()}`
                       );
                     }}
-                    className={`w-full flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-3 text-left rounded-xl transition-all duration-200 ${
-                      activeTab === tab.id
+                    className={`w-full flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-3 text-left rounded-xl transition-all duration-200 ${activeTab === tab.id
                         ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)]/10 to-[oklch(0.58_0.16_8)]/10 text-[oklch(0.66_0.14_358.91)] font-medium'
                         : 'text-gray-600 hover:bg-gray-50'
-                    }`}
+                      }`}
                   >
                     <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
                     <span className="text-xs sm:text-sm">{tab.label}</span>
@@ -422,11 +423,10 @@ function AccountPageInner() {
                               <div className="relative">
                                 <input
                                   {...field}
-                                  className={`w-full rounded-xl border border-[oklch(0.84_0.04_10.35)]/40 bg-white px-4 py-2 sm:py-3 text-sm focus:border-[oklch(0.66_0.14_358.91)] focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/20 focus:outline-none transition-colors ${
-                                    fieldState.error
+                                  className={`w-full rounded-xl border border-[oklch(0.84_0.04_10.35)]/40 bg-white px-4 py-2 sm:py-3 text-sm focus:border-[oklch(0.66_0.14_358.91)] focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/20 focus:outline-none transition-colors ${fieldState.error
                                       ? 'border-red-300'
                                       : ''
-                                  }`}
+                                    }`}
                                   placeholder="Enter your full name"
                                 />
                                 {fieldState.error && (
@@ -473,11 +473,10 @@ function AccountPageInner() {
                                       field.onChange(value);
                                     }}
                                     maxLength={10}
-                                    className={`w-full rounded-xl border border-[oklch(0.84_0.04_10.35)]/40 bg-white px-10 py-2 sm:py-3 text-sm focus:border-[oklch(0.66_0.14_358.91)] focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/20 focus:outline-none transition-colors ${
-                                      fieldState.error
+                                    className={`w-full rounded-xl border border-[oklch(0.84_0.04_10.35)]/40 bg-white px-10 py-2 sm:py-3 text-sm focus:border-[oklch(0.66_0.14_358.91)] focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/20 focus:outline-none transition-colors ${fieldState.error
                                         ? 'border-red-300'
                                         : ''
-                                    }`}
+                                      }`}
                                     placeholder="Enter 10 digit phone number"
                                     autoComplete="tel"
                                     inputMode="numeric"
@@ -526,22 +525,22 @@ function AccountPageInner() {
                 </div>
               )}
 
-                      {/* Preferences Tab */}
-                      {activeTab === 'preferences' && (
-                        <form id="preferences-form" onSubmit={onSubmit} className="p-4 sm:p-6 lg:p-8">
-                          <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
-                            <Bell className="w-5 h-5 sm:w-6 sm:h-6 text-[oklch(0.66_0.14_358.91)]" />
-                            <h2 className="text-lg sm:text-xl font-medium text-gray-900">
-                              Preferences
-                            </h2>
-                          </div>
+              {/* Preferences Tab */}
+              {activeTab === 'preferences' && (
+                <form id="preferences-form" onSubmit={onSubmit} className="p-4 sm:p-6 lg:p-8">
+                  <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+                    <Bell className="w-5 h-5 sm:w-6 sm:h-6 text-[oklch(0.66_0.14_358.91)]" />
+                    <h2 className="text-lg sm:text-xl font-medium text-gray-900">
+                      Preferences
+                    </h2>
+                  </div>
 
                   <div className="space-y-6">
-                            {/* Notifications */}
-                            <div>
-                              <h3 className="text-sm sm:text-base font-normal text-gray-900 mb-3 sm:mb-4">
-                                Notification Preferences
-                              </h3>
+                    {/* Notifications */}
+                    <div>
+                      <h3 className="text-sm sm:text-base font-normal text-gray-900 mb-3 sm:mb-4">
+                        Notification Preferences
+                      </h3>
                       <div className="space-y-3">
                         {[
                           {
@@ -601,11 +600,11 @@ function AccountPageInner() {
                       </div>
                     </div>
 
-                            {/* Language & Region */}
-                            <div>
-                              <h3 className="text-sm sm:text-base font-normal text-gray-900 mb-3 sm:mb-4">
-                                Language & Region
-                              </h3>
+                    {/* Language & Region */}
+                    <div>
+                      <h3 className="text-sm sm:text-base font-normal text-gray-900 mb-3 sm:mb-4">
+                        Language & Region
+                      </h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <Controller
                           name="language"
@@ -625,24 +624,24 @@ function AccountPageInner() {
                 </form>
               )}
 
-                      {/* Privacy & Security Tab */}
-                      {activeTab === 'privacy' && (
-                        <div className="p-4 sm:p-6 lg:p-8">
-                          <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
-                            <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-[oklch(0.66_0.14_358.91)]" />
-                            <h2 className="text-lg sm:text-xl font-medium text-gray-900">
-                              Privacy & Security
-                            </h2>
-                          </div>
+              {/* Privacy & Security Tab */}
+              {activeTab === 'privacy' && (
+                <div className="p-4 sm:p-6 lg:p-8">
+                  <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+                    <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-[oklch(0.66_0.14_358.91)]" />
+                    <h2 className="text-lg sm:text-xl font-medium text-gray-900">
+                      Privacy & Security
+                    </h2>
+                  </div>
 
                   <div className="space-y-6">
-                            {/* Security */}
-                            <div>
-                              <h3 className="text-sm sm:text-base font-normal text-gray-900 mb-3 sm:mb-4">
-                                Security
-                              </h3>
+                    {/* Security */}
+                    <div>
+                      <h3 className="text-sm sm:text-base font-normal text-gray-900 mb-3 sm:mb-4">
+                        Security
+                      </h3>
                       <div className="space-y-3">
-                     
+
 
                         {hasPassword && (
                           <div className="flex items-start justify-between p-3 sm:p-4 bg-gray-50 rounded-xl">
@@ -668,20 +667,20 @@ function AccountPageInner() {
                 </div>
               )}
 
-                      {/* Activity Tab */}
-                      {activeTab === 'activity' && (
-                        <div className="p-4 sm:p-6 lg:p-8">
-                          <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
-                            <ShoppingBag className="w-5 h-5 sm:w-6 sm:h-6 text-[oklch(0.66_0.14_358.91)]" />
-                            <h2 className="text-lg sm:text-xl font-medium text-gray-900">
-                              Activity Overview
-                            </h2>
-                          </div>
-                          <div className="space-y-4 sm:space-y-6">
-                            <div>
-                              <h3 className="text-sm sm:text-base font-normal text-gray-900 mb-2 sm:mb-3">
-                                Recent Orders
-                              </h3>
+              {/* Activity Tab */}
+              {activeTab === 'activity' && (
+                <div className="p-4 sm:p-6 lg:p-8">
+                  <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+                    <ShoppingBag className="w-5 h-5 sm:w-6 sm:h-6 text-[oklch(0.66_0.14_358.91)]" />
+                    <h2 className="text-lg sm:text-xl font-medium text-gray-900">
+                      Activity Overview
+                    </h2>
+                  </div>
+                  <div className="space-y-4 sm:space-y-6">
+                    <div>
+                      <h3 className="text-sm sm:text-base font-normal text-gray-900 mb-2 sm:mb-3">
+                        Recent Orders
+                      </h3>
                       <div className="space-y-3">
                         {ordersPreview.slice(0, 5).map(o => (
                           <div
@@ -751,58 +750,57 @@ function AccountPageInner() {
                 </div>
               )}
 
-                      {/* Action Buttons */}
-                      {isDirty &&
-                        (activeTab === 'profile' || activeTab === 'preferences') && (
-                          <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 bg-gray-50 border-t border-gray-100 rounded-b-2xl">
-                            <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  const formId =
-                                    activeTab === 'profile'
-                                      ? 'profile-form'
-                                      : 'preferences-form';
-                                  const formElement = document.getElementById(formId);
-                                  if (formElement) {
-                                    (formElement as HTMLFormElement).requestSubmit();
-                                  }
-                                }}
-                                disabled={!isValid || isSubmitting}
-                                className={`relative inline-flex items-center justify-center px-4 sm:px-6 py-2 sm:py-3 text-white text-xs sm:text-sm font-medium rounded-xl transition-all ${
-                                  !isValid || isSubmitting
-                                    ? 'bg-gray-300 cursor-not-allowed'
-                                    : 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] hover:shadow-lg hover:shadow-[oklch(0.66_0.14_358.91)]/25'
-                                }`}
-                              >
-                                <span className={isSubmitting ? 'opacity-0' : ''}>Save Changes</span>
-                                {isSubmitting && (
-                                  <span className="absolute inset-0 flex items-center justify-center">
-                                    <Spinner className="text-white" />
-                                  </span>
-                                )}
-                              </button>
-
-                              <button
-                                type="button"
-                                onClick={handleCancel}
-                                className="px-4 sm:px-6 py-2 sm:py-3 border border-gray-300 text-gray-700 text-xs sm:text-sm font-medium rounded-xl hover:bg-gray-50 transition-colors"
-                              >
-                                Cancel
-                              </button>
-
-                              {form.formState.errors.root && (
-                                <div className="flex items-center gap-1.5 sm:gap-2 text-red-600">
-                                  <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-red-600 rounded-full"></div>
-                                  <p className="text-xs sm:text-sm">
-                                    {form.formState.errors.root.message}
-                                  </p>
-                                </div>
-                              )}
-                            </div>
-                          </div>
+              {/* Action Buttons */}
+              {isDirty &&
+                (activeTab === 'profile' || activeTab === 'preferences') && (
+                  <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 bg-gray-50 border-t border-gray-100 rounded-b-2xl">
+                    <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          const formId =
+                            activeTab === 'profile'
+                              ? 'profile-form'
+                              : 'preferences-form';
+                          const formElement = document.getElementById(formId);
+                          if (formElement) {
+                            (formElement as HTMLFormElement).requestSubmit();
+                          }
+                        }}
+                        disabled={!isValid || isSubmitting}
+                        className={`relative inline-flex items-center justify-center px-4 sm:px-6 py-2 sm:py-3 text-white text-xs sm:text-sm font-medium rounded-xl transition-all ${!isValid || isSubmitting
+                            ? 'bg-gray-300 cursor-not-allowed'
+                            : 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] hover:shadow-lg hover:shadow-[oklch(0.66_0.14_358.91)]/25'
+                          }`}
+                      >
+                        <span className={isSubmitting ? 'opacity-0' : ''}>Save Changes</span>
+                        {isSubmitting && (
+                          <span className="absolute inset-0 flex items-center justify-center">
+                            <Spinner className="text-white" />
+                          </span>
                         )}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleCancel}
+                        className="px-4 sm:px-6 py-2 sm:py-3 border border-gray-300 text-gray-700 text-xs sm:text-sm font-medium rounded-xl hover:bg-gray-50 transition-colors"
+                      >
+                        Cancel
+                      </button>
+
+                      {form.formState.errors.root && (
+                        <div className="flex items-center gap-1.5 sm:gap-2 text-red-600">
+                          <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-red-600 rounded-full"></div>
+                          <p className="text-xs sm:text-sm">
+                            {form.formState.errors.root.message}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
             </div>
           </div>
         </div>
@@ -847,11 +845,10 @@ function AccountPageInner() {
                       setPasswordMethod('password');
                       setPasswordError('');
                     }}
-                    className={`flex-1 px-3 py-2 text-xs sm:text-sm rounded-lg transition-colors ${
-                      passwordMethod === 'password'
+                    className={`flex-1 px-3 py-2 text-xs sm:text-sm rounded-lg transition-colors ${passwordMethod === 'password'
                         ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)]/10 to-[oklch(0.58_0.16_8)]/10 text-[oklch(0.66_0.14_358.91)] font-medium'
                         : 'text-gray-600 hover:bg-gray-50'
-                    }`}
+                      }`}
                   >
                     Current Password
                   </button>
@@ -863,11 +860,10 @@ function AccountPageInner() {
                         handleRequestOtp();
                       }
                     }}
-                    className={`flex-1 px-3 py-2 text-xs sm:text-sm rounded-lg transition-colors ${
-                      passwordMethod === 'otp'
+                    className={`flex-1 px-3 py-2 text-xs sm:text-sm rounded-lg transition-colors ${passwordMethod === 'otp'
                         ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)]/10 to-[oklch(0.58_0.16_8)]/10 text-[oklch(0.66_0.14_358.91)] font-medium'
                         : 'text-gray-600 hover:bg-gray-50'
-                    }`}
+                      }`}
                   >
                     OTP
                   </button>
