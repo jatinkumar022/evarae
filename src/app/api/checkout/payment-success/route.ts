@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 import { connect } from '@/dbConfig/dbConfig';
 import Order from '@/models/orderModel';
 import Cart from '@/models/cartModel';
-import User from '@/models/userModel';
 import Notification from '@/models/notificationModel';
 import mongoose from 'mongoose';
 import { notifyOrderPlaced } from '@/lib/notify';

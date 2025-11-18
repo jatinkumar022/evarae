@@ -16,8 +16,9 @@ const StoryCollections = memo(() => {
 
   // Cleanup timeouts on unmount
   useEffect(() => {
+    const timeouts = timeoutRefs.current;
     return () => {
-      Object.values(timeoutRefs.current).forEach(timeout => {
+      Object.values(timeouts).forEach(timeout => {
         if (timeout) clearTimeout(timeout);
       });
     };

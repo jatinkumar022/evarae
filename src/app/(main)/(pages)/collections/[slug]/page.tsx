@@ -15,7 +15,6 @@ import {
   SortOption,
   Product as UiProduct,
 } from '@/lib/types/product';
-import BannerImage from '../../shop/components/Banner';
 import { ad } from '@/app/(main)/assets/Shop-list';
 import { ProductCard } from '../../shop/components/ProductCard';
 import Image from '@/app/(main)/components/ui/FallbackImage';

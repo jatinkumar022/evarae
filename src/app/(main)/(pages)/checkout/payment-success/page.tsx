@@ -4,15 +4,7 @@ import { useEffect, useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import Container from '@/app/(main)/components/layouts/Container';
-import {
-  CheckCircle,
-  Package,
-  Truck,
-  Clock,
-  AlertCircle,
-  Download,
-  RotateCcw,
-} from 'lucide-react';
+import { CheckCircle, Package, Truck, Clock, AlertCircle, Download } from 'lucide-react';
 import { InvoiceDownloadProgress } from '@/app/(main)/components/ui/InvoiceDownloadProgress';
 import { downloadInvoiceWithProgress } from '@/app/(main)/utils/invoiceDownload';
 import { useCartStore } from '@/lib/data/mainStore/cartStore';
@@ -40,15 +32,6 @@ type SuccessOrder = {
   paymentStatus?: string;
   paidAt?: string | null;
   items?: OrderItem[];
-};
-
-// Check if order is within 7 days return window
-const isWithinReturnWindow = (paidAt: string | null | undefined): boolean => {
-  if (!paidAt) return false;
-  const paidDate = new Date(paidAt);
-  const now = new Date();
-  const daysDiff = (now.getTime() - paidDate.getTime()) / (1000 * 60 * 60 * 24);
-  return daysDiff <= 7 && daysDiff >= 0;
 };
 
 function PaymentSuccessInner() {

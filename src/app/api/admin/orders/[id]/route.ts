@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { connect } from '@/dbConfig/dbConfig';
 import Order from '@/models/orderModel';
-import User from '@/models/userModel';
 import Notification from '@/models/notificationModel';
 import mongoose from 'mongoose';
 import { notifyOrderStatusUpdate } from '@/lib/notify';

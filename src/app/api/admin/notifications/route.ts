@@ -2,6 +2,14 @@ import { NextResponse } from 'next/server';
 import { connect } from '@/dbConfig/dbConfig';
 import Notification from '@/models/notificationModel';
 import jwt from 'jsonwebtoken';
+import mongoose from 'mongoose';
+
+type LeanNotification = {
+  _id: mongoose.Types.ObjectId;
+  orderId?: mongoose.Types.ObjectId | null;
+  userId?: mongoose.Types.ObjectId | null;
+  [key: string]: unknown;
+};
 
 const ADMIN_JWT_SECRET = process.env.ADMIN_JWT_SECRET as string;
 
@@ -39,16 +47,16 @@ export async function GET(request: Request) {
     const notifications = await Notification.find()
       .sort({ createdAt: -1 })
       .limit(50)
-      .lean();
+      .lean<LeanNotification[]>();
 
     const unreadCount = await Notification.countDocuments({ isRead: false });
 
     return NextResponse.json({
-      notifications: notifications.map(n => ({
-        ...n,
-        _id: n._id.toString(),
-        orderId: n.orderId ? n.orderId.toString() : undefined,
-        userId: n.userId ? n.userId.toString() : undefined,
+      notifications: notifications.map(notification => ({
+        ...notification,
+        _id: notification._id.toString(),
+        orderId: notification.orderId ? notification.orderId.toString() : undefined,
+        userId: notification.userId ? notification.userId.toString() : undefined,
       })),
       unreadCount,
     });
