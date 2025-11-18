@@ -309,8 +309,8 @@ export default function NewProductPage() {
                       type="text"
                       {...register('name')}
                       className={`block w-full px-3 py-2 border rounded-lg shadow-sm placeholder-gray-400 dark:placeholder-[#bdbdbd] focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-[#242424] text-gray-900 dark:text-white border-gray-300 dark:border-[#525252] text-sm md:text-base ${errors.name
-                          ? 'border-red-300'
-                          : 'border-gray-300'
+                        ? 'border-red-300'
+                        : 'border-gray-300'
                         }`}
                       placeholder="Enter product name"
                     />
@@ -329,8 +329,8 @@ export default function NewProductPage() {
                       rows={4}
                       {...register('description')}
                       className={`block w-full px-3 py-2 border rounded-lg shadow-sm placeholder-gray-400 dark:placeholder-[#bdbdbd] focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-[#242424] text-gray-900 dark:text-white border-gray-300 dark:border-[#525252] resize-none text-sm md:text-base  ${errors.description
-                          ? 'border-red-300'
-                          : 'border-gray-300'
+                        ? 'border-red-300'
+                        : 'border-gray-300'
                         }`}
                       placeholder="Describe your product in detail"
                     />
@@ -408,8 +408,8 @@ export default function NewProductPage() {
                             },
                           })}
                           className={`block w-full pl-8 pr-3 py-2 border rounded-lg shadow-sm placeholder-gray-400 dark:placeholder-[#777777] focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent text-sm md:text-base bg-white dark:bg-[#242424] text-gray-900 dark:text-gray-100 border-gray-300 dark:border-[#3a3a3a] ${errors.price
-                              ? 'border-red-300 dark:border-red-800'
-                              : 'border-gray-300 dark:border-[#3a3a3a]'
+                            ? 'border-red-300 dark:border-red-800'
+                            : 'border-gray-300 dark:border-[#3a3a3a]'
                             }`}
                           placeholder="0.00"
                         />
@@ -443,8 +443,8 @@ export default function NewProductPage() {
                             },
                           })}
                           className={`block w-full pl-8 pr-3 py-2 border rounded-lg shadow-sm placeholder-gray-400 dark:placeholder-[#777777] focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent text-sm md:text-base bg-white dark:bg-[#242424] text-gray-900 dark:text-gray-100 border-gray-300 dark:border-[#3a3a3a] ${errors.discountPrice
-                              ? 'border-red-300 dark:border-red-800'
-                              : 'border-gray-300 dark:border-[#3a3a3a]'
+                            ? 'border-red-300 dark:border-red-800'
+                            : 'border-gray-300 dark:border-[#3a3a3a]'
                             }`}
                           placeholder="0.00"
                         />
@@ -475,8 +475,8 @@ export default function NewProductPage() {
                       <label
                         key={cat._id}
                         className={`flex items-center p-3 rounded-lg border-2 text-sm md:text-base  cursor-pointer transition-all ${watch('categories').includes(cat._id)
-                            ? 'border-gray-300 bg-gray-100 dark:border-[#333333] dark:bg-[#1e1e1e]'
-                            : 'border-gray-200 dark:border-[#2a2a2a] hover:border-gray-300 dark:hover:border-[#3a3a3a]'
+                          ? 'border-gray-300 bg-gray-100 dark:border-[#333333] dark:bg-[#1e1e1e]'
+                          : 'border-gray-200 dark:border-[#2a2a2a] hover:border-gray-300 dark:hover:border-[#3a3a3a]'
                           }`}
                       >
                         <input
@@ -544,8 +544,8 @@ export default function NewProductPage() {
                         },
                       })}
                       className={`block w-full px-3 py-2 border rounded-lg shadow-sm placeholder-gray-400 dark:placeholder-[#bdbdbd] focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-[#242424] text-gray-900 dark:text-white border-gray-300 dark:border-[#525252] text-sm md:text-base ${errors.stockQuantity
-                          ? 'border-red-300'
-                          : 'border-gray-300'
+                        ? 'border-red-300'
+                        : 'border-gray-300'
                         }`}
                       placeholder="Enter stock quantity"
                     />

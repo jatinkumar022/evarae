@@ -333,8 +333,8 @@ export function ReturnRequestTrackingModal({
                           <div className="flex flex-col items-center flex-shrink-0">
                             <div
                               className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center border-2 transition-all ${isCompleted
-                                  ? 'bg-primary text-white border-primary'
-                                  : 'bg-gray-100 text-gray-400 border-gray-300'
+                                ? 'bg-primary text-white border-primary'
+                                : 'bg-gray-100 text-gray-400 border-gray-300'
                                 }`}
                             >
                               <IconComponent className="w-4 h-4 sm:w-5 sm:h-5" />
