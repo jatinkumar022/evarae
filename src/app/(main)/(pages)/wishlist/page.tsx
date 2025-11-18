@@ -57,8 +57,6 @@ export default function WishlistPage() {
         isActive: true,
       },
       brand: 'Caelvi',
-      material: p.material || '',
-      colors: p.colors || [],
       inStock: (p.stockQuantity || 0) > 0,
       stockCount: p.stockQuantity || 0,
       rating: 0,
@@ -81,7 +79,6 @@ export default function WishlistPage() {
 
   // Generate filter options based on actual products
   const filterOptions: FilterOptions = useMemo(() => {
-    const materials = new Set<string>();
     const subcategories = new Set<string>();
     const priceRanges = [
       { value: 'under-1k', label: 'Under ₹1,000' },
@@ -91,13 +88,11 @@ export default function WishlistPage() {
     ];
 
     mappedProducts.forEach(product => {
-      if (product.material) materials.add(product.material);
       if (product.category.name) subcategories.add(product.category.name);
     });
 
     return {
       priceRanges,
-      materials: Array.from(materials).sort(),
       subcategories: Array.from(subcategories).sort(),
     };
   }, [mappedProducts]);

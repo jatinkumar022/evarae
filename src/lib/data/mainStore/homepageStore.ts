@@ -17,8 +17,6 @@ export interface HomepageProduct {
   price: number;
   discountPrice?: number;
   tags?: string[];
-  material?: string;
-  colors?: string[];
   categories?: Array<{
     _id: string;
     name: string;

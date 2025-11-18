@@ -12,9 +12,7 @@ export interface Product {
   price: number;
   discountPrice?: number;
   stockQuantity: number;
-  material: string;
   weight: string;
-  colors: string[];
   images: string[];
   tags: string[];
   video?: string;

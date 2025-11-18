@@ -34,7 +34,7 @@ export async function GET(request: Request) {
     const [products, total] = await Promise.all([
       Product.find(filter)
         .select(
-          'name slug images price discountPrice status tags material colors stockQuantity'
+          'name slug images price discountPrice status tags stockQuantity'
         )
         .populate('categories', 'name slug')
         .sort({ createdAt: -1 })

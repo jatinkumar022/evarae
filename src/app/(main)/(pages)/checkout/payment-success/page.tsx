@@ -21,8 +21,6 @@ type OrderItem = {
   price: number;
   quantity: number;
   image: string | null;
-  selectedColor: string | null;
-  selectedSize: string | null;
 };
 
 type SuccessOrder = {
@@ -215,8 +213,6 @@ function PaymentSuccessInner() {
                         </h4>
                         <div className="flex flex-wrap gap-2 text-xs text-gray-600">
                           <span>Qty: {item.quantity}</span>
-                          {item.selectedColor && <span>• Color: {item.selectedColor}</span>}
-                          {item.selectedSize && <span>• Size: {item.selectedSize}</span>}
                         </div>
                       </div>
                       <div className="text-sm font-medium text-primary mt-1">

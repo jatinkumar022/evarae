@@ -174,8 +174,6 @@ export async function POST(request: Request) {
     const validReasons = [
       'defective',
       'wrong_item',
-      'size_issue',
-      'color_issue',
       'quality_issue',
       'not_as_described',
       'damaged',
@@ -240,8 +238,6 @@ export async function POST(request: Request) {
         price: orderItem.price,
         quantity: orderItem.quantity,
         image: orderItem.image || null,
-        selectedColor: orderItem.selectedColor || null,
-        selectedSize: orderItem.selectedSize || null,
       },
       returnReason,
       note: (note || '').trim().substring(0, 1000),

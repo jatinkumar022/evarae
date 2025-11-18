@@ -8,8 +8,6 @@ const cartItemSchema = new mongoose.Schema(
       required: true,
     },
     quantity: { type: Number, default: 1, min: 1 },
-    selectedColor: { type: String, default: null },
-    selectedSize: { type: String, default: null },
     addedAt: { type: Date, default: Date.now },
   },
   { _id: true }

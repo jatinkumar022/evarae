@@ -35,8 +35,6 @@ type OrderItem = {
   price: number;
   quantity: number;
   image: string | null;
-  selectedColor: string | null;
-  selectedSize: string | null;
 };
 
 type ShippingAddress = {

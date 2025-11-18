@@ -23,7 +23,6 @@ type ApiProduct = {
   discountPrice?: number | null;
   images?: string[];
   brand?: string;
-  material?: string;
   weight?: number | string;
   stockQuantity?: number;
   rating?: number;
@@ -67,7 +66,6 @@ function mapApiToUiProduct(api: ApiProduct): UiProduct {
     category,
     subcategory: undefined,
     brand: api.brand || '',
-    material: api.material || '',
     weight: api.weight
       ? Number(String(api.weight).replace(/[^0-9.]/g, ''))
       : undefined,

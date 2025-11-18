@@ -9,8 +9,6 @@ export interface WishlistProduct {
   price: number;
   discountPrice?: number | null;
   tags: string[];
-  material: string;
-  colors: string[];
   stockQuantity: number;
   categories: Array<{ _id?: string; name: string; slug: string }>;
   addedAt?: string | Date;

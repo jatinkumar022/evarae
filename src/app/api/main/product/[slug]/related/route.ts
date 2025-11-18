@@ -39,8 +39,6 @@ export async function GET(request: Request, { params }: RouteContext) {
           discountPrice: 1,
           status: 1,
           tags: 1,
-          material: 1,
-          colors: 1,
           stockQuantity: 1,
           sku: 1,
           categories: 1,

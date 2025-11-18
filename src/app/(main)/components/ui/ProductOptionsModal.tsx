@@ -20,7 +20,6 @@ export default function ProductOptionsModal({
   onClose,
   product,
 }: ProductOptionsModalProps) {
-  const [selectedColor, setSelectedColor] = useState<string>('');
   const [quantity, setQuantity] = useState(1);
   const [showNotification, setShowNotification] = useState(false);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
@@ -33,14 +32,6 @@ export default function ProductOptionsModal({
   // Reset state when modal opens/closes or product changes
   useEffect(() => {
     if (isOpen && product) {
-      // Pre-select first color if available, otherwise use material (empty string)
-      if (product.colors && product.colors.length > 0) {
-        setSelectedColor(product.colors[0]);
-      } else if (product.material && product.material.trim() !== '') {
-        setSelectedColor(''); // Material is represented by empty string in the button
-      } else {
-        setSelectedColor('');
-      }
       setQuantity(1);
     }
   }, [isOpen, product]);
@@ -85,7 +76,6 @@ export default function ProductOptionsModal({
 
   if (!product) return null;
 
-  const hasColors = (product.colors && product.colors.length > 0) || (product.material && product.material.trim() !== '');
   const maxQuantity = Math.min(product.stockCount || 10, 10); // Limit to 10 or available stock
 
   const handleAddToCart = async () => {
@@ -113,7 +103,6 @@ export default function ProductOptionsModal({
         productSlug: String(product.id),
         quantity,
         optimisticProduct,
-        selectedColor: hasColors ? selectedColor : undefined,
       });
       onClose();
       // Show notification after modal closes
@@ -125,7 +114,7 @@ export default function ProductOptionsModal({
     }
   };
 
-  const canAddToCart = quantity > 0 && (!hasColors || selectedColor !== '');
+  const canAddToCart = quantity > 0;
 
   return (
     <>
@@ -190,43 +179,6 @@ export default function ProductOptionsModal({
 
               {/* Options */}
               <div className="p-4 space-y-4">
-          {/* Color Selection */}
-          {hasColors && (
-            <div>
-              <label className="block text-sm font-medium text-primary-dark mb-2">
-                {product.colors && product.colors.length > 0 ? 'Color' : 'Material'}
-              </label>
-              <div className="flex flex-wrap gap-2">
-                {product.colors && product.colors.length > 0 ? (
-                  product.colors.map((color, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setSelectedColor(color)}
-                      className={`px-3 py-2 text-xs rounded-full border transition-colors ${
-                        selectedColor === color
-                          ? 'bg-primary text-white border-primary'
-                          : 'bg-white text-gray-700 border-gray-300 hover:border-primary'
-                      }`}
-                    >
-                      {color}
-                    </button>
-                  ))
-                ) : (
-                  <button
-                    onClick={() => setSelectedColor('')}
-                    className={`px-3 py-2 text-xs rounded-full border transition-colors ${
-                      selectedColor === ''
-                        ? 'bg-primary text-white border-primary'
-                        : 'bg-white text-gray-700 border-gray-300 hover:border-primary'
-                    }`}
-                  >
-                    {product.material || 'Default'}
-                  </button>
-                )}
-              </div>
-            </div>
-          )}
-
               {/* Quantity Selection */}
               <div>
             <label className="block text-sm font-medium text-primary-dark mb-2">

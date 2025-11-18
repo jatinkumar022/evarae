@@ -38,9 +38,7 @@ const productFormSchema = z.object({
   ),
   discountPrice: z.string().optional(),
   categories: z.array(z.string()).min(1, 'At least one category is required'),
-  material: z.string().optional(),
   weight: z.string().optional(),
-  colors: z.array(z.string()),
   stockQuantity: z.string().refine(
     (val) => {
       if (!val || val.trim() === '') return false;
@@ -72,26 +70,6 @@ const productFormSchema = z.object({
 );
 
 type ProductFormData = z.infer<typeof productFormSchema>;
-
-const materials = [
-  'Brass Alloy (Gold Color)',
-  'Copper Alloy (Gold Color)',
-  'Zinc Alloy (Gold Color)',
-  'Stainless Steel Alloy (Gold Tone)',
-  'American Diamond (CZ)',
-  'Crystal Stones',
-  'Pearl Beads',
-  'Oxidised Alloy',
-];
-
-const colors = [
-  'Rose Gold',
-  'Silver',
-  'Gold',
-  'Platinum',
-  'White Gold',
-  'Yellow Gold',
-];
 
 const statusOptions = [
   { value: 'active', label: 'Active', color: 'bg-green-100 text-green-800' },
@@ -136,9 +114,7 @@ export default function EditProductPage() {
       price: '',
       discountPrice: '',
       categories: [],
-      material: '',
       weight: '',
-      colors: [],
       stockQuantity: '',
       sku: '',
       status: 'active',
@@ -174,9 +150,7 @@ export default function EditProductPage() {
         price: currentProduct.price?.toString() || '',
         discountPrice: currentProduct.discountPrice?.toString() || '',
         categories: currentProduct.categories?.map(cat => cat._id) || [],
-        material: currentProduct.material || '',
         weight: currentProduct.weight || '',
-        colors: currentProduct.colors || [],
         stockQuantity: currentProduct.stockQuantity?.toString() || '',
         sku: currentProduct.sku || '',
         status: currentProduct.status || 'active',
@@ -189,7 +163,7 @@ export default function EditProductPage() {
     }
   }, [currentProduct, reset]);
 
-  const toggleArray = (field: 'colors' | 'categories', value: string) => {
+  const toggleArray = (field: 'categories', value: string) => {
     const current = watch(field);
     const updated = current.includes(value)
       ? current.filter(v => v !== value)
@@ -254,9 +228,7 @@ export default function EditProductPage() {
         stockQuantity: data.stockQuantity && data.stockQuantity.trim() !== ''
           ? parseInt(data.stockQuantity, 10)
           : 0,
-        material: data.material?.trim() || undefined,
         weight: data.weight?.trim() || undefined,
-        colors: data.colors,
         images: data.images,
         tags: data.tags.filter(tag => tag.trim().length > 0),
         video: data.video?.trim() && data.video.trim().length > 0 ? data.video.trim() : undefined,
@@ -582,67 +554,27 @@ export default function EditProductPage() {
                   </h2>
                 </div>
                 <div className="p-6 space-y-6">
-                  <div className="grid grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Material
-                      </label>
-                      <CustomSelect
-                        value={watch('material') || ''}
-                        onChange={(v) => setValue('material', v, { shouldValidate: true })}
-                        options={[{ value: '', label: 'Select Material' }, ...materials.map(m => ({ value: m, label: m }))]}
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Weight (grams)
-                      </label>
-                      <input
-                        type="text"
-                        inputMode="decimal"
-                        {...register('weight', {
-                          onChange: (e) => {
-                            let value = e.target.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');
-                            // If starts with dot, prefix with 0
-                            if (value.startsWith('.')) {
-                              value = '0' + value;
-                            }
-                            setValue('weight', value, { shouldValidate: true });
-                          },
-                        })}
-                        className="block w-full px-3 py-2 border border-gray-300 dark:border-[#525252] rounded-lg shadow-sm placeholder-gray-400 dark:placeholder-[#bdbdbd] focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-[#242424] text-gray-900 dark:text-white text-sm md:text-base"
-                        placeholder="0.0"
-                      />
-                    </div>
-                  </div>
-
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                      Available Colors
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Weight (grams)
                     </label>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                      {colors.map(color => (
-                        <label
-                          key={color}
-                          className={`flex items-center p-2 md:p-3 rounded-lg border-2 text-sm md:text-base  cursor-pointer transition-all ${
-                            watch('colors').includes(color)
-                              ? 'border-gray-300 bg-gray-100 dark:border-[#333333] dark:bg-[#1e1e1e]'
-                              : 'border-gray-200 dark:border-[#2a2a2a] hover:border-gray-300 dark:hover:border-[#3a3a3a]'
-                          }`}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={watch('colors').includes(color)}
-                            onChange={() => toggleArray('colors', color)}
-                            className="h-4 w-4 text-primary-600 dark:text-primary-400 border-gray-300 dark:border-[#3a3a3a] rounded focus:ring-primary-500 dark:focus:ring-primary-600"
-                          />
-                          <span className="ml-3 font-medium text-gray-900 dark:text-gray-100 text-sm md:text-base">
-                            {color}
-                          </span>
-                        </label>
-                      ))}
-                    </div>
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      {...register('weight', {
+                        onChange: e => {
+                          let value = e.target.value
+                            .replace(/[^0-9.]/g, '')
+                            .replace(/(\..*)\./g, '$1');
+                          if (value.startsWith('.')) {
+                            value = '0' + value;
+                          }
+                          setValue('weight', value, { shouldValidate: true });
+                        },
+                      })}
+                      className="block w-full px-3 py-2 border border-gray-300 dark:border-[#525252] rounded-lg shadow-sm placeholder-gray-400 dark:placeholder-[#bdbdbd] focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-[#242424] text-gray-900 dark:text-white text-sm md:text-base"
+                      placeholder="0.0"
+                    />
                   </div>
 
                   <div>

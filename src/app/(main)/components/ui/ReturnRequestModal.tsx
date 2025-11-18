@@ -19,8 +19,6 @@ type OrderItem = {
   price: number;
   quantity: number;
   image: string | null;
-  selectedColor: string | null;
-  selectedSize: string | null;
 };
 
 interface ReturnRequestModalProps {
@@ -40,15 +38,11 @@ const DEFAULT_ORDER_ITEM: OrderItem = {
   price: 0,
   quantity: 0,
   image: null,
-  selectedColor: null,
-  selectedSize: null,
 };
 
 const RETURN_REASONS = [
   { value: 'defective', label: 'Defective Product' },
   { value: 'wrong_item', label: 'Wrong Item Received' },
-  { value: 'size_issue', label: 'Size Issue' },
-  { value: 'color_issue', label: 'Color Issue' },
   { value: 'quality_issue', label: 'Quality Issue' },
   { value: 'not_as_described', label: 'Not as Described' },
   { value: 'damaged', label: 'Damaged During Shipping' },

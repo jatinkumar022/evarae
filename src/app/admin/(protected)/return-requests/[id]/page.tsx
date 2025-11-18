@@ -42,8 +42,6 @@ type ReturnRequest = {
     price: number;
     quantity: number;
     image: string | null;
-    selectedColor: string | null;
-    selectedSize: string | null;
   };
   returnReason: string;
   note: string;
@@ -59,8 +57,6 @@ type ReturnRequest = {
 const RETURN_REASON_LABELS: Record<string, string> = {
   defective: 'Defective Product',
   wrong_item: 'Wrong Item Received',
-  size_issue: 'Size Issue',
-  color_issue: 'Color Issue',
   quality_issue: 'Quality Issue',
   not_as_described: 'Not as Described',
   damaged: 'Damaged During Shipping',
@@ -393,8 +389,6 @@ export default function ReturnRequestDetailsPage() {
                   </h4>
                   <div className="mt-1 text-xs text-gray-500 dark:text-[#bdbdbd] space-y-1">
                     <p>SKU: {returnRequest.orderItem.sku}</p>
-                    {returnRequest.orderItem.selectedColor && <p>Color: {returnRequest.orderItem.selectedColor}</p>}
-                    {returnRequest.orderItem.selectedSize && <p>Size: {returnRequest.orderItem.selectedSize}</p>}
                   </div>
                   <div className="mt-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                     <span className="text-sm text-gray-500 dark:text-[#bdbdbd]">

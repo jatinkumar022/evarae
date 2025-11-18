@@ -32,8 +32,6 @@ type Item = {
   image?: string;
   price: number;
   quantity: number;
-  selectedColor?: string | null;
-  selectedSize?: string | null;
   originalPrice?: number;
 };
 
@@ -73,8 +71,6 @@ export default function CheckoutPage() {
       price: cartItem.product.discountPrice ?? cartItem.product.price ?? 0,
       originalPrice: cartItem.product.price ?? undefined,
       quantity: cartItem.quantity,
-      selectedColor: cartItem.selectedColor ?? null,
-      selectedSize: cartItem.selectedSize ?? null,
     }));
   }, [cartItems]);
 
@@ -526,22 +522,7 @@ export default function CheckoutPage() {
                       <span className="inline-flex items-center rounded-full border border-primary/20 px-2 py-0.5 text-gray-600">
                         Qty: {it.quantity}
                       </span>
-                      {it.selectedColor && (
-                        <span className="inline-flex items-center rounded-full border border-primary/20 px-2 py-0.5 text-gray-600">
-                          {it.selectedColor}
-                        </span>
-                      )}
-                      {it.selectedSize && (
-                        <span className="inline-flex items-center rounded-full border border-primary/20 px-2 py-0.5 text-gray-600">
-                          {it.selectedSize}
-                        </span>
-                      )}
                     </div>
-                    {(it.selectedColor || it.selectedSize) && (
-                      <div className="text-xs text-gray-600">
-                        {it.selectedColor || ''} {it.selectedSize || ''}
-                      </div>
-                    )}
                   </div>
                   <div className="text-right">
                     <div className="text-sm font-semibold text-accent">

@@ -33,9 +33,7 @@ const productSchema = new mongoose.Schema(
     stockQuantity: { type: Number, default: 0 },
 
     // Jewellery-specific fields
-    material: { type: String, default: '' }, // Gold-plated, Silver, Rose Gold
     weight: { type: String, default: '' }, // e.g., "15g"
-    colors: [String], // e.g., ["Rose Gold", "Silver"]
 
     // Media
     images: [String], // multiple product images

@@ -364,8 +364,6 @@ export default function OrderDetailPage() {
                       </h4>
                       <div className="mt-1 text-xs text-gray-500 dark:text-[#bdbdbd] space-y-1">
                         <p>SKU: {item.sku}</p>
-                        {item.selectedColor && <p>Color: {item.selectedColor}</p>}
-                        {item.selectedSize && <p>Size: {item.selectedSize}</p>}
                       </div>
                       <div className="mt-2 flex items-center justify-between">
                         <span className="text-sm text-gray-500 dark:text-[#bdbdbd]">

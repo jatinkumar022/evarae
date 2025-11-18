@@ -13,8 +13,6 @@ const orderItemSchema = new mongoose.Schema(
     price: { type: Number, required: true },
     quantity: { type: Number, required: true, min: 1 },
     image: { type: String, default: null },
-    selectedColor: { type: String, default: null },
-    selectedSize: { type: String, default: null },
   },
   { _id: false }
 );

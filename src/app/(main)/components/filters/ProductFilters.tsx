@@ -75,7 +75,6 @@ const FilterModal = ({
   const handleClearAll = () => {
     const clearedFilters = {
       priceRange: '',
-      material: [],
       subcategory: [],
       isNew: false,
       isSale: false,
@@ -128,41 +127,6 @@ const FilterModal = ({
                       className="text-primary focus:ring-primary"
                     />
                     <span className="text-primary-dark">{range.label}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            {/* Material */}
-            <div>
-              <span className="block text-xs font-semibold text-primary-dark mb-2">
-                Material
-              </span>
-              <div className="space-y-2">
-                {filterOptions.materials.map(material => (
-                  <label
-                    key={material}
-                    className="flex items-center gap-2 cursor-pointer text-sm"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={tempFilters.material.includes(material)}
-                      onChange={e => {
-                        if (e.target.checked) {
-                          setTempFilters(prev => ({
-                            ...prev,
-                            material: [...prev.material, material],
-                          }));
-                        } else {
-                          setTempFilters(prev => ({
-                            ...prev,
-                            material: prev.material.filter(m => m !== material),
-                          }));
-                        }
-                      }}
-                      className="text-primary focus:ring-primary"
-                    />
-                    <span className="text-primary-dark">{material}</span>
                   </label>
                 ))}
               </div>
@@ -317,7 +281,6 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({
 }) => {
   const [filters, setFilters] = useState<FilterState>({
     priceRange: '',
-    material: [],
     subcategory: [],
     isNew: false,
     isSale: false,
@@ -349,14 +312,6 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({
             if (price != null && price < 200000) return false;
             break;
         }
-      }
-
-      // Material filter
-      if (
-        filters.material.length > 0 &&
-        !filters.material.includes(product.material)
-      ) {
-        return false;
       }
 
       // Subcategory/Category filter
@@ -427,7 +382,6 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({
             ?.label ?? '',
         ]
       : []),
-    ...filters.material,
     ...filters.subcategory,
     ...(filters.isNew ? ['New Arrivals'] : []),
     ...(filters.isSale ? ['On Sale'] : []),
@@ -437,7 +391,6 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({
   const clearAllFilters = () => {
     setFilters({
       priceRange: '',
-      material: [],
       subcategory: [],
       isNew: false,
       isSale: false,
@@ -452,11 +405,6 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({
         filters.priceRange
     ) {
       setFilters(prev => ({ ...prev, priceRange: '' }));
-    } else if (filters.material.includes(filterToRemove)) {
-      setFilters(prev => ({
-        ...prev,
-        material: prev.material.filter(m => m !== filterToRemove),
-      }));
     } else if (filters.subcategory.includes(filterToRemove)) {
       setFilters(prev => ({
         ...prev,

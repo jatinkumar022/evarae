@@ -20,8 +20,6 @@ export async function GET() {
           status: 1,
           stockQuantity: 1,
           tags: 1,
-          material: 1,
-          colors: 1,
           categories: 1,
         },
       },

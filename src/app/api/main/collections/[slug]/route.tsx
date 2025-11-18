@@ -16,7 +16,8 @@ export async function GET(request: Request, { params }: RouteContext) {
       .select('name slug image description isActive products')
       .populate({
         path: 'products',
-        select: 'name slug images price discountPrice status stockQuantity material colors',
+        select:
+          'name slug images price discountPrice status stockQuantity',
         match: { status: 'active' },
         options: { limit: 24 },
       })

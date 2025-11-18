@@ -40,7 +40,7 @@ export function ProductTabs({
                 <ul className="space-y-2 lg:space-y-3 text-xs lg:text-sm text-gray-500">
                   <li className="flex items-start gap-2 lg:gap-3">
                     <span className="w-1.5 h-1.5 lg:w-2 lg:h-2 bg-primary rounded-full mt-1.5 lg:mt-2 flex-shrink-0"></span>
-                    <span>Premium quality {product.material}</span>
+                    <span>Premium quality craftsmanship</span>
                   </li>
                   <li className="flex items-start gap-2 lg:gap-3">
                     <span className="w-1.5 h-1.5 lg:w-2 lg:h-2 bg-primary rounded-full mt-1.5 lg:mt-2 flex-shrink-0"></span>
@@ -139,14 +139,6 @@ export function ProductTabs({
                       </span>
                     </div>
                   )}
-                  <div className="flex justify-between py-2 lg:py-3 border-b border-primary/10">
-                    <span className="text-primary-dark text-xs lg:text-sm">
-                      Material
-                    </span>
-                    <span className="font-medium text-xs lg:text-sm">
-                      {product.material}
-                    </span>
-                  </div>
                   {product.weight && (
                     <div className="flex justify-between py-2 lg:py-3 border-b border-primary/10">
                       <span className="text-primary-dark text-xs lg:text-sm">

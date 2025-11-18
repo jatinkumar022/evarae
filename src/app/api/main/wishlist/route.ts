@@ -16,8 +16,6 @@ interface PopulatedWishlistProduct {
   discountPrice?: number | null;
   status?: string;
   tags?: string[];
-  material?: string;
-  colors?: string[];
   stockQuantity?: number;
   categories?: Array<{ _id?: string; name?: string; slug?: string }>;
 }
@@ -34,8 +32,6 @@ interface WishlistResponseProduct {
   price?: number;
   discountPrice?: number | null;
   tags: string[];
-  material: string;
-  colors: string[];
   stockQuantity: number;
   categories: Array<{ _id?: string; name?: string; slug?: string }>;
 }
@@ -61,8 +57,6 @@ function serializeWishlistProducts(
       price: product.price,
       discountPrice: product.discountPrice ?? null,
       tags: product.tags ?? [],
-      material: product.material ?? '',
-      colors: product.colors ?? [],
       stockQuantity: product.stockQuantity ?? 0,
       categories: product.categories ?? [],
     }));
@@ -121,7 +115,7 @@ export async function GET(request: Request) {
       .populate({
         path: 'wishlist',
         select:
-          'name slug images price discountPrice status tags material colors stockQuantity categories',
+          'name slug images price discountPrice status tags stockQuantity categories',
         populate: {
           path: 'categories',
           select: 'name slug',
@@ -183,7 +177,7 @@ export async function POST(request: Request) {
       .populate({
         path: 'wishlist',
         select:
-          'name slug images price discountPrice status tags material colors stockQuantity categories',
+          'name slug images price discountPrice status tags stockQuantity categories',
         populate: {
           path: 'categories',
           select: 'name slug',
@@ -244,7 +238,7 @@ export async function DELETE(request: Request) {
       .populate({
         path: 'wishlist',
         select:
-          'name slug images price discountPrice status tags material colors stockQuantity categories',
+          'name slug images price discountPrice status tags stockQuantity categories',
         populate: {
           path: 'categories',
           select: 'name slug',

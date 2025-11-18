@@ -13,8 +13,6 @@ import {
 } from 'lucide-react';
 import { Cart } from '@/app/(main)/assets/Common';
 import CustomSelect from '@/app/(main)/components/filters/CustomSelect';
-import { ringsCat } from '@/app/(main)/assets/CategoryGrid';
-import Image from '@/app/(main)/components/ui/FallbackImage';
 import { useCartStore } from '@/lib/data/mainStore/cartStore';
 import { useWishlistStore } from '@/lib/data/mainStore/wishlistStore';
 import CartNotification from '@/app/(main)/components/ui/CartNotification';
@@ -29,7 +27,6 @@ interface ProductInfoProps {
 
 export function ProductInfo({ product }: ProductInfoProps) {
   const [quantity, setQuantity] = useState(1);
-  const [selectedVariant, setSelectedVariant] = useState('default');
   const [isStickyVisible, setIsStickyVisible] = useState(false);
   const [showNotification, setShowNotification] = useState(false);
   const [isWishlistLoading, setIsWishlistLoading] = useState(false);
@@ -41,14 +38,6 @@ export function ProductInfo({ product }: ProductInfoProps) {
   const { add: addToWishlist, remove: removeFromWishlist, products: wishlistProducts } = useWishlistStore();
 
   // User and wishlist are loaded centrally via Navbar, no need to fetch here
-
-  // Mock variants - in real app, this would come from product data
-  const variants = [
-    { id: 'default', name: 'Default', color: '#FFD700' },
-    { id: 'rose-gold', name: 'Rose Gold', color: '#B76E79' },
-    { id: 'white-gold', name: 'White Gold', color: '#F5F5DC' },
-    { id: 'platinum', name: 'Platinum', color: '#E5E4E2' },
-  ];
 
   // Sticky cart visibility on scroll
   useEffect(() => {
@@ -118,7 +107,6 @@ export function ProductInfo({ product }: ProductInfoProps) {
       await addToCart({
         productSlug: String(product.id),
         quantity,
-        selectedColor: selectedVariant,
         optimisticProduct,
       });
       // Show notification after successful add to cart
@@ -223,35 +211,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
           )}
         </div>
 
-        {/* Variant Selector */}
-        <div className="space-y-2 lg:space-y-3">
-          <label className="block text-sm font-medium text-primary-dark">
-            Select Color / Metal
-          </label>
-
-          <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2">
-            {variants.map(variant => (
-              <button
-                key={variant.id}
-                onClick={() => setSelectedVariant(variant.id)}
-                className={`relative rounded-lg overflow-hidden border transition-all duration-200 ${
-                  selectedVariant === variant.id
-                    ? 'border-primary ring-2 ring-primary/30'
-                    : 'border-gray-200 hover:border-primary/40'
-                }`}
-              >
-                <Image
-                  src={ringsCat}
-                  alt={variant.name}
-                  className=" h-14 object-cover"
-                />
-                <span className="absolute bottom-0 inset-x-0 bg-white/80 text-[10px] font-medium text-primary-dark text-center px-1 py-0.5">
-                  {variant.name}
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
+        {/* Variant Selector removed - single standard product */}
         {/* Quantity Selector */}
         {product.price && (
           <div className="space-y-2 lg:space-y-3">

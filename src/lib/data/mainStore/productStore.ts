@@ -15,8 +15,6 @@ export interface PublicProduct {
   discountPrice?: number;
   status?: string;
   tags?: string[];
-  material?: string;
-  colors?: string[];
   categories?: PublicCategoryRef[];
   description?: string;
   stockQuantity?: number;

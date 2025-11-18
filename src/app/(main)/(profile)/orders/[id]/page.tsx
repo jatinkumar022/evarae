@@ -39,8 +39,6 @@ type OrderItem = {
   price: number;
   quantity: number;
   image: string | null;
-  selectedColor: string | null;
-  selectedSize: string | null;
 };
 
 type ShippingAddress = {
@@ -535,16 +533,6 @@ export default function OrderDetailsPage() {
                           <span className="text-text-primary/70">
                             <strong>Qty:</strong> {item.quantity}
                           </span>
-                          {item.selectedColor && (
-                            <span className="text-text-primary/70">
-                              <strong>Color:</strong> {item.selectedColor}
-                            </span>
-                          )}
-                          {item.selectedSize && (
-                            <span className="text-text-primary/70">
-                              <strong>Size:</strong> {item.selectedSize}
-                            </span>
-                          )}
                         </div>
                       </div>
 

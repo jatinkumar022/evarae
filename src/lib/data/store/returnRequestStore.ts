@@ -9,8 +9,6 @@ export interface ReturnRequestOrderItem {
   price: number;
   quantity: number;
   image: string | null;
-  selectedColor: string | null;
-  selectedSize: string | null;
 }
 
 export interface ReturnRequest {

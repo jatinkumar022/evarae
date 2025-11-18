@@ -14,8 +14,6 @@ export type CartProduct = {
 export type CartItem = {
   product: CartProduct;
   quantity: number;
-  selectedColor?: string | null;
-  selectedSize?: string | null;
 };
 export type SavedItem = { product: CartProduct };
 
@@ -32,21 +30,12 @@ interface CartState {
     sku?: string;
     product?: CartProduct; // nested support
     quantity?: number;
-    selectedColor?: string | null;
-    selectedSize?: string | null;
     optimisticProduct?: CartProduct;
   }) => Promise<void>;
   save: (productId: string) => Promise<void>;
   unsave: (productId: string) => Promise<void>;
-  update: (
-    productId: string,
-    quantity: number,
-    opts?: { selectedColor?: string | null; selectedSize?: string | null }
-  ) => Promise<void>;
-  remove: (
-    productId: string,
-    opts?: { selectedColor?: string | null; selectedSize?: string | null }
-  ) => Promise<void>;
+  update: (productId: string, quantity: number) => Promise<void>;
+  remove: (productId: string) => Promise<void>;
 }
 
 export const useCartStore = create<CartState>(set => ({
@@ -105,8 +94,6 @@ export const useCartStore = create<CartState>(set => ({
           nextItems.unshift({
             product: payload.optimisticProduct as CartProduct,
             quantity: payload.quantity || 1,
-            selectedColor: payload.selectedColor,
-            selectedSize: payload.selectedSize,
           });
         }
         return { items: nextItems } as Partial<CartState> as CartState;
@@ -193,14 +180,14 @@ export const useCartStore = create<CartState>(set => ({
     }
   },
 
-  update: async (productId, quantity, opts) => {
+  update: async (productId, quantity) => {
     try {
       const data = await apiFetch<{
         items: CartItem[];
         savedItems: SavedItem[];
       }>('/api/account/cart', {
         method: 'PATCH',
-        body: JSON.stringify({ productId, quantity, ...(opts || {}) }),
+        body: JSON.stringify({ productId, quantity }),
       });
       set({
         items: data.items || [],
@@ -219,14 +206,14 @@ export const useCartStore = create<CartState>(set => ({
     }
   },
 
-  remove: async (productId, opts) => {
+  remove: async productId => {
     try {
       const data = await apiFetch<{
         items: CartItem[];
         savedItems: SavedItem[];
       }>('/api/account/cart', {
         method: 'DELETE',
-        body: JSON.stringify({ productId, ...(opts || {}) }),
+        body: JSON.stringify({ productId }),
       });
       set({
         items: data.items || [],

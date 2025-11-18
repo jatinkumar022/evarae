@@ -9,7 +9,7 @@ export async function GET() {
     // Fetch latest 30 active products sorted by createdAt descending
     const products = await Product.find({ status: 'active' })
       .select(
-        'name slug images price discountPrice status tags material colors stockQuantity'
+        'name slug images price discountPrice status tags stockQuantity'
       )
       .populate('categories', 'name slug')
       .sort({ createdAt: -1 })

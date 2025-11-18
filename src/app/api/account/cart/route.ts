@@ -10,8 +10,6 @@ const USER_JWT_SECRET = process.env.USER_JWT_SECRET as string;
 type CartItemDoc = {
   product: mongoose.Types.ObjectId | { _id?: mongoose.Types.ObjectId } | null;
   quantity: number;
-  selectedColor?: string | null;
-  selectedSize?: string | null;
   addedAt?: string | Date;
 };
 
@@ -86,7 +84,8 @@ function extractProductKey(body: unknown): string | null {
 }
 
 // Optimize: Select only needed product fields to reduce data transfer
-const PRODUCT_SELECT_FIELDS = 'name slug sku price discountPrice stockQuantity images material weight colors rating reviewsCount status';
+const PRODUCT_SELECT_FIELDS =
+  'name slug sku price discountPrice stockQuantity images weight rating reviewsCount status';
 
 export async function GET(request: Request) {
   try {
@@ -145,9 +144,6 @@ export async function POST(request: Request) {
     const productKey = extractProductKey(body);
     const b = (body || {}) as Record<string, unknown>;
     const quantity = Math.max(1, Number(b.quantity) || 1);
-    const selectedColor =
-      (b.selectedColor as string | null | undefined) ?? null;
-    const selectedSize = (b.selectedSize as string | null | undefined) ?? null;
 
     if (!productKey)
       return NextResponse.json(
@@ -169,37 +165,21 @@ export async function POST(request: Request) {
         { upsert: true, new: true }
       );
     } else {
-      // Reliable add: try to increment existing exact variant
-      let updated = await Cart.findOneAndUpdate(
+      const existingItem = await Cart.findOneAndUpdate(
         {
           user: uid,
           'items.product': pid,
-          'items.selectedColor': selectedColor,
-          'items.selectedSize': selectedSize,
         },
         { $inc: { 'items.$.quantity': quantity } },
         { new: true }
       );
 
-      if (!updated) {
-        // Fallback: merge by product, regardless of variant differences
-        updated = await Cart.findOneAndUpdate(
-          {
-            user: uid,
-            'items.product': pid,
-          },
-          { $inc: { 'items.$.quantity': quantity } },
-          { new: true }
-        );
-      }
-
-      if (!updated) {
-        // No existing item for this product -> push new line
+      if (!existingItem) {
         await Cart.findOneAndUpdate(
           { user: uid },
           {
             $push: {
-              items: { product: pid, quantity, selectedColor, selectedSize },
+              items: { product: pid, quantity },
             },
           },
           { upsert: true }
@@ -272,8 +252,6 @@ export async function PATCH(request: Request) {
     const b = (body || {}) as Record<string, unknown>;
     const qtyNum = Number(b.quantity);
     const quantity = Math.max(1, Number.isNaN(qtyNum) ? 1 : qtyNum);
-    const selectedColor = b.selectedColor as string | undefined;
-    const selectedSize = b.selectedSize as string | undefined;
 
     if (!productKey)
       return NextResponse.json(
@@ -285,20 +263,18 @@ export async function PATCH(request: Request) {
     if (!pid)
       return NextResponse.json({ error: 'Product not found' }, { status: 404 });
 
-    const match: Record<string, unknown> = { user: uid, 'items.product': pid };
-    if (selectedColor !== undefined)
-      match['items.selectedColor'] = selectedColor;
-    if (selectedSize !== undefined) match['items.selectedSize'] = selectedSize;
-
-    const res = await Cart.updateOne(match, {
+    const res = await Cart.updateOne(
+      { user: uid, 'items.product': pid },
+      {
       $set: { 'items.$.quantity': quantity },
-    });
+      }
+    );
     if (res.matchedCount === 0) {
       await Cart.updateOne(
         { user: uid },
         {
           $push: {
-            items: { product: pid, quantity, selectedColor, selectedSize },
+            items: { product: pid, quantity },
           },
         },
         { upsert: true }
@@ -370,8 +346,6 @@ export async function DELETE(request: Request) {
     const body = (await request.json()) as unknown;
     const productKey = extractProductKey(body);
     const b = (body || {}) as Record<string, unknown>;
-    const selectedColor = b.selectedColor as string | undefined;
-    const selectedSize = b.selectedSize as string | undefined;
 
     if (!productKey)
       return NextResponse.json(
@@ -389,12 +363,10 @@ export async function DELETE(request: Request) {
         { $pull: { savedItems: { product: pid } } }
       );
     } else {
-      const pullCriteria: Record<string, unknown> = { product: pid };
-      if (selectedColor !== undefined)
-        pullCriteria.selectedColor = selectedColor;
-      if (selectedSize !== undefined) pullCriteria.selectedSize = selectedSize;
-
-      await Cart.updateOne({ user: uid }, { $pull: { items: pullCriteria } });
+      await Cart.updateOne(
+        { user: uid },
+        { $pull: { items: { product: pid } } }
+      );
     }
 
     // Optimize: Select only needed product fields

@@ -149,9 +149,6 @@ export default function ProductDetailPage() {
                 {currentProduct.categories?.length ? (
                   <span>Categories: {currentProduct.categories.length}</span>
                 ) : null}
-                {currentProduct.colors?.length ? (
-                  <span>Colors: {currentProduct.colors.length}</span>
-                ) : null}
               </div>
               <div className="mt-6 flex flex-col sm:flex-row gap-3">
               <Link
@@ -263,38 +260,10 @@ export default function ProductDetailPage() {
                 <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
                     <dt className="text-sm font-medium text-gray-500 dark:text-[#bdbdbd]">
-                      Material
-                    </dt>
-                    <dd className="mt-1 text-sm text-gray-900 dark:text-white">
-                      {currentProduct.material || 'Not specified'}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="text-sm font-medium text-gray-500 dark:text-[#bdbdbd]">
                       Weight
                     </dt>
                     <dd className="mt-1 text-sm text-gray-900 dark:text-white">
                       {currentProduct.weight || 'Not specified'}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="text-sm font-medium text-gray-500 dark:text-[#bdbdbd]">
-                      Available Sizes
-                    </dt>
-                    <dd className="mt-1 text-sm text-gray-900 dark:text-white">
-                      {currentProduct.sizes && currentProduct.sizes.length > 0
-                        ? currentProduct.sizes.join(', ')
-                        : 'Not specified'}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="text-sm font-medium text-gray-500 dark:text-[#bdbdbd]">
-                      Available Colors
-                    </dt>
-                    <dd className="mt-1 text-sm text-gray-900 dark:text-white">
-                      {currentProduct.colors && currentProduct.colors.length > 0
-                        ? currentProduct.colors.join(', ')
-                        : 'Not specified'}
                     </dd>
                   </div>
                 </dl>

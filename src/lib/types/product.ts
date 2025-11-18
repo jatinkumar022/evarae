@@ -12,8 +12,6 @@ export interface Product {
   category: Category;
   subcategory?: string;
   brand: string;
-  material: string;
-  colors?: string[];
   weight?: number;
   dimensions?: {
     length?: number;
@@ -47,7 +45,6 @@ export interface Category {
 // Filter-related interfaces
 export interface FilterState {
   priceRange: string;
-  material: string[];
   subcategory: string[];
   isNew: boolean;
   isSale: boolean;
@@ -56,7 +53,6 @@ export interface FilterState {
 
 export interface FilterOptions {
   priceRanges: Array<{ value: string; label: string }>;
-  materials: string[];
   subcategories: string[];
 }
 
@@ -163,8 +159,6 @@ export interface CartItemLean {
   _id: string;
   product: string;
   quantity: number;
-  selectedColor?: string | null;
-  selectedSize?: string | null;
   addedAt: string | Date;
 }
 
@@ -183,8 +177,6 @@ export interface OrderItemLean {
   price: number;
   quantity: number;
   image?: string | null;
-  selectedColor?: string | null;
-  selectedSize?: string | null;
 }
 
 export interface OrderLean {

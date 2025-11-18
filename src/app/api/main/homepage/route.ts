@@ -46,8 +46,6 @@ export async function GET() {
             discountPrice: 1,
             status: 1,
             tags: 1,
-            material: 1,
-            colors: 1,
             categories: 1,
           },
         },

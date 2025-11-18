@@ -13,8 +13,6 @@ export interface NewArrivalProduct {
     name?: string;
     slug?: string;
   }>;
-  material?: string;
-  colors?: string[];
   status?: string;
   stockQuantity?: number;
   tags?: string[];

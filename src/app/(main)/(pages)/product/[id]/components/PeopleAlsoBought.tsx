@@ -70,8 +70,6 @@ function PeopleAlsoBoughtComponent({ currentProduct }: PeopleAlsoBoughtProps) {
             name?: string;
             slug?: string;
           }>;
-          material?: string;
-          colors?: string[];
           status?: string;
           stockQuantity?: number;
           tags?: string[];
@@ -109,8 +107,6 @@ function PeopleAlsoBoughtComponent({ currentProduct }: PeopleAlsoBoughtProps) {
           },
           subcategory: '',
           brand: '',
-          material: p.material || '',
-          colors: p.colors || [],
           inStock: (p.status || 'active') === 'active',
           stockCount: p.stockQuantity ?? 0,
           rating: 0,

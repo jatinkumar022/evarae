@@ -32,9 +32,7 @@ export async function GET(request: Request) {
     // Optimize: Run product query and count in parallel
     const [products, total] = await Promise.all([
       Product.find(filter)
-        .select(
-          'name slug images price discountPrice status tags material colors stockQuantity'
-        )
+        .select('name slug images price discountPrice status tags stockQuantity')
         .populate('categories', 'name slug')
         .sort(sort)
         .skip(skip)

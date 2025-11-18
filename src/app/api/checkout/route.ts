@@ -72,8 +72,6 @@ export async function GET(request: Request) {
       price: ci.product?.discountPrice ?? ci.product?.price ?? 0,
       originalPrice: ci.product?.originalPrice ?? ci.product?.price ?? null,
       quantity: ci.quantity || 1,
-      selectedColor: ci.selectedColor ?? null,
-      selectedSize: ci.selectedSize ?? null,
     }));
 
     const addresses = (profile?.addresses || []).map(a => ({

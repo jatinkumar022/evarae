@@ -72,16 +72,6 @@ function SearchPageInner() {
         { value: '2k-5k', label: '₹2,000 - ₹5,000' },
         { value: 'above-5k', label: 'Above ₹5,000' },
       ],
-      materials: [
-        'Brass Alloy (Gold Color)',
-        'Copper Alloy (Gold Color)',
-        'Zinc Alloy (Gold Color)',
-        'Stainless Steel Alloy (Gold Tone)',
-        'American Diamond (CZ)',
-        'Crystal Stones',
-        'Pearl Beads',
-        'Oxidised Alloy',
-      ],
       subcategories: categories.map(cat => cat.name),
     }),
     [categories]
@@ -106,8 +96,6 @@ function SearchPageInner() {
     discountPrice?: number | null;
     images?: string[];
     categories?: Array<{ _id?: string; name?: string; slug?: string }>;
-    material?: string;
-    colors?: string[];
     status?: string;
     stockQuantity?: number;
     tags?: string[];
@@ -142,8 +130,6 @@ function SearchPageInner() {
           },
           subcategory: '',
           brand: '',
-          material: p.material || '',
-          colors: p.colors || [],
           inStock: (p.status || 'active') === 'active',
           stockCount: p.stockQuantity ?? 0,
           rating: 0,

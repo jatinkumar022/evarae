@@ -88,7 +88,6 @@ export default function CartPage() {
           isActive: true,
         },
         brand: '',
-        material: '',
         inStock: inStock,
         stockCount: stockQuantity,
         rating: 0,

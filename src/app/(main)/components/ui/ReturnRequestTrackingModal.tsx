@@ -71,8 +71,6 @@ const STATUS_STAGES: Array<{
 const RETURN_REASON_LABELS: Record<string, string> = {
   defective: 'Defective Product',
   wrong_item: 'Wrong Item Received',
-  size_issue: 'Size Issue',
-  color_issue: 'Color Issue',
   quality_issue: 'Quality Issue',
   not_as_described: 'Not as Described',
   damaged: 'Damaged During Shipping',

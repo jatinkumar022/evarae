@@ -153,8 +153,6 @@ export async function POST(request: Request) {
       quantity: ci.quantity || 1,
       image:
         (ci.product?.images && ci.product.images[0]) || null,
-      selectedColor: ci.selectedColor ?? null,
-      selectedSize: ci.selectedSize ?? null,
     }));
 
     const subtotal = items.reduce((sum, it) => sum + it.price * it.quantity, 0);

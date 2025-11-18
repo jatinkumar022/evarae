@@ -14,8 +14,6 @@ type PublicProduct = {
   discountPrice?: number | null;
   status?: string;
   tags?: string[];
-  material?: string;
-  colors?: string[];
   stockQuantity?: number;
   video?: string | null;
   metaTitle?: string;
@@ -45,7 +43,7 @@ export async function GET(request: Request, { params }: RouteContext) {
       $or: queryConditions,
     })
       .select(
-        'name slug description images price discountPrice status tags material colors stockQuantity video metaTitle metaDescription sku'
+        'name slug description images price discountPrice status tags stockQuantity video metaTitle metaDescription sku'
       )
       .populate('categories', 'name slug')
       .lean<PublicProduct | null>();
