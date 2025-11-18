@@ -378,9 +378,9 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({
   const activeFilters = [
     ...(filters.priceRange
       ? [
-          filterOptions.priceRanges.find(p => p.value === filters.priceRange)
-            ?.label ?? '',
-        ]
+        filterOptions.priceRanges.find(p => p.value === filters.priceRange)
+          ?.label ?? '',
+      ]
       : []),
     ...filters.subcategory,
     ...(filters.isNew ? ['New Arrivals'] : []),
@@ -402,7 +402,7 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({
     if (
       filters.priceRange &&
       filterOptions.priceRanges.find(p => p.label === filterToRemove)?.value ===
-        filters.priceRange
+      filters.priceRange
     ) {
       setFilters(prev => ({ ...prev, priceRange: '' }));
     } else if (filters.subcategory.includes(filterToRemove)) {

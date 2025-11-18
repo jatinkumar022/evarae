@@ -36,37 +36,37 @@ const STATUS_STAGES: Array<{
   icon: typeof Package;
   description: string;
 }> = [
-  {
-    key: 'pending',
-    label: 'Request Submitted',
-    icon: Package,
-    description: 'Your return request has been submitted and is awaiting review',
-  },
-  {
-    key: 'approved',
-    label: 'Request Approved',
-    icon: CheckCircle2,
-    description: 'Your return request has been approved',
-  },
-  {
-    key: 'processing',
-    label: 'Processing Return',
-    icon: RotateCcw,
-    description: 'Your return is being processed',
-  },
-  {
-    key: 'completed',
-    label: 'Return Completed',
-    icon: CheckCircle2,
-    description: 'Your return has been completed and refund processed',
-  },
-  {
-    key: 'rejected',
-    label: 'Request Rejected',
-    icon: XCircle,
-    description: 'Your return request has been rejected',
-  },
-];
+    {
+      key: 'pending',
+      label: 'Request Submitted',
+      icon: Package,
+      description: 'Your return request has been submitted and is awaiting review',
+    },
+    {
+      key: 'approved',
+      label: 'Request Approved',
+      icon: CheckCircle2,
+      description: 'Your return request has been approved',
+    },
+    {
+      key: 'processing',
+      label: 'Processing Return',
+      icon: RotateCcw,
+      description: 'Your return is being processed',
+    },
+    {
+      key: 'completed',
+      label: 'Return Completed',
+      icon: CheckCircle2,
+      description: 'Your return has been completed and refund processed',
+    },
+    {
+      key: 'rejected',
+      label: 'Request Rejected',
+      icon: XCircle,
+      description: 'Your return request has been rejected',
+    },
+  ];
 
 const RETURN_REASON_LABELS: Record<string, string> = {
   defective: 'Defective Product',
@@ -332,19 +332,17 @@ export function ReturnRequestTrackingModal({
                         <div key={stage.key} className="flex gap-3 sm:gap-4">
                           <div className="flex flex-col items-center flex-shrink-0">
                             <div
-                              className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center border-2 transition-all ${
-                                isCompleted
+                              className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center border-2 transition-all ${isCompleted
                                   ? 'bg-primary text-white border-primary'
                                   : 'bg-gray-100 text-gray-400 border-gray-300'
-                              }`}
+                                }`}
                             >
                               <IconComponent className="w-4 h-4 sm:w-5 sm:h-5" />
                             </div>
                             {index < STATUS_STAGES.length - 1 && (
                               <div
-                                className={`w-0.5 h-8 sm:h-12 mt-2 ${
-                                  isCompleted ? 'bg-primary' : 'bg-gray-300'
-                                }`}
+                                className={`w-0.5 h-8 sm:h-12 mt-2 ${isCompleted ? 'bg-primary' : 'bg-gray-300'
+                                  }`}
                               />
                             )}
                           </div>
@@ -352,9 +350,8 @@ export function ReturnRequestTrackingModal({
                             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                               <div className="min-w-0">
                                 <p
-                                  className={`font-medium text-sm sm:text-base ${
-                                    isCompleted ? 'text-gray-900' : 'text-gray-500'
-                                  }`}
+                                  className={`font-medium text-sm sm:text-base ${isCompleted ? 'text-gray-900' : 'text-gray-500'
+                                    }`}
                                 >
                                   {stage.label}
                                 </p>
@@ -365,8 +362,8 @@ export function ReturnRequestTrackingModal({
                                   {stage.key === 'pending'
                                     ? formatDate(returnRequest.createdAt)
                                     : returnRequest.processedAt
-                                    ? formatDate(returnRequest.processedAt)
-                                    : ''}
+                                      ? formatDate(returnRequest.processedAt)
+                                      : ''}
                                 </span>
                               )}
                             </div>

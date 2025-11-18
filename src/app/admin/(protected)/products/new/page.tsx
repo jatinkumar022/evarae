@@ -99,20 +99,20 @@ export default function NewProductPage() {
   } = useForm<ProductFormData>({
     resolver: zodResolver(productFormSchema),
     defaultValues: {
-    name: '',
-    description: '',
-    price: '',
-    discountPrice: '',
-    categories: [],
-    weight: '',
+      name: '',
+      description: '',
+      price: '',
+      discountPrice: '',
+      categories: [],
+      weight: '',
       stockQuantity: '',
-    sku: '',
-    status: 'active',
-    metaTitle: '',
-    metaDescription: '',
-    tags: [],
-    video: '',
-    images: [],
+      sku: '',
+      status: 'active',
+      metaTitle: '',
+      metaDescription: '',
+      tags: [],
+      video: '',
+      images: [],
     },
     mode: 'onChange',
   });
@@ -308,11 +308,10 @@ export default function NewProductPage() {
                     <input
                       type="text"
                       {...register('name')}
-                      className={`block w-full px-3 py-2 border rounded-lg shadow-sm placeholder-gray-400 dark:placeholder-[#bdbdbd] focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-[#242424] text-gray-900 dark:text-white border-gray-300 dark:border-[#525252] text-sm md:text-base ${
-                        errors.name
+                      className={`block w-full px-3 py-2 border rounded-lg shadow-sm placeholder-gray-400 dark:placeholder-[#bdbdbd] focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-[#242424] text-gray-900 dark:text-white border-gray-300 dark:border-[#525252] text-sm md:text-base ${errors.name
                           ? 'border-red-300'
                           : 'border-gray-300'
-                      }`}
+                        }`}
                       placeholder="Enter product name"
                     />
                     {errors.name && (
@@ -329,11 +328,10 @@ export default function NewProductPage() {
                     <textarea
                       rows={4}
                       {...register('description')}
-                      className={`block w-full px-3 py-2 border rounded-lg shadow-sm placeholder-gray-400 dark:placeholder-[#bdbdbd] focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-[#242424] text-gray-900 dark:text-white border-gray-300 dark:border-[#525252] resize-none text-sm md:text-base  ${
-                        errors.description
+                      className={`block w-full px-3 py-2 border rounded-lg shadow-sm placeholder-gray-400 dark:placeholder-[#bdbdbd] focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-[#242424] text-gray-900 dark:text-white border-gray-300 dark:border-[#525252] resize-none text-sm md:text-base  ${errors.description
                           ? 'border-red-300'
                           : 'border-gray-300'
-                      }`}
+                        }`}
                       placeholder="Describe your product in detail"
                     />
                     {errors.description && (
@@ -409,11 +407,10 @@ export default function NewProductPage() {
                               setValue('price', value, { shouldValidate: true });
                             },
                           })}
-                          className={`block w-full pl-8 pr-3 py-2 border rounded-lg shadow-sm placeholder-gray-400 dark:placeholder-[#777777] focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent text-sm md:text-base bg-white dark:bg-[#242424] text-gray-900 dark:text-gray-100 border-gray-300 dark:border-[#3a3a3a] ${
-                            errors.price
+                          className={`block w-full pl-8 pr-3 py-2 border rounded-lg shadow-sm placeholder-gray-400 dark:placeholder-[#777777] focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent text-sm md:text-base bg-white dark:bg-[#242424] text-gray-900 dark:text-gray-100 border-gray-300 dark:border-[#3a3a3a] ${errors.price
                               ? 'border-red-300 dark:border-red-800'
                               : 'border-gray-300 dark:border-[#3a3a3a]'
-                          }`}
+                            }`}
                           placeholder="0.00"
                         />
                       </div>
@@ -445,11 +442,10 @@ export default function NewProductPage() {
                               setValue('discountPrice', value, { shouldValidate: true });
                             },
                           })}
-                          className={`block w-full pl-8 pr-3 py-2 border rounded-lg shadow-sm placeholder-gray-400 dark:placeholder-[#777777] focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent text-sm md:text-base bg-white dark:bg-[#242424] text-gray-900 dark:text-gray-100 border-gray-300 dark:border-[#3a3a3a] ${
-                            errors.discountPrice
+                          className={`block w-full pl-8 pr-3 py-2 border rounded-lg shadow-sm placeholder-gray-400 dark:placeholder-[#777777] focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent text-sm md:text-base bg-white dark:bg-[#242424] text-gray-900 dark:text-gray-100 border-gray-300 dark:border-[#3a3a3a] ${errors.discountPrice
                               ? 'border-red-300 dark:border-red-800'
                               : 'border-gray-300 dark:border-[#3a3a3a]'
-                          }`}
+                            }`}
                           placeholder="0.00"
                         />
                       </div>
@@ -478,11 +474,10 @@ export default function NewProductPage() {
                     {categories.map(cat => (
                       <label
                         key={cat._id}
-                        className={`flex items-center p-3 rounded-lg border-2 text-sm md:text-base  cursor-pointer transition-all ${
-                          watch('categories').includes(cat._id)
+                        className={`flex items-center p-3 rounded-lg border-2 text-sm md:text-base  cursor-pointer transition-all ${watch('categories').includes(cat._id)
                             ? 'border-gray-300 bg-gray-100 dark:border-[#333333] dark:bg-[#1e1e1e]'
                             : 'border-gray-200 dark:border-[#2a2a2a] hover:border-gray-300 dark:hover:border-[#3a3a3a]'
-                        }`}
+                          }`}
                       >
                         <input
                           type="checkbox"
@@ -548,11 +543,10 @@ export default function NewProductPage() {
                           setValue('stockQuantity', value, { shouldValidate: true });
                         },
                       })}
-                      className={`block w-full px-3 py-2 border rounded-lg shadow-sm placeholder-gray-400 dark:placeholder-[#bdbdbd] focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-[#242424] text-gray-900 dark:text-white border-gray-300 dark:border-[#525252] text-sm md:text-base ${
-                        errors.stockQuantity
+                      className={`block w-full px-3 py-2 border rounded-lg shadow-sm placeholder-gray-400 dark:placeholder-[#bdbdbd] focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-[#242424] text-gray-900 dark:text-white border-gray-300 dark:border-[#525252] text-sm md:text-base ${errors.stockQuantity
                           ? 'border-red-300'
                           : 'border-gray-300'
-                      }`}
+                        }`}
                       placeholder="Enter stock quantity"
                     />
                     {errors.stockQuantity && (
@@ -612,8 +606,8 @@ export default function NewProductPage() {
                       Tags
                     </label>
                     <div className="space-y-2">
-                    <input
-                      type="text"
+                      <input
+                        type="text"
                         value={tagInput}
                         onChange={e => setTagInput(e.target.value)}
                         onKeyDown={e => {
@@ -627,7 +621,7 @@ export default function NewProductPage() {
                             }
                           }
                         }}
-                      className="block w-full px-3 py-2 border rounded-lg shadow-sm placeholder-gray-400 dark:placeholder-[#777777] focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent text-sm md:text-base bg-white dark:bg-[#242424] text-gray-900 dark:text-gray-100 border-gray-300 dark:border-[#3a3a3a]"
+                        className="block w-full px-3 py-2 border rounded-lg shadow-sm placeholder-gray-400 dark:placeholder-[#777777] focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent text-sm md:text-base bg-white dark:bg-[#242424] text-gray-900 dark:text-gray-100 border-gray-300 dark:border-[#3a3a3a]"
                         placeholder="Type tag and press comma or Enter"
                       />
                       {watch('tags').length > 0 && (
@@ -747,10 +741,10 @@ export default function NewProductPage() {
                   </div>
                 </div>
                 <div className="p-6">
-                    <input
+                  <input
                     type="url"
                     {...register('video')}
-                      className="block w-full px-3 py-2 border rounded-lg shadow-sm placeholder-gray-400 dark:placeholder-[#777777] focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-[#242424] text-gray-900 dark:text-gray-100 border-gray-300 dark:border-[#3a3a3a]"
+                    className="block w-full px-3 py-2 border rounded-lg shadow-sm placeholder-gray-400 dark:placeholder-[#777777] focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 focus:border-transparent bg-white dark:bg-[#242424] text-gray-900 dark:text-gray-100 border-gray-300 dark:border-[#3a3a3a]"
                     placeholder="https://www.youtube.com/watch?v=YOUR_VIDEO_ID"
                   />
                   <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
