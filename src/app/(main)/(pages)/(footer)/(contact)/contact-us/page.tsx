@@ -239,34 +239,34 @@ export default function ContactUsPage() {
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    
+
     // Real-time validation for specific fields
     let newValue = value;
-    
+
     // Phone number formatting (allow only digits, +, spaces, dashes, parentheses)
     if (name === 'phone') {
       // First, allow only valid characters
       newValue = value.replace(/[^\d\+\s\-\(\)]/g, '');
-      
+
       // Extract country code and phone digits separately
       const hasCountryCode = /^(\+91|91)/.test(newValue);
       let phoneDigits = newValue.replace(/[\s\-\(\)]/g, '');
-      
+
       // Remove country code if present
       if (phoneDigits.startsWith('+91')) {
         phoneDigits = phoneDigits.substring(3);
       } else if (phoneDigits.startsWith('91')) {
         phoneDigits = phoneDigits.substring(2);
       }
-      
+
       // Remove leading zeros
       phoneDigits = phoneDigits.replace(/^0+/, '');
-      
+
       // Limit to 10 digits
       if (phoneDigits.length > 10) {
         phoneDigits = phoneDigits.substring(0, 10);
       }
-      
+
       // Reconstruct with country code if it was present
       if (hasCountryCode && phoneDigits) {
         newValue = `+91 ${phoneDigits}`;
@@ -274,12 +274,12 @@ export default function ContactUsPage() {
         newValue = phoneDigits;
       }
     }
-    
+
     // Name formatting (allow letters, spaces, hyphens, apostrophes)
     if (name === 'name') {
       newValue = value.replace(/[^a-zA-Z\s'-]/g, '');
     }
-    
+
     setFormData(prev => ({ ...prev, [name]: newValue }));
 
     // Clear error when user starts typing
@@ -317,17 +317,17 @@ export default function ContactUsPage() {
     } else {
       // Remove spaces, dashes, and parentheses for validation
       let cleanPhone = formData.phone.replace(/[\s\-\(\)]/g, '');
-      
+
       // Remove country code if present
       if (cleanPhone.startsWith('+91')) {
         cleanPhone = cleanPhone.substring(3);
       } else if (cleanPhone.startsWith('91')) {
         cleanPhone = cleanPhone.substring(2);
       }
-      
+
       // Remove leading zeros
       cleanPhone = cleanPhone.replace(/^0+/, '');
-      
+
       // Must be exactly 10 digits starting with 6-9
       if (cleanPhone.length !== 10 || !/^[6-9]\d{9}$/.test(cleanPhone)) {
         newErrors.phone = 'Please enter a valid 10-digit Indian phone number';
@@ -390,7 +390,7 @@ export default function ContactUsPage() {
       if (!serviceId) missing.push('EMAILJS_SERVICE_ID');
       if (!templateId) missing.push('EMAILJS_TEMPLATE_ID');
       if (!publicKey) missing.push('EMAILJS_PUBLIC_KEY');
-      
+
       toastApi.error(
         'Configuration Error',
         `Missing environment variables: ${missing.join(', ')}. Please check your .env.local file.`
@@ -429,7 +429,7 @@ export default function ContactUsPage() {
       }
 
       const response = await emailjs.send(serviceId, templateId, templateParams, publicKey);
-      
+
       // Debug: Log response
       if (process.env.NODE_ENV !== 'production') {
         console.log('EmailJS Response:', response);
@@ -455,10 +455,10 @@ export default function ContactUsPage() {
     } catch (error: unknown) {
       console.error('EmailJS Error:', error);
       setIsSubmitting(false);
-      
+
       // Provide more specific error messages
       let errorMessage = 'Please try again later or contact us directly at contact@caelvi.com';
-      
+
       const emailError =
         typeof error === 'object' && error !== null
           ? (error as { status?: number; text?: string })
@@ -477,7 +477,7 @@ export default function ContactUsPage() {
       } else if (emailError?.status === 500) {
         errorMessage = 'EmailJS server error. Please try again later.';
       }
-      
+
       toastApi.error('Failed to Send Message', errorMessage);
     }
   };
@@ -660,31 +660,148 @@ export default function ContactUsPage() {
             transition={{ duration: 0.8 }}
             className="relative"
           >
-            <div className="absolute -inset-4 bg-gradient-to-r from-primary/10 to-accent/10 rounded-3xl blur-xl"></div>
-            <div className="relative bg-white rounded-2xl p-4 md:p-6 shadow-md border border-primary/10 overflow-hidden">
+            <motion.div
+              className="absolute -inset-4 bg-gradient-to-r from-primary/10 to-accent/10 rounded-3xl blur-xl"
+              animate={{
+                opacity: [0.5, 0.8, 0.5],
+              }}
+              transition={{
+                duration: 3,
+                repeat: Infinity,
+                ease: 'easeInOut',
+              }}
+            />
+            <motion.div
+              className="relative bg-white rounded-2xl p-4 md:p-6 shadow-md border border-primary/10 overflow-hidden cursor-pointer"
+              whileHover={{
+                scale: 1.02,
+                boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+              }}
+              transition={{ duration: 0.3 }}
+              onClick={() => {
+                window.open(
+                  'https://www.google.com/maps/search/Ahmedabad,+Gujarat,+India',
+                  '_blank',
+                  'noopener,noreferrer'
+                );
+              }}
+            >
               <div className="w-full h-80 rounded-xl overflow-hidden relative group">
-                <Image
-                  src="/images/ahmedabad-map.jpg"
-                  alt="Ahmedabad Map - Caelvi Location"
-                  fill
-                  className="object-cover"
-                  priority
+                {/* Map Image with Zoom Animation */}
+                <motion.div
+                  className="absolute inset-0"
+                  whileHover={{
+                    scale: 1.1,
+                  }}
+                  transition={{ duration: 0.6, ease: 'easeOut' }}
+                >
+                  <Image
+                    src="/images/ahmedabad-map.jpg"
+                    alt="Ahmedabad Map - Caelvi Location"
+                    fill
+                    className="object-cover"
+                    priority
+                  />
+                </motion.div>
+
+                {/* Map Overlay with Grid Pattern */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-black/10 to-transparent pointer-events-none" />
+                <div
+                  className="absolute inset-0 opacity-10 pointer-events-none"
+                  style={{
+                    backgroundImage: `
+                      linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)
+                    `,
+                    backgroundSize: '40px 40px',
+                  }}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
-                <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/60 to-transparent">
-                  <div className="text-white">
-                    <h3 className="text-sm md:text-base font-fraunces font-medium mb-1">
-                      Our Location
-                    </h3>
-                    <p className="text-xs md:text-sm mb-2 opacity-90">
-                      Ahmedabad, Gujarat, India
-                    </p>
-                    <a
-                      href="https://www.google.com/maps/search/Ahmedabad,+Gujarat,+India"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 text-xs md:text-sm font-medium hover:underline transition-all"
+
+                {/* Animated Location Pin */}
+                <motion.div
+                  className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20"
+                  initial={{ scale: 0, y: -20 }}
+                  animate={{
+                    scale: [1, 1.2, 1],
+                    y: [-20, -30, -20],
+                  }}
+                  transition={{
+                    scale: {
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: 'easeInOut',
+                    },
+                    y: {
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: 'easeInOut',
+                    },
+                  }}
+                >
+                  {/* Pin Shadow */}
+                  <motion.div
+                    className="absolute top-full left-1/2 transform -translate-x-1/2 w-8 h-4 bg-black/20 rounded-full blur-md"
+                    animate={{
+                      scale: [1, 1.3, 1],
+                      opacity: [0.3, 0.5, 0.3],
+                    }}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: 'easeInOut',
+                    }}
+                  />
+
+                  {/* Pin Icon */}
+                  <motion.div
+                    whileHover={{ scale: 1.3 }}
+                    className="relative"
+                  >
+                    <svg
+                      className="w-12 h-12 md:w-16 md:h-16 text-primary drop-shadow-lg"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
                     >
+                      <path
+                        fillRule="evenodd"
+                        d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+
+                    {/* Pulsing Rings */}
+                    {[0, 1, 2].map((i) => (
+                      <motion.div
+                        key={i}
+                        className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-primary"
+                        style={{
+                          width: `${24 + i * 16}px`,
+                          height: `${24 + i * 16}px`,
+                        }}
+                        animate={{
+                          scale: [1, 2, 1],
+                          opacity: [0.6, 0, 0.6],
+                        }}
+                        transition={{
+                          duration: 2,
+                          repeat: Infinity,
+                          delay: i * 0.4,
+                          ease: 'easeOut',
+                        }}
+                      />
+                    ))}
+                  </motion.div>
+                </motion.div>
+
+                {/* Bottom Info Overlay */}
+                <motion.div
+                  className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 via-black/60 to-transparent"
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.5, duration: 0.6 }}
+                >
+                  <div className="text-white">
+                    <h3 className="text-sm md:text-base font-fraunces font-medium mb-1 flex items-center gap-2">
                       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                         <path
                           fillRule="evenodd"
@@ -692,12 +809,48 @@ export default function ContactUsPage() {
                           clipRule="evenodd"
                         />
                       </svg>
-                      View on Google Maps
-                    </a>
+                      Our Location
+                    </h3>
+                    <p className="text-xs md:text-sm mb-2 opacity-90">
+                      Ahmedabad, Gujarat, India
+                    </p>
+                    <motion.div
+                      className="inline-flex items-center gap-1.5 text-xs md:text-sm font-medium"
+                      whileHover={{ x: 5 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <span className="underline">Click to view on Google Maps</span>
+                      <motion.svg
+                        className="w-4 h-4"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                        animate={{ x: [0, 4, 0] }}
+                        transition={{
+                          duration: 1.5,
+                          repeat: Infinity,
+                          ease: 'easeInOut',
+                        }}
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
+                          clipRule="evenodd"
+                        />
+                      </motion.svg>
+                    </motion.div>
                   </div>
-                </div>
+                </motion.div>
+
+                {/* Hover Overlay Effect */}
+                <motion.div
+                  className="absolute inset-0 bg-primary/0 pointer-events-none"
+                  whileHover={{
+                    backgroundColor: 'rgba(139, 92, 246, 0.08)',
+                  }}
+                  transition={{ duration: 0.3 }}
+                />
               </div>
-            </div>
+            </motion.div>
           </motion.div>
         </div>
       </Container>

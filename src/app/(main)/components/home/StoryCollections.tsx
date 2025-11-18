@@ -25,7 +25,7 @@ const StoryCollections = memo(() => {
 
   const handleClick = (e: MouseEvent<HTMLDivElement>, idx: number) => {
     e.preventDefault();
-    
+
     const item = storyCollections[idx];
     if (!item?.slug) {
       return;
@@ -67,11 +67,10 @@ const StoryCollections = memo(() => {
                 <div className="relative group w-20 h-20 md:w-24 md:h-24 overflow-visible">
                   {/* Border - Always visible, spins on hover and click */}
                   <div
-                    className={`absolute inset-0 rounded-full border-2 border-primary z-10 transition-all duration-300 ${
-                      clickedIndex === idx 
-                        ? 'animate-spin-slow border-dashed scale-110' 
-                        : 'group-hover:animate-spin-slow'
-                    }`}
+                    className={`absolute inset-0 rounded-full border-2 border-primary z-10 transition-all duration-300 ${clickedIndex === idx
+                      ? 'animate-spin-slow border-dashed scale-110'
+                      : 'group-hover:animate-spin-slow'
+                      }`}
                   />
                   {/* Image Container - Slightly smaller to create gap between border and image */}
                   <div className="absolute inset-1.5 sm:inset-2 rounded-full overflow-hidden z-0">

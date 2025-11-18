@@ -135,7 +135,7 @@ function PaymentSuccessInner() {
         <PageLoader fullscreen showLogo />
         <ReturnRequestModal
           isOpen={false}
-          onClose={() => {}}
+          onClose={() => { }}
           orderId=""
           orderItem={null}
         />
@@ -208,7 +208,7 @@ function PaymentSuccessInner() {
                   {orderDetails.items.map((item, index) => (
                     <div
                       key={index}
-                      className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-white/40 rounded-lg border border-primary/5"
+                      className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-white/40 rounded-lg border border-primary/5"
                     >
                       {/* Product Image */}
                       <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-primary/10 to-accent/10 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -227,7 +227,7 @@ function PaymentSuccessInner() {
 
                       {/* Product Details */}
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-primary-dark text-sm sm:text-base mb-1">
+                        <h4 className="font-medium text-start text-primary-dark text-sm sm:text-base mb-1">
                           {item.name}
                         </h4>
                         <div className="flex flex-wrap gap-2 text-xs text-gray-600">
@@ -235,25 +235,10 @@ function PaymentSuccessInner() {
                           {item.selectedColor && <span>• Color: {item.selectedColor}</span>}
                           {item.selectedSize && <span>• Size: {item.selectedSize}</span>}
                         </div>
-                        <div className="text-sm font-medium text-primary mt-1">
-                          ₹{(item.price * item.quantity).toLocaleString()}
-                        </div>
                       </div>
-
-                      {/* Return Button */}
-                      {isWithinReturnWindow(orderDetails.paidAt) && 
-                       (orderDetails.paymentStatus === 'paid' || orderDetails.paymentStatus === 'completed') && (
-                        <button
-                          onClick={() => {
-                            setSelectedItem(item);
-                            setReturnModalOpen(true);
-                          }}
-                          className="flex items-center gap-2 px-3 py-1.5 text-xs sm:text-sm font-medium text-[oklch(0.66_0.14_358.91)] border border-[oklch(0.66_0.14_358.91)] rounded-lg hover:bg-[oklch(0.66_0.14_358.91)]/10 transition-colors whitespace-nowrap"
-                        >
-                          <RotateCcw className="w-4 h-4" />
-                          Return
-                        </button>
-                      )}
+                      <div className="text-sm font-medium text-primary mt-1">
+                        ₹{(item.price * item.quantity).toLocaleString()}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -266,7 +251,7 @@ function PaymentSuccessInner() {
                 onClick={downloadInvoice}
                 className="w-full sm:w-auto text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2 rounded-md font-medium text-white bg-primary hover:bg-primary-dark transition-colors duration-200 active:scale-[0.98] flex items-center justify-center gap-1.5 sm:gap-2"
               >
-                <Download className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> 
+                <Download className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                 <span className="whitespace-nowrap">Download Invoice</span>
               </button>
             </div>
@@ -312,8 +297,8 @@ function PaymentSuccessInner() {
 
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-2.5 sm:gap-3 justify-center px-2 sm:px-0">
-          <Link 
-            href="/orders/history" 
+          <Link
+            href="/orders/history"
             className="w-full sm:w-auto text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2 text-center rounded-md font-medium text-white bg-primary hover:bg-primary-dark transition-colors duration-200 active:scale-[0.98] flex items-center justify-center"
           >
             View Order History
@@ -380,7 +365,7 @@ export default function PaymentSuccessPage() {
           </Container>
           <ReturnRequestModal
             isOpen={false}
-            onClose={() => {}}
+            onClose={() => { }}
             orderId=""
             orderItem={null}
           />

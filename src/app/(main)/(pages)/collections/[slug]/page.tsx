@@ -15,22 +15,22 @@ import {
   SortOption,
   Product as UiProduct,
 } from '@/lib/types/product';
-import BannerImage from '../components/Banner';
+import BannerImage from '../../shop/components/Banner';
 import { ad } from '@/app/(main)/assets/Shop-list';
-import { ProductCard } from '../components/ProductCard';
+import { ProductCard } from '../../shop/components/ProductCard';
 import Image from '@/app/(main)/components/ui/FallbackImage';
 import { useParams } from 'next/navigation';
-import { usePublicCategoryStore } from '@/lib/data/mainStore/categoryStore';
+import { usePublicCollectionStore } from '@/lib/data/mainStore/collectionStore';
 import { List, NoItems } from '@/app/(main)/assets/Common';
 import PageLoader from '@/app/(main)/components/layouts/PageLoader';
 
-export default function ShopCategoryPage() {
+export default function CollectionDetailPage() {
   const params = useParams();
-  const rawCategory = params?.category;
-  const slug = Array.isArray(rawCategory) ? rawCategory[0] : rawCategory || '';
+  const rawSlug = params?.slug;
+  const slug = Array.isArray(rawSlug) ? rawSlug[0] : rawSlug || '';
 
-  const { currentCategory, status, error, fetchCategory } =
-    usePublicCategoryStore();
+  const { currentCollection, status, error, fetchCollection } =
+    usePublicCollectionStore();
 
   const [filteredProducts, setFilteredProducts] = useState<UiProduct[]>([]);
   const [columns, setColumns] = useState(3);
@@ -39,25 +39,20 @@ export default function ShopCategoryPage() {
   const hasFetchedRef = useRef<string | null>(null);
 
   // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
-  // Fetch category when slug changes (only fetch if slug is different and not already fetched)
+  // Fetch collection when slug changes (only fetch if slug is different and not already fetched)
   useEffect(() => {
     if (slug && slug !== hasFetchedRef.current && status !== 'loading') {
-      // Only fetch if we haven't fetched this slug yet or if status is idle (not error)
-      if (currentCategory?.slug !== slug || (status !== 'error' && status === 'idle')) {
+      // Only fetch if we haven't fetched this slug yet or if status is error/idle
+      if (currentCollection?.slug !== slug || (status !== 'error' && status === 'idle')) {
         hasFetchedRef.current = slug;
-        fetchCategory(slug, true);
+        fetchCollection(slug);
       }
     }
-  }, [slug, fetchCategory, currentCategory?.slug, status]);
-
-  // Reset hasFetchedRef when slug changes
-  useEffect(() => {
-    hasFetchedRef.current = null;
-  }, [slug]);
+  }, [slug, fetchCollection, currentCollection?.slug, status]);
 
   // Map API products to UI Product type
   const mappedProducts: UiProduct[] = useMemo(() => {
-    const apiProducts = (currentCategory?.products ?? []) as Array<{
+    const apiProducts = (currentCollection?.products ?? []) as Array<{
       _id?: string;
       name: string;
       slug: string;
@@ -81,11 +76,11 @@ export default function ShopCategoryPage() {
         images: hoverImage ? [mainImage, hoverImage] : [mainImage],
         hoverImage,
         category: {
-          id: currentCategory?._id || currentCategory?.slug || '',
-          name: currentCategory?.name || '',
-          slug: currentCategory?.slug || '',
-          description: currentCategory?.description,
-          image: currentCategory?.image,
+          id: currentCollection?._id || currentCollection?.slug || '',
+          name: currentCollection?.name || '',
+          slug: currentCollection?.slug || '',
+          description: currentCollection?.description,
+          image: currentCollection?.image,
           productCount: apiProducts.length,
           isActive: true,
         },
@@ -106,7 +101,7 @@ export default function ShopCategoryPage() {
         updatedAt: new Date().toISOString(),
       } as UiProduct;
     });
-  }, [currentCategory]);
+  }, [currentCollection]);
 
   useEffect(() => {
     setFilteredProducts(mappedProducts);
@@ -143,6 +138,11 @@ export default function ShopCategoryPage() {
     window.addEventListener('resize', updateColumns);
     return () => window.removeEventListener('resize', updateColumns);
   }, []);
+
+  // Reset hasFetchedRef when slug changes
+  useEffect(() => {
+    hasFetchedRef.current = null;
+  }, [slug]);
 
   // Show loader while fetching - AFTER all hooks
   if (status === 'loading') {
@@ -265,7 +265,7 @@ export default function ShopCategoryPage() {
   };
 
   const headerTitle =
-    currentCategory?.name ||
+    currentCollection?.name ||
     slug.charAt(0).toUpperCase() + slug.slice(1).replace(/-/g, ' ');
 
   // Global loader will handle loading state
@@ -274,19 +274,18 @@ export default function ShopCategoryPage() {
     return (
       <Container>
         <div className="py-10 text-center text-red-600">
-          {error || 'Failed to load category'}
+          {error || 'Failed to load collection'}
         </div>
       </Container>
     );
   }
 
-  if (!currentCategory) {
-    // if (true) {
+  if (!currentCollection) {
     return (
       <Container>
         <div className="text-center py-12 text-primary-dark text-lg">
           <List className="w-28 mx-auto " />
-          <p className="">Category not found.</p>
+          <p className="">Collection not found.</p>
         </div>
       </Container>
     );
@@ -294,34 +293,61 @@ export default function ShopCategoryPage() {
 
   return (
     <>
-      {currentCategory.banner && (
-        <BannerImage
-          desktopSrc={currentCategory.banner}
-          mobileSrc={currentCategory.mobileBanner || currentCategory.banner}
-          alt={currentCategory.name}
-        />
-      )}
       <Container>
-        <nav className="py-4 sm:py-6 text-xs sm:text-sm">
+        {/* Breadcrumb Navigation */}
+        <nav className="py-3 sm:py-4 text-xs sm:text-sm text-primary/70">
           <div className="flex items-center gap-1 sm:gap-2">
             <Link
-              href={`/${prevPage?.toLocaleLowerCase()}`}
+              href={`/${prevPage?.toLocaleLowerCase() || 'collections'}`}
               prefetch={true}
               className="hover:text-primary transition-colors"
             >
-              {prevPage}
+              {prevPage || 'Collections'}
             </Link>
             <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
-            <span className="text-primary-dark cursor-default">
+            <span className="text-primary-dark">
               {headerTitle}
             </span>
           </div>
         </nav>
-        <div className="font-heading my-6 sm:my-8 md:flex justify-center items-center gap-2 flex-col text-accent">
-          <h1 className="text-2xl lg:text-3xl">{headerTitle} Collection</h1>
-          <h2 className="text-sm sm:text-base">
-            ({filteredProducts.length} results)
-          </h2>
+
+        {/* Collection Header with Image and Details */}
+        <div className="border-b border-primary/10 pb-6 mb-6">
+          <div className="flex gap-4 sm:gap-6">
+            {/* Left: Collection Image */}
+            {currentCollection.image && (
+              <div className="flex-shrink-0">
+                <div className="relative w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 rounded-lg overflow-hidden border border-primary/10">
+                  <Image
+                    src={currentCollection.image}
+                    alt={currentCollection.name}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 640px) 96px, (max-width: 768px) 128px, 160px"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Right: Collection Details */}
+            <div className="flex-1 flex flex-col justify-center gap-2 sm:gap-3">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-heading text-primary-dark">
+                {headerTitle}
+              </h1>
+
+              {currentCollection.description && (
+                <p className="text-sm sm:text-base text-primary/70 line-clamp-2">
+                  {currentCollection.description}
+                </p>
+              )}
+
+              <div className="flex items-center gap-4 text-sm text-primary/60">
+                <span>
+                  {filteredProducts.length} {filteredProducts.length === 1 ? 'item' : 'items'}
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
 
         <ProductFilters
@@ -349,7 +375,7 @@ export default function ShopCategoryPage() {
           {filteredProducts.length === 0 && (
             <div className="text-center py-12 text-primary-dark text-lg">
               <NoItems className="w-38 mx-auto " />
-              <p className="">No products found in this category.</p>
+              <p className="">No products found in this collection.</p>
             </div>
           )}
         </ProductFilters>

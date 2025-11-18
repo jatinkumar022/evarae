@@ -91,6 +91,18 @@ export const usePublicCategoryStore = create<PublicCategoryState>()(
       },
 
       fetchCategory: async (slugOrId, includeProducts = false) => {
+        const state = get();
+        
+        // If already loading, don't start another request
+        if (state.status === 'loading') {
+          return;
+        }
+
+        // If we already have this category loaded and it matches, don't refetch
+        if (state.currentCategory?.slug === slugOrId && state.status === 'success') {
+          return;
+        }
+
         set({ status: 'loading', error: null });
         try {
           const res = await fetch(
@@ -99,6 +111,16 @@ export const usePublicCategoryStore = create<PublicCategoryState>()(
             }`,
             { cache: 'no-store' }
           );
+          
+          // If 404, set error and don't retry
+          if (res.status === 404) {
+            set({
+              status: 'error',
+              error: 'Category not found',
+            });
+            return;
+          }
+          
           if (!res.ok) throw new Error('Failed to fetch category');
           const data: {
             category: PublicCategory;

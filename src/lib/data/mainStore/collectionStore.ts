@@ -87,11 +87,33 @@ export const usePublicCollectionStore = create<PublicCollectionState>()(
       },
 
   fetchCollection: async slugOrId => {
+    const state = get();
+    
+    // If already loading, don't start another request
+    if (state.status === 'loading') {
+      return;
+    }
+
+    // If we already have this collection loaded and it matches, don't refetch
+    if (state.currentCollection?.slug === slugOrId && state.status === 'success') {
+      return;
+    }
+
     set({ status: 'loading', error: null });
     try {
       const res = await fetch(`/api/main/collections/${slugOrId}`, {
         cache: 'no-store',
       });
+      
+      // If 404, set error and don't retry
+      if (res.status === 404) {
+        set({
+          status: 'error',
+          error: 'Collection not found',
+        });
+        return;
+      }
+      
       if (!res.ok) throw new Error('Failed to fetch collection');
       const data: { collection: PublicCollectionWithProducts } =
         await res.json();

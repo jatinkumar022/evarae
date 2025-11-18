@@ -41,8 +41,24 @@ const coerceSrc = (src?: ImageSource): ImageSource | undefined => {
     return undefined;
   }
 
+  // Handle empty string
   if (typeof src === 'string' && src.trim().length === 0) {
     return undefined;
+  }
+
+  // Handle empty object
+  if (typeof src === 'object' && src !== null) {
+    // If it's a StaticImageData, check if it has a valid src
+    if ('src' in src) {
+      if (typeof src.src === 'string' && src.src.trim().length === 0) {
+        return undefined;
+      }
+      return src;
+    }
+    // If it's an empty object (not StaticImageData), return undefined
+    if (Object.keys(src).length === 0) {
+      return undefined;
+    }
   }
 
   return src;
@@ -93,10 +109,24 @@ const FallbackImage = ({
     [className],
   );
 
+  // Ensure we always have a valid src (fallback to safeFallback if currentSrc is invalid)
+  const finalSrc = useMemo(() => {
+    if (!currentSrc) {
+      return safeFallback;
+    }
+    // If currentSrc is an empty object (not StaticImageData), use fallback
+    if (typeof currentSrc === 'object' && !isStaticImageData(currentSrc)) {
+      if (Object.keys(currentSrc).length === 0) {
+        return safeFallback;
+      }
+    }
+    return currentSrc;
+  }, [currentSrc, safeFallback]);
+
   return (
     <Image
       {...rest}
-      src={currentSrc}
+      src={finalSrc}
       alt={rest.alt || ''}
       onError={handleError}
       onLoadingComplete={handleLoadingComplete}

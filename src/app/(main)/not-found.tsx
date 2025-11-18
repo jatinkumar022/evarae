@@ -19,13 +19,7 @@ export default function NotFoundPage() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-200px)] flex items-center justify-center py-12 sm:py-20 relative overflow-hidden bg-gradient-to-b from-bg-menu/30 to-white">
-      {/* Decorative Background Elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-32 -left-32 w-96 h-96 bg-gradient-to-br from-primary/10 to-accent/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-gradient-to-br from-accent/10 to-primary/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-br from-primary/5 to-transparent rounded-full blur-3xl" />
-      </div>
+    <div className="min-h-[calc(100vh-200px)] flex items-center justify-center py-12 sm:py-20 relative overflow-hidden">
 
       <Container className="relative z-10">
         <div className="max-w-3xl mx-auto text-center">
