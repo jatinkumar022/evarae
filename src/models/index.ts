@@ -10,4 +10,5 @@ import './reviewModel';
 import './returnRequestModel';
 import './settingsModel';
 import './userModel';
+import './notificationModel';
 import './userProfile';

@@ -5,11 +5,12 @@ import { useRouter } from "next/navigation";
 import { useSidebar } from "../context/SidebarContext";
 import { ThemeToggleButton } from "./ThemeToggleButton";
 import { useTheme } from "../context/ThemeContext";
-import { Menu, X, Search, Bell, Settings, LogOut, Package, ShoppingBag, Users, AlertCircle } from "lucide-react";
+import { Menu, X, Search, Bell, Settings, LogOut, Package, ShoppingBag, Users, AlertCircle, RotateCcw } from "lucide-react";
 import Modal from "./Modal";
 import { useAdminAuth } from "@/lib/data/store/adminAuth";
 import { toastApi } from '@/lib/toast';
 import { Spinner } from '@/app/(main)/components/ui/ScaleLoader';
+import { useNotificationStore, type Notification } from '@/lib/data/store/notificationStore';
 
 // Search Component
 function SearchBar() {
@@ -42,15 +43,24 @@ function SearchBar() {
   );
 }
 
-// Notification interface
-interface Notification {
-  id: string;
-  type: 'order' | 'product' | 'customer' | 'system';
-  title: string;
-  message: string;
-  time: string;
-  isRead: boolean;
-  link?: string;
+// Format time ago
+function formatTimeAgo(dateString: string): string {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+  if (diffInSeconds < 60) {
+    return 'Just now';
+  } else if (diffInSeconds < 3600) {
+    const minutes = Math.floor(diffInSeconds / 60);
+    return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+  } else if (diffInSeconds < 86400) {
+    const hours = Math.floor(diffInSeconds / 3600);
+    return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+  } else {
+    const days = Math.floor(diffInSeconds / 86400);
+    return `${days} day${days > 1 ? 's' : ''} ago`;
+  }
 }
 
 export default function AppHeader() {
@@ -65,55 +75,26 @@ export default function AppHeader() {
   const { logout } = useAdminAuth();
   const { resetTheme } = useTheme();
 
-  // Mock notifications - Replace with API call later
-  const [notifications, setNotifications] = useState<Notification[]>([
-    {
-      id: '1',
-      type: 'order',
-      title: 'New Order Received',
-      message: 'Order #ORD-2024-001 has been placed by Priya Sharma',
-      time: '2 minutes ago',
-      isRead: false,
-      link: '/admin/orders/ORD-2024-001',
-    },
-    {
-      id: '2',
-      type: 'product',
-      title: 'Low Stock Alert',
-      message: 'Diamond Solitaire Ring is running low (only 3 items left)',
-      time: '15 minutes ago',
-      isRead: false,
-      link: '/admin/products',
-    },
-    {
-      id: '3',
-      type: 'customer',
-      title: 'New Customer Registration',
-      message: 'Rahul Patel has registered on your store',
-      time: '1 hour ago',
-      isRead: true,
-      link: '/admin/customers',
-    },
-    {
-      id: '4',
-      type: 'order',
-      title: 'Order Shipped',
-      message: 'Order #ORD-2024-002 has been shipped successfully',
-      time: '2 hours ago',
-      isRead: true,
-      link: '/admin/orders/ORD-2024-002',
-    },
-    {
-      id: '5',
-      type: 'system',
-      title: 'System Update',
-      message: 'Your admin panel has been updated to version 2.1.0',
-      time: '1 day ago',
-      isRead: true,
-    },
-  ]);
+  // Real notifications from store
+  const {
+    notifications,
+    unreadCount,
+    fetchNotifications,
+    markAsRead,
+    markAllAsRead,
+  } = useNotificationStore();
 
-  const unreadCount = notifications.filter(n => !n.isRead).length;
+  // Fetch notifications on mount and set up polling
+  useEffect(() => {
+    fetchNotifications();
+
+    // Poll for new notifications every 30 seconds
+    const interval = setInterval(() => {
+      fetchNotifications();
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [fetchNotifications]);
 
   // Calculate notification menu position
   const calculateNotificationPosition = () => {
@@ -146,28 +127,16 @@ export default function AppHeader() {
     }
   }, [isNotificationOpen]);
 
-  // Mark notification as read
-  const markAsRead = (id: string) => {
-    setNotifications(prev =>
-      prev.map(n => (n.id === id ? { ...n, isRead: true } : n))
-    );
-  };
-
-  // Mark all as read
-  const markAllAsRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
-  };
-
   // Get notification icon based on type
   const getNotificationIcon = (type: Notification['type']) => {
     switch (type) {
-      case 'order':
+      case 'order_placed':
         return <ShoppingBag className="w-4 h-4" />;
-      case 'product':
+      case 'order_status_changed':
         return <Package className="w-4 h-4" />;
-      case 'customer':
-        return <Users className="w-4 h-4" />;
-      case 'system':
+      case 'return_request':
+        return <RotateCcw className="w-4 h-4" />;
+      case 'payment_received':
         return <AlertCircle className="w-4 h-4" />;
       default:
         return <Bell className="w-4 h-4" />;
@@ -177,17 +146,25 @@ export default function AppHeader() {
   // Get notification color based on type
   const getNotificationColor = (type: Notification['type']) => {
     switch (type) {
-      case 'order':
+      case 'order_placed':
         return 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20';
-      case 'product':
+      case 'order_status_changed':
         return 'text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/20';
-      case 'customer':
-        return 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20';
-      case 'system':
+      case 'return_request':
         return 'text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20';
+      case 'payment_received':
+        return 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20';
       default:
         return 'text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-900/20';
     }
+  };
+
+  // Get notification link
+  const getNotificationLink = (notification: Notification): string | undefined => {
+    if (notification.orderId) {
+      return `/admin/orders/${notification.orderId}`;
+    }
+    return undefined;
   };
 
   const handleLogoutClick = () => {
@@ -209,10 +186,10 @@ export default function AppHeader() {
       'auth',
       'session',
     ];
-    
+
     // Get all current cookies
     const allCookies = document.cookie.split(';').map(c => c.trim().split('=')[0]);
-    
+
     // Find all cookies that match token patterns
     const cookiesToDelete = new Set<string>();
     allCookies.forEach(cookieName => {
@@ -221,19 +198,19 @@ export default function AppHeader() {
         cookiesToDelete.add(cookieName);
       }
     });
-    
+
     // Also add explicit token cookie names
     tokenPatterns.forEach(pattern => {
       cookiesToDelete.add(pattern);
       cookiesToDelete.add(pattern.toLowerCase());
       cookiesToDelete.add(pattern.toUpperCase());
     });
-    
+
     // Delete all matching cookies with different path/domain combinations
     const hostname = window.location.hostname;
     const paths = ['/', '/admin', '/admin/'];
     const domains = ['', hostname, `.${hostname}`];
-    
+
     cookiesToDelete.forEach(cookieName => {
       paths.forEach(path => {
         domains.forEach(domain => {
@@ -250,16 +227,16 @@ export default function AppHeader() {
     try {
       // Reset theme to light mode before logout
       resetTheme();
-      
+
       // Clear all token cookies client-side
       clearAllTokenCookies();
-      
+
       // Clear all admin-related cookies and state via API
       await logout();
-      
+
       // Clear any additional localStorage items
       localStorage.removeItem("admin-theme");
-      
+
       setIsLogoutModalOpen(false);
       router.push('/admin/login');
     } catch (error: unknown) {
@@ -289,7 +266,7 @@ export default function AppHeader() {
           {/* Right Actions - Aligned to right corner */}
           <div className="flex items-center gap-2 sm:gap-3 ml-auto">
             <ThemeToggleButton />
-            
+
             <div className="relative">
               <button
                 ref={notificationButtonRef}
@@ -354,75 +331,79 @@ export default function AppHeader() {
                         </div>
                       ) : (
                         <div className="py-2">
-                          {notifications.map((notification) => (
-                            <div
-                              key={notification.id}
-                              className={`px-4 py-3 hover:bg-gray-50 dark:hover:bg-[#363636] transition-colors border-b border-gray-100 dark:border-[#404040] last:border-b-0 ${
-                                !notification.isRead ? 'bg-blue-50/50 dark:bg-blue-900/10' : ''
-                              }`}
-                            >
-                              {notification.link ? (
-                                <Link
-                                  href={notification.link}
-                                  onClick={() => {
-                                    markAsRead(notification.id);
-                                    setIsNotificationOpen(false);
-                                    setNotificationPosition(null);
-                                  }}
-                                  className="block"
-                                >
-                                  <div className="flex items-start gap-3">
-                                    <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${getNotificationColor(notification.type)}`}>
-                                      {getNotificationIcon(notification.type)}
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                      <div className="flex items-start justify-between gap-2">
-                                        <p className={`text-sm font-medium ${!notification.isRead ? 'text-gray-900 dark:text-white' : 'text-gray-700 dark:text-gray-300'}`}>
-                                          {notification.title}
-                                        </p>
-                                        {!notification.isRead && (
-                                          <span className="flex-shrink-0 w-2 h-2 rounded-full bg-primary-500 mt-1.5" />
-                                        )}
+                          {notifications.map((notification) => {
+                            const link = getNotificationLink(notification);
+                            return (
+                              <div
+                                key={notification._id}
+                                className={`px-4 py-3 hover:bg-gray-50 dark:hover:bg-[#363636] transition-colors border-b border-gray-100 dark:border-[#404040] last:border-b-0 ${!notification.isRead ? 'bg-blue-50/50 dark:bg-blue-900/10' : ''
+                                  }`}
+                              >
+                                {link ? (
+                                  <Link
+                                    href={link}
+                                    onClick={() => {
+                                      markAsRead(notification._id);
+                                      setIsNotificationOpen(false);
+                                      setNotificationPosition(null);
+                                    }}
+                                    className="block"
+                                  >
+                                    <div className="flex items-start gap-3">
+                                      <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${getNotificationColor(notification.type)}`}>
+                                        {getNotificationIcon(notification.type)}
                                       </div>
-                                      <p className="mt-1 text-xs text-gray-600 dark:text-[#bdbdbd] line-clamp-2">
-                                        {notification.message}
-                                      </p>
-                                      <p className="mt-1.5 text-xs text-gray-500 dark:text-[#bdbdbd]">
-                                        {notification.time}
-                                      </p>
+                                      <div className="flex-1 min-w-0">
+                                        <div className="flex items-start justify-between gap-2">
+                                          <p className={`text-sm font-medium ${!notification.isRead ? 'text-gray-900 dark:text-white' : 'text-gray-700 dark:text-gray-300'}`}>
+                                            {notification.title}
+                                          </p>
+                                          {!notification.isRead && (
+                                            <span className="flex-shrink-0 w-2 h-2 rounded-full bg-primary-500 mt-1.5" />
+                                          )}
+                                        </div>
+                                        <p className="mt-1 text-xs text-gray-600 dark:text-[#bdbdbd] line-clamp-2">
+                                          {notification.message}
+                                        </p>
+                                        <p className="mt-1.5 text-xs text-gray-500 dark:text-[#bdbdbd]">
+                                          {formatTimeAgo(notification.createdAt)}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  </Link>
+                                ) : (
+                                  <div
+                                    onClick={() => {
+                                      markAsRead(notification._id);
+                                    }}
+                                    className="cursor-pointer"
+                                  >
+                                    <div className="flex items-start gap-3">
+                                      <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${getNotificationColor(notification.type)}`}>
+                                        {getNotificationIcon(notification.type)}
+                                      </div>
+                                      <div className="flex-1 min-w-0">
+                                        <div className="flex items-start justify-between gap-2">
+                                          <p className={`text-sm font-medium ${!notification.isRead ? 'text-gray-900 dark:text-white' : 'text-gray-700 dark:text-gray-300'}`}>
+                                            {notification.title}
+                                          </p>
+                                          {!notification.isRead && (
+                                            <span className="flex-shrink-0 w-2 h-2 rounded-full bg-primary-500 mt-1.5" />
+                                          )}
+                                        </div>
+                                        <p className="mt-1 text-xs text-gray-600 dark:text-[#bdbdbd] line-clamp-2">
+                                          {notification.message}
+                                        </p>
+                                        <p className="mt-1.5 text-xs text-gray-500 dark:text-[#bdbdbd]">
+                                          {formatTimeAgo(notification.createdAt)}
+                                        </p>
+                                      </div>
                                     </div>
                                   </div>
-                                </Link>
-                              ) : (
-                                <div
-                                  onClick={() => markAsRead(notification.id)}
-                                  className="cursor-pointer"
-                                >
-                                  <div className="flex items-start gap-3">
-                                    <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${getNotificationColor(notification.type)}`}>
-                                      {getNotificationIcon(notification.type)}
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                      <div className="flex items-start justify-between gap-2">
-                                        <p className={`text-sm font-medium ${!notification.isRead ? 'text-gray-900 dark:text-white' : 'text-gray-700 dark:text-gray-300'}`}>
-                                          {notification.title}
-                                        </p>
-                                        {!notification.isRead && (
-                                          <span className="flex-shrink-0 w-2 h-2 rounded-full bg-primary-500 mt-1.5" />
-                                        )}
-                                      </div>
-                                      <p className="mt-1 text-xs text-gray-600 dark:text-[#bdbdbd] line-clamp-2">
-                                        {notification.message}
-                                      </p>
-                                      <p className="mt-1.5 text-xs text-gray-500 dark:text-[#bdbdbd]">
-                                        {notification.time}
-                                      </p>
-                                    </div>
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          ))}
+                                )}
+                              </div>
+                            );
+                          })}
                         </div>
                       )}
                     </div>
@@ -462,40 +443,40 @@ export default function AppHeader() {
                 </span>
               </button>
 
-            {isUserMenuOpen && (
-              <>
-                {/* Backdrop to close menu on outside click */}
-                <div
-                  className="fixed inset-0 z-40"
-                  onClick={() => setIsUserMenuOpen(false)}
-                />
-                <div className="absolute right-0 mt-2 w-64 z-50 rounded-xl bg-white p-3 shadow-2xl border border-gray-200 dark:bg-[#2a2a2a] dark:border-[#404040] ring-1 ring-black/5 dark:ring-white/10">
-                  <div className="mb-3 pb-3 border-b border-gray-200 dark:border-[#404040]">
-                    <span className="block text-sm font-medium text-gray-900 dark:text-white">
-                      Admin User
-                    </span>
-                    <span className="mt-0.5 block text-xs text-gray-600 dark:text-gray-400">
-                      admin@caelvi.com
-                    </span>
-                  </div>
-                  <Link
-                    href="/admin/settings"
-                    className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 dark:text-white dark:hover:bg-[#363636] transition-colors"
+              {isUserMenuOpen && (
+                <>
+                  {/* Backdrop to close menu on outside click */}
+                  <div
+                    className="fixed inset-0 z-40"
                     onClick={() => setIsUserMenuOpen(false)}
-                  >
-                    <Settings className="w-4 h-4" />
-                    Settings
-                  </Link>
-                  <button
-                    onClick={handleLogoutClick}
-                    className="flex items-center gap-3 px-3 py-2 mt-2 w-full text-left text-sm font-medium text-red-600 rounded-lg hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/30 transition-colors"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    Sign out
-                  </button>
-                </div>
-              </>
-            )}
+                  />
+                  <div className="absolute right-0 mt-2 w-64 z-50 rounded-xl bg-white p-3 shadow-2xl border border-gray-200 dark:bg-[#2a2a2a] dark:border-[#404040] ring-1 ring-black/5 dark:ring-white/10">
+                    <div className="mb-3 pb-3 border-b border-gray-200 dark:border-[#404040]">
+                      <span className="block text-sm font-medium text-gray-900 dark:text-white">
+                        Admin User
+                      </span>
+                      <span className="mt-0.5 block text-xs text-gray-600 dark:text-gray-400">
+                        admin@caelvi.com
+                      </span>
+                    </div>
+                    <Link
+                      href="/admin/settings"
+                      className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 dark:text-white dark:hover:bg-[#363636] transition-colors"
+                      onClick={() => setIsUserMenuOpen(false)}
+                    >
+                      <Settings className="w-4 h-4" />
+                      Settings
+                    </Link>
+                    <button
+                      onClick={handleLogoutClick}
+                      className="flex items-center gap-3 px-3 py-2 mt-2 w-full text-left text-sm font-medium text-red-600 rounded-lg hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/30 transition-colors"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Sign out
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>

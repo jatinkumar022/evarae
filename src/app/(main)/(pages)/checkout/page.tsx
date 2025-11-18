@@ -106,7 +106,7 @@ export default function CheckoutPage() {
       const originalBodyOverflow = window.getComputedStyle(document.body).overflow;
       const originalHtmlOverflow = window.getComputedStyle(document.documentElement).overflow;
       const originalBodyHeight = document.body.style.height;
-      
+
       // Disable scrolling on both body and html (Safari fix)
       document.body.style.overflow = 'hidden';
       document.body.style.height = '100%';
@@ -262,9 +262,45 @@ export default function CheckoutPage() {
             const verifyData = await verifyResponse.json();
             if (verifyData.success) {
               toastApi.success('Payment successful');
-              router.push(
-                `/checkout/payment-success?orderId=${verifyData.orderId}`
-              );
+
+              if (verifyData.orderId) {
+                try {
+                  const finalizeResponse = await fetch(
+                    '/api/checkout/payment-success',
+                    {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      credentials: 'include',
+                      body: JSON.stringify({
+                        orderId: verifyData.orderId,
+                        providerOrderId: response.razorpay_order_id,
+                      }),
+                    }
+                  );
+
+                  if (!finalizeResponse.ok) {
+                    const finalizeError = await finalizeResponse.json().catch(() => ({}));
+                    console.warn(
+                      '[checkout] payment-success sync failed',
+                      finalizeError
+                    );
+                    toastApi.warning(
+                      'Order synced with a delay',
+                      'We placed your order, but notifications may take a moment.'
+                    );
+                  } else {
+                    console.log('[checkout] payment-success sync completed');
+                  }
+                } catch (err) {
+                  console.error('[checkout] payment-success sync error', err);
+                  toastApi.warning(
+                    'Order synced with a delay',
+                    'We placed your order, but notifications may take a moment.'
+                  );
+                }
+              }
+
+              router.push(`/checkout/payment-success?orderId=${verifyData.orderId}`);
             } else {
               toastApi.error('Payment verification failed');
               router.push(
@@ -1066,8 +1102,8 @@ export default function CheckoutPage() {
                   form="address-form"
                   disabled={!isValid || isSubmitting}
                   className={`px-5 py-2.5 text-white text-sm font-normal rounded-md transition-all disabled:opacity-50 disabled:cursor-not-allowed ${!isValid || isSubmitting
-                      ? 'bg-gray-300 cursor-not-allowed'
-                      : 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] hover:shadow-lg hover:shadow-[oklch(0.66_0.14_358.91)]/25'
+                    ? 'bg-gray-300 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] hover:shadow-lg hover:shadow-[oklch(0.66_0.14_358.91)]/25'
                     }`}
                 >
                   {isSubmitting ? (

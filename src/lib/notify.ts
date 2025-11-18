@@ -1568,3 +1568,433 @@ The Caelvi Security Team`,
     console.error('❌ Failed to send password change OTP email:', err);
   }
 }
+
+interface OrderItem {
+  name: string;
+  quantity: number;
+  price: number;
+}
+
+interface ShippingAddress {
+  fullName: string;
+  phone: string;
+  line1: string;
+  line2?: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+}
+
+interface OrderPlacedData {
+  orderNumber: string;
+  customerName: string;
+  customerEmail: string;
+  orderDate: string;
+  items: OrderItem[];
+  subtotal: number;
+  tax: number;
+  shipping: number;
+  discount: number;
+  total: number;
+  shippingAddress: ShippingAddress;
+  orderStatus?: string;
+}
+
+/**
+ * Send order confirmation email to customer with CC to orders@caelvi.com
+ */
+export async function notifyOrderPlaced(data: OrderPlacedData): Promise<void> {
+  if (!data.customerEmail) return;
+
+  try {
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        type: 'OAuth2',
+        user: process.env.EMAIL_USER,
+        clientId: process.env.GOOGLE_CLIENT_ID,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+        refreshToken: process.env.GOOGLE_REFRESH_TOKEN,
+      },
+    });
+
+    await transporter.verify();
+
+    const itemsList = data.items
+      .map(item => `• ${item.name} (Qty: ${item.quantity}) - ₹${(item.price * item.quantity).toLocaleString()}`)
+      .join('\n');
+
+    const shippingAddressText = `${data.shippingAddress.fullName}\n${data.shippingAddress.line1}${data.shippingAddress.line2 ? `, ${data.shippingAddress.line2}` : ''}\n${data.shippingAddress.city}, ${data.shippingAddress.state} ${data.shippingAddress.postalCode}\n${data.shippingAddress.country}\nPhone: ${data.shippingAddress.phone}`;
+
+    const info = await transporter.sendMail({
+      from: `"Caelvi" <${process.env.EMAIL_USER}>`,
+      to: data.customerEmail,
+      cc: 'orders@caelvi.com',
+      subject: `🎉 Order Confirmation - ${data.orderNumber}`,
+      text: `Dear ${data.customerName},
+
+Thank you for your order! We're excited to confirm that your order has been received and is being processed.
+
+Order Details:
+Order Number: ${data.orderNumber}
+Order Date: ${data.orderDate}
+Order Status: ${data.orderStatus || 'Processing'}
+
+Items Ordered:
+${itemsList}
+
+Order Summary:
+Subtotal: ₹${data.subtotal.toLocaleString()}
+Tax: ₹${data.tax.toLocaleString()}
+Shipping: ₹${data.shipping.toLocaleString()}
+${data.discount > 0 ? `Discount: -₹${data.discount.toLocaleString()}\n` : ''}Total: ₹${data.total.toLocaleString()}
+
+Shipping Address:
+${shippingAddressText}
+
+We'll send you another email once your order ships. If you have any questions, please contact us at support@caelvi.com.
+
+Thank you for choosing Caelvi!
+
+Best regards,
+The Caelvi Team`,
+      html: `<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Order Confirmation - Caelvi</title>
+  <style>
+    body, table, td, p, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+    table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+    img { -ms-interpolation-mode: bicubic; border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none; }
+    .container { width: 100%; max-width: 720px; margin: 0 auto; }
+    .header-section { background: linear-gradient(135deg, #b76e79 0%, #c8869a 35%, #d5a6bd 70%, #e1c2d1 100%); padding: 50px 40px; text-align: center; color: #ffffff; }
+    .main-content { padding: 45px 50px; background: #ffffff; }
+    .section-title { font-size: 24px; font-weight: 700; color: #1a202c; margin: 0 0 20px; }
+    .order-box { background: #f8f9fa; border-radius: 12px; padding: 20px; margin: 20px 0; border-left: 4px solid #b76e79; }
+    .order-item { padding: 12px 0; border-bottom: 1px solid #e2e8f0; }
+    .order-item:last-child { border-bottom: none; }
+    .summary-row { display: flex; justify-content: space-between; padding: 8px 0; }
+    .summary-total { font-size: 18px; font-weight: 700; color: #b76e79; border-top: 2px solid #e2e8f0; padding-top: 12px; margin-top: 8px; }
+    .address-box { background: #f8f9fa; border-radius: 12px; padding: 20px; margin: 20px 0; }
+    .footer-section { text-align: center; padding-top: 20px; border-top: 1px solid #e2e8f0; color: #64748b; font-size: 13px; }
+    @media only screen and (max-width: 600px) {
+      .container { width: 100% !important; padding: 16px !important; }
+      .main-content { padding: 30px 25px !important; }
+    }
+  </style>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f7f3f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f7f3f5;">
+    <tr>
+      <td align="center" style="padding: 30px 16px;">
+        <table class="container" width="720" cellpadding="0" cellspacing="0" style="max-width: 720px; width: 100%; background-color: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+          <tr>
+            <td class="header-section">
+              <h1 style="margin: 0 0 12px; font-size: 36px; font-weight: 500;">🎉 Order Confirmed!</h1>
+              <p style="margin: 0; font-size: 16px; opacity: 0.95;">Thank you for your purchase</p>
+            </td>
+          </tr>
+          <tr>
+            <td class="main-content">
+              <p style="font-size: 16px; color: #4a5568; margin: 0 0 20px;">Dear <strong style="color: #b76e79;">${data.customerName}</strong>,</p>
+              <p style="font-size: 15px; color: #4a5568; margin: 0 0 20px;">Thank you for your order! We're excited to confirm that your order has been received and is being processed.</p>
+              
+              <div class="order-box">
+                <h2 class="section-title" style="font-size: 20px; margin-bottom: 15px;">Order Details</h2>
+                <p style="margin: 8px 0; color: #64748b;"><strong>Order Number:</strong> ${data.orderNumber}</p>
+                <p style="margin: 8px 0; color: #64748b;"><strong>Order Date:</strong> ${data.orderDate}</p>
+                <p style="margin: 8px 0; color: #64748b;"><strong>Status:</strong> <span style="color: #b76e79; font-weight: 600;">${data.orderStatus || 'Processing'}</span></p>
+              </div>
+
+              <h2 class="section-title" style="font-size: 20px;">Items Ordered</h2>
+              <div style="background: #f8f9fa; border-radius: 12px; padding: 20px;">
+                ${data.items.map(item => `
+                  <div class="order-item">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                      <div>
+                        <p style="margin: 0; font-weight: 600; color: #1a202c;">${item.name}</p>
+                        <p style="margin: 4px 0 0; font-size: 14px; color: #64748b;">Quantity: ${item.quantity}</p>
+                      </div>
+                      <p style="margin: 0; font-weight: 600; color: #b76e79;">₹${(item.price * item.quantity).toLocaleString()}</p>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+
+              <h2 class="section-title" style="font-size: 20px; margin-top: 30px;">Order Summary</h2>
+              <div style="background: #f8f9fa; border-radius: 12px; padding: 20px;">
+                <div class="summary-row">
+                  <span style="color: #64748b;">Subtotal:</span>
+                  <span style="font-weight: 600; color: #1a202c;">₹${data.subtotal.toLocaleString()}</span>
+                </div>
+                <div class="summary-row">
+                  <span style="color: #64748b;">Tax:</span>
+                  <span style="font-weight: 600; color: #1a202c;">₹${data.tax.toLocaleString()}</span>
+                </div>
+                <div class="summary-row">
+                  <span style="color: #64748b;">Shipping:</span>
+                  <span style="font-weight: 600; color: #1a202c;">₹${data.shipping.toLocaleString()}</span>
+                </div>
+                ${data.discount > 0 ? `
+                <div class="summary-row">
+                  <span style="color: #64748b;">Discount:</span>
+                  <span style="font-weight: 600; color: #10b981;">-₹${data.discount.toLocaleString()}</span>
+                </div>
+                ` : ''}
+                <div class="summary-row summary-total">
+                  <span>Total:</span>
+                  <span>₹${data.total.toLocaleString()}</span>
+                </div>
+              </div>
+
+              <h2 class="section-title" style="font-size: 20px; margin-top: 30px;">Shipping Address</h2>
+              <div class="address-box">
+                <p style="margin: 4px 0; color: #1a202c; line-height: 1.6;">${data.shippingAddress.fullName}<br/>
+                ${data.shippingAddress.line1}${data.shippingAddress.line2 ? `, ${data.shippingAddress.line2}` : ''}<br/>
+                ${data.shippingAddress.city}, ${data.shippingAddress.state} ${data.shippingAddress.postalCode}<br/>
+                ${data.shippingAddress.country}<br/>
+                Phone: ${data.shippingAddress.phone}</p>
+              </div>
+
+              <p style="font-size: 15px; color: #4a5568; margin: 30px 0 20px;">We'll send you another email once your order ships. If you have any questions, please contact us at <a href="mailto:support@caelvi.com" style="color: #b76e79; text-decoration: none;">support@caelvi.com</a>.</p>
+              
+              <p style="font-size: 15px; color: #4a5568; margin: 0;">Thank you for choosing Caelvi!</p>
+            </td>
+          </tr>
+          <tr>
+            <td class="footer-section">
+              <p style="margin: 0 0 8px;">© ${new Date().getFullYear()} Caelvi. All rights reserved.</p>
+              <p style="margin: 0; font-size: 12px;">
+                <a href="#" style="color: #94a3b8; text-decoration: none; margin: 0 8px;">Privacy Policy</a> |
+                <a href="#" style="color: #94a3b8; text-decoration: none; margin: 0 8px;">Terms of Service</a>
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`,
+    });
+
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('[DEV] Order confirmation email sent:', info.messageId);
+    }
+  } catch (err) {
+    console.error('❌ Failed to send order confirmation email:', err);
+  }
+}
+
+/**
+ * Send order status update email to customer
+ */
+export async function notifyOrderStatusUpdate(
+  customerEmail: string,
+  customerName: string,
+  orderNumber: string,
+  orderStatus: string,
+  trackingNumber?: string,
+  courierName?: string
+): Promise<void> {
+  if (!customerEmail) return;
+
+  try {
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        type: 'OAuth2',
+        user: process.env.EMAIL_USER,
+        clientId: process.env.GOOGLE_CLIENT_ID,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+        refreshToken: process.env.GOOGLE_REFRESH_TOKEN,
+      },
+    });
+
+    await transporter.verify();
+
+    const statusMessages: Record<string, { emoji: string; title: string; message: string; color: string }> = {
+      confirmed: {
+        emoji: '✅',
+        title: 'Order Confirmed',
+        message: 'Your order has been confirmed and is being prepared!',
+        color: '#10b981',
+      },
+      processing: {
+        emoji: '⚙️',
+        title: 'Order Processing',
+        message: 'Your order is being processed and will be shipped soon.',
+        color: '#3b82f6',
+      },
+      shipped: {
+        emoji: '📦',
+        title: 'Order Shipped',
+        message: 'Great news! Your order has been shipped and is on its way to you.',
+        color: '#8b5cf6',
+      },
+      delivered: {
+        emoji: '🎉',
+        title: 'Order Delivered',
+        message: 'Your order has been delivered! We hope you love your purchase.',
+        color: '#10b981',
+      },
+      cancelled: {
+        emoji: '❌',
+        title: 'Order Cancelled',
+        message: 'Your order has been cancelled.',
+        color: '#ef4444',
+      },
+      returned: {
+        emoji: '↩️',
+        title: 'Order Returned',
+        message: 'Your order return has been processed.',
+        color: '#f59e0b',
+      },
+    };
+
+    const statusInfo = statusMessages[orderStatus] || {
+      emoji: '📋',
+      title: 'Order Status Updated',
+      message: `Your order status has been updated to: ${orderStatus}`,
+      color: '#64748b',
+    };
+
+    const statusLabel = orderStatus.charAt(0).toUpperCase() + orderStatus.slice(1);
+
+    let trackingInfo = '';
+    if (trackingNumber && courierName) {
+      trackingInfo = `\n\nTracking Details:\nCourier: ${courierName}\nTracking Number: ${trackingNumber}`;
+    } else if (trackingNumber) {
+      trackingInfo = `\n\nTracking Number: ${trackingNumber}`;
+    }
+
+    const info = await transporter.sendMail({
+      from: `"Caelvi" <${process.env.EMAIL_USER}>`,
+      to: customerEmail,
+      subject: `${statusInfo.emoji} Order ${statusLabel} - ${orderNumber}`,
+      text: `Dear ${customerName},
+
+${statusInfo.message}
+
+Order Number: ${orderNumber}
+Status: ${statusLabel}${trackingInfo}
+
+If you have any questions, please contact us at support@caelvi.com.
+
+Thank you for choosing Caelvi!
+
+Best regards,
+The Caelvi Team`,
+      html: `<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Order Status Update - Caelvi</title>
+  <style>
+    body, table, td, p, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+    table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+    img { -ms-interpolation-mode: bicubic; border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none; }
+    .container { width: 100%; max-width: 720px; margin: 0 auto; }
+    .header-section { background: linear-gradient(135deg, #b76e79 0%, #c8869a 35%, #d5a6bd 70%, #e1c2d1 100%); padding: 50px 40px; text-align: center; color: #ffffff; }
+    .main-content { padding: 45px 50px; background: #ffffff; }
+    .status-box { background: ${statusInfo.color}15; border-radius: 12px; padding: 30px; margin: 20px 0; text-align: center; border: 2px solid ${statusInfo.color}40; }
+    .status-emoji { font-size: 64px; margin-bottom: 16px; }
+    .status-title { font-size: 28px; font-weight: 700; color: ${statusInfo.color}; margin: 0 0 12px; }
+    .status-message { font-size: 16px; color: #4a5568; margin: 0 0 20px; }
+    .order-info { background: #f8f9fa; border-radius: 12px; padding: 20px; margin: 20px 0; }
+    .info-row { padding: 8px 0; border-bottom: 1px solid #e2e8f0; }
+    .info-row:last-child { border-bottom: none; }
+    .footer-section { text-align: center; padding-top: 20px; border-top: 1px solid #e2e8f0; color: #64748b; font-size: 13px; }
+    @media only screen and (max-width: 600px) {
+      .container { width: 100% !important; padding: 16px !important; }
+      .main-content { padding: 30px 25px !important; }
+      .status-emoji { font-size: 48px !important; }
+      .status-title { font-size: 24px !important; }
+    }
+  </style>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f7f3f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f7f3f5;">
+    <tr>
+      <td align="center" style="padding: 30px 16px;">
+        <table class="container" width="720" cellpadding="0" cellspacing="0" style="max-width: 720px; width: 100%; background-color: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+          <tr>
+            <td class="header-section">
+              <h1 style="margin: 0 0 12px; font-size: 36px; font-weight: 500;">Order Status Update</h1>
+              <p style="margin: 0; font-size: 16px; opacity: 0.95;">Your order information</p>
+            </td>
+          </tr>
+          <tr>
+            <td class="main-content">
+              <p style="font-size: 16px; color: #4a5568; margin: 0 0 20px;">Dear <strong style="color: #b76e79;">${customerName}</strong>,</p>
+              
+              <div class="status-box">
+                <div class="status-emoji">${statusInfo.emoji}</div>
+                <h2 class="status-title">${statusInfo.title}</h2>
+                <p class="status-message">${statusInfo.message}</p>
+              </div>
+
+              <div class="order-info">
+                <div class="info-row">
+                  <p style="margin: 0; display: flex; justify-content: space-between;">
+                    <span style="color: #64748b; font-weight: 600;">Order Number:</span>
+                    <span style="color: #1a202c; font-weight: 600;">${orderNumber}</span>
+                  </p>
+                </div>
+                <div class="info-row">
+                  <p style="margin: 0; display: flex; justify-content: space-between;">
+                    <span style="color: #64748b; font-weight: 600;">Status:</span>
+                    <span style="color: ${statusInfo.color}; font-weight: 700;">${statusLabel}</span>
+                  </p>
+                </div>
+                ${trackingNumber ? `
+                <div class="info-row">
+                  <p style="margin: 0; display: flex; justify-content: space-between;">
+                    <span style="color: #64748b; font-weight: 600;">Tracking Number:</span>
+                    <span style="color: #1a202c; font-weight: 600;">${trackingNumber}</span>
+                  </p>
+                </div>
+                ` : ''}
+                ${courierName ? `
+                <div class="info-row">
+                  <p style="margin: 0; display: flex; justify-content: space-between;">
+                    <span style="color: #64748b; font-weight: 600;">Courier:</span>
+                    <span style="color: #1a202c; font-weight: 600;">${courierName}</span>
+                  </p>
+                </div>
+                ` : ''}
+              </div>
+
+              <p style="font-size: 15px; color: #4a5568; margin: 30px 0 20px;">If you have any questions, please contact us at <a href="mailto:support@caelvi.com" style="color: #b76e79; text-decoration: none;">support@caelvi.com</a>.</p>
+              
+              <p style="font-size: 15px; color: #4a5568; margin: 0;">Thank you for choosing Caelvi!</p>
+            </td>
+          </tr>
+          <tr>
+            <td class="footer-section">
+              <p style="margin: 0 0 8px;">© ${new Date().getFullYear()} Caelvi. All rights reserved.</p>
+              <p style="margin: 0; font-size: 12px;">
+                <a href="#" style="color: #94a3b8; text-decoration: none; margin: 0 8px;">Privacy Policy</a> |
+                <a href="#" style="color: #94a3b8; text-decoration: none; margin: 0 8px;">Terms of Service</a>
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`,
+    });
+
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('[DEV] Order status update email sent:', info.messageId);
+    }
+  } catch (err) {
+    console.error('❌ Failed to send order status update email:', err);
+  }
+}
