@@ -345,8 +345,7 @@ export async function DELETE(request: Request) {
 
     const body = (await request.json()) as unknown;
     const productKey = extractProductKey(body);
-    const b = (body || {}) as Record<string, unknown>;
-
+ 
     if (!productKey)
       return NextResponse.json(
         { error: 'Product identifier is required' },
