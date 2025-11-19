@@ -2,6 +2,25 @@ import { NextResponse } from 'next/server';
 import { connect } from '@/dbConfig/dbConfig';
 import Review from '@/models/reviewModel';
 import { updateProductRating } from '@/lib/server/reviews/updateProductRating';
+import mongoose from 'mongoose';
+
+type LeanAdminReview = {
+  _id: mongoose.Types.ObjectId;
+  product?: {
+    _id?: mongoose.Types.ObjectId;
+    name?: string;
+    slug?: string;
+  } | null;
+  user?: {
+    _id?: mongoose.Types.ObjectId;
+    name?: string;
+    email?: string;
+  } | null;
+  isFeatured?: boolean;
+  featuredFullName?: string;
+  helpfulVotes?: mongoose.Types.ObjectId[] | number;
+  [key: string]: unknown;
+};
 
 const APPROVED_OR_LEGACY = {
   $or: [{ status: 'approved' }, { status: { $exists: false } }],
@@ -77,14 +96,7 @@ export async function GET(request: Request) {
         .sort(sort)
         .skip(skip)
         .limit(limit)
-        .lean<Array<{
-        _id: any;
-        product?: any;
-        user?: any;
-        isFeatured?: boolean;
-        featuredFullName?: string;
-        [key: string]: any;
-        }>>(),
+        .lean<LeanAdminReview[]>(),
       Review.countDocuments(filter),
     ]);
 

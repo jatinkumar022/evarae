@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState, useRef } from 'react';
 import { Star, X, Upload, Trash2, Loader2 } from 'lucide-react';
 import toastApi from '@/lib/toast';
+import Image from '@/app/(main)/components/ui/FallbackImage';
 
 interface WriteReviewModalProps {
   isOpen: boolean;
@@ -297,10 +298,12 @@ export default function WriteReviewModal({
                     key={img}
                     className="relative w-20 h-20 rounded-lg overflow-hidden border border-primary/20"
                   >
-                    <img
+                    <Image
                       src={img}
                       alt={`Uploaded review ${idx + 1}`}
-                      className="w-full h-full object-cover"
+                      fill
+                      sizes="80px"
+                      className="object-cover"
                     />
                     <button
                       type="button"

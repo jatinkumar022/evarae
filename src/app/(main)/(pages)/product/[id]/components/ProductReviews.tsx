@@ -117,7 +117,7 @@ export function ProductReviews({ product }: ProductReviewsProps) {
   const refreshReviews = useProductReviewStore(state => state.refreshReviews);
 
   const entry = entries[product.id];
-  const reviews = entry?.reviews ?? [];
+  const reviews = useMemo(() => entry?.reviews ?? [], [entry?.reviews]);
   const summary = entry?.summary;
   const initialLoading = !entry || (entry.status === 'loading' && !entry.lastFetched);
   const storeError = entry?.error;
@@ -285,7 +285,8 @@ export function ProductReviews({ product }: ProductReviewsProps) {
   const clearNotHelpfulState = useCallback((reviewId: string) => {
     setNotHelpfulStates(prev => {
       if (!prev[reviewId]) return prev;
-      const { [reviewId]: _ignored, ...rest } = prev;
+      const rest = { ...prev };
+      delete rest[reviewId];
       return rest;
     });
   }, []);

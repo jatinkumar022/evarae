@@ -1,11 +1,15 @@
 import { NextResponse } from 'next/server';
 import { connect } from '@/dbConfig/dbConfig';
 import Review from '@/models/reviewModel';
-import mongoose from 'mongoose';
 import { updateProductRating } from '@/lib/server/reviews/updateProductRating';
 
 type RouteContext = {
   params: Promise<{ id: string }>;
+};
+
+type DummyLeanReview = {
+  dummyFullName?: string;
+  [key: string]: unknown;
 };
 
 export async function GET(request: Request, { params }: RouteContext) {
@@ -15,7 +19,7 @@ export async function GET(request: Request, { params }: RouteContext) {
     const { id } = await params;
     const review = await Review.findOne({ _id: id, isDummy: true })
       .populate('product', 'name slug')
-      .lean();
+      .lean<DummyLeanReview | null>();
 
     if (!review) {
       return NextResponse.json({ error: 'Dummy review not found' }, { status: 404 });
@@ -26,7 +30,7 @@ export async function GET(request: Request, { params }: RouteContext) {
       ...review,
       user: {
         _id: null,
-        name: (review as any).dummyFullName || 'Customer',
+        name: review.dummyFullName || 'Customer',
         email: '',
       },
     };

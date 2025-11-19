@@ -88,11 +88,15 @@ export async function PUT(request: Request, { params }: RouteContext) {
     if (helpfulVotes !== undefined) {
       if (Array.isArray(helpfulVotes)) {
         // Ensure all items are ObjectIds
-        const validObjectIds = helpfulVotes.filter((v: any) =>
-          mongoose.Types.ObjectId.isValid(v)
-        );
+        const validObjectIds = helpfulVotes
+          .map(value =>
+            typeof value === 'string' && mongoose.Types.ObjectId.isValid(value)
+              ? value
+              : null
+          )
+          .filter((value): value is string => Boolean(value));
         review.helpfulVotes = validObjectIds.map(
-          (v: any) => new mongoose.Types.ObjectId(v)
+          value => new mongoose.Types.ObjectId(value)
         );
       }
       // If not an array, ignore it - don't try to set it

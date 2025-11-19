@@ -74,7 +74,7 @@ export async function POST(request: Request, { params }: RouteContext) {
     let userId: string;
     try {
       userId = requireUserId(request);
-    } catch (authError) {
+    } catch {
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }
@@ -95,8 +95,6 @@ export async function POST(request: Request, { params }: RouteContext) {
       return NextResponse.json({ error: 'Invalid user ID' }, { status: 400 });
     }
 
-    const userIdObjectId = new mongoose.Types.ObjectId(userId);
-
     // Ensure helpfulVotes is an array before proceeding
     await ensureHelpfulVotesIsArray(reviewId);
 
@@ -113,9 +111,13 @@ export async function POST(request: Request, { params }: RouteContext) {
       review.helpfulVotes = [];
     }
 
+    const helpfulVotesArray = review.helpfulVotes.filter(
+      (vote: unknown): vote is mongoose.Types.ObjectId => vote instanceof mongoose.Types.ObjectId
+    );
+
     // Convert current votes to strings for comparison
-    const currentVoteStrings = review.helpfulVotes.map((v: any) =>
-      v?.toString?.() || String(v)
+    const currentVoteStrings = helpfulVotesArray.map((vote: mongoose.Types.ObjectId) =>
+      vote.toString()
     );
     const alreadyVoted = currentVoteStrings.includes(userId);
 
@@ -130,13 +132,14 @@ export async function POST(request: Request, { params }: RouteContext) {
     }
 
     // Add the user ID to the array
-    review.helpfulVotes.push(userIdObjectId);
+    helpfulVotesArray.push(new mongoose.Types.ObjectId(userId));
+    review.helpfulVotes = helpfulVotesArray;
 
     // Save the document (bypass validation to avoid casting issues)
     await review.save({ validateBeforeSave: false });
 
     // Calculate total: real votes + featured votes
-    const realVotesCount = review.helpfulVotes.length;
+    const realVotesCount = helpfulVotesArray.length;
     const featuredVotesCount = review.featuredVotes ?? 0;
     const totalVotes = realVotesCount + featuredVotesCount;
 
@@ -161,7 +164,7 @@ export async function DELETE(request: Request, { params }: RouteContext) {
     let userId: string;
     try {
       userId = requireUserId(request);
-    } catch (authError) {
+    } catch {
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }
@@ -182,8 +185,6 @@ export async function DELETE(request: Request, { params }: RouteContext) {
       return NextResponse.json({ error: 'Invalid user ID' }, { status: 400 });
     }
 
-    const userIdObjectId = new mongoose.Types.ObjectId(userId);
-
     // Ensure helpfulVotes is an array before proceeding
     await ensureHelpfulVotesIsArray(reviewId);
 
@@ -200,16 +201,21 @@ export async function DELETE(request: Request, { params }: RouteContext) {
       review.helpfulVotes = [];
     }
 
-    // Remove the user ID from the array
-    review.helpfulVotes = review.helpfulVotes.filter(
-      (voteId: any) => voteId?.toString() !== userId
+    const helpfulVotesArray = review.helpfulVotes.filter(
+      (vote: unknown): vote is mongoose.Types.ObjectId => vote instanceof mongoose.Types.ObjectId
     );
+
+    // Remove the user ID from the array
+    const filteredVotes = helpfulVotesArray.filter(
+      (voteId: mongoose.Types.ObjectId) => voteId.toString() !== userId
+    );
+    review.helpfulVotes = filteredVotes;
 
     // Save the document (bypass validation to avoid casting issues)
     await review.save({ validateBeforeSave: false });
 
     // Calculate total: real votes + featured votes
-    const realVotesCount = review.helpfulVotes.length;
+    const realVotesCount = filteredVotes.length;
     const featuredVotesCount = review.featuredVotes ?? 0;
     const totalVotes = realVotesCount + featuredVotesCount;
 

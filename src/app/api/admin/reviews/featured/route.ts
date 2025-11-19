@@ -18,6 +18,20 @@ interface FeaturedReviewInput {
   images?: string[];
 }
 
+type LeanFeaturedReview = {
+  _id: mongoose.Types.ObjectId;
+  product?: {
+    _id?: mongoose.Types.ObjectId;
+    name?: string;
+    slug?: string;
+  } | null;
+  isFeatured?: boolean;
+  featuredFullName?: string;
+  helpfulVotes?: mongoose.Types.ObjectId[] | number;
+  featuredVotes?: number;
+  [key: string]: unknown;
+};
+
 export async function GET(request: Request) {
   try {
     await connect();
@@ -66,15 +80,7 @@ export async function GET(request: Request) {
         .sort(sort)
         .skip(skip)
         .limit(limit)
-        .lean<Array<{
-          _id: any;
-          product?: any;
-          isFeatured?: boolean;
-          featuredFullName?: string;
-          helpfulVotes?: any;
-          featuredVotes?: number;
-          [key: string]: any;
-        }>>(),
+        .lean<LeanFeaturedReview[]>(),
       Review.countDocuments(filter),
     ]);
 

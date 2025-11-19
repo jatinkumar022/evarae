@@ -6,6 +6,27 @@ import Review from '@/models/reviewModel';
 import Order from '@/models/orderModel';
 import { getUserIdFromRequest } from '@/lib/server/auth/getUserFromRequest';
 
+type LeanProductReview = {
+  _id: mongoose.Types.ObjectId;
+  product?: mongoose.Types.ObjectId;
+  user?: {
+    _id?: mongoose.Types.ObjectId;
+    name?: string;
+    email?: string;
+  } | null;
+  isFeatured?: boolean;
+  featuredFullName?: string;
+  featuredVotes?: number;
+  helpfulVotes?: mongoose.Types.ObjectId[];
+  rating: number;
+  title?: string;
+  comment: string;
+  images?: string[];
+  createdAt: Date;
+  verifiedPurchase?: boolean;
+  [key: string]: unknown;
+};
+
 type RouteContext = { params: Promise<{ id: string }> };
 
 const APPROVED_MATCH = {
@@ -80,19 +101,11 @@ export async function GET(request: Request, { params }: RouteContext) {
         .sort({ createdAt: -1 })
         .populate('user', 'name email')
         .select('+helpfulVotes')
-        .lean<{
-          _id: mongoose.Types.ObjectId;
-          helpfulVotes?: mongoose.Types.ObjectId[];
-          [key: string]: any;
-        }[]>(),
+        .lean<LeanProductReview[]>(),
       Review.find(featuredReviewsFilter)
         .sort({ createdAt: -1 })
         .select('+helpfulVotes')
-        .lean<{
-          _id: mongoose.Types.ObjectId;
-          helpfulVotes?: mongoose.Types.ObjectId[];
-          [key: string]: any;
-        }[]>(),
+        .lean<LeanProductReview[]>(),
     ]);
 
     // Combine both arrays

@@ -19,7 +19,7 @@ import {
   X,
   Package,
 } from 'lucide-react';
-import { useReviewStore, AdminReview, ReviewStatus, ReviewType } from '@/lib/data/store/reviewStore';
+import { useReviewStore, AdminReview, ReviewStatus } from '@/lib/data/store/reviewStore';
 import { useProductStore, Product } from '@/lib/data/store/productStore';
 import { CustomSelect } from '@/app/admin/components/CustomSelect';
 import Modal from '@/app/admin/components/Modal';
@@ -34,7 +34,6 @@ export default function AdminReviewsPage() {
     pagination,
     status,
     stats,
-    statsStatus,
     setReviewType,
     setFilters,
     fetchReviews,
@@ -89,7 +88,6 @@ export default function AdminReviewsPage() {
 
   const handleSearch = (search: string) => setFilters({ search, page: 1 });
   const handleStatusFilter = (status: string) => setFilters({ status, page: 1 });
-  const handleRatingFilter = (rating: string) => setFilters({ rating, page: 1 });
   const handleSort = (sortBy: string) => {
     const currentSortOrder = filters.sortBy === sortBy && filters.sortOrder === 'asc' ? 'desc' : 'asc';
     setFilters({ sortBy, sortOrder: currentSortOrder, page: 1 });
@@ -289,7 +287,7 @@ export default function AdminReviewsPage() {
     try {
       await fetchReview(review._id);
       setSelectedReview(review);
-    } catch (error) {
+    } catch {
       toastApi.error('Failed to load review', 'Please try again');
     }
   };
@@ -308,7 +306,7 @@ export default function AdminReviewsPage() {
     let parsedReviews;
     try {
       parsedReviews = JSON.parse(reviewsJson);
-    } catch (error) {
+    } catch {
       toastApi.error('Invalid JSON format');
       return;
     }
@@ -321,9 +319,10 @@ export default function AdminReviewsPage() {
     setIsSubmittingFeatured(true);
     try {
       const result = await createFeaturedReviews(selectedProductId, parsedReviews);
+      const failedCount = result.errors?.length ?? 0;
       toastApi.success(
         `Created ${result.created?.length || 0} featured review(s)`,
-        result.errors?.length > 0 ? `${result.errors.length} review(s) failed` : undefined
+        failedCount > 0 ? `${failedCount} review(s) failed` : undefined
       );
       setIsFeaturedModalOpen(false);
       setSelectedProductId('');
@@ -923,7 +922,7 @@ export default function AdminReviewsPage() {
             <ul className="list-disc list-inside space-y-1">
               <li>All featured reviews will be auto-approved</li>
               <li>Each review will be created as a separate entry</li>
-              <li>Featured reviews won't have a real user account</li>
+              <li>Featured reviews won&apos;t have a real user account</li>
               <li>Product rating will be updated automatically</li>
             </ul>
           </div>

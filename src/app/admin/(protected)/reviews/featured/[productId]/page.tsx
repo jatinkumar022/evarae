@@ -31,7 +31,10 @@ export default function FeaturedReviewsDetailPage() {
   const fetchFeaturedReviews = useFeaturedReviewStore(state => state.fetchFeaturedReviews);
 
   const featuredEntry = featuredEntries[productId];
-  const featuredReviews = featuredEntry?.reviews ?? [];
+  const featuredReviews = useMemo(
+    () => featuredEntry?.reviews ?? [],
+    [featuredEntry?.reviews]
+  );
   const featuredStatus = featuredEntry?.status ?? 'idle';
   const featuredError = featuredEntry?.error ?? null;
 

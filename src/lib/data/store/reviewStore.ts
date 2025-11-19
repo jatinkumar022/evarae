@@ -51,6 +51,23 @@ export interface ReviewStats {
   total: number;
 }
 
+export interface FeaturedReviewPayload {
+  fullName: string;
+  rating: number;
+  comment: string;
+  title?: string;
+  featuredVotes?: number;
+  verifiedPurchase?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+  images?: string[];
+}
+
+export interface FeaturedReviewError {
+  index: number;
+  error: string;
+}
+
 interface ReviewState {
   reviews: AdminReview[];
   currentReview: AdminReview | null;
@@ -68,7 +85,10 @@ interface ReviewState {
   fetchReview: (id: string) => Promise<void>;
   updateReviewStatus: (id: string, status: ReviewStatus) => Promise<AdminReview>;
   deleteReview: (id: string) => Promise<void>;
-  createFeaturedReviews: (productId: string, reviews: any[]) => Promise<{ created: AdminReview[]; errors: any[] }>;
+  createFeaturedReviews: (
+    productId: string,
+    reviews: FeaturedReviewPayload[]
+  ) => Promise<{ created: AdminReview[]; errors?: FeaturedReviewError[] }>;
   fetchStats: () => Promise<void>;
   clearError: () => void;
   reset: () => void;
@@ -252,7 +272,7 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
     try {
       const response = await apiFetch<{
         created: AdminReview[];
-        errors: any[];
+        errors?: FeaturedReviewError[];
       }>('/api/admin/reviews/featured', {
         method: 'POST',
         body: JSON.stringify({ productId, reviews }),
