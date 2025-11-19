@@ -17,6 +17,8 @@ export interface Product {
   tags: string[];
   video?: string;
   status: 'active' | 'out_of_stock' | 'hidden';
+  rating?: number;
+  reviewsCount?: number;
   metaTitle: string;
   metaDescription: string;
   createdAt: string;

@@ -21,6 +21,7 @@ import { ProductCard } from '../shop/components/ProductCard';
 import Image from '@/app/(main)/components/ui/FallbackImage';
 import { usePublicProductStore } from '@/lib/data/mainStore/productStore';
 import PageLoader from '@/app/(main)/components/layouts/PageLoader';
+import { FASHION_PRICE_RANGES } from '@/lib/constants/productFilters';
 
 export default function AllJewelleryPage() {
   const {
@@ -109,12 +110,7 @@ export default function AllJewelleryPage() {
   }, [mappedProducts]);
 
   const filterOptions: FilterOptions = {
-    priceRanges: [
-      { value: 'under-1k', label: 'Under ₹1,000' },
-      { value: '1k-2k', label: '₹1,000 - ₹2,000' },
-      { value: '2k-5k', label: '₹2,000 - ₹5,000' },
-      { value: 'above-5k', label: 'Above ₹5,000' },
-    ],
+    priceRanges: FASHION_PRICE_RANGES,
     subcategories: [
       'Rings',
       'Earrings',

@@ -14,6 +14,7 @@ import {
   Settings,
   Home,
   RotateCcw,
+  MessageSquare,
 } from "lucide-react";
 
 type NavItem = {
@@ -52,6 +53,11 @@ const navItems: NavItem[] = [
     icon: <ShoppingBag className="w-5 h-5" />,
     name: "Orders",
     path: "/admin/orders",
+  },
+  {
+    icon: <MessageSquare className="w-5 h-5" />,
+    name: "Reviews",
+    path: "/admin/reviews",
   },
   {
     icon: <RotateCcw className="w-5 h-5" />,
@@ -102,20 +108,17 @@ const AppSidebar: React.FC = () => {
           <li key={nav.path}>
             <Link
               href={nav.path}
-              className={`menu-item group ${
-                active ? "menu-item-active" : "menu-item-inactive"
-              } ${
-                !isExpanded && !isHovered
+              className={`menu-item group ${active ? "menu-item-active" : "menu-item-inactive"
+                } ${!isExpanded && !isHovered
                   ? "lg:justify-center"
                   : "lg:justify-start"
-              }`}
+                }`}
             >
               <span
-                className={`${
-                  active
+                className={`${active
                     ? "menu-item-icon-active"
                     : "menu-item-icon-inactive"
-                }`}
+                  }`}
               >
                 {nav.icon}
               </span>
@@ -131,26 +134,24 @@ const AppSidebar: React.FC = () => {
 
   return (
     <aside
-      className={`fixed mt-16 flex flex-col lg:mt-0 top-0 left-0 px-4 bg-white dark:bg-[#0a0a0a] text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 ${
-        isExpanded || isMobileOpen
+      className={`fixed mt-16 flex flex-col lg:mt-0 top-0 left-0 px-4 bg-white dark:bg-[#0a0a0a] text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 ${isExpanded || isMobileOpen
           ? "w-[290px]"
           : isHovered
-          ? "w-[290px]"
-          : "w-[90px]"
-      } ${isMobileOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0`}
+            ? "w-[290px]"
+            : "w-[90px]"
+        } ${isMobileOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0`}
       onMouseEnter={() => !isExpanded && setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       <div
-        className={`py-6 flex ${
-          !isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
-        }`}
+        className={`py-6 flex ${!isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
+          }`}
       >
         <Link href="/admin">
           {(isExpanded || isHovered || isMobileOpen) ? (
-              <span className="text-xl font-heading text-primary-600 dark:text-primary-400">
-                Caelvi Admin
-              </span>
+            <span className="text-xl font-heading text-primary-600 dark:text-primary-400">
+              Caelvi Admin
+            </span>
           ) : (
             <span className="text-xl font-bold text-primary-600 dark:text-primary-400">
               C
@@ -163,11 +164,10 @@ const AppSidebar: React.FC = () => {
           <div className="flex flex-col gap-4">
             <div>
               <h2
-                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 dark:text-[#bdbdbd] ${
-                  !isExpanded && !isHovered
+                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 dark:text-[#bdbdbd] ${!isExpanded && !isHovered
                     ? "lg:justify-center"
                     : "justify-start"
-                }`}
+                  }`}
               >
                 {isExpanded || isHovered || isMobileOpen ? (
                   "Menu"
@@ -180,11 +180,10 @@ const AppSidebar: React.FC = () => {
 
             <div>
               <h2
-                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 dark:text-[#bdbdbd] ${
-                  !isExpanded && !isHovered
+                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 dark:text-[#bdbdbd] ${!isExpanded && !isHovered
                     ? "lg:justify-center"
                     : "justify-start"
-                }`}
+                  }`}
               >
                 {isExpanded || isHovered || isMobileOpen ? (
                   "Others"

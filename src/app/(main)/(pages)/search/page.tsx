@@ -21,6 +21,7 @@ import {
   SortOption,
   Product as UiProduct,
 } from '@/lib/types/product';
+import { FASHION_PRICE_RANGES } from '@/lib/constants/productFilters';
 import { ProductCard } from '../shop/components/ProductCard';
 import Image from '@/app/(main)/components/ui/FallbackImage';
 import { useRouter } from 'next/navigation';
@@ -66,12 +67,7 @@ function SearchPageInner() {
   const { categories } = usePublicCategoryStore();
   const filterOptions: FilterOptions = useMemo(
     () => ({
-      priceRanges: [
-        { value: 'under-1k', label: 'Under ₹1,000' },
-        { value: '1k-2k', label: '₹1,000 - ₹2,000' },
-        { value: '2k-5k', label: '₹2,000 - ₹5,000' },
-        { value: 'above-5k', label: 'Above ₹5,000' },
-      ],
+      priceRanges: FASHION_PRICE_RANGES,
       subcategories: categories.map(cat => cat.name),
     }),
     [categories]
@@ -361,8 +357,8 @@ function SearchPageInner() {
             <button
               onClick={() => setViewMode('grid')}
               className={`px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-medium flex items-center gap-1 transition-colors ${viewMode === 'grid'
-                  ? 'bg-primary text-white'
-                  : 'text-gray-600 hover:bg-gray-200'
+                ? 'bg-primary text-white'
+                : 'text-gray-600 hover:bg-gray-200'
                 }`}
             >
               <Grid3X3 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
@@ -371,8 +367,8 @@ function SearchPageInner() {
             <button
               onClick={() => setViewMode('list')}
               className={`px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-medium flex items-center gap-1 transition-colors ${viewMode === 'list'
-                  ? 'bg-primary text-white'
-                  : 'text-gray-600 hover:bg-gray-200'
+                ? 'bg-primary text-white'
+                : 'text-gray-600 hover:bg-gray-200'
                 }`}
             >
               <List className="h-3.5 w-3.5 sm:h-4 sm:w-4" />

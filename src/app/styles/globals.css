@@ -90,9 +90,108 @@
   --border: oklch(0.84 0.04 10.35);
   --ring: oklch(0.66 0.14 358.91);
 
+  /* lighter hover OKLCH fallbacks (increase lightness) */
+  --primary-light-1: oklch(0.78 0.12 358.91);
+  /* brighter stop */
+  --primary-light-2: oklch(0.86 0.10 358.91);
+  /* even lighter stop */
+
+  /* Fallback hexs used by WebKit when OKLCH isn't supported */
+  --primary-hover-fallback-1: #e17896;
+  /* approx of primary-light-1 */
+  --primary-hover-fallback-2: #f596aa;
+  /* approx of primary-light-2 */
 
 }
 
+
+
+
+/* ---------- Firefox (standard) ---------- */
+* {
+  /* Firefox honours these */
+  scrollbar-width: thin;
+  scrollbar-color: var(--primary) rgba(161 74 101 / 0.08);
+}
+
+/* ---------- WebKit / Chromium (Chrome, Edge, Safari desktop) ---------- */
+/* Apply to commonly-scrolling elements — scope if you want to limit effects */
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+*:not(iframe)::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+*::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+/* Track */
+html::-webkit-scrollbar-track,
+body::-webkit-scrollbar-track,
+*:not(iframe)::-webkit-scrollbar-track {
+  background: rgba(161 74 101 / 0.05);
+  border-radius: 10px;
+  margin: 4px;
+}
+
+/* Thumb (base) */
+/* Use OKLCH variable when supported; fallback to primary-dark hex for older engines */
+html::-webkit-scrollbar-thumb,
+body::-webkit-scrollbar-thumb,
+*:not(iframe)::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg,
+      var(--primary) 0%,
+      rgba(161 74 101 / 0.85) 100%);
+  /* Fallback for engines that don't parse OKLCH: second declaration */
+  background: linear-gradient(180deg,
+      var(--primary-dark) 0%,
+      rgba(161, 74, 101, 0.85) 100%);
+
+  border-radius: 9999px;
+  /* fully rounded */
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  transition: all 0.18s ease;
+  min-height: 32px;
+}
+
+/* Hover — brighter stops (no black) */
+/* Prefer OKLCH lighter stops, fallback to hex approximations */
+html::-webkit-scrollbar-thumb:hover,
+body::-webkit-scrollbar-thumb:hover,
+*:not(iframe)::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg,
+      var(--primary-light-1) 0%,
+      var(--primary-light-2) 100%);
+
+  /* fallback hex gradient if OKLCH isn't supported */
+  background: linear-gradient(180deg,
+      var(--primary-hover-fallback-1) 0%,
+      var(--primary-hover-fallback-2) 100%);
+
+  border: 2px solid rgba(255 255 255 / 0.12);
+  box-shadow: 0 0 8px rgba(225 120 150 / 0.45), inset 0 1px 2px rgba(255 255 255 / 0.25);
+}
+
+/* Active (pressed) */
+html::-webkit-scrollbar-thumb:active,
+body::-webkit-scrollbar-thumb:active,
+*:not(iframe)::-webkit-scrollbar-thumb:active {
+  background: var(--primary);
+  background: var(--primary-dark);
+  /* fallback */
+  box-shadow: 0 0 14px rgba(161 74 101 / 0.45), inset 0 2px 4px rgba(0 0 0 / 0.18);
+}
+
+/* Corner */
+*::-webkit-scrollbar-corner {
+  background: rgba(161 74 101 / 0.05);
+  border-radius: 10px;
+}
 
 
 @layer base {

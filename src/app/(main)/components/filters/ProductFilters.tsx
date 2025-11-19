@@ -293,23 +293,26 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({
   // Filter and sort products
   const filteredAndSortedProducts = useMemo(() => {
     const filtered = products.filter(product => {
-      // Price filter
+      // Price filter tailored for fashion jewellery (₹200 - ₹2,000 focus)
       if (filters.priceRange) {
         const price = product.price;
+        if (price == null) return false;
+
         switch (filters.priceRange) {
-          case 'under-50k':
-            if (price != null && price >= 50000) return false;
+          case 'under-200':
+            if (price >= 200) return false;
             break;
-          case '50k-100k':
-            if (price != null && (price < 50000 || price >= 100000))
-              return false;
+          case '200-500':
+            if (price < 200 || price >= 500) return false;
             break;
-          case '100k-200k':
-            if (price != null && (price < 100000 || price >= 200000))
-              return false;
+          case '500-1000':
+            if (price < 500 || price >= 1000) return false;
             break;
-          case 'above-200k':
-            if (price != null && price < 200000) return false;
+          case '1000-2000':
+            if (price < 1000 || price >= 2000) return false;
+            break;
+          case 'above-2000':
+            if (price < 2000) return false;
             break;
         }
       }

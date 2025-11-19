@@ -22,6 +22,7 @@ import { useParams } from 'next/navigation';
 import { usePublicCollectionStore } from '@/lib/data/mainStore/collectionStore';
 import { List, NoItems } from '@/app/(main)/assets/Common';
 import PageLoader from '@/app/(main)/components/layouts/PageLoader';
+import { FASHION_PRICE_RANGES } from '@/lib/constants/productFilters';
 
 export default function CollectionDetailPage() {
   const params = useParams();
@@ -152,12 +153,7 @@ export default function CollectionDetailPage() {
   }
 
   const filterOptions: FilterOptions = {
-    priceRanges: [
-      { value: 'under-1k', label: 'Under ₹1,000' },
-      { value: '1k-2k', label: '₹1,000 - ₹2,000' },
-      { value: '2k-5k', label: '₹2,000 - ₹5,000' },
-      { value: 'above-5k', label: 'Above ₹5,000' },
-    ],
+    priceRanges: FASHION_PRICE_RANGES,
     subcategories: [
       'Rings',
       'Earrings',

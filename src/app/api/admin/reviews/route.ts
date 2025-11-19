@@ -1,50 +1,108 @@
 import { NextResponse } from 'next/server';
 import { connect } from '@/dbConfig/dbConfig';
 import Review from '@/models/reviewModel';
+import { updateProductRating } from '@/lib/server/reviews/updateProductRating';
+
+const APPROVED_OR_LEGACY = {
+  $or: [{ status: 'approved' }, { status: { $exists: false } }],
+};
 
 export async function GET(request: Request) {
   try {
     await connect();
 
     const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '10');
-    const search = searchParams.get('search') || '';
-    const product = searchParams.get('product') || '';
-    const rating = searchParams.get('rating') || '';
-    const verifiedPurchase = searchParams.get('verifiedPurchase') || '';
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
+    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '12', 10)));
+    const search = searchParams.get('search')?.trim() || '';
+    const product = searchParams.get('product')?.trim() || '';
+    const rating = searchParams.get('rating')?.trim() || '';
+    const verifiedPurchase = searchParams.get('verifiedPurchase')?.trim() || '';
     const sortBy = searchParams.get('sortBy') || 'createdAt';
     const sortOrder = searchParams.get('sortOrder') || 'desc';
+    const status = searchParams.get('status')?.trim() || '';
 
     const skip = (page - 1) * limit;
 
-    // Build filter
-    const filter: Record<string, unknown> = {};
+    // Build filter - exclude featured reviews (only show real reviews)
+    const filter: Record<string, unknown> = {
+      $or: [{ isFeatured: { $exists: false } }, { isFeatured: false }],
+    };
+
+    // Build search filter - search in comment, title, and user name/email via populate
     if (search) {
-      filter.$or = [{ comment: { $regex: search, $options: 'i' } }];
+      const searchConditions: unknown[] = [
+        { comment: { $regex: search, $options: 'i' } },
+        { title: { $regex: search, $options: 'i' } },
+      ];
+      filter.$and = filter.$and || [];
+      (filter.$and as unknown[]).push({ $or: searchConditions });
     }
-    if (product) filter.product = product;
-    if (rating) filter.rating = parseInt(rating);
-    if (verifiedPurchase !== '')
+
+    if (product) {
+      filter.product = product;
+    }
+    if (rating) {
+      const ratingNum = parseInt(rating, 10);
+      if (!isNaN(ratingNum) && ratingNum >= 1 && ratingNum <= 5) {
+        filter.rating = ratingNum;
+      }
+    }
+    if (verifiedPurchase !== '') {
       filter.verifiedPurchase = verifiedPurchase === 'true';
+    }
 
-    // Build sort
+    // Handle status filter - empty means "All Status"
+    if (status) {
+      if (status === 'approved') {
+        filter.$and = filter.$and || [];
+        (filter.$and as unknown[]).push(APPROVED_OR_LEGACY);
+      } else if (status === 'rejected' || status === 'pending') {
+        filter.status = status;
+      }
+    }
+    // If status is empty, show all statuses (no status filter applied)
+
+    // Build sort - validate sortBy to prevent injection
+    const allowedSortFields = ['createdAt', 'rating', 'helpfulVotes', 'updatedAt'];
+    const validSortBy = allowedSortFields.includes(sortBy) ? sortBy : 'createdAt';
     const sort: Record<string, 1 | -1> = {};
-    sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
+    sort[validSortBy] = sortOrder === 'desc' ? -1 : 1;
 
-    const reviews = await Review.find(filter)
-      .populate('product', 'name slug')
-      .populate('user', 'name email')
-      .sort(sort)
-      .skip(skip)
-      .limit(limit)
-      .lean();
+    // Execute queries in parallel for better performance
+    const [reviews, total] = await Promise.all([
+      Review.find(filter)
+        .populate('product', 'name slug')
+        .populate('user', 'name email')
+        .sort(sort)
+        .skip(skip)
+        .limit(limit)
+        .lean<Array<{
+        _id: any;
+        product?: any;
+        user?: any;
+        isFeatured?: boolean;
+        featuredFullName?: string;
+        [key: string]: any;
+        }>>(),
+      Review.countDocuments(filter),
+    ]);
 
-    const total = await Review.countDocuments(filter);
+    // Filter reviews by user name/email if search is provided (post-populate filter)
+    let formattedReviews = reviews;
+    if (search && reviews.length > 0) {
+      const searchLower = search.toLowerCase();
+      formattedReviews = reviews.filter((review) => {
+        const userName = review.user?.name?.toLowerCase() || '';
+        const userEmail = review.user?.email?.toLowerCase() || '';
+        return userName.includes(searchLower) || userEmail.includes(searchLower);
+      });
+    }
+
     const totalPages = Math.ceil(total / limit);
 
     return NextResponse.json({
-      reviews,
+      reviews: formattedReviews,
       pagination: {
         page,
         limit,
@@ -55,7 +113,7 @@ export async function GET(request: Request) {
       },
     });
   } catch (error) {
-    console.error('Reviews GET error:', error);
+    console.error('[admin reviews GET] Error:', error);
     return NextResponse.json(
       { error: 'Unable to load reviews. Please try again later' },
       { status: 500 }
@@ -68,8 +126,17 @@ export async function POST(request: Request) {
     await connect();
 
     const body = await request.json();
-    const { product, user, rating, comment, images, videos, verifiedPurchase } =
-      body;
+    const {
+      product,
+      user,
+      rating,
+      comment,
+      images,
+      videos,
+      verifiedPurchase,
+      status = 'approved',
+      title,
+    } = body;
 
     // Validate required fields
     if (!product || !user || !rating) {
@@ -104,16 +171,23 @@ export async function POST(request: Request) {
       product,
       user,
       rating,
+      title: title || '',
       comment: comment || '',
       images: images || [],
       videos: videos || [],
       verifiedPurchase: verifiedPurchase || false,
       helpfulVotes: 0,
+      status,
+      approvedAt: status === 'approved' ? new Date() : null,
     });
 
     await review.save();
     await review.populate('product', 'name slug');
     await review.populate('user', 'name email');
+
+    if (status === 'approved') {
+      await updateProductRating(product);
+    }
 
     return NextResponse.json(
       {

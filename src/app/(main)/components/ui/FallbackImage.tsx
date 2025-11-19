@@ -41,27 +41,30 @@ const coerceSrc = (src?: ImageSource): ImageSource | undefined => {
     return undefined;
   }
 
-  // Handle empty string
-  if (typeof src === 'string' && src.trim().length === 0) {
+  if (typeof src === 'string') {
+    const trimmed = src.trim();
+    return trimmed.length > 0 ? trimmed : undefined;
+  }
+
+  if (typeof src === 'object' && src !== null) {
+    if (isStaticImageData(src)) {
+      const staticSrc = typeof src.src === 'string' ? src.src.trim() : '';
+      return staticSrc.length > 0 ? src : undefined;
+    }
+
+    const possibleKeys = ['url', 'uri', 'image', 'imageUrl', 'secure_url', 'path'];
+    const record = src as unknown as Record<string, unknown>;
+    for (const key of possibleKeys) {
+      const value = record[key];
+      if (typeof value === 'string' && value.trim().length > 0) {
+        return value.trim();
+      }
+    }
+
     return undefined;
   }
 
-  // Handle empty object
-  if (typeof src === 'object' && src !== null) {
-    // If it's a StaticImageData, check if it has a valid src
-    if ('src' in src) {
-      if (typeof src.src === 'string' && src.src.trim().length === 0) {
-        return undefined;
-      }
-      return src;
-    }
-    // If it's an empty object (not StaticImageData), return undefined
-    if (Object.keys(src).length === 0) {
-      return undefined;
-    }
-  }
-
-  return src;
+  return undefined;
 };
 
 const FallbackImage = ({

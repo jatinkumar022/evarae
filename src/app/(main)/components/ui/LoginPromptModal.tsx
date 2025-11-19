@@ -3,10 +3,12 @@ import { useEffect } from 'react';
 import { X, LogIn } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
+type LoginPromptAction = 'cart' | 'wishlist' | 'review';
+
 interface LoginPromptModalProps {
   isOpen: boolean;
   onClose: () => void;
-  action?: 'cart' | 'wishlist';
+  action?: LoginPromptAction;
 }
 
 export default function LoginPromptModal({
@@ -23,12 +25,12 @@ export default function LoginPromptModal({
       const originalBodyOverflow = window.getComputedStyle(document.body).overflow;
       const originalHtmlOverflow = window.getComputedStyle(document.documentElement).overflow;
       const originalBodyHeight = document.body.style.height;
-      
+
       // Disable scrolling on both body and html (Safari fix)
       document.body.style.overflow = 'hidden';
       document.body.style.height = '100%';
       document.documentElement.style.overflow = 'hidden';
-      
+
       return () => {
         // Restore original styles on cleanup
         document.body.style.overflow = originalBodyOverflow;
@@ -40,7 +42,7 @@ export default function LoginPromptModal({
 
   useEffect(() => {
     if (!isOpen) return;
-    
+
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         onClose();
@@ -60,7 +62,12 @@ export default function LoginPromptModal({
     onClose();
   };
 
-  const actionText = action === 'wishlist' ? 'add items to your wishlist' : 'add items to your cart';
+  const actionMap: Record<LoginPromptAction, string> = {
+    cart: 'add items to your cart',
+    wishlist: 'add items to your wishlist',
+    review: 'write a product review',
+  };
+  const actionText = actionMap[action] ?? actionMap.cart;
 
   return (
     <div

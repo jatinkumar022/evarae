@@ -13,6 +13,7 @@ import toastApi from '@/lib/toast';
 import Link from 'next/link';
 import { Spinner } from '@/app/(main)/components/ui/ScaleLoader';
 import PageLoader from '@/app/(main)/components/layouts/PageLoader';
+import { FASHION_PRICE_RANGES } from '@/lib/constants/productFilters';
 
 // Lazy load heavy components to reduce initial bundle size
 const ProductFilters = dynamic(() => import('@/app/(main)/components/filters/ProductFilters'), {
@@ -80,12 +81,7 @@ export default function WishlistPage() {
   // Generate filter options based on actual products
   const filterOptions: FilterOptions = useMemo(() => {
     const subcategories = new Set<string>();
-    const priceRanges = [
-      { value: 'under-1k', label: 'Under ₹1,000' },
-      { value: '1k-2k', label: '₹1,000 - ₹2,000' },
-      { value: '2k-5k', label: '₹2,000 - ₹5,000' },
-      { value: 'above-5k', label: 'Above ₹5,000' },
-    ];
+    const priceRanges = FASHION_PRICE_RANGES;
 
     mappedProducts.forEach(product => {
       if (product.category.name) subcategories.add(product.category.name);

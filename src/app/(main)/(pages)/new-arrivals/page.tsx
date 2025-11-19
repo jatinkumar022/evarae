@@ -28,6 +28,7 @@ import { ProductCard } from '../shop/components/ProductCard';
 import Container from '@/app/(main)/components/layouts/Container';
 import { useNewArrivalsStore, type NewArrivalProduct } from '@/lib/data/mainStore/newArrivalsStore';
 import PageLoader from '@/app/(main)/components/layouts/PageLoader';
+import { FASHION_PRICE_RANGES } from '@/lib/constants/productFilters';
 
 type NewArrivalsTimer = {
   hours: number;
@@ -130,12 +131,7 @@ export default function EnhancedNewArrivalsPage() {
   }
 
   const filterOptions: FilterOptions = {
-    priceRanges: [
-      { value: 'under-1k', label: 'Under ₹1,000' },
-      { value: '1k-2k', label: '₹1,000 - ₹2,000' },
-      { value: '2k-5k', label: '₹2,000 - ₹5,000' },
-      { value: 'above-5k', label: 'Above ₹5,000' },
-    ],
+    priceRanges: FASHION_PRICE_RANGES,
     subcategories: [
       'American Diamond (CZ) Rings',
       'Crystal Rings',
