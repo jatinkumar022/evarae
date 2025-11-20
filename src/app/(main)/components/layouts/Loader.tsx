@@ -6,9 +6,15 @@ interface LoaderProps {
   text?: string;
   fullscreen?: boolean;
   showLogo?: boolean;
+  restoreScroll?: boolean;
 }
 
-const Loader = ({ text = 'Loading...', fullscreen = false, showLogo = false }: LoaderProps) => {
+const Loader = ({
+  text = 'Loading...',
+  fullscreen = false,
+  showLogo = false,
+  restoreScroll = true,
+}: LoaderProps) => {
   const loaderRef = useRef<HTMLDivElement>(null);
   const scrollYRef = useRef(0);
 
@@ -50,7 +56,7 @@ const Loader = ({ text = 'Loading...', fullscreen = false, showLogo = false }: L
         document.documentElement.style.removeProperty('height');
         document.documentElement.style.removeProperty('scrollbar-width');
 
-        window.scrollTo(0, scrollYRef.current);
+        window.scrollTo(0, restoreScroll ? scrollYRef.current : 0);
       };
     } else if (typeof window !== 'undefined') {
       document.body.style.removeProperty('overflow');
@@ -62,7 +68,7 @@ const Loader = ({ text = 'Loading...', fullscreen = false, showLogo = false }: L
       document.documentElement.style.removeProperty('height');
       document.documentElement.style.removeProperty('scrollbar-width');
     }
-  }, [fullscreen]);
+  }, [fullscreen, restoreScroll]);
 
   const spinner = (
     <div className="relative">

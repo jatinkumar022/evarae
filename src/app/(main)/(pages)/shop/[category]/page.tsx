@@ -36,7 +36,6 @@ export default function ShopCategoryPage() {
   const [filteredProducts, setFilteredProducts] = useState<UiProduct[]>([]);
   const [columns, setColumns] = useState(3);
   const [visibleProducts, setVisibleProducts] = useState(10);
-  const [prevPage, setPrevPage] = useState<string | null>(null);
   const hasFetchedRef = useRef<string | null>(null);
 
   // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
@@ -111,23 +110,6 @@ export default function ShopCategoryPage() {
   useEffect(() => {
     setFilteredProducts(mappedProducts);
   }, [mappedProducts]);
-
-  useEffect(() => {
-    if (document.referrer) {
-      try {
-        const url = new URL(document.referrer);
-        const segments = url.pathname.split('/').filter(Boolean);
-        let lastSegment = segments[segments.length - 1] || null;
-        if (lastSegment) {
-          lastSegment =
-            lastSegment.charAt(0).toUpperCase() + lastSegment.slice(1);
-        }
-        setPrevPage(lastSegment);
-      } catch {
-        setPrevPage(null);
-      }
-    }
-  }, []);
 
   useEffect(() => {
     function updateColumns() {
@@ -293,12 +275,15 @@ export default function ShopCategoryPage() {
       <Container>
         <nav className="py-4 sm:py-6 text-xs sm:text-sm">
           <div className="flex items-center gap-1 sm:gap-2">
+            <Link href="/" className="hover:text-primary transition-colors">
+              Home
+            </Link>
+            <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
             <Link
-              href={`/${prevPage?.toLocaleLowerCase()}`}
-              prefetch={true}
+              href="/categories"
               className="hover:text-primary transition-colors"
             >
-              {prevPage}
+              Categories
             </Link>
             <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
             <span className="text-primary-dark cursor-default">
