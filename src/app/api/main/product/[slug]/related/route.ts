@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { connect } from '@/dbConfig/dbConfig';
 import Product from '@/models/productModel';
 import mongoose from 'mongoose';
+import cache, { cacheKeys } from '@/lib/cache';
 
 type RouteContext = { params: Promise<{ slug: string }> };
 
@@ -9,6 +10,14 @@ export async function GET(request: Request, { params }: RouteContext) {
   try {
     await connect();
     const { slug } = await params;
+
+    const cacheKey = cacheKeys.productList(`related:${slug}`);
+    const cachedPayload = cache.get<unknown>(cacheKey);
+    if (cachedPayload) {
+      const cachedResponse = NextResponse.json(cachedPayload);
+      cachedResponse.headers.set('Cache-Control', 'no-store');
+      return cachedResponse;
+    }
 
     // Optimize: Use select with minimal fields for existence check
     const current = await Product.findOne({ status: 'active', slug })
@@ -48,7 +57,9 @@ export async function GET(request: Request, { params }: RouteContext) {
       },
     ]);
 
-    const res = NextResponse.json({ products });
+    const payload = { products };
+    cache.set(cacheKey, payload);
+    const res = NextResponse.json(payload);
     // Add cache header for related products (2 minutes)
     res.headers.set('Cache-Control', 'no-store');
     return res;

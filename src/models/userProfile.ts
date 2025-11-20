@@ -53,6 +53,9 @@ const userProfileSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+userProfileSchema.index({ user: 1 }, { unique: true });
+userProfileSchema.index({ phone: 1 });
+
 const UserProfile =
   mongoose.models.UserProfile ||
   mongoose.model('UserProfile', userProfileSchema);

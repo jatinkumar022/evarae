@@ -10,7 +10,6 @@ const productSchema = new mongoose.Schema(
     slug: {
       type: String,
       required: [true, 'Product slug is required'],
-      unique: true,
       lowercase: true,
       trim: true,
     },
@@ -20,8 +19,7 @@ const productSchema = new mongoose.Schema(
     },
     sku: {
       type: String,
-      unique: true,
-      sparse: true, // allows null but ensures uniqueness if present
+      trim: true,
     },
     brand: { type: String, default: 'Caelvi' },
     // Relations
@@ -57,6 +55,11 @@ const productSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+productSchema.index({ slug: 1 }, { unique: true });
+productSchema.index({ sku: 1 }, { unique: true, sparse: true });
+productSchema.index({ status: 1, createdAt: -1 });
+productSchema.index({ categories: 1, status: 1 });
 
 const Product =
   mongoose.models.Product || mongoose.model('Product', productSchema);

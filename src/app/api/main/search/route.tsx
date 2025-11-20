@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { connect } from '@/dbConfig/dbConfig';
 import Product from '@/models/productModel';
+import cache, { cacheKeys } from '@/lib/cache';
 
 export async function GET(request: Request) {
   try {
@@ -18,6 +19,16 @@ export async function GET(request: Request) {
         { error: 'Search query is required' },
         { status: 400 }
       );
+    }
+
+    const cacheKey = cacheKeys.productList(
+      `search:${query}:${page}:${limit}`
+    );
+    const cachedPayload = cache.get<unknown>(cacheKey);
+    if (cachedPayload) {
+      const cachedResponse = NextResponse.json(cachedPayload);
+      cachedResponse.headers.set('Cache-Control', 'no-store');
+      return cachedResponse;
     }
 
     // Build search filter
@@ -46,7 +57,7 @@ export async function GET(request: Request) {
 
     const totalPages = Math.ceil(total / limit);
 
-    const res = NextResponse.json({
+    const payload = {
       products,
       pagination: {
         page,
@@ -56,7 +67,10 @@ export async function GET(request: Request) {
         hasNext: page < totalPages,
         hasPrev: page > 1,
       },
-    });
+    };
+    cache.set(cacheKey, payload);
+
+    const res = NextResponse.json(payload);
     // Add cache header for search results (30 seconds)
     res.headers.set('Cache-Control', 'no-store');
     return res;

@@ -3,6 +3,7 @@ import { connect } from '@/dbConfig/dbConfig';
 import jwt from 'jsonwebtoken';
 import UserProfile from '@/models/userProfile';
 import type { Address, UserProfileLean } from '@/lib/types/product';
+import cache, { cacheKeys, clearKeys } from '@/lib/cache';
 
 function getCookie(req: Request, name: string): string | null {
   try {
@@ -83,6 +84,7 @@ export async function PUT(
     
     if (!payload?.uid)
       return NextResponse.json({ error: 'Please log in to continue' }, { status: 401 });
+    const cacheKey = cacheKeys.userAddresses(payload.uid);
 
     const raw: Partial<Address> = await request.json();
     const $setFields = sanitizePartialAddress(raw);
@@ -104,7 +106,12 @@ export async function PUT(
     const profile = await UserProfile.findOne({ user: payload.uid })
       .select({ addresses: 1 })
       .lean<UserProfileLean | null>();
-    return NextResponse.json({ ok: true, addresses: profile?.addresses || [] });
+    const addresses = profile?.addresses || [];
+    clearKeys([cacheKey]);
+    cache.set(cacheKey, addresses);
+    const response = NextResponse.json({ ok: true, addresses });
+    response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    return response;
   } catch (error) {
     console.error('[addresses PUT] Error:', error);
     
@@ -149,6 +156,7 @@ export async function PATCH(
     
     if (!payload?.uid)
       return NextResponse.json({ error: 'Please log in to continue' }, { status: 401 });
+    const cacheKey = cacheKeys.userAddresses(payload.uid);
 
     // Unset default on all addresses
     await UserProfile.updateOne(
@@ -164,7 +172,12 @@ export async function PATCH(
     const profile = await UserProfile.findOne({ user: payload.uid })
       .select({ addresses: 1 })
       .lean<UserProfileLean | null>();
-    return NextResponse.json({ ok: true, addresses: profile?.addresses || [] });
+    const addresses = profile?.addresses || [];
+    clearKeys([cacheKey]);
+    cache.set(cacheKey, addresses);
+    const response = NextResponse.json({ ok: true, addresses });
+    response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    return response;
   } catch (error) {
     console.error('[addresses PATCH] Error:', error);
     
@@ -209,6 +222,7 @@ export async function DELETE(
     
     if (!payload?.uid)
       return NextResponse.json({ error: 'Please log in to continue' }, { status: 401 });
+    const cacheKey = cacheKeys.userAddresses(payload.uid);
 
     await UserProfile.updateOne(
       { user: payload.uid },
@@ -217,7 +231,12 @@ export async function DELETE(
     const profile = await UserProfile.findOne({ user: payload.uid })
       .select({ addresses: 1 })
       .lean<UserProfileLean | null>();
-    return NextResponse.json({ ok: true, addresses: profile?.addresses || [] });
+    const addresses = profile?.addresses || [];
+    clearKeys([cacheKey]);
+    cache.set(cacheKey, addresses);
+    const response = NextResponse.json({ ok: true, addresses });
+    response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    return response;
   } catch (error) {
     console.error('[addresses DELETE] Error:', error);
     

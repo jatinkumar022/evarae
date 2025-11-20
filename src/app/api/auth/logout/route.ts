@@ -1,10 +1,29 @@
 import { NextResponse } from 'next/server';
+import jwt from 'jsonwebtoken';
+import { clearKeys, cacheKeys } from '@/lib/cache';
+
+const USER_JWT_SECRET = process.env.USER_JWT_SECRET as string | undefined;
 
 export async function POST(request: Request) {
   const res = NextResponse.json({ ok: true });
   
   // Get all cookies from the request
   const cookieHeader = request.headers.get('cookie') || '';
+  let userId: string | null = null;
+  if (USER_JWT_SECRET) {
+    const token = cookieHeader
+      .split(';')
+      .map(c => c.trim())
+      .find(part => part.startsWith('token='))?.split('=')[1];
+    if (token) {
+      try {
+        const payload = jwt.verify(token, USER_JWT_SECRET) as { uid?: string } | null;
+        userId = payload?.uid ?? null;
+      } catch {
+        userId = null;
+      }
+    }
+  }
   const cookies = cookieHeader.split(';').map(c => c.trim().split('=')[0]).filter(Boolean);
   
   // List of token-related cookie names (case-insensitive matching)
@@ -56,6 +75,16 @@ export async function POST(request: Request) {
       });
     });
   });
+  
+  if (userId) {
+    clearKeys([
+      cacheKeys.userProfile(userId),
+      cacheKeys.userCart(userId),
+      cacheKeys.userAddresses(userId),
+      cacheKeys.userWishlist(userId),
+      cacheKeys.userReturnRequests(userId),
+    ]);
+  }
   
   return res;
 }

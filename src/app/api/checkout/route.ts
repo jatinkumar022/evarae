@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import Cart from '@/models/cartModel';
 import UserProfile from '@/models/userProfile';
 import type { Address, CartLean } from '@/lib/types/product';
+import { cache, cacheKeys, clearKeys } from '@/lib/cache';
 
 const USER_JWT_SECRET = process.env.USER_JWT_SECRET as string;
 
@@ -49,6 +50,13 @@ export async function GET(request: Request) {
     const uid = getUid(request);
     if (!uid) return NextResponse.json({ items: [], addresses: [] });
 
+    // Check cache
+    const cacheKey = cacheKeys.checkout(uid);
+    const cached = cache.get<{ items: unknown[]; addresses: Address[] }>(cacheKey);
+    if (cached) {
+      return NextResponse.json(cached);
+    }
+
     // Optimize: Select only needed fields and use lean() for better performance
     const [cart, profile] = await Promise.all([
       Cart.findOne({ user: uid })
@@ -88,7 +96,9 @@ export async function GET(request: Request) {
       isDefaultBilling: !!a.isDefaultBilling,
     }));
 
-    return NextResponse.json({ items, addresses });
+    const response = { items, addresses };
+    cache.set(cacheKey, response);
+    return NextResponse.json(response);
   } catch (error) {
     console.error('[checkout GET] Error:', error);
     return NextResponse.json(

@@ -1,14 +1,24 @@
 import { NextResponse } from 'next/server';
 import { connect } from '@/dbConfig/dbConfig';
 import Collection from '@/models/collectionModel';
+import cache, { cacheKeys } from '@/lib/cache';
 
 type RouteContext = { params: Promise<{ slug: string }> };
 
+const CACHE_CONTROL = 'public, s-maxage=300, stale-while-revalidate=600';
+
 export async function GET(request: Request, { params }: RouteContext) {
   try {
-    await connect();
-
     const { slug } = await params;
+    const cacheKey = cacheKeys.collectionDetail(slug);
+    const cachedPayload = cache.get<Record<string, unknown>>(cacheKey);
+    if (cachedPayload) {
+      const cachedResponse = NextResponse.json(cachedPayload);
+      cachedResponse.headers.set('Cache-Control', CACHE_CONTROL);
+      return cachedResponse;
+    }
+
+    await connect();
     const isObjectId = /^[a-f0-9]{24}$/i.test(slug);
     const query = isObjectId ? { _id: slug } : { slug };
 
@@ -30,9 +40,11 @@ export async function GET(request: Request, { params }: RouteContext) {
       );
     }
 
-    const res = NextResponse.json({ collection });
-    // Add cache header for collection details (5 minutes)
-    res.headers.set('Cache-Control', 'no-store');
+    const payload = { collection };
+    cache.set(cacheKey, payload);
+
+    const res = NextResponse.json(payload);
+    res.headers.set('Cache-Control', CACHE_CONTROL);
     return res;
   } catch (error) {
     console.error('Public collection GET error:', error);

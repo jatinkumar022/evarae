@@ -4,7 +4,29 @@ import Order from '@/models/orderModel';
 import Cart from '@/models/cartModel';
 import Notification from '@/models/notificationModel';
 import mongoose from 'mongoose';
+import jwt from 'jsonwebtoken';
 import { notifyOrderPlaced } from '@/lib/notify';
+import { clearKeys, cacheKeys } from '@/lib/cache';
+
+const USER_JWT_SECRET = process.env.USER_JWT_SECRET as string;
+
+function getUid(request: Request): string | null {
+  try {
+    const cookieHeader = request.headers.get('cookie') || '';
+    const token = cookieHeader
+      .split(';')
+      .map(p => p.trim())
+      .find(p => p.startsWith('token='))
+      ?.split('=')[1];
+    if (!token || !USER_JWT_SECRET) return null;
+    const payload = jwt.verify(token, USER_JWT_SECRET) as {
+      uid?: string;
+    } | null;
+    return payload?.uid || null;
+  } catch {
+    return null;
+  }
+}
 
 interface LeanOrder {
   _id: mongoose.Types.ObjectId;
@@ -50,6 +72,16 @@ export async function POST(request: Request) {
   try {
     console.log('[payment-success] request received');
     await connect();
+    
+    // Security: Verify user authentication
+    const uid = getUid(request);
+    if (!uid) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
     const { orderId, providerOrderId } = await request.json();
     if (!orderId) {
       return NextResponse.json(
@@ -58,8 +90,14 @@ export async function POST(request: Request) {
       );
     }
 
-    const order = (await Order.findByIdAndUpdate(
-      orderId,
+    // Security: Verify user owns the order
+    // Only update if order is still pending (idempotency check)
+    const order = (await Order.findOneAndUpdate(
+      {
+        _id: orderId,
+        user: uid, // Critical: Ensure user owns the order
+        paymentStatus: { $in: ['pending'] }, // Only update if still pending
+      },
       {
         paymentStatus: 'paid',
         orderStatus: 'processing',
@@ -68,13 +106,28 @@ export async function POST(request: Request) {
       },
       { new: true }
     )
+      .select('_id user orderNumber items subtotalAmount taxAmount shippingAmount discountAmount totalAmount shippingAddress orderStatus createdAt paymentStatus')
       .populate('user', 'name email')
-      .lean()) as LeanOrder | null;
+      .lean()) as LeanOrder & { paymentStatus?: string } | null;
 
     if (!order) {
-      console.warn('[payment-success] order not found', orderId);
+      // Check if order exists but was already processed
+      const existingOrder = await Order.findOne({
+        _id: orderId,
+        user: uid,
+      })
+        .select('paymentStatus orderStatus')
+        .lean<{ paymentStatus?: string; orderStatus?: string } | null>();
+      
+      if (existingOrder && (existingOrder.paymentStatus === 'completed' || existingOrder.paymentStatus === 'paid')) {
+        // Order already processed, return success (idempotent)
+        console.log('[payment-success] Order already processed', { orderId, uid, paymentStatus: existingOrder.paymentStatus });
+        return NextResponse.json({ ok: true, alreadyProcessed: true });
+      }
+      
+      console.warn('[payment-success] order not found or access denied', { orderId, uid });
       return NextResponse.json(
-        { error: 'Order not found. Please check your order number' },
+        { error: 'Order not found or access denied' },
         { status: 404 }
       );
     }
@@ -109,6 +162,24 @@ export async function POST(request: Request) {
       userId: normalizedUserId || order.user,
       cartCleared: true,
     });
+
+    // Invalidate user-specific caches after payment success
+    const userIdStr = typeof normalizedUserId === 'string' 
+      ? normalizedUserId 
+      : normalizedUserId instanceof mongoose.Types.ObjectId 
+        ? normalizedUserId.toString() 
+        : typeof order.user === 'string' 
+          ? order.user 
+          : order.user instanceof mongoose.Types.ObjectId 
+            ? order.user.toString() 
+            : undefined;
+    
+    if (userIdStr) {
+      clearKeys([
+        cacheKeys.checkout(userIdStr),
+        cacheKeys.userCart(userIdStr),
+      ]);
+    }
 
     if (customerEmail && customerName) {
       const orderDate = new Date(order.createdAt || new Date()).toLocaleDateString('en-IN', {

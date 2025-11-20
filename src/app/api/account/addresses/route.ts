@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import UserProfile from '@/models/userProfile';
 import type { Address, UserProfileLean } from '@/lib/types/product';
 import mongoose from 'mongoose';
+import cache, { cacheKeys, clearKeys } from '@/lib/cache';
 
 function getCookie(req: Request, name: string): string | null {
   try {
@@ -146,10 +147,22 @@ export async function GET(request: Request) {
     }
     if (!payload?.uid) return NextResponse.json({ addresses: [] as Address[] });
 
+    const cacheKey = cacheKeys.userAddresses(payload.uid);
+    const cached = cache.get<Address[]>(cacheKey);
+    if (cached) {
+      const cachedResponse = NextResponse.json({ addresses: cached });
+      cachedResponse.headers.set('Cache-Control', 'private, max-age=120, stale-while-revalidate=120');
+      return cachedResponse;
+    }
+
     const profile = await UserProfile.findOne({ user: payload.uid })
       .select({ addresses: 1 })
       .lean<UserProfileLean | null>();
-    return NextResponse.json({ addresses: profile?.addresses || [] });
+    const addresses = profile?.addresses || [];
+    cache.set(cacheKey, addresses);
+    const response = NextResponse.json({ addresses });
+    response.headers.set('Cache-Control', 'private, max-age=120, stale-while-revalidate=120');
+    return response;
   } catch {
     return NextResponse.json({ addresses: [] as Address[] });
   }
@@ -175,6 +188,8 @@ export async function POST(request: Request) {
     }
     if (!payload?.uid)
       return NextResponse.json({ error: 'Please log in to continue' }, { status: 401 });
+
+    const cacheKey = cacheKeys.userAddresses(payload.uid);
 
     // Validate uid for ObjectId to avoid cast errors during upsert
     if (!mongoose.isValidObjectId(payload.uid)) {
@@ -209,7 +224,12 @@ export async function POST(request: Request) {
       { new: true, upsert: true }
     ).lean<UserProfileLean>();
 
-    return NextResponse.json({ ok: true, addresses: profile?.addresses || [] });
+    const addresses = profile?.addresses || [];
+    clearKeys([cacheKey]);
+    cache.set(cacheKey, addresses);
+    const response = NextResponse.json({ ok: true, addresses });
+    response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    return response;
   } catch (err: unknown) {
     // Log server-side for diagnosis
     try {

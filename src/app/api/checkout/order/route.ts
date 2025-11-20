@@ -10,6 +10,7 @@ import type {
   OrderItemLean,
   UserProfileLean,
 } from '@/lib/types/product';
+import { clearKeys, cacheKeys } from '@/lib/cache';
 
 const USER_JWT_SECRET = process.env.USER_JWT_SECRET as string;
 
@@ -94,6 +95,12 @@ export async function POST(request: Request) {
       );
     }
 
+    // Calculate original subtotal BEFORE mapping (using original prices)
+    const originalSubtotal = cart.items.reduce((sum, ci) => {
+      const originalPrice = ci.product?.price ?? 0;
+      return sum + originalPrice * (ci.quantity || 1);
+    }, 0);
+
     const items: OrderItemLean[] = cart.items.map(ci => ({
       product: ci.product?._id || '',
       name: ci.product?.name || '',
@@ -106,10 +113,6 @@ export async function POST(request: Request) {
     }));
 
     const subtotal = items.reduce((sum, it) => sum + it.price * it.quantity, 0);
-    const originalSubtotal = items.reduce(
-      (sum, it) => sum + ((it as unknown as { price?: number }).price ?? 0),
-      0
-    );
     const discount = Math.max(0, originalSubtotal - subtotal);
 
     const shipping = 0;
@@ -151,35 +154,76 @@ export async function POST(request: Request) {
       }
     }
 
-    const order = await Order.create({
-      user: uid,
-      orderNumber,
-      items,
-      subtotalAmount: subtotal,
-      taxAmount: gst,
-      shippingAmount: shipping,
-      discountAmount: discount,
-      paymentChargesAmount: paymentCharges,
-      totalAmount: total,
-      paymentMethod: 'razorpay',
-      paymentStatus: 'pending',
-      orderStatus: 'pending',
-      shippingAddress: {
-        fullName: address.fullName,
-        phone: address.phone,
-        line1: address.line1,
-        line2: address.line2,
-        city: address.city,
-        state: address.state,
-        postalCode: address.postalCode,
-        country: address.country,
-      },
-      paymentProvider: 'razorpay',
-      paymentProviderOrderId: null,
-      couponCode: couponCode || null,
-    });
+    // Create order with retry logic for order number uniqueness
+    let order;
+    let attempts = 0;
+    const maxAttempts = 3;
+    
+    while (attempts < maxAttempts) {
+      try {
+        order = await Order.create({
+          user: uid,
+          orderNumber,
+          items,
+          subtotalAmount: subtotal,
+          taxAmount: gst,
+          shippingAmount: shipping,
+          discountAmount: discount,
+          paymentChargesAmount: paymentCharges,
+          totalAmount: total,
+          paymentMethod: 'razorpay',
+          paymentStatus: 'pending',
+          orderStatus: 'pending',
+          shippingAddress: {
+            fullName: address.fullName,
+            phone: address.phone,
+            line1: address.line1,
+            line2: address.line2,
+            city: address.city,
+            state: address.state,
+            postalCode: address.postalCode,
+            country: address.country,
+          },
+          paymentProvider: 'razorpay',
+          paymentProviderOrderId: null,
+          couponCode: couponCode || null,
+        });
+        break; // Success, exit loop
+      } catch (createError: unknown) {
+        const err = createError as { code?: number; keyPattern?: { orderNumber?: number } };
+        // Check if error is due to duplicate order number
+        if (err.code === 11000 && err.keyPattern?.orderNumber) {
+          attempts++;
+          if (attempts >= maxAttempts) {
+            // Generate a guaranteed unique order number using timestamp + random
+            const now = new Date();
+            const ymd = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
+            orderNumber = `ORD-${ymd}-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+          } else {
+            // Retry with a new order number
+            const now = new Date();
+            const ymd = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
+            orderNumber = `ORD-${ymd}-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+          }
+        } else {
+          // Re-throw if it's not a duplicate key error
+          throw createError;
+        }
+      }
+    }
+    
+    if (!order) {
+      throw new Error('Failed to create order after retries');
+    }
 
     const paymentLink = `/checkout/payment?orderId=${order._id}`;
+
+    // Invalidate user-specific caches after order creation
+    clearKeys([
+      cacheKeys.checkout(uid),
+      cacheKeys.userCart(uid),
+      cacheKeys.userAddresses(uid),
+    ]);
 
     return NextResponse.json({
       orderId: String(order._id),

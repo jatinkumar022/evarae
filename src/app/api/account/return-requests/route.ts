@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import ReturnRequest from '@/models/returnRequestModel';
 import Order from '@/models/orderModel';
 import mongoose from 'mongoose';
+import cache, { cacheKeys, clearKeys } from '@/lib/cache';
 
 const USER_JWT_SECRET = process.env.USER_JWT_SECRET as string;
 
@@ -53,6 +54,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ returnRequests: [] }, { status: 200 });
     }
 
+    const cacheKey = cacheKeys.userReturnRequests(payload.uid);
     const { searchParams } = new URL(request.url);
     const orderId = searchParams.get('orderId');
     const sku = searchParams.get('sku');
@@ -70,12 +72,22 @@ export async function GET(request: Request) {
       return NextResponse.json({ returnRequest });
     }
 
+    const cached = cache.get<{ returnRequests: unknown[] }>(cacheKey);
+    if (cached) {
+      const cachedResponse = NextResponse.json(cached);
+      cachedResponse.headers.set('Cache-Control', 'private, max-age=60, stale-while-revalidate=60');
+      return cachedResponse;
+    }
+
     const returnRequests = await ReturnRequest.find({ user: payload.uid })
       .populate('order', 'orderNumber totalAmount paidAt')
       .sort({ createdAt: -1 })
       .lean();
-
-    return NextResponse.json({ returnRequests });
+    const responsePayload = { returnRequests };
+    cache.set(cacheKey, responsePayload);
+    const response = NextResponse.json(responsePayload);
+    response.headers.set('Cache-Control', 'private, max-age=60, stale-while-revalidate=60');
+    return response;
   } catch (error) {
     console.error('[return-requests GET] error:', error);
     return NextResponse.json(
@@ -217,7 +229,9 @@ export async function POST(request: Request) {
       order: orderId,
       'orderItem.sku': orderItem.sku,
       status: { $in: ['pending', 'approved', 'processing'] },
-    });
+    })
+      .select('_id')
+      .lean();
 
     if (existingRequest) {
       return NextResponse.json(
@@ -246,6 +260,7 @@ export async function POST(request: Request) {
     });
 
     await returnRequest.save();
+    clearKeys([cacheKeys.userReturnRequests(payload.uid)]);
 
     return NextResponse.json({
       success: true,

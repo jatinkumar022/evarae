@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { connect } from '@/dbConfig/dbConfig';
 import Product from '@/models/productModel';
+import cache, { cacheKeys } from '@/lib/cache';
 
 export async function GET(request: Request) {
   try {
@@ -29,6 +30,16 @@ export async function GET(request: Request) {
     const sort: Record<string, 1 | -1> = {};
     sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
 
+    const cacheKey = cacheKeys.productList(
+      `list:${page}:${limit}:${search}:${category}:${sortBy}:${sortOrder}`
+    );
+    const cachedPayload = cache.get<unknown>(cacheKey);
+    if (cachedPayload) {
+      const cachedResponse = NextResponse.json(cachedPayload);
+      cachedResponse.headers.set('Cache-Control', 'no-store');
+      return cachedResponse;
+    }
+
     // Optimize: Run product query and count in parallel
     const [products, total] = await Promise.all([
       Product.find(filter)
@@ -43,7 +54,7 @@ export async function GET(request: Request) {
 
     const totalPages = Math.ceil(total / limit);
 
-    const res = NextResponse.json({
+    const payload = {
       products,
       pagination: {
         page,
@@ -53,7 +64,11 @@ export async function GET(request: Request) {
         hasNext: page < totalPages,
         hasPrev: page > 1,
       },
-    });
+    };
+
+    cache.set(cacheKey, payload);
+
+    const res = NextResponse.json(payload);
     // Add cache header for product lists (1 minute)
     res.headers.set('Cache-Control', 'no-store');
     return res;

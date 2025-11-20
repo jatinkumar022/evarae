@@ -1,10 +1,19 @@
 import { NextResponse } from 'next/server';
 import { connect } from '@/dbConfig/dbConfig';
 import Product from '@/models/productModel';
+import cache, { cacheKeys } from '@/lib/cache';
 
 export async function GET() {
   try {
     await connect();
+
+    const cacheKey = cacheKeys.bestSellers;
+    const cachedPayload = cache.get<unknown>(cacheKey);
+    if (cachedPayload) {
+      const cachedResponse = NextResponse.json(cachedPayload);
+      cachedResponse.headers.set('Cache-Control', 'no-store');
+      return cachedResponse;
+    }
 
     // Fetch 10 random active products
     const products = await Product.aggregate([
@@ -31,7 +40,10 @@ export async function GET() {
       select: 'name slug',
     });
 
-    const res = NextResponse.json({ products: populatedProducts });
+    const payload = { products: populatedProducts };
+    cache.set(cacheKey, payload);
+
+    const res = NextResponse.json(payload);
     // Add cache header for best sellers (2 minutes)
     res.headers.set('Cache-Control', 'no-store');
     return res;

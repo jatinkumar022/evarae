@@ -6,6 +6,7 @@ import Category from '@/models/categoryModel';
 import Product from '@/models/productModel';
 import Order from '@/models/orderModel';
 import mongoose from 'mongoose';
+import cache, { cacheKeys } from '@/lib/cache';
 
 type LeanCollection = {
   _id: mongoose.Types.ObjectId | string;
@@ -19,21 +20,37 @@ type RecentOrder = {
   items: Array<{ product?: mongoose.Types.ObjectId | string }>;
 };
 
+const CACHE_CONTROL = 'public, s-maxage=120, stale-while-revalidate=600';
+
 export async function GET() {
   try {
+    const cachedPayload = cache.get<Record<string, unknown>>(cacheKeys.homepage);
+    if (cachedPayload) {
+      const cachedResponse = NextResponse.json(cachedPayload);
+      cachedResponse.headers.set('Cache-Control', CACHE_CONTROL);
+      return cachedResponse;
+    }
+
     await connect();
 
     // Get homepage configuration
     const homepage = await Homepage.getHomepage();
+    const daysBack = homepage.trendingConfig?.daysBack || 30;
+    const dateThreshold = new Date();
+    dateThreshold.setDate(dateThreshold.getDate() - daysBack);
 
-    // Optimize: Fetch independent data in parallel
-    const [categories, bestsellersAgg] = await Promise.all([
-      // Fetch categories (for Explore by Category section)
+    const [
+      categories,
+      bestsellersAgg,
+      signatureCollections,
+      worldOfCaelviCollections,
+      storyCollections,
+      recentOrders,
+    ] = await Promise.all([
       Category.find({ isActive: true })
         .select('name slug image description banner mobileBanner')
         .sort({ sortOrder: 1, name: 1 })
         .lean(),
-      // Fetch bestsellers (for Our Bestsellers section)
       Product.aggregate([
         { $match: { status: 'active' } },
         { $sample: { size: 10 } },
@@ -50,6 +67,30 @@ export async function GET() {
           },
         },
       ]),
+      Collection.find<LeanCollection>({
+        _id: { $in: homepage.signatureCollections || [] },
+        isActive: true,
+      })
+        .select('name slug image description')
+        .lean(),
+      Collection.find<LeanCollection>({
+        _id: { $in: homepage.worldOfCaelviCollections || [] },
+        isActive: true,
+      })
+        .select('name slug image description')
+        .lean(),
+      Collection.find<LeanCollection>({
+        _id: { $in: homepage.storyCollections || [] },
+        isActive: true,
+      })
+        .select('name slug image description')
+        .lean(),
+      Order.find({
+        createdAt: { $gte: dateThreshold },
+        orderStatus: { $ne: 'cancelled' },
+      })
+        .select('items')
+        .lean<RecentOrder[]>(),
     ]);
 
     // Populate categories for bestsellers
@@ -58,51 +99,12 @@ export async function GET() {
       select: 'name slug',
     });
 
-    // Optimize: Fetch collections in parallel
-    const [
-      signatureCollections,
-      worldOfCaelviCollections,
-      storyCollections,
-    ] = await Promise.all([
-      // Fetch Signature Collections
-      Collection.find<LeanCollection>({
-        _id: { $in: homepage.signatureCollections || [] },
-        isActive: true,
-      })
-        .select('name slug image description')
-        .lean(),
-      // Fetch World of Caelvi Collections
-      Collection.find<LeanCollection>({
-        _id: { $in: homepage.worldOfCaelviCollections || [] },
-        isActive: true,
-      })
-        .select('name slug image description')
-        .lean(),
-      // Fetch Story Collections (for mobile carousel)
-      Collection.find<LeanCollection>({
-        _id: { $in: homepage.storyCollections || [] },
-        isActive: true,
-      })
-        .select('name slug image description')
-        .lean(),
-    ]);
-
     // Calculate Currently Trending Collections based on recent sales
-    const daysBack = homepage.trendingConfig?.daysBack || 30;
-    const dateThreshold = new Date();
-    dateThreshold.setDate(dateThreshold.getDate() - daysBack);
-
-    // Get collections with products sold in the last N days
-    const recentOrders = (await Order.find<RecentOrder>({
-      createdAt: { $gte: dateThreshold },
-      orderStatus: { $ne: 'cancelled' },
-    })
-      .select('items')
-      .lean()) as unknown as RecentOrder[];
+    const recentOrdersList = recentOrders ?? [];
 
     // Extract product IDs from recent orders
     const soldProductIds = new Set<string>();
-    recentOrders.forEach(order => {
+    recentOrdersList.forEach(order => {
       order.items.forEach(item => {
         if (item.product) {
           soldProductIds.add(item.product.toString());
@@ -145,7 +147,7 @@ export async function GET() {
     // Limit to 3 collections
     trendingCollections = trendingCollections.slice(0, 3);
 
-    const res = NextResponse.json({
+    const payload = {
       hero: {
         images: homepage.heroImages || [],
       },
@@ -168,9 +170,12 @@ export async function GET() {
       },
       worldOfCaelvi: worldOfCaelviCollections || [],
       storyCollections: storyCollections || [],
-    });
-    // Add cache header for homepage (2 minutes)
-    res.headers.set('Cache-Control', 'no-store');
+    };
+
+    cache.set(cacheKeys.homepage, payload);
+
+    const res = NextResponse.json(payload);
+    res.headers.set('Cache-Control', CACHE_CONTROL);
     return res;
   } catch (error) {
     console.error('Homepage GET error:', error);

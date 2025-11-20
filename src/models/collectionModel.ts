@@ -10,7 +10,6 @@ const collectionSchema = new mongoose.Schema(
     slug: {
       type: String,
       required: [true, 'Collection slug is required'],
-      unique: true,
       lowercase: true,
       trim: true,
     },
@@ -40,6 +39,9 @@ const collectionSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+collectionSchema.index({ slug: 1 }, { unique: true });
+collectionSchema.index({ isActive: 1, sortOrder: 1 });
 
 const Collection =
   mongoose.models.Collection || mongoose.model('Collection', collectionSchema);

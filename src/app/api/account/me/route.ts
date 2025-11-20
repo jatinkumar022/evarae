@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import { connect } from '@/dbConfig/dbConfig';
 import User from '@/models/userModel';
 import UserProfile from '@/models/userProfile';
+import cache, { cacheKeys } from '@/lib/cache';
 
 const USER_JWT_SECRET = process.env.USER_JWT_SECRET as string;
 
@@ -42,6 +43,23 @@ export async function GET(request: Request) {
       return NextResponse.json({ user: null });
     }
 
+    const cacheKey = cacheKeys.userProfile(payload.uid);
+    const cached = cache.get<{ user: {
+      id: string;
+      name: string;
+      email: string;
+      hasPassword: boolean;
+      profile: unknown;
+    } }>(cacheKey);
+    if (cached) {
+      const cachedResponse = NextResponse.json(cached);
+      cachedResponse.headers.set(
+        'Cache-Control',
+        'private, max-age=120, stale-while-revalidate=60'
+      );
+      return cachedResponse;
+    }
+
     // Optimize: Fetch user and profile in parallel for better performance
     const [userDoc, profile] = await Promise.all([
       User.findById(payload.uid)
@@ -57,15 +75,17 @@ export async function GET(request: Request) {
       return NextResponse.json({ user: null });
     }
 
-    const response = NextResponse.json({
+    const summary = {
       user: {
         id: payload.uid,
         name: userDoc.name,
         email: userDoc.email,
-        hasPassword: !!userDoc.passwordHash, // Indicate if user has password (not Google sign-in)
+        hasPassword: !!userDoc.passwordHash,
         profile: profile || null,
       },
-    });
+    };
+    cache.set(cacheKey, summary);
+    const response = NextResponse.json(summary);
 
     // Add cache headers for client-side caching (2 minutes)
     response.headers.set('Cache-Control', 'private, max-age=120, stale-while-revalidate=60');

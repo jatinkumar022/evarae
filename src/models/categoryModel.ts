@@ -10,7 +10,6 @@ const categorySchema = new mongoose.Schema(
     slug: {
       type: String,
       required: [true, 'Category slug is required'],
-      unique: true,
       lowercase: true,
       trim: true,
     },
@@ -41,6 +40,10 @@ const categorySchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+categorySchema.index({ slug: 1 }, { unique: true });
+categorySchema.index({ isActive: 1, sortOrder: 1 });
+categorySchema.index({ isActive: 1, name: 1 });
 
 // Ensure latest schema is used in dev/hot-reload environments
 if (mongoose.models.Category) {

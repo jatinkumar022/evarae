@@ -4,6 +4,7 @@ import { connect } from '@/dbConfig/dbConfig';
 import UserProfile from '@/models/userProfile';
 import Product from '@/models/productModel';
 import mongoose from 'mongoose';
+import cache, { cacheKeys, clearKeys } from '@/lib/cache';
 
 const USER_JWT_SECRET = process.env.USER_JWT_SECRET as string;
 
@@ -108,6 +109,14 @@ export async function GET(request: Request) {
       return NextResponse.json({ products: [] });
     }
 
+    const cacheKey = cacheKeys.userWishlist(uid);
+    const cached = cache.get<{ products: WishlistResponseProduct[] }>(cacheKey);
+    if (cached) {
+      const cachedResponse = NextResponse.json(cached);
+      cachedResponse.headers.set('Cache-Control', 'private, max-age=120, stale-while-revalidate=120');
+      return cachedResponse;
+    }
+
     // Get user profile with wishlist
     const profile = (await UserProfile.findOne({ user: uid })
       .populate({
@@ -123,8 +132,11 @@ export async function GET(request: Request) {
       .lean()) as LeanProfileWithWishlist | null;
 
     const products = serializeWishlistProducts(profile?.wishlist);
-
-    return NextResponse.json({ products });
+    const payload = { products };
+    cache.set(cacheKey, payload);
+    const response = NextResponse.json(payload);
+    response.headers.set('Cache-Control', 'private, max-age=120, stale-while-revalidate=120');
+    return response;
   } catch (error) {
     console.error('Wishlist GET error:', error);
     return NextResponse.json(
@@ -143,6 +155,7 @@ export async function POST(request: Request) {
     if (!uid) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    const cacheKey = cacheKeys.userWishlist(uid);
 
     const body = await request.json();
     const productKey = body.productId || body.productSlug || body.sku;
@@ -191,8 +204,12 @@ export async function POST(request: Request) {
       .lean()) as LeanProfileWithWishlist | null;
 
     const products = serializeWishlistProducts(updatedProfile?.wishlist);
-
-    return NextResponse.json({ products });
+    const payload = { products };
+    clearKeys([cacheKey]);
+    cache.set(cacheKey, payload);
+    const response = NextResponse.json(payload);
+    response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    return response;
   } catch (error) {
     console.error('Wishlist POST error:', error);
     return NextResponse.json(
@@ -211,6 +228,7 @@ export async function DELETE(request: Request) {
     if (!uid) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    const cacheKey = cacheKeys.userWishlist(uid);
 
     const body = await request.json();
     const productKey = body.productId || body.productSlug || body.sku;
@@ -252,8 +270,12 @@ export async function DELETE(request: Request) {
       .lean()) as LeanProfileWithWishlist | null;
 
     const products = serializeWishlistProducts(profile?.wishlist);
-
-    return NextResponse.json({ products });
+    const payload = { products };
+    clearKeys([cacheKey]);
+    cache.set(cacheKey, payload);
+    const response = NextResponse.json(payload);
+    response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    return response;
   } catch (error) {
     console.error('Wishlist DELETE error:', error);
     return NextResponse.json(

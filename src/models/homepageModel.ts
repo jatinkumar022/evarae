@@ -118,9 +118,10 @@ homepageSchema.statics.getHomepage = async function () {
   return homepage;
 };
 
+homepageSchema.index({ updatedAt: -1 });
+
 const HomepageModelInstance =
   (mongoose.models.Homepage as HomepageModel | undefined) ||
   mongoose.model<HomepageDocument, HomepageModel>('Homepage', homepageSchema);
 
 export default HomepageModelInstance;
-

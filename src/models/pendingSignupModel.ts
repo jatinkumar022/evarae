@@ -5,7 +5,6 @@ const pendingSignupSchema = new mongoose.Schema(
     email: {
       type: String,
       required: true,
-      unique: true,
       lowercase: true,
       trim: true,
     },
@@ -16,6 +15,9 @@ const pendingSignupSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+pendingSignupSchema.index({ email: 1 }, { unique: true });
+pendingSignupSchema.index({ createdAt: -1 });
 
 const PendingSignup =
   mongoose.models.PendingSignup ||

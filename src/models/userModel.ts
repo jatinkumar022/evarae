@@ -6,7 +6,6 @@ const userSchema = new mongoose.Schema(
     email: {
       type: String,
       required: [true, 'Email is required'],
-      unique: true,
       trim: true,
       lowercase: true,
       validate: {
@@ -42,6 +41,9 @@ const userSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+userSchema.index({ email: 1 }, { unique: true });
+userSchema.index({ role: 1, createdAt: -1 });
 
 const User = mongoose.models.User || mongoose.model('User', userSchema);
 export default User;

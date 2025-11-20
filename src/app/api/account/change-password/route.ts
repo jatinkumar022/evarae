@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { connect } from '@/dbConfig/dbConfig';
 import User from '@/models/userModel';
+import { clearKeys, cacheKeys } from '@/lib/cache';
 
 const USER_JWT_SECRET = process.env.USER_JWT_SECRET as string;
 
@@ -74,7 +75,9 @@ export async function POST(request: Request) {
       );
     }
 
-    const user = await User.findById(payload.uid);
+    const user = await User.findById(payload.uid).select(
+      '_id passwordHash loginOtpHash loginOtpExpiry loginOtpAttempts'
+    );
     if (!user) {
       console.error('[account/change-password] User not found:', payload.uid);
       return NextResponse.json(
@@ -184,6 +187,7 @@ export async function POST(request: Request) {
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     user.passwordHash = hashedPassword;
     await user.save();
+    clearKeys([cacheKeys.userProfile(payload.uid)]);
 
     return NextResponse.json({ ok: true, message: 'Password changed successfully' });
   } catch (error) {

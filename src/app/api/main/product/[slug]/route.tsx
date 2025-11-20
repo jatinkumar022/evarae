@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { connect } from '@/dbConfig/dbConfig';
 import Product from '@/models/productModel';
+import cache, { cacheKeys } from '@/lib/cache';
 
 type RouteContext = { params: Promise<{ slug: string }> };
 
@@ -22,11 +23,20 @@ type PublicProduct = {
   categories?: Array<{ name: string; slug: string }>;
 };
 
+const CACHE_CONTROL = 'public, s-maxage=300, stale-while-revalidate=900';
+
 export async function GET(request: Request, { params }: RouteContext) {
   try {
-    await connect();
-
     const { slug } = await params;
+    const cacheKey = cacheKeys.productDetail(slug);
+    const cachedPayload = cache.get<{ product: PublicProduct }>(cacheKey);
+    if (cachedPayload) {
+      const cachedResponse = NextResponse.json(cachedPayload);
+      cachedResponse.headers.set('Cache-Control', CACHE_CONTROL);
+      return cachedResponse;
+    }
+
+    await connect();
     const isObjectId = /^[a-f0-9]{24}$/i.test(slug);
 
     // Optimize: Use single $or query instead of sequential queries
@@ -52,9 +62,10 @@ export async function GET(request: Request, { params }: RouteContext) {
       return NextResponse.json({ error: 'Product not found' }, { status: 404 });
     }
 
-    const res = NextResponse.json({ product });
-    // Add cache header for product details (5 minutes)
-    res.headers.set('Cache-Control', 'no-store');
+    const payload = { product };
+    cache.set(cacheKey, payload);
+    const res = NextResponse.json(payload);
+    res.headers.set('Cache-Control', CACHE_CONTROL);
     return res;
   } catch (error) {
     console.error('Public product GET error:', error);

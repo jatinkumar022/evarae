@@ -65,5 +65,6 @@ settingsSchema.statics.getSettings = async function () {
 const Settings: ISettingsModel =
   (mongoose.models.Settings as ISettingsModel) || mongoose.model<ISettings, ISettingsModel>('Settings', settingsSchema);
 
-export default Settings;
+settingsSchema.index({ updatedAt: -1 });
 
+export default Settings;

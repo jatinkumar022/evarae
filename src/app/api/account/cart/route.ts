@@ -4,6 +4,7 @@ import { connect } from '@/dbConfig/dbConfig';
 import Product from '@/models/productModel';
 import Cart from '@/models/cartModel';
 import mongoose from 'mongoose';
+import cache, { cacheKeys, clearKeys } from '@/lib/cache';
 
 const USER_JWT_SECRET = process.env.USER_JWT_SECRET as string;
 
@@ -97,6 +98,17 @@ export async function GET(request: Request) {
       return response;
     }
 
+    const cacheKey = cacheKeys.userCart(uid);
+    const cached = cache.get<{ items: CartItemDoc[]; savedItems: CartDoc['savedItems'] }>(cacheKey);
+    if (cached) {
+      const cachedResponse = NextResponse.json(cached);
+      cachedResponse.headers.set(
+        'Cache-Control',
+        'private, max-age=60, stale-while-revalidate=30'
+      );
+      return cachedResponse;
+    }
+
     const cart = await Cart.findOne({ user: uid })
       .populate({
         path: 'items.product',
@@ -108,10 +120,12 @@ export async function GET(request: Request) {
       })
       .lean<CartDoc | null>();
 
-    const response = NextResponse.json({
+    const payload = {
       items: cart?.items ?? [],
       savedItems: cart?.savedItems ?? [],
-    });
+    };
+    cache.set(cacheKey, payload);
+    const response = NextResponse.json(payload);
 
     // Add cache headers (1 minute for cart data)
     response.headers.set('Cache-Control', 'private, max-age=60, stale-while-revalidate=30');
@@ -136,6 +150,7 @@ export async function POST(request: Request) {
         { status: 401 }
       );
     }
+    const cacheKey = cacheKeys.userCart(uid);
 
     const url = new URL(request.url);
     const action = url.searchParams.get('action');
@@ -187,7 +202,7 @@ export async function POST(request: Request) {
       }
     }
 
-    // Optimize: Select only needed product fields
+    clearKeys([cacheKey]);
     const cart = await Cart.findOne({ user: uid })
       .populate({
         path: 'items.product',
@@ -199,10 +214,12 @@ export async function POST(request: Request) {
       })
       .lean<CartDoc | null>();
     
-    const response = NextResponse.json({
+    const payload = {
       items: cart?.items ?? [],
       savedItems: cart?.savedItems ?? [],
-    });
+    };
+    cache.set(cacheKey, payload);
+    const response = NextResponse.json(payload);
     
     // No cache for POST requests (data just changed)
     response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
@@ -246,6 +263,7 @@ export async function PATCH(request: Request) {
         { status: 401 }
       );
     }
+    const cacheKey = cacheKeys.userCart(uid);
 
     const body = (await request.json()) as unknown;
     const productKey = extractProductKey(body);
@@ -281,7 +299,8 @@ export async function PATCH(request: Request) {
       );
     }
 
-    // Optimize: Select only needed product fields
+    clearKeys([cacheKey]);
+
     const cart = await Cart.findOne({ user: uid })
       .populate({
         path: 'items.product',
@@ -293,10 +312,12 @@ export async function PATCH(request: Request) {
       })
       .lean<CartDoc | null>();
     
-    const response = NextResponse.json({
+    const payload = {
       items: cart?.items ?? [],
       savedItems: cart?.savedItems ?? [],
-    });
+    };
+    cache.set(cacheKey, payload);
+    const response = NextResponse.json(payload);
     
     // No cache for POST requests (data just changed)
     response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
@@ -339,6 +360,7 @@ export async function DELETE(request: Request) {
         { status: 401 }
       );
     }
+    const cacheKey = cacheKeys.userCart(uid);
 
     const url = new URL(request.url);
     const action = url.searchParams.get('action');
@@ -368,7 +390,7 @@ export async function DELETE(request: Request) {
       );
     }
 
-    // Optimize: Select only needed product fields
+    clearKeys([cacheKey]);
     const cart = await Cart.findOne({ user: uid })
       .populate({
         path: 'items.product',
@@ -380,10 +402,12 @@ export async function DELETE(request: Request) {
       })
       .lean<CartDoc | null>();
     
-    const response = NextResponse.json({
+    const payload = {
       items: cart?.items ?? [],
       savedItems: cart?.savedItems ?? [],
-    });
+    };
+    cache.set(cacheKey, payload);
+    const response = NextResponse.json(payload);
     
     // No cache for POST requests (data just changed)
     response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');

@@ -562,7 +562,14 @@ export default function OrderDetailsPage() {
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-text-primary/70">Shipping:</span>
-                      <span className="font-medium">{formatCurrency(order.shippingAmount)}</span>
+                      {order.shippingAmount === 0 ? (
+                        <span className="flex items-center gap-2">
+                          <span className="text-gray-500 line-through">₹109</span>
+                          <span className="text-green-600 font-semibold">FREE</span>
+                        </span>
+                      ) : (
+                        <span className="font-medium">{formatCurrency(order.shippingAmount)}</span>
+                      )}
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-text-primary/70">Tax:</span>

@@ -3,14 +3,35 @@ import { connect } from '@/dbConfig/dbConfig';
 import Category from '@/models/categoryModel';
 import Product from '@/models/productModel';
 import mongoose from 'mongoose';
+import cache, { cacheKeys } from '@/lib/cache';
 
 type RouteContext = { params: Promise<{ slug: string }> };
 
+const META_CACHE_CONTROL =
+  'public, s-maxage=600, stale-while-revalidate=900';
+const PRODUCTS_CACHE_CONTROL =
+  'public, s-maxage=180, stale-while-revalidate=600';
+
 export async function GET(request: Request, { params }: RouteContext) {
   try {
-    await connect();
-
     const { slug } = await params;
+    const { searchParams } = new URL(request.url);
+    const includeProducts = searchParams.get('includeProducts') === 'true';
+    const cacheKey = includeProducts
+      ? cacheKeys.categoryWithProducts(slug)
+      : cacheKeys.categoryMeta(slug);
+    const cacheControl = includeProducts
+      ? PRODUCTS_CACHE_CONTROL
+      : META_CACHE_CONTROL;
+
+    const cachedPayload = cache.get<Record<string, unknown>>(cacheKey);
+    if (cachedPayload) {
+      const cachedResponse = NextResponse.json(cachedPayload);
+      cachedResponse.headers.set('Cache-Control', cacheControl);
+      return cachedResponse;
+    }
+
+    await connect();
     const isObjectId = /^[a-f0-9]{24}$/i.test(slug);
     const query = isObjectId ? { _id: slug } : { slug };
 
@@ -25,13 +46,11 @@ export async function GET(request: Request, { params }: RouteContext) {
       );
     }
 
-    const { searchParams } = new URL(request.url);
-    const includeProducts = searchParams.get('includeProducts') === 'true';
-
     if (!includeProducts) {
-      const res = NextResponse.json({ category });
-      // Add cache header for category details (5 minutes)
-    res.headers.set('Cache-Control', 'no-store');
+      const payload = { category };
+      cache.set(cacheKey, payload);
+      const res = NextResponse.json(payload);
+      res.headers.set('Cache-Control', cacheControl);
       return res;
     }
 
@@ -46,9 +65,10 @@ export async function GET(request: Request, { params }: RouteContext) {
       .limit(24)
       .lean();
 
-    const res = NextResponse.json({ category, products });
-    // Add cache header for category with products (2 minutes)
-      res.headers.set('Cache-Control', 'no-store');
+    const payload = { category, products };
+    cache.set(cacheKey, payload);
+    const res = NextResponse.json(payload);
+    res.headers.set('Cache-Control', cacheControl);
     return res;
   } catch (error) {
     console.error('Public category GET error:', error);

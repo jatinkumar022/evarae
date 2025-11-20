@@ -564,12 +564,7 @@ export default function CartPage() {
                   ₹{totals.originalSubtotal.toLocaleString()}
                 </span>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-dark">Discounted Subtotal</span>
-                <span className="font-semibold text-accent">
-                  ₹{totals.subtotal.toLocaleString()}
-                </span>
-              </div>
+
               {totals.savings > 0 && (
                 <div className="flex items-center justify-between">
                   <span className="text-dark">Savings</span>
@@ -586,6 +581,13 @@ export default function CartPage() {
                   </span>
                 </div>
               )}
+
+              <div className="flex items-center justify-between">
+                <span className="text-dark">Discounted Subtotal</span>
+                <span className="font-semibold text-accent">
+                  ₹{totals.subtotal.toLocaleString()}
+                </span>
+              </div>
               <div className="flex items-center justify-between">
                 <span className="text-dark">GST (3%)</span>
                 <span className="text-dark">
@@ -602,9 +604,16 @@ export default function CartPage() {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-dark">Shipping</span>
-                <span className="text-dark">
-                  ₹{totals.shipping.toLocaleString()}
-                </span>
+                {totals.shipping === 0 ? (
+                  <span className="flex items-center gap-2">
+                    <span className="text-gray-500 line-through">₹109</span>
+                    <span className="text-green-600 font-semibold">FREE</span>
+                  </span>
+                ) : (
+                  <span className="text-dark">
+                    ₹{totals.shipping.toLocaleString()}
+                  </span>
+                )}
               </div>
               <div className="h-px bg-gradient-to-r from-transparent via-rose-200/70 to-transparent my-2" />
               <div className="flex items-center justify-between text-sm sm:text-base">

@@ -659,9 +659,16 @@ export default function CheckoutPage() {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-dark">Shipping</span>
-                <span className="text-dark">
-                  ₹{totals.shipping.toLocaleString()}
-                </span>
+                {totals.shipping === 0 ? (
+                  <span className="flex items-center gap-2">
+                    <span className="text-gray-500 line-through">₹109</span>
+                    <span className="text-green-600 font-semibold">FREE</span>
+                  </span>
+                ) : (
+                  <span className="text-dark">
+                    ₹{totals.shipping.toLocaleString()}
+                  </span>
+                )}
               </div>
               <div className="h-px bg-gradient-to-r from-transparent via-rose-200/70 to-transparent my-2" />
               <div className="flex items-center justify-between text-sm sm:text-base">

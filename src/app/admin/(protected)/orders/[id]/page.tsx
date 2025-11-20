@@ -157,7 +157,7 @@ export default function OrderDetailPage() {
   const handleStatusChange = (newStatus: Order['orderStatus']) => {
     if (formValues) {
       const updated = { ...formValues, orderStatus: newStatus };
-      
+
       // Auto-generate tracking number when status changes to shipped
       if (newStatus === 'shipped' && !formValues.trackingNumber) {
         updated.trackingNumber = generateTrackingNumber();
@@ -166,7 +166,7 @@ export default function OrderDetailPage() {
           updated.courierName = 'Standard Shipping';
         }
       }
-      
+
       setFormValues(updated);
     }
   };
@@ -192,19 +192,19 @@ export default function OrderDetailPage() {
   // Save all changes at once
   const handleSaveAll = async () => {
     if (!currentOrder || !formValues || !isDirty) return;
-    
+
     setIsUpdating(true);
     try {
       // Update order status if changed
       if (formValues.orderStatus !== originalValues?.orderStatus) {
         await updateOrderStatus(currentOrder._id, formValues.orderStatus);
       }
-      
+
       // Update payment status if changed
       if (formValues.paymentStatus !== originalValues?.paymentStatus) {
         await updatePaymentStatus(currentOrder._id, formValues.paymentStatus);
       }
-      
+
       // Update tracking if changed
       if (
         formValues.trackingNumber !== originalValues?.trackingNumber ||
@@ -212,10 +212,10 @@ export default function OrderDetailPage() {
       ) {
         await updateTracking(currentOrder._id, formValues.trackingNumber, formValues.courierName);
       }
-      
+
       // Update original values to mark form as clean
       setOriginalValues({ ...formValues });
-      
+
       // Update currentOrder in store
       useOrderStore.setState({
         currentOrder: {
@@ -226,7 +226,7 @@ export default function OrderDetailPage() {
           courierName: formValues.courierName,
         },
       });
-      
+
       toastApi.success('Order updated successfully', 'Order details have been saved');
     } catch (error) {
       console.error('Failed to save changes:', error);
@@ -617,8 +617,15 @@ export default function OrderDetailPage() {
                 )}
                 <div className="flex justify-between">
                   <dt className="text-sm text-gray-500 dark:text-[#bdbdbd]">Shipping</dt>
-                  <dd className="text-sm font-medium text-gray-900 dark:text-white">
-                    {formatCurrency(currentOrder.shippingAmount)}
+                  <dd className="text-sm font-medium">
+                    {currentOrder.shippingAmount === 0 ? (
+                      <span className="flex items-center gap-2">
+                        <span className="text-gray-500 dark:text-gray-400 line-through">₹109</span>
+                        <span className="text-green-600 dark:text-green-400 font-semibold">FREE</span>
+                      </span>
+                    ) : (
+                      <span className="text-gray-900 dark:text-white">{formatCurrency(currentOrder.shippingAmount)}</span>
+                    )}
                   </dd>
                 </div>
                 {currentOrder.discountAmount > 0 && (
@@ -710,7 +717,7 @@ export default function OrderDetailPage() {
           </button>
         </div>
       )}
-      
+
       {/* Add bottom padding for mobile when save button is visible */}
       {isDirty && <div className="md:hidden h-24" />}
     </div>

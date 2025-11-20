@@ -3,6 +3,7 @@ import { connect } from '@/dbConfig/dbConfig';
 import jwt from 'jsonwebtoken';
 import ReturnRequest from '@/models/returnRequestModel';
 import mongoose from 'mongoose';
+import cache, { cacheKeys } from '@/lib/cache';
 
 const USER_JWT_SECRET = process.env.USER_JWT_SECRET as string;
 
@@ -45,10 +46,26 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const cacheKey = cacheKeys.userReturnRequests(payload.uid);
+    const cached = cache.get<{ returnRequests: Array<{ _id: mongoose.Types.ObjectId | string }> }>(
+      cacheKey
+    );
+
     const { id } = await params;
 
     if (!mongoose.isValidObjectId(id)) {
       return NextResponse.json({ error: 'Invalid return request ID' }, { status: 400 });
+    }
+
+    if (cached) {
+      const cachedMatch = cached.returnRequests.find(
+        req => String((req._id as mongoose.Types.ObjectId | string) ?? '') === id
+      );
+      if (cachedMatch) {
+        const cachedResponse = NextResponse.json({ returnRequest: cachedMatch });
+        cachedResponse.headers.set('Cache-Control', 'private, max-age=60, stale-while-revalidate=60');
+        return cachedResponse;
+      }
     }
 
     const returnRequest = await ReturnRequest.findOne({
@@ -63,7 +80,9 @@ export async function GET(
       );
     }
 
-    return NextResponse.json({ returnRequest });
+    const response = NextResponse.json({ returnRequest });
+    response.headers.set('Cache-Control', 'private, max-age=60, stale-while-revalidate=60');
+    return response;
   } catch (error) {
     console.error('[return-requests/[id] GET] error:', error);
     return NextResponse.json(

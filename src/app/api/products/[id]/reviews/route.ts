@@ -5,6 +5,7 @@ import Product from '@/models/productModel';
 import Review from '@/models/reviewModel';
 import Order from '@/models/orderModel';
 import { getUserIdFromRequest } from '@/lib/server/auth/getUserFromRequest';
+import { clearKeys, cacheKeys } from '@/lib/cache';
 
 type LeanProductReview = {
   _id: mongoose.Types.ObjectId;
@@ -292,10 +293,23 @@ export async function POST(request: Request, { params }: RouteContext) {
       );
     }
 
-    const existingReview = await Review.findOne({
-      product: productId,
-      user: userId,
-    }).lean();
+    // Optimize: Check for existing review and qualified order in parallel
+    const [existingReview, qualifiedOrder] = await Promise.all([
+      Review.findOne({
+        product: productId,
+        user: userId,
+      })
+        .select('_id')
+        .lean<{ _id: mongoose.Types.ObjectId } | null>(),
+      Order.findOne({
+        user: userId,
+        'items.product': productId,
+        paymentStatus: { $in: ['paid', 'completed'] },
+        orderStatus: { $nin: ['cancelled'] },
+      })
+        .select('_id')
+        .lean<{ _id: mongoose.Types.ObjectId } | null>(),
+    ]);
 
     if (existingReview) {
       return NextResponse.json(
@@ -303,15 +317,6 @@ export async function POST(request: Request, { params }: RouteContext) {
         { status: 409 }
       );
     }
-
-    const qualifiedOrder = await Order.findOne({
-      user: userId,
-      'items.product': productId,
-      paymentStatus: { $in: ['paid', 'completed'] },
-      orderStatus: { $nin: ['cancelled'] },
-    })
-      .select('_id')
-      .lean<{ _id: mongoose.Types.ObjectId } | null>();
 
     await Review.create({
       product: productId,
@@ -324,6 +329,12 @@ export async function POST(request: Request, { params }: RouteContext) {
       verifiedPurchase: Boolean(qualifiedOrder),
       status: 'pending',
     });
+
+    clearKeys([
+      cacheKeys.productDetail(id),
+      cacheKeys.productList(`people-also-bought:${id}`),
+      cacheKeys.productList(`related:${id}`),
+    ]);
 
     return NextResponse.json(
       {

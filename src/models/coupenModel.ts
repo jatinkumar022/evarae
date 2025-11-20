@@ -5,7 +5,6 @@ const couponSchema = new mongoose.Schema(
     code: {
       type: String,
       required: true,
-      unique: true,
       trim: true,
       uppercase: true, // always store in uppercase
     },
@@ -75,6 +74,9 @@ const couponSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+couponSchema.index({ code: 1 }, { unique: true });
+couponSchema.index({ isActive: 1, expiryDate: 1 });
 
 const Coupon = mongoose.models.Coupon || mongoose.model('Coupon', couponSchema);
 export default Coupon;

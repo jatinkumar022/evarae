@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import Order from '@/models/orderModel';
 import Cart from '@/models/cartModel';
 import crypto from 'crypto';
+import { clearKeys, cacheKeys } from '@/lib/cache';
 
 const USER_JWT_SECRET = process.env.USER_JWT_SECRET as string;
 const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET as string;
@@ -68,10 +69,12 @@ export async function POST(request: Request) {
     }
 
     // Optimize: Find and update order in one operation
+    // Only update if order is still pending (idempotency check)
     const order = await Order.findOneAndUpdate(
       {
         paymentProviderOrderId: razorpay_order_id,
         user: uid,
+        paymentStatus: { $in: ['pending'] }, // Only update if still pending
       },
       {
         paymentStatus: 'completed',
@@ -81,16 +84,44 @@ export async function POST(request: Request) {
         paidAt: new Date(),
       },
       { new: true }
-    ).select('_id orderNumber').lean<{ _id: unknown; orderNumber: string } | null>();
+    ).select('_id orderNumber paymentStatus').lean<{ _id: unknown; orderNumber: string; paymentStatus?: string } | null>();
 
     if (!order) {
+      // Check if order exists but was already processed
+      const existingOrder = await Order.findOne({
+        paymentProviderOrderId: razorpay_order_id,
+        user: uid,
+      })
+        .select('paymentStatus orderStatus')
+        .lean<{ paymentStatus?: string; orderStatus?: string } | null>();
+      
+      if (existingOrder && (existingOrder.paymentStatus === 'completed' || existingOrder.paymentStatus === 'paid')) {
+        // Order already processed, return success (idempotent)
+        return NextResponse.json({
+          success: true,
+          message: 'Payment already verified',
+          alreadyProcessed: true,
+        });
+      }
+      
       return NextResponse.json({ error: 'Order not found' }, { status: 404 });
     }
 
-    // Optimize: Clear cart using updateOne (non-blocking, don't wait for result)
-    Cart.updateOne({ user: uid }, { $set: { items: [] } }).catch(err => {
-      console.error('[verify-payment] Failed to clear cart:', err);
-    });
+    // Clear cart after successful payment verification
+    // Use await to ensure cart is cleared before responding
+    try {
+      await Cart.updateOne({ user: uid }, { $set: { items: [] } });
+    } catch (cartError) {
+      // Log error but don't fail the payment verification
+      console.error('[verify-payment] Failed to clear cart:', cartError);
+      // Cart will be cleared on next cart operation or can be cleared manually
+    }
+
+    // Invalidate user-specific caches after payment verification
+    clearKeys([
+      cacheKeys.checkout(uid),
+      cacheKeys.userCart(uid),
+    ]);
 
     return NextResponse.json({
       success: true,

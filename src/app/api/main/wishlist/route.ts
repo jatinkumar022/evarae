@@ -4,6 +4,7 @@ import { connect } from '@/dbConfig/dbConfig';
 import UserProfile from '@/models/userProfile';
 import Product from '@/models/productModel';
 import mongoose from 'mongoose';
+import { cache, cacheKeys, clearKeys } from '@/lib/cache';
 
 const USER_JWT_SECRET = process.env.USER_JWT_SECRET as string;
 
@@ -110,6 +111,13 @@ export async function GET(request: Request) {
       return NextResponse.json({ products: [] });
     }
 
+    // Check cache
+    const cacheKey = cacheKeys.userWishlist(uid);
+    const cached = cache.get<{ products: WishlistResponseProduct[] }>(cacheKey);
+    if (cached) {
+      return NextResponse.json(cached);
+    }
+
     // Get user profile with wishlist
     const profile = (await UserProfile.findOne({ user: uid })
       .populate({
@@ -125,8 +133,9 @@ export async function GET(request: Request) {
       .lean()) as LeanProfileWithWishlist | null;
 
     const products = serializeWishlistProducts(profile?.wishlist);
-
-    return NextResponse.json({ products });
+    const response = { products };
+    cache.set(cacheKey, response);
+    return NextResponse.json(response);
   } catch (error) {
     console.error('Wishlist GET error:', error);
     return NextResponse.json(
@@ -188,6 +197,10 @@ export async function POST(request: Request) {
 
     const products = serializeWishlistProducts(updatedProfile?.wishlist);
 
+    // Update cache after wishlist modification
+    const cacheKey = cacheKeys.userWishlist(uid);
+    cache.set(cacheKey, { products });
+
     return NextResponse.json({ products });
   } catch (error) {
     console.error('Wishlist POST error:', error);
@@ -248,6 +261,10 @@ export async function DELETE(request: Request) {
       .lean()) as LeanProfileWithWishlist | null;
 
     const products = serializeWishlistProducts(profile?.wishlist);
+
+    // Update cache after wishlist modification
+    const cacheKey = cacheKeys.userWishlist(uid);
+    cache.set(cacheKey, { products });
 
     return NextResponse.json({ products });
   } catch (error) {

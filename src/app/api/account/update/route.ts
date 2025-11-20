@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import { connect } from '@/dbConfig/dbConfig';
 import User from '@/models/userModel';
 import UserProfile from '@/models/userProfile';
+import { clearKeys, cacheKeys } from '@/lib/cache';
 
 const USER_JWT_SECRET = process.env.USER_JWT_SECRET as string;
 
@@ -55,7 +56,7 @@ export async function POST(request: Request) {
     // Basic user fields allowed to update
     const { name } = body as { name?: unknown };
 
-    const user = await User.findById(payload.uid);
+    const user = await User.findById(payload.uid).select('_id name passwordHash');
     if (!user) {
       console.error('[account/update] User not found with ID:', payload.uid);
       return NextResponse.json({ error: 'Account not found. Please log in again' }, { status: 404 });
@@ -146,6 +147,11 @@ export async function POST(request: Request) {
       }
       throw dbError; // Re-throw if it's a different error
     }
+
+    clearKeys([
+      cacheKeys.userProfile(String(user._id)),
+      cacheKeys.userAddresses(String(user._id)),
+    ]);
 
     return NextResponse.json({ ok: true, profile });
   } catch (error) {

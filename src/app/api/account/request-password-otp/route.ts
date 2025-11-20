@@ -58,7 +58,9 @@ export async function POST(request: Request) {
       );
     }
 
-    const user = await User.findById(payload.uid);
+    const user = await User.findById(payload.uid).select(
+      '_id name email passwordHash loginOtpLastSentAt loginOtpHash loginOtpExpiry loginOtpAttempts'
+    );
     if (!user) {
       return NextResponse.json(
         { error: 'Account not found. Please log in again' },
