@@ -4,7 +4,7 @@ import { connect } from '@/dbConfig/dbConfig';
 import UserProfile from '@/models/userProfile';
 import Product from '@/models/productModel';
 import mongoose from 'mongoose';
-import { cache, cacheKeys, clearKeys } from '@/lib/cache';
+import { cache, cacheKeys } from '@/lib/cache';
 
 const USER_JWT_SECRET = process.env.USER_JWT_SECRET as string;
 

@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken';
 import Cart from '@/models/cartModel';
 import UserProfile from '@/models/userProfile';
 import type { Address, CartLean } from '@/lib/types/product';
-import { cache, cacheKeys, clearKeys } from '@/lib/cache';
+import { cache, cacheKeys } from '@/lib/cache';
 
 const USER_JWT_SECRET = process.env.USER_JWT_SECRET as string;
 

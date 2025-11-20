@@ -1,45 +1,225 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSidebar } from "../context/SidebarContext";
 import { ThemeToggleButton } from "./ThemeToggleButton";
 import { useTheme } from "../context/ThemeContext";
-import { Menu, X, Search, Bell, Settings, LogOut, Package, ShoppingBag, AlertCircle, RotateCcw } from "lucide-react";
+import { Menu, X, Search, Bell, Settings, LogOut, Package, ShoppingBag, AlertCircle, RotateCcw, LayoutDashboard, ClipboardList, Star, ShoppingCart } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import Modal from "./Modal";
 import { useAdminAuth } from "@/lib/data/store/adminAuth";
 import { toastApi } from '@/lib/toast';
 import { Spinner } from '@/app/(main)/components/ui/ScaleLoader';
 import { useNotificationStore, type Notification } from '@/lib/data/store/notificationStore';
 
+type AdminSearchEntry = {
+  id: string;
+  label: string;
+  description: string;
+  path: string;
+  hash?: string;
+  keywords: string[];
+  icon: LucideIcon;
+};
+
+const ADMIN_SEARCH_LINKS: AdminSearchEntry[] = [
+  {
+    id: "dashboard-overview",
+    label: "Dashboard · Key Metrics",
+    description: "Products, orders, revenue and customer growth snapshot.",
+    path: "/admin",
+    hash: "dashboard-stats",
+    keywords: ["dashboard", "overview", "stats", "metrics", "home"],
+    icon: LayoutDashboard,
+  },
+  {
+    id: "dashboard-recent-orders",
+    label: "Dashboard · Recent Orders",
+    description: "Jump to the most recent orders list.",
+    path: "/admin",
+    hash: "dashboard-recent-orders",
+    keywords: ["orders", "recent", "sales", "latest"],
+    icon: ShoppingCart,
+  },
+  {
+    id: "dashboard-top-products",
+    label: "Dashboard · Top Products",
+    description: "Best performing products and revenue share.",
+    path: "/admin",
+    hash: "dashboard-top-products",
+    keywords: ["products", "top", "best sellers", "performance"],
+    icon: Star,
+  },
+  {
+    id: "dashboard-low-stock",
+    label: "Dashboard · Low Stock Alerts",
+    description: "See which SKUs need restocking soon.",
+    path: "/admin",
+    hash: "dashboard-low-stock-list",
+    keywords: ["stock", "inventory", "alerts", "low stock"],
+    icon: AlertCircle,
+  },
+  {
+    id: "orders-page",
+    label: "Orders · Manage Orders",
+    description: "Go to the full orders management table.",
+    path: "/admin/orders",
+    keywords: ["orders", "sales", "manage orders", "fulfilment"],
+    icon: ClipboardList,
+  },
+  {
+    id: "products-page",
+    label: "Products · Catalog",
+    description: "Browse and edit the full product catalog.",
+    path: "/admin/products",
+    keywords: ["products", "catalog", "inventory", "items"],
+    icon: Package,
+  },
+];
+
 // Search Component
 function SearchBar() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
   const router = useRouter();
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+
+  const filteredResults = useMemo(() => {
+    if (!normalizedQuery) {
+      return ADMIN_SEARCH_LINKS.slice(0, 5);
+    }
+
+    return ADMIN_SEARCH_LINKS.filter(entry =>
+      entry.label.toLowerCase().includes(normalizedQuery) ||
+      entry.description.toLowerCase().includes(normalizedQuery) ||
+      entry.keywords.some(keyword => keyword.includes(normalizedQuery))
+    );
+  }, [normalizedQuery]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isOpen]);
+
+  useEffect(() => {
+    setActiveIndex(0);
+  }, [normalizedQuery]);
+
+  const handleNavigate = (entry: AdminSearchEntry) => {
+    const targetUrl = entry.hash ? `${entry.path}#${entry.hash}` : entry.path;
+    setIsOpen(false);
+    setSearchQuery("");
+    setActiveIndex(0);
+    router.push(targetUrl);
+  };
 
   const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (searchQuery.trim()) {
-      // Navigate to search page with query
-      router.push(`/admin/search?q=${encodeURIComponent(searchQuery.trim())}`);
+    if (filteredResults.length > 0) {
+      handleNavigate(filteredResults[Math.min(activeIndex, filteredResults.length - 1)]);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if ((e.key === "ArrowDown" || e.key === "ArrowUp") && !isOpen) {
+      setIsOpen(true);
+      return;
+    }
+
+    if (!filteredResults.length) {
+      return;
+    }
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setActiveIndex(prev => (prev + 1) % filteredResults.length);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActiveIndex(prev => (prev - 1 + filteredResults.length) % filteredResults.length);
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      handleNavigate(filteredResults[Math.min(activeIndex, filteredResults.length - 1)]);
+    } else if (e.key === "Escape") {
+      setIsOpen(false);
     }
   };
 
   return (
-    <form onSubmit={handleSearch}>
-      <div className="relative">
-        <span className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">
-          <Search className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-        </span>
-        <input
-          type="text"
-          placeholder="Search..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="h-11 w-full rounded-lg bg-gray-50 dark:bg-[#141414] py-2.5 pl-12 pr-4 text-sm text-gray-800 dark:text-white placeholder:text-gray-400 dark:placeholder:text-[#bdbdbd] focus:outline-none focus:ring-2 focus:ring-primary-500/10 dark:focus:ring-primary-600/20 xl:w-[430px]"
-        />
-      </div>
-    </form>
+    <div className="relative" ref={containerRef}>
+      <form onSubmit={handleSearch}>
+        <div className="relative">
+          <span className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">
+            <Search className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+          </span>
+          <input
+            type="text"
+            placeholder="Search admin pages or sections..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onFocus={() => setIsOpen(true)}
+            onKeyDown={handleKeyDown}
+            className="h-11 w-full rounded-lg bg-gray-50 dark:bg-[#141414] py-2.5 pl-12 pr-4 text-sm text-gray-800 dark:text-white placeholder:text-gray-400 dark:placeholder:text-[#bdbdbd] focus:outline-none focus:ring-2 focus:ring-primary-500/10 dark:focus:ring-primary-600/20 xl:w-[430px]"
+          />
+        </div>
+      </form>
+
+      {isOpen && (
+        <div className="absolute z-50 mt-2 w-full rounded-xl border border-gray-200 bg-white shadow-xl dark:border-[#333] dark:bg-[#141414]">
+          <div className="max-h-72 overflow-y-auto custom-scrollbar py-2">
+            {filteredResults.length === 0 ? (
+              <div className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
+                No quick links found. Try another keyword.
+              </div>
+            ) : (
+              filteredResults.map((entry, index) => {
+                const Icon = entry.icon;
+                const isActive = index === activeIndex;
+                return (
+                  <button
+                    type="button"
+                    key={entry.id}
+                    onMouseDown={(event) => {
+                      event.preventDefault();
+                      handleNavigate(entry);
+                    }}
+                    onMouseEnter={() => setActiveIndex(index)}
+                    className={`flex w-full items-start gap-3 px-4 py-2.5 text-left transition-colors ${isActive
+                      ? "bg-primary-50 dark:bg-[#1f1418]"
+                      : "hover:bg-gray-50 dark:hover:bg-[#1e1e1e]"
+                      }`}
+                  >
+                    <span
+                      className={`flex h-9 w-9 items-center justify-center rounded-lg ${isActive ? "bg-primary-100 dark:bg-primary-900/30" : "bg-gray-100 dark:bg-[#2a2a2a]"
+                        }`}
+                    >
+                      <Icon className="w-4 h-4 text-primary-600 dark:text-primary-300" />
+                    </span>
+                    <span className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                        {entry.label}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        {entry.description}
+                      </p>
+                    </span>
+                  </button>
+                );
+              })
+            )}
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 

@@ -90,6 +90,33 @@ export default function AdminDashboard() {
     }
   };
 
+  useEffect(() => {
+    let highlightTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const focusSectionFromHash = () => {
+      if (typeof window === 'undefined') return;
+      const hash = window.location.hash?.replace('#', '');
+      if (!hash) return;
+      const section = document.getElementById(hash);
+      if (section && section.classList.contains('admin-section')) {
+        section.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
+        section.classList.add('admin-section--focused');
+        if (highlightTimer) clearTimeout(highlightTimer);
+        highlightTimer = setTimeout(() => {
+          section.classList.remove('admin-section--focused');
+        }, 1800);
+      }
+    };
+
+    focusSectionFromHash();
+    window.addEventListener('hashchange', focusSectionFromHash);
+
+    return () => {
+      window.removeEventListener('hashchange', focusSectionFromHash);
+      if (highlightTimer) clearTimeout(highlightTimer);
+    };
+  }, []);
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
@@ -199,7 +226,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Stats Grid */}
-      <div className="lg:flex-shrink-0 grid grid-cols-1 gap-3 sm:gap-4 md:gap-5 sm:grid-cols-2 lg:grid-cols-4 mt-4 sm:mt-6">
+      <div id="dashboard-stats" className="lg:flex-shrink-0 grid grid-cols-1 gap-3 sm:gap-4 md:gap-5 sm:grid-cols-2 lg:grid-cols-4 mt-4 sm:mt-6 admin-section scroll-mt-36">
         {/* Total Products */}
         <div className="bg-white dark:bg-[#191919] overflow-hidden shadow rounded-lg border border-gray-200 dark:border-[#525252] flex flex-col h-full">
           <div className="p-4 sm:p-5 md:p-6 flex-1">
@@ -337,7 +364,7 @@ export default function AdminDashboard() {
 
       {/* Low Stock Alert */}
       {stats.lowStockProducts > 0 && (
-        <div className="lg:flex-shrink-0 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 mt-4 sm:mt-6">
+        <div id="dashboard-low-stock-alert" className="lg:flex-shrink-0 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 mt-4 sm:mt-6 admin-section scroll-mt-36">
           <div className="flex items-center">
             <AlertCircle className="h-5 w-5 text-yellow-600 dark:text-yellow-400 mr-3" />
             <div>
@@ -361,7 +388,7 @@ export default function AdminDashboard() {
       {/* Recent Orders and Top Products */}
       <div className="lg:flex-1 lg:min-h-0 grid grid-cols-1 gap-4 sm:gap-5 md:gap-6 lg:grid-cols-2 mt-4 sm:mt-6">
         {/* Recent Orders */}
-        <div className="bg-white dark:bg-[#191919] shadow rounded-lg border border-gray-200 dark:border-[#525252] lg:flex lg:flex-col lg:h-full lg:min-h-0 lg:max-h-[52vh] 2xl:max-h-[48vh]">
+        <div id="dashboard-recent-orders" className="bg-white dark:bg-[#191919] shadow rounded-lg border border-gray-200 dark:border-[#525252] lg:flex lg:flex-col lg:h-full lg:min-h-0 lg:max-h-[52vh] 2xl:max-h-[48vh] admin-section scroll-mt-36">
           <div className="p-4 sm:p-5 md:p-6 lg:flex-shrink-0">
             <div className="flex items-center justify-between">
               <h3 className="text-base sm:text-lg leading-6 font-medium text-gray-900 dark:text-white">
@@ -429,7 +456,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Top Products */}
-        <div className="bg-white dark:bg-[#191919] shadow rounded-lg border border-gray-200 dark:border-[#525252] lg:flex lg:flex-col lg:h-full lg:min-h-0 lg:max-h-[52vh] 2xl:max-h-[48vh]">
+        <div id="dashboard-top-products" className="bg-white dark:bg-[#191919] shadow rounded-lg border border-gray-200 dark:border-[#525252] lg:flex lg:flex-col lg:h-full lg:min-h-0 lg:max-h-[52vh] 2xl:max-h-[48vh] admin-section scroll-mt-36">
           <div className="p-4 sm:p-5 md:p-6 lg:flex-shrink-0">
             <div className="flex items-center justify-between">
               <h3 className="text-base sm:text-lg leading-6 font-medium text-gray-900 dark:text-white">
@@ -487,7 +514,7 @@ export default function AdminDashboard() {
 
       {/* Low Stock Products */}
       {lowStockProducts.length > 0 && (
-        <div className="lg:flex-shrink-0 bg-white dark:bg-[#191919] shadow rounded-lg border border-gray-200 dark:border-[#525252] mt-4 sm:mt-6">
+        <div id="dashboard-low-stock-list" className="lg:flex-shrink-0 bg-white dark:bg-[#191919] shadow rounded-lg border border-gray-200 dark:border-[#525252] mt-4 sm:mt-6 admin-section scroll-mt-36">
           <div className="p-4 sm:p-5 md:p-6">
             <div className="flex items-center justify-between">
               <h3 className="text-base sm:text-lg leading-6 font-medium text-gray-900 dark:text-white">
