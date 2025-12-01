@@ -240,6 +240,13 @@ export default function OrderDetailsPage() {
   const hasFetchedReturnRequestsRef = useRef<string | null>(null);
   const returnRequestsFetchedRef = useRef<boolean>(false);
 
+  // Ensure this page always starts at the top to avoid inheriting scroll from previous route
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    }
+  }, []);
+
   // Filter return requests for this order - use ref to track previous value
   const returnRequestsRef = useRef<ReturnRequest[]>([]);
   const returnRequests = useMemo(() => {

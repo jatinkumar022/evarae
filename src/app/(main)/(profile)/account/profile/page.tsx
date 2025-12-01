@@ -234,7 +234,7 @@ function AccountPageInner() {
   // Show loader while fetching profile data - AFTER all hooks, BEFORE main return
   if (isLoading) {
     return (
-      <div className="h-screen overflow-hidden">
+      <div className="min-h-screen">
         <PageLoader fullscreen showLogo />
       </div>
     );
@@ -291,8 +291,8 @@ function AccountPageInner() {
                     );
                   }}
                   className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition-all duration-200 whitespace-nowrap ${activeTab === tab.id
-                      ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)]/10 to-[oklch(0.58_0.16_8)]/10 text-[oklch(0.66_0.14_358.91)] font-medium'
-                      : 'text-gray-600 hover:bg-gray-50'
+                    ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)]/10 to-[oklch(0.58_0.16_8)]/10 text-[oklch(0.66_0.14_358.91)] font-medium'
+                    : 'text-gray-600 hover:bg-gray-50'
                     }`}
                 >
                   <Icon className={`w-4 h-4 ${activeTab === tab.id ? 'text-[oklch(0.66_0.14_358.91)]' : 'text-gray-600'}`} />
@@ -311,8 +311,8 @@ function AccountPageInner() {
                 );
               }}
               className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition-all duration-200 whitespace-nowrap ${activeTab === 'stats'
-                  ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)]/10 to-[oklch(0.58_0.16_8)]/10 text-[oklch(0.66_0.14_358.91)] font-medium'
-                  : 'text-gray-600 hover:bg-gray-50'
+                ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)]/10 to-[oklch(0.58_0.16_8)]/10 text-[oklch(0.66_0.14_358.91)] font-medium'
+                : 'text-gray-600 hover:bg-gray-50'
                 }`}
             >
               <Star className={`w-4 h-4 ${activeTab === 'stats' ? 'text-[oklch(0.66_0.14_358.91)]' : 'text-gray-600'}`} />
@@ -359,8 +359,8 @@ function AccountPageInner() {
                       );
                     }}
                     className={`w-full flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-3 text-left rounded-xl transition-all duration-200 ${activeTab === tab.id
-                        ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)]/10 to-[oklch(0.58_0.16_8)]/10 text-[oklch(0.66_0.14_358.91)] font-medium'
-                        : 'text-gray-600 hover:bg-gray-50'
+                      ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)]/10 to-[oklch(0.58_0.16_8)]/10 text-[oklch(0.66_0.14_358.91)] font-medium'
+                      : 'text-gray-600 hover:bg-gray-50'
                       }`}
                   >
                     <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -424,8 +424,8 @@ function AccountPageInner() {
                                 <input
                                   {...field}
                                   className={`w-full rounded-xl border border-[oklch(0.84_0.04_10.35)]/40 bg-white px-4 py-2 sm:py-3 text-sm focus:border-[oklch(0.66_0.14_358.91)] focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/20 focus:outline-none transition-colors ${fieldState.error
-                                      ? 'border-red-300'
-                                      : ''
+                                    ? 'border-red-300'
+                                    : ''
                                     }`}
                                   placeholder="Enter your full name"
                                 />
@@ -474,8 +474,8 @@ function AccountPageInner() {
                                     }}
                                     maxLength={10}
                                     className={`w-full rounded-xl border border-[oklch(0.84_0.04_10.35)]/40 bg-white px-10 py-2 sm:py-3 text-sm focus:border-[oklch(0.66_0.14_358.91)] focus:ring-2 focus:ring-[oklch(0.66_0.14_358.91)]/20 focus:outline-none transition-colors ${fieldState.error
-                                        ? 'border-red-300'
-                                        : ''
+                                      ? 'border-red-300'
+                                      : ''
                                       }`}
                                     placeholder="Enter 10 digit phone number"
                                     autoComplete="tel"
@@ -770,8 +770,8 @@ function AccountPageInner() {
                         }}
                         disabled={!isValid || isSubmitting}
                         className={`relative inline-flex items-center justify-center px-4 sm:px-6 py-2 sm:py-3 text-white text-xs sm:text-sm font-medium rounded-xl transition-all ${!isValid || isSubmitting
-                            ? 'bg-gray-300 cursor-not-allowed'
-                            : 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] hover:shadow-lg hover:shadow-[oklch(0.66_0.14_358.91)]/25'
+                          ? 'bg-gray-300 cursor-not-allowed'
+                          : 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] hover:shadow-lg hover:shadow-[oklch(0.66_0.14_358.91)]/25'
                           }`}
                       >
                         <span className={isSubmitting ? 'opacity-0' : ''}>Save Changes</span>
@@ -846,8 +846,8 @@ function AccountPageInner() {
                       setPasswordError('');
                     }}
                     className={`flex-1 px-3 py-2 text-xs sm:text-sm rounded-lg transition-colors ${passwordMethod === 'password'
-                        ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)]/10 to-[oklch(0.58_0.16_8)]/10 text-[oklch(0.66_0.14_358.91)] font-medium'
-                        : 'text-gray-600 hover:bg-gray-50'
+                      ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)]/10 to-[oklch(0.58_0.16_8)]/10 text-[oklch(0.66_0.14_358.91)] font-medium'
+                      : 'text-gray-600 hover:bg-gray-50'
                       }`}
                   >
                     Current Password
@@ -861,8 +861,8 @@ function AccountPageInner() {
                       }
                     }}
                     className={`flex-1 px-3 py-2 text-xs sm:text-sm rounded-lg transition-colors ${passwordMethod === 'otp'
-                        ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)]/10 to-[oklch(0.58_0.16_8)]/10 text-[oklch(0.66_0.14_358.91)] font-medium'
-                        : 'text-gray-600 hover:bg-gray-50'
+                      ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)]/10 to-[oklch(0.58_0.16_8)]/10 text-[oklch(0.66_0.14_358.91)] font-medium'
+                      : 'text-gray-600 hover:bg-gray-50'
                       }`}
                   >
                     OTP

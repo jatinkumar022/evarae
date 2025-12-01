@@ -144,7 +144,7 @@ function AddressesPageInner() {
   // Show loader while fetching addresses - AFTER all hooks, BEFORE main return
   if (isLoading) {
     return (
-      <div className="h-screen overflow-hidden">
+      <div className="min-h-screen">
         <PageLoader fullscreen showLogo />
       </div>
     );
@@ -206,8 +206,8 @@ function AddressesPageInner() {
               <div
                 key={address._id}
                 className={`bg-white rounded-2xl border transition-all hover:shadow-md flex flex-col ${address.isDefaultShipping
-                    ? 'border-[oklch(0.66_0.14_358.91)] ring-2 ring-[oklch(0.66_0.14_358.91)]/20 bg-gradient-to-r from-[oklch(0.66_0.14_358.91)]/5 to-[oklch(0.58_0.16_8)]/5'
-                    : 'border-[oklch(0.84_0.04_10.35)]/30 hover:border-[oklch(0.84_0.04_10.35)]/50'
+                  ? 'border-[oklch(0.66_0.14_358.91)] ring-2 ring-[oklch(0.66_0.14_358.91)]/20 bg-gradient-to-r from-[oklch(0.66_0.14_358.91)]/5 to-[oklch(0.58_0.16_8)]/5'
+                  : 'border-[oklch(0.84_0.04_10.35)]/30 hover:border-[oklch(0.84_0.04_10.35)]/50'
                   }`}
               >
                 <div className="p-5 flex flex-col h-full min-h-[280px]">
@@ -216,8 +216,8 @@ function AddressesPageInner() {
                     <div className="flex items-start gap-3 flex-1 min-w-0">
                       <div
                         className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${address.isDefaultShipping
-                            ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] text-white'
-                            : 'bg-gray-100 text-gray-600'
+                          ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] text-white'
+                          : 'bg-gray-100 text-gray-600'
                           }`}
                       >
                         <MapPin className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -648,8 +648,8 @@ function AddressesPageInner() {
                     form="address-form"
                     disabled={!isValid || isSubmitting}
                     className={`px-5 py-2.5 text-white text-sm font-normal rounded-md transition-all disabled:opacity-50 disabled:cursor-not-allowed ${!isValid || isSubmitting
-                        ? 'bg-gray-300 cursor-not-allowed'
-                        : 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] hover:shadow-lg hover:shadow-[oklch(0.66_0.14_358.91)]/25'
+                      ? 'bg-gray-300 cursor-not-allowed'
+                      : 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] hover:shadow-lg hover:shadow-[oklch(0.66_0.14_358.91)]/25'
                       }`}
                   >
                     {isSubmitting ? (

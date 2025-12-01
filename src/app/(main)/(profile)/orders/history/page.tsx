@@ -161,6 +161,13 @@ export default function OrdersHistoryPage() {
   const [downloadProgress, setDownloadProgress] = useState(0);
   const { orders: storeOrders, fetchOrders, status: ordersStatus } = useOrdersStore();
 
+  // Ensure this page always starts at the top to avoid inheriting scroll from previous route
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    }
+  }, []);
+
   // Load orders once on mount
   useEffect(() => {
     if (ordersStatus === 'idle') fetchOrders();

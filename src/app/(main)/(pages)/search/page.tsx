@@ -293,7 +293,7 @@ function SearchPageInner() {
   // Show loader while searching
   if (isLoading && initialQuery) {
     return (
-      <div className="h-screen overflow-hidden">
+      <div className="min-h-screen">
         <PageLoader fullscreen showLogo />
       </div>
     );

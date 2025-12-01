@@ -128,7 +128,7 @@ export default function CollectionDetailPage() {
   // Show loader while fetching - AFTER all hooks
   if (status === 'loading') {
     return (
-      <div className="h-screen overflow-hidden">
+      <div className="min-h-screen">
         <PageLoader fullscreen showLogo />
       </div>
     );

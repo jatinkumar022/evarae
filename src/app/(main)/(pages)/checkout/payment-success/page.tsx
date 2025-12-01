@@ -44,6 +44,13 @@ function PaymentSuccessInner() {
   const loadCart = useCartStore(state => state.load);
   const syncCartCount = useCartCountStore(state => state.syncWithCart);
 
+  // Ensure page always starts at the top when this screen is opened
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    }
+  }, []);
+
   useEffect(() => {
     // Ensure cart is cleared client-side after successful payment
     loadCart()
