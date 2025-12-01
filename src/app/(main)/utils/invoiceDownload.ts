@@ -61,34 +61,67 @@ export async function downloadInvoiceWithProgress(
 
     onProgress(100);
 
+    // Detect mobile devices
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+
     // Use download endpoint for both mobile and desktop
     // This endpoint sets Content-Disposition header with proper filename
     const downloadApiPath = isAdmin
       ? `/api/admin/orders/${orderId}/invoice/download`
       : `/api/orders/${orderId}/invoice/download`;
     
-    // Create download link
-    const link = document.createElement('a');
-    link.href = downloadApiPath;
-    link.download = fileName; // Fallback filename (works if browser supports it)
-    link.style.display = 'none';
-    document.body.appendChild(link);
-    
-    try {
-      // Trigger download
-      link.click();
-    } catch (error) {
-      console.warn('[invoiceDownload] Link click failed, using window.open:', error);
-      // Fallback: open in new tab (user can download from browser)
-      window.open(downloadApiPath, '_blank');
-    }
-    
-    // Clean up after delay
-    setTimeout(() => {
-      if (document.body.contains(link)) {
-        document.body.removeChild(link);
+    if (isMobile) {
+      // For mobile: Use window.location or window.open to trigger download
+      // The Content-Disposition: attachment header will force download
+      // iOS Safari will open in new tab, but user can use share/download from browser
+      try {
+        // Try using window.location first (works better on some mobile browsers)
+        const link = document.createElement('a');
+        link.href = downloadApiPath;
+        link.download = fileName;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        link.click();
+        
+        // Clean up
+        setTimeout(() => {
+          if (document.body.contains(link)) {
+            document.body.removeChild(link);
+          }
+        }, 2000);
+      } catch (error) {
+        console.warn('[invoiceDownload] Mobile link click failed, using window.open:', error);
+        // Fallback: open in new tab
+        // The Content-Disposition header should still trigger download on Android
+        window.open(downloadApiPath, '_blank');
       }
-    }, 2000);
+    } else {
+      // For desktop: Use standard download approach
+      const link = document.createElement('a');
+      link.href = downloadApiPath;
+      link.download = fileName; // Fallback filename
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      
+      try {
+        // Trigger download
+        link.click();
+      } catch (error) {
+        console.warn('[invoiceDownload] Link click failed, using window.open:', error);
+        // Fallback: open in new tab
+        window.open(downloadApiPath, '_blank');
+      }
+      
+      // Clean up after delay
+      setTimeout(() => {
+        if (document.body.contains(link)) {
+          document.body.removeChild(link);
+        }
+      }, 2000);
+    }
   } catch (error) {
     clearInterval(progressInterval);
     throw error;
