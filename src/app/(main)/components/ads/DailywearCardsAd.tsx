@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import Image from '@/app/(main)/components/ui/FallbackImage';
+import Link from 'next/link';
 import { StaticImageData } from 'next/image';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { one, two, three } from '@/app/(main)/assets/Home/CAROUSEL';
@@ -20,43 +21,60 @@ const DailywearCarousel: React.FC<DailywearCarouselProps> = ({
   products: propProducts,
   className = '',
 }) => {
-  const defaultProducts: DailywearProduct[] = [
-    {
-      id: 'dw-earrings-1',
-      name: 'Dailywear Earrings',
-      image: one,
-    },
-    {
-      id: 'dw-mangalsutra-1',
-      name: 'Dailywear Mangalsutra',
-      image: two,
-    },
-    {
-      id: 'dw-pendants-1',
-      name: 'Dailywear Pendants',
-      image: three,
-    },
-    {
-      id: 'dw-earrings-2',
-      name: 'Dailywear Earrings',
-      image: one,
-    },
-    {
-      id: 'dw-mangalsutra-2',
-      name: 'Dailywear Mangalsutra',
-      image: two,
-    },
-    {
-      id: 'dw-pendants-2',
-      name: 'Dailywear Pendants',
-      image: three,
-    },
-  ];
-
-  const products = propProducts || defaultProducts;
+  const [products, setProducts] = useState<DailywearProduct[]>(
+    propProducts || []
+  );
   const trackRef = useRef<HTMLDivElement | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [cardsPerView, setCardsPerView] = useState(3);
+
+  // Load real products (7 items) when no products are passed in
+  useEffect(() => {
+    if (propProducts && propProducts.length > 0) {
+      setProducts(propProducts);
+      return;
+    }
+
+    let isMounted = true;
+    const controller = new AbortController();
+
+    const loadProducts = async () => {
+      try {
+        const res = await fetch(
+          '/api/main/product?limit=7&sortBy=createdAt&sortOrder=desc',
+          { signal: controller.signal }
+        );
+        if (!res.ok) return;
+        const data = await res.json();
+        const apiProducts = (data.products || []) as Array<{
+          slug: string;
+          name: string;
+          images?: string[];
+        }>;
+
+        if (!isMounted || !apiProducts.length) return;
+
+        const mapped: DailywearProduct[] = apiProducts.slice(0, 7).map(p => ({
+          id: p.slug,
+          name: p.name,
+          image: (p.images && p.images[0]) || one,
+          href: `/product/${p.slug}`,
+        }));
+
+        setProducts(mapped);
+      } catch (error) {
+        if ((error as Error).name === 'AbortError') return;
+        console.error('Failed to load dailywear products', error);
+      }
+    };
+
+    loadProducts();
+
+    return () => {
+      isMounted = false;
+      controller.abort();
+    };
+  }, [propProducts]);
 
   useEffect(() => {
     const updateCardsPerView = () => {
@@ -80,7 +98,7 @@ const DailywearCarousel: React.FC<DailywearCarouselProps> = ({
 
   const scrollToIndex = useCallback(
     (index: number) => {
-      if (!trackRef.current) return;
+      if (!trackRef.current || products.length === 0) return;
 
       const track = trackRef.current;
       const cardWidth = track.scrollWidth / products.length;
@@ -110,6 +128,7 @@ const DailywearCarousel: React.FC<DailywearCarouselProps> = ({
     if (!track) return;
 
     const handleScroll = () => {
+      if (!products.length) return;
       const scrollLeft = track.scrollLeft;
       const cardWidth = track.scrollWidth / products.length;
       const newIndex = Math.round(scrollLeft / cardWidth);
@@ -158,22 +177,43 @@ const DailywearCarousel: React.FC<DailywearCarouselProps> = ({
                 key={product.id}
                 className="flex-shrink-0 snap-start w-[160px] xs:w-[180px] sm:w-[200px] md:w-[220px] lg:w-[240px] group transition-all"
               >
-                <div className="rounded-lg sm:rounded-xl overflow-hidden  border border-gray-200  h-full">
-                  <div className="relative h-24 sm:h-32 md:h-36 lg:h-40 overflow-hidden">
-                    <Image
-                      src={product.image}
-                      alt={product.name}
-                      fill
-                      sizes="(max-width: 480px) 160px, (max-width: 640px) 180px, (max-width: 768px) 200px, (max-width: 1024px) 220px, 240px"
-                      className="object-cover transform group-hover:scale-105 transition-transform duration-500 ease-in-out"
-                    />
+                {product.href ? (
+                  <Link href={product.href} className="block h-full">
+                    <div className="rounded-lg sm:rounded-xl overflow-hidden border border-gray-200 h-full">
+                      <div className="relative h-24 sm:h-32 md:h-36 lg:h-40 overflow-hidden">
+                        <Image
+                          src={product.image}
+                          alt={product.name}
+                          fill
+                          sizes="(max-width: 480px) 160px, (max-width: 640px) 180px, (max-width: 768px) 200px, (max-width: 1024px) 220px, 240px"
+                          className="object-cover transform group-hover:scale-105 transition-transform duration-500 ease-in-out"
+                        />
+                      </div>
+                      <div className="p-2 sm:p-3 md:p-4 text-center">
+                        <h3 className="text-xs sm:text-sm md:text-base font-semibold text-primary-dark leading-tight">
+                          {product.name}
+                        </h3>
+                      </div>
+                    </div>
+                  </Link>
+                ) : (
+                  <div className="rounded-lg sm:rounded-xl overflow-hidden border border-gray-200 h-full">
+                    <div className="relative h-24 sm:h-32 md:h-36 lg:h-40 overflow-hidden">
+                      <Image
+                        src={product.image}
+                        alt={product.name}
+                        fill
+                        sizes="(max-width: 480px) 160px, (max-width: 640px) 180px, (max-width: 768px) 200px, (max-width: 1024px) 220px, 240px"
+                        className="object-cover transform group-hover:scale-105 transition-transform duration-500 ease-in-out"
+                      />
+                    </div>
+                    <div className="p-2 sm:p-3 md:p-4 text-center">
+                      <h3 className="text-xs sm:text-sm md:text-base font-semibold text-primary-dark leading-tight">
+                        {product.name}
+                      </h3>
+                    </div>
                   </div>
-                  <div className="p-2 sm:p-3 md:p-4 text-center">
-                    <h3 className="text-xs sm:text-sm md:text-base font-semibold text-primary-dark leading-tight">
-                      {product.name}
-                    </h3>
-                  </div>
-                </div>
+                )}
               </div>
             ))}
           </div>

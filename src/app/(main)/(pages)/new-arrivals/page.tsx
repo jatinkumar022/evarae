@@ -155,6 +155,14 @@ export default function EnhancedNewArrivalsPage() {
   const displayedProducts = filteredProducts.slice(0, visibleProducts);
   const hasMoreProducts = visibleProducts < filteredProducts.length;
 
+  const scrollToProducts = () => {
+    if (typeof window === 'undefined') return;
+    const section = document.getElementById('new-arrivals-products');
+    if (section) {
+      section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   return (
     <div
       className="min-h-screen"
@@ -224,19 +232,18 @@ export default function EnhancedNewArrivalsPage() {
                 affordable prices.
               </p>
 
-              {/* CTA Buttons */}
+              {/* CTA Button */}
               <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mb-6 sm:mb-8">
-                <button className="btn btn-filled !px-4 !py-2 sm:!px-5 sm:!py-2.5 flex items-center gap-2 justify-center group !font-medium !text-sm sm:!text-base !font-sans">
+                <button
+                  onClick={scrollToProducts}
+                  className="btn btn-filled !px-4 !py-2 sm:!px-5 sm:!py-2.5 flex items-center gap-2 justify-center group !font-medium !text-sm sm:!text-base !font-sans"
+                >
                   <Crown
                     className="w-4 h-4 sm:w-5 sm:h-5 group-hover:animate-pulse"
                     strokeWidth={1.5}
                   />
                   Explore Collection
                   <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" />
-                </button>
-                <button className="btn btn-outline !px-4 !py-2 sm:!px-5 sm:!py-2.5 flex items-center gap-2 justify-center !font-medium !text-sm sm:!text-base !font-sans">
-                  <Play className="w-4 h-4 sm:w-5 sm:h-5" strokeWidth={1.5} />
-                  Watch Showcase
                 </button>
               </div>
 
@@ -388,7 +395,11 @@ export default function EnhancedNewArrivalsPage() {
       </div>
 
       {/* Enhanced Product Section */}
-      <div className="py-8 sm:py-12 lg:py-16" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+      <div
+        id="new-arrivals-products"
+        className="py-8 sm:py-12 lg:py-16"
+        style={{ backgroundColor: 'var(--bg-secondary)' }}
+      >
         <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
           {/* Breadcrumb */}
           <nav className="py-2 sm:py-3 lg:py-4 text-xs sm:text-sm">

@@ -67,45 +67,15 @@ export async function downloadInvoiceWithProgress(
     const isMobile = isMobileDevice();
 
     if (isMobile) {
-      // For mobile devices: Use multiple fallback strategies
-      // Mobile browsers often block programmatic downloads, so we need alternatives
+      // For mobile devices: navigate directly to the blob URL.
+      // This avoids popup blockers and works better on iOS/Android browsers.
       const url = window.URL.createObjectURL(blob);
-      
-      // Strategy 1: Try opening in new tab (works on most mobile browsers)
-      const newWindow = window.open(url, '_blank');
-      
-      if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
-        // Strategy 2: If popup blocked, create a visible link and click it
-        // This works better on iOS Safari and some Android browsers
-        const a = document.createElement('a');
-        a.href = url;
-        a.target = '_blank';
-        a.rel = 'noopener noreferrer';
-        // Style it to be invisible but clickable
-        a.style.position = 'fixed';
-        a.style.top = '0';
-        a.style.left = '0';
-        a.style.width = '1px';
-        a.style.height = '1px';
-        a.style.opacity = '0';
-        a.style.pointerEvents = 'auto';
-        a.style.zIndex = '9999';
-        document.body.appendChild(a);
-        
-        // Trigger click
-        a.click();
-        
-        // Clean up after a short delay
-        setTimeout(() => {
-          a.remove();
-          window.URL.revokeObjectURL(url);
-        }, 1000);
-      } else {
-        // Clean up URL after window opens
-        setTimeout(() => {
-          window.URL.revokeObjectURL(url);
-        }, 2000);
-      }
+      window.location.href = url;
+
+      // Revoke after navigation has had time to start.
+      setTimeout(() => {
+        window.URL.revokeObjectURL(url);
+      }, 10_000);
     } else {
       // For desktop: Use blob URL with programmatic download
       const url = window.URL.createObjectURL(blob);

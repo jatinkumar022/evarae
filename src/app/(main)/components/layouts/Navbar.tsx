@@ -30,7 +30,7 @@ import { userAuthApi } from '@/lib/utils';
 import {
   ChevronRight,
   Package,
-  ShieldUser ,
+  ShieldUser,
   MapPin,
   Bell,
   Shield,
@@ -51,7 +51,7 @@ import { useWishlistStore } from '@/lib/data/mainStore/wishlistStore';
 import { CartCount } from './Navbar/CartCount';
 import { NavbarLogo } from './Navbar/NavbarLogo';
 
-const Cross =({className}: {className: string})=>{
+const Cross = ({ className }: { className: string }) => {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 256 256" className={className}><path d="M204.24,195.76a6,6,0,1,1-8.48,8.48L128,136.49,60.24,204.24a6,6,0,0,1-8.48-8.48L119.51,128,51.76,60.24a6,6,0,0,1,8.48-8.48L128,119.51l67.76-67.75a6,6,0,0,1,8.48,8.48L136.49,128Z"></path></svg>
   )
@@ -123,18 +123,18 @@ const saveSearchToHistory = (query: string): void => {
   try {
     const history = getSearchHistory();
     const trimmedQuery = query.trim().toLowerCase();
-    
+
     // Remove if already exists (to move to top)
     const filteredHistory = history.filter(
       item => item.toLowerCase() !== trimmedQuery
     );
-    
+
     // Add to beginning and limit to MAX_SEARCH_HISTORY
     const updatedHistory = [
       query.trim(), // Keep original casing
       ...filteredHistory,
     ].slice(0, MAX_SEARCH_HISTORY);
-    
+
     localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(updatedHistory));
   } catch {
     // Silently fail if localStorage is not available
@@ -162,7 +162,7 @@ export default function Navbar() {
     hydrate: hydrateUser,
   } = useUserAccountStore();
   const { load: loadWishlist } = useWishlistStore();
-  
+
   // Load user account once on mount (centralized - all components will use this)
   useEffect(() => {
     loadUser();
@@ -262,15 +262,32 @@ export default function Navbar() {
       }
     };
     if (isSearchOpen) {
+      // Prevent body scroll when search is open
+      const originalStyle = window.getComputedStyle(document.body).overflow;
+      const originalPaddingRight = document.body.style.paddingRight;
+      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+
       document.body.style.overflow = 'hidden';
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
+      document.body.style.top = `-${window.scrollY}px`;
+
       window.addEventListener('keydown', handleKeyDown);
-    } else {
-      document.body.style.overflow = 'auto';
+
+      return () => {
+        const scrollY = document.body.style.top;
+        document.body.style.overflow = originalStyle;
+        document.body.style.paddingRight = originalPaddingRight;
+        document.body.style.position = '';
+        document.body.style.width = '';
+        document.body.style.top = '';
+        if (scrollY) {
+          window.scrollTo(0, parseInt(scrollY || '0') * -1);
+        }
+        window.removeEventListener('keydown', handleKeyDown);
+      };
     }
-    return () => {
-      document.body.style.overflow = 'auto';
-      window.removeEventListener('keydown', handleKeyDown);
-    };
   }, [isSearchOpen]);
 
   // Login dropdown helpers
@@ -408,7 +425,7 @@ export default function Navbar() {
   const handleLogout = async () => {
     try {
       setIsLoggingOut(true);
-      
+
       // Define protected paths that require authentication
       const PROTECTED_PATHS = [
         '/checkout',
@@ -417,12 +434,12 @@ export default function Navbar() {
         '/wishlist',
         '/cart',
       ];
-      
+
       // Check if current path is a protected path
-      const isOnProtectedPath = PROTECTED_PATHS.some(path => 
+      const isOnProtectedPath = PROTECTED_PATHS.some(path =>
         pathname.startsWith(path)
       );
-      
+
       await userAuthApi.logout();
       clearUser(); // Clear user from centralized store
       setLoginStep('email');
@@ -430,10 +447,10 @@ export default function Navbar() {
       setLoginPassword('');
       setLoginOtp(Array(6).fill(''));
       setShowLogoutModal(false);
-     if (isOnProtectedPath) {
-       router.push('/');
+      if (isOnProtectedPath) {
+        router.push('/');
 
-     }
+      }
       // Redirect to dashboard (home) when logging out, especially from protected pages
     } catch (error) {
       console.error('Logout error:', error);
@@ -499,7 +516,7 @@ export default function Navbar() {
       const originalBodyOverflow = window.getComputedStyle(document.body).overflow;
       const originalHtmlOverflow = window.getComputedStyle(document.documentElement).overflow;
       const originalBodyHeight = document.body.style.height;
-      
+
       // Disable scrolling on both body and html (Safari fix)
       document.body.style.overflow = 'hidden';
       document.body.style.height = '100%';
@@ -511,7 +528,7 @@ export default function Navbar() {
         }
       };
       document.addEventListener('keydown', handleEscape);
-      
+
       return () => {
         // Restore original styles
         document.body.style.overflow = originalBodyOverflow;
@@ -544,7 +561,7 @@ export default function Navbar() {
           label: 'Notifications',
           href: '/account/profile?tab=preferences',
         },
-       
+
         { icon: MapPin, label: 'Addresses', href: '/account/addresses' },
       ],
     },
@@ -713,11 +730,10 @@ export default function Navbar() {
                                 </div>
                                 <div className="p-1 rounded hover:bg-gray-100">
                                   <ChevronRight
-                                    className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${
-                                      activeSubmenu === item.key
-                                        ? 'rotate-90'
-                                        : ''
-                                    }`}
+                                    className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${activeSubmenu === item.key
+                                      ? 'rotate-90'
+                                      : ''
+                                      }`}
                                   />
                                 </div>
                               </div>
@@ -801,21 +817,19 @@ export default function Navbar() {
                         <div className="inline-flex rounded-full border border-[oklch(0.84_0.04_10.35)] bg-white p-1">
                           <button
                             onClick={() => setAuthMode('password')}
-                            className={`${
-                              authMode === 'password'
-                                ? 'bg-[oklch(0.93_0.03_12.01)] text-[oklch(0.39_0.09_17.83)]'
-                                : 'text-[oklch(0.55_0.06_15)]'
-                            } px-3 py-1.5 rounded-full text-xs font-medium transition-colors`}
+                            className={`${authMode === 'password'
+                              ? 'bg-[oklch(0.93_0.03_12.01)] text-[oklch(0.39_0.09_17.83)]'
+                              : 'text-[oklch(0.55_0.06_15)]'
+                              } px-3 py-1.5 rounded-full text-xs font-medium transition-colors`}
                           >
                             Password
                           </button>
                           <button
                             onClick={() => setAuthMode('otp')}
-                            className={`${
-                              authMode === 'otp'
-                                ? 'bg-[oklch(0.93_0.03_12.01)] text-[oklch(0.39_0.09_17.83)]'
-                                : 'text-[oklch(0.55_0.06_15)]'
-                            } px-3 py-1.5 rounded-full text-xs font-medium transition-colors`}
+                            className={`${authMode === 'otp'
+                              ? 'bg-[oklch(0.93_0.03_12.01)] text-[oklch(0.39_0.09_17.83)]'
+                              : 'text-[oklch(0.55_0.06_15)]'
+                              } px-3 py-1.5 rounded-full text-xs font-medium transition-colors`}
                           >
                             OTP
                           </button>
@@ -844,23 +858,21 @@ export default function Navbar() {
                               className="flex flex-col items-center gap-2 relative z-10"
                             >
                               <span
-                                className={`flex h-4 w-4 items-center justify-center rounded-full text-[10px] ${
-                                  idx === 0 && loginStep === 'email'
-                                    ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] text-white'
-                                    : idx === 1 && loginStep === 'verify'
+                                className={`flex h-4 w-4 items-center justify-center rounded-full text-[10px] ${idx === 0 && loginStep === 'email'
+                                  ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] text-white'
+                                  : idx === 1 && loginStep === 'verify'
                                     ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] text-white'
                                     : 'bg-white border-2 border-[oklch(0.84_0.04_10.35)] text-[oklch(0.55_0.06_15)]'
-                                }`}
+                                  }`}
                               >
                                 {idx + 1}
                               </span>
                               <span
-                                className={`text-[10px] ${
-                                  (idx === 0 && loginStep === 'email') ||
+                                className={`text-[10px] ${(idx === 0 && loginStep === 'email') ||
                                   (idx === 1 && loginStep === 'verify')
-                                    ? 'text-[oklch(0.66_0.14_358.91)]'
-                                    : 'text-[oklch(0.55_0.06_15)]'
-                                }`}
+                                  ? 'text-[oklch(0.66_0.14_358.91)]'
+                                  : 'text-[oklch(0.55_0.06_15)]'
+                                  }`}
                               >
                                 {label}
                               </span>
@@ -897,11 +909,10 @@ export default function Navbar() {
                             <button
                               onClick={continueFromEmail}
                               disabled={!isValidLoginEmail || loginLoading}
-                              className={`rounded-lg px-4 py-2.5 text-white text-sm font-medium transition-all duration-200 ${
-                                isValidLoginEmail && !loginLoading
-                                  ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] hover:shadow-md'
-                                  : 'bg-[oklch(0.84_0.04_10.35)] cursor-not-allowed'
-                              }`}
+                              className={`rounded-lg px-4 py-2.5 text-white text-sm font-medium transition-all duration-200 ${isValidLoginEmail && !loginLoading
+                                ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] hover:shadow-md'
+                                : 'bg-[oklch(0.84_0.04_10.35)] cursor-not-allowed'
+                                }`}
                             >
                               {loginLoading ? (
                                 <Spinner className="text-white" />
@@ -962,11 +973,10 @@ export default function Navbar() {
                                 <button
                                   onClick={handleNavbarPasswordLogin}
                                   disabled={!isValidLoginPassword || loginLoading}
-                                  className={`rounded-lg px-4 py-2.5 text-white text-sm font-medium transition-all duration-200 ${
-                                    isValidLoginPassword && !loginLoading
-                                      ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] hover:shadow-md'
-                                      : 'bg-[oklch(0.84_0.04_10.35)] cursor-not-allowed'
-                                  }`}
+                                  className={`rounded-lg px-4 py-2.5 text-white text-sm font-medium transition-all duration-200 ${isValidLoginPassword && !loginLoading
+                                    ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] hover:shadow-md'
+                                    : 'bg-[oklch(0.84_0.04_10.35)] cursor-not-allowed'
+                                    }`}
                                 >
                                   {loginLoading ? (
                                     <Spinner className="text-white" />
@@ -1020,26 +1030,24 @@ export default function Navbar() {
                                     type="button"
                                     disabled={loginResendIn > 0 || loginLoading}
                                     onClick={handleNavbarResendOtp}
-                                    className={`text-xs ${
-                                      loginResendIn > 0 || loginLoading
-                                        ? 'text-[oklch(0.7_0.04_12)] cursor-not-allowed'
-                                        : 'text-[oklch(0.66_0.14_358.91)] hover:text-[oklch(0.58_0.16_8)]'
-                                    }`}
+                                    className={`text-xs ${loginResendIn > 0 || loginLoading
+                                      ? 'text-[oklch(0.7_0.04_12)] cursor-not-allowed'
+                                      : 'text-[oklch(0.66_0.14_358.91)] hover:text-[oklch(0.58_0.16_8)]'
+                                      }`}
                                   >
                                     {loginResendIn > 0
                                       ? `Resend in 00:${String(loginResendIn).padStart(2, '0')}`
                                       : loginLoading
-                                      ? <Spinner className="h-3 w-3" />
-                                      : 'Resend OTP'}
+                                        ? <Spinner className="h-3 w-3" />
+                                        : 'Resend OTP'}
                                   </button>
                                   <button
                                     onClick={handleNavbarVerifyOtp}
                                     disabled={!isValidLoginOtp || loginLoading}
-                                    className={`rounded-lg px-4 py-2.5 text-white text-sm font-medium transition-all duration-200 ${
-                                      isValidLoginOtp && !loginLoading
-                                        ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] hover:shadow-md'
-                                        : 'bg-[oklch(0.84_0.04_10.35)] cursor-not-allowed'
-                                    }`}
+                                    className={`rounded-lg px-4 py-2.5 text-white text-sm font-medium transition-all duration-200 ${isValidLoginOtp && !loginLoading
+                                      ? 'bg-gradient-to-r from-[oklch(0.66_0.14_358.91)] to-[oklch(0.58_0.16_8)] hover:shadow-md'
+                                      : 'bg-[oklch(0.84_0.04_10.35)] cursor-not-allowed'
+                                      }`}
                                   >
                                     {loginLoading ? (
                                       <Spinner className="text-white" />
@@ -1138,7 +1146,7 @@ export default function Navbar() {
                                   src={String(
                                     (i?.product?.images &&
                                       (i.product.images[0] as string)) ??
-                                      '/favicon.ico'
+                                    '/favicon.ico'
                                   )}
                                   alt={i?.product?.name || 'Product'}
                                   className="h-full w-full object-cover"
@@ -1161,8 +1169,8 @@ export default function Navbar() {
                                   maximumFractionDigits: 0,
                                 }).format(
                                   i?.product?.discountPrice ??
-                                    i?.product?.price ??
-                                    0
+                                  i?.product?.price ??
+                                  0
                                 )}
                               </div>
                             </div>
@@ -1173,7 +1181,7 @@ export default function Navbar() {
                               <span>{formatINR(subtotal)}</span>
                             </div>
                             <div className="mt-3 flex justify-end">
-                              
+
                               <button
                                 className="flex-1 relative rounded-md bg-primary px-3 py-2 text-center text-sm text-white transition-colors hover:bg-primary/90 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center"
                                 onClick={() => {
@@ -1212,17 +1220,18 @@ export default function Navbar() {
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-40 bg-black/25 backdrop-blur-sm"
             onClick={() => setIsSearchOpen(false)}
+            style={{ touchAction: 'none' }}
           >
             <motion.div
               initial={{ y: '-100%' }}
               animate={{ y: '0%' }}
               exit={{ y: '-100%' }}
               transition={{ duration: 0.4, ease: [0.25, 1, 0.5, 1] }}
-              className="bg-white "
+              className="bg-white h-screen overflow-y-auto"
               onClick={e => e.stopPropagation()}
             >
               <Container>
-                <div className="py-8">
+                <div className="py-6 sm:py-8">
                   {/* Search Input */}
                   <div className="relative border border-border px-2 sm:px-3 md:px-4 flex items-center rounded-md py-1">
                     <Search
@@ -1300,61 +1309,11 @@ export default function Navbar() {
                       <RxCross2 size={18} />
                     </button>
                   </div>
-                  {/* Content */}
-                  <div className="pt-10 grid sm:grid-cols-2 gap-5 sm:gap-12">
+                  {/* Content - Recent Searches First */}
+                  <div className="pt-8 sm:pt-10 space-y-8 sm:space-y-10">
+                    {/* Recent Searches Section */}
                     <div>
-                      <h3 className="text-sm font-medium text-gray-700">
-                        Popular Categories
-                      </h3>
-                      {isLoadingCategories ? (
-                        <div className="mt-4 grid grid-cols-2 gap-4">
-                          {[...Array(4)].map((_, i) => (
-                            <div
-                              key={i}
-                              className="aspect-square w-full rounded-md bg-gray-100 animate-pulse"
-                            />
-                          ))}
-                        </div>
-                      ) : categories.length > 0 ? (
-                        <div className="mt-4 grid grid-cols-2 gap-4">
-                          {categories.slice(0, 4).map(cat => (
-                            <Link
-                              href={`/shop/${cat.slug}`}
-                              key={cat._id || cat.slug}
-                              onClick={() => setIsSearchOpen(false)}
-                              className="group block"
-                            >
-                              <div className="aspect-square w-full overflow-hidden rounded-md bg-gray-100">
-                                {cat.image ? (
-                                  <Image
-                                    src={cat.image}
-                                    alt={cat.name}
-                                    width={200}
-                                    height={200}
-                                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                                  />
-                                ) : (
-                                  <div className="h-full w-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
-                                    <span className="text-gray-500 text-sm font-medium">
-                                      {cat.name}
-                                    </span>
-                                  </div>
-                                )}
-                              </div>
-                              <p className="mt-2 text-sm font-medium text-gray-800 transition-colors group-hover:text-primary">
-                                {cat.name}
-                              </p>
-                            </Link>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="mt-4 text-sm text-gray-500">
-                          No categories available
-                        </p>
-                      )}
-                    </div>
-                    <div>
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between mb-4">
                         <h3 className="text-sm font-medium text-gray-700">
                           Recent Searches
                         </h3>
@@ -1372,7 +1331,7 @@ export default function Navbar() {
                         )}
                       </div>
                       {searchHistory.length > 0 ? (
-                        <div className="mt-4 flex flex-wrap gap-3">
+                        <div className="flex flex-wrap gap-3">
                           {searchHistory.map((term, index) => (
                             <button
                               key={`${term}-${index}`}
@@ -1392,8 +1351,61 @@ export default function Navbar() {
                           ))}
                         </div>
                       ) : (
-                        <p className="mt-4 text-sm text-gray-500">
+                        <p className="text-sm text-gray-500">
                           No recent searches
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Popular Categories Section - Smaller */}
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-700 mb-4">
+                        Popular Categories
+                      </h3>
+                      {isLoadingCategories ? (
+                        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+                          {[...Array(5)].map((_, i) => (
+                            <div
+                              key={i}
+                              className="aspect-square w-full rounded-md bg-gray-100 animate-pulse"
+                            />
+                          ))}
+                        </div>
+                      ) : categories.length > 0 ? (
+                        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+                          {categories.slice(0, 5).map(cat => (
+                            <Link
+                              href={`/shop/${cat.slug}`}
+                              key={cat._id || cat.slug}
+                              onClick={() => setIsSearchOpen(false)}
+                              className="group block"
+                            >
+                              <div className="aspect-square w-full overflow-hidden rounded-md bg-gray-100">
+                                {cat.image ? (
+                                  <Image
+                                    src={cat.image}
+                                    alt={cat.name}
+                                    width={120}
+                                    height={120}
+                                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                  />
+                                ) : (
+                                  <div className="h-full w-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
+                                    <span className="text-gray-500 text-xs font-medium text-center px-1">
+                                      {cat.name}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                              <p className="mt-1.5 text-xs font-medium text-gray-800 transition-colors group-hover:text-primary text-center line-clamp-2">
+                                {cat.name}
+                              </p>
+                            </Link>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-gray-500">
+                          No categories available
                         </p>
                       )}
                     </div>
@@ -1470,7 +1482,7 @@ export default function Navbar() {
                   onClick={handleLogout}
                   disabled={isLoggingOut}
                   className="relative px-5 py-2.5 bg-[#d92d20] text-white text-sm font-normal rounded-md hover:bg-[#c0231a] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                 >
+                >
                   <span className={isLoggingOut ? 'opacity-0' : ''}>Sign Out</span>
                   {isLoggingOut && (
                     <span className="absolute inset-0 flex items-center justify-center">

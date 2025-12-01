@@ -182,21 +182,18 @@ function SearchPageInner() {
     }
   }, [initialQuery, fetchSearch]);
 
-  useEffect(() => {
-    const id = setTimeout(() => {
-      if (searchValue.trim()) {
-        fetchSearch(searchValue.trim());
-
-        // Push updated query to URL
-        router.push(`/search?q=${encodeURIComponent(searchValue.trim())}`);
-      }
-    }, 350);
-    return () => clearTimeout(id);
-  }, [searchValue, fetchSearch, router]);
-
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    fetchSearch(searchValue.trim());
+    const trimmed = searchValue.trim();
+    if (!trimmed) {
+      setSearchResults([]);
+      setResults([]);
+      return;
+    }
+    // Trigger search only on submit / Enter
+    fetchSearch(trimmed);
+    // Keep URL in sync with the submitted query
+    router.push(`/search?q=${encodeURIComponent(trimmed)}`);
   };
 
   const handleFiltersChange = useCallback((filteredProducts: UiProduct[]) => {

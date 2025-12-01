@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { RxCross2 } from 'react-icons/rx';
@@ -8,12 +8,11 @@ import { BsInboxes } from 'react-icons/bs';
 import {
   Store,
   New,
-  Search,
   Heart,
   User,
 } from '@/app/(main)/assets/Navbar';
-import { LogoCaelvi } from '@/app/(main)/assets';
 import { usePublicCategoryStore } from '@/lib/data/mainStore/categoryStore';
+import { NavbarLogo } from './Navbar/NavbarLogo';
 
 const quickLinks = [
   {
@@ -39,23 +38,35 @@ interface MobileNavMenuProps {
 }
 
 const MobileNavMenu = ({ isOpen, onClose }: MobileNavMenuProps) => {
-  // const [activeSubmenu, setActiveSubmenu] = useState<string | null>(null);
-  const [searchValue, setSearchValue] = useState('');
-
   const { categories, status } = usePublicCategoryStore();
 
   // Categories are already fetched by Navbar, so we just use them from the store
 
   useEffect(() => {
     if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'auto';
-    }
+      // Prevent body scroll when sidebar is open
+      const originalStyle = window.getComputedStyle(document.body).overflow;
+      const originalPaddingRight = document.body.style.paddingRight;
+      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
 
-    return () => {
-      document.body.style.overflow = 'auto';
-    };
+      document.body.style.overflow = 'hidden';
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
+      document.body.style.top = `-${window.scrollY}px`;
+
+      return () => {
+        const scrollY = document.body.style.top;
+        document.body.style.overflow = originalStyle;
+        document.body.style.paddingRight = originalPaddingRight;
+        document.body.style.position = '';
+        document.body.style.width = '';
+        document.body.style.top = '';
+        if (scrollY) {
+          window.scrollTo(0, parseInt(scrollY || '0') * -1);
+        }
+      };
+    }
   }, [isOpen]);
 
   useEffect(() => {
@@ -83,8 +94,9 @@ const MobileNavMenu = ({ isOpen, onClose }: MobileNavMenuProps) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm lg:hidden"
+            className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm lg:hidden"
             onClick={onClose}
+            style={{ touchAction: 'none' }}
           />
 
           {/* Side Drawer */}
@@ -93,13 +105,15 @@ const MobileNavMenu = ({ isOpen, onClose }: MobileNavMenuProps) => {
             animate={{ x: 0 }}
             exit={{ x: '-100%' }}
             transition={{ duration: 0.3, ease: 'easeOut' }}
-            className="fixed left-0 top-0 z-50 h-full w-80 max-w-[85vw] bg-white shadow-2xl lg:hidden"
+            className="fixed left-0 top-0 z-[70] h-screen w-80 max-w-[85vw] bg-white shadow-2xl lg:hidden"
+            style={{
+              position: 'fixed',
+              willChange: 'transform'
+            }}
           >
             {/* Header */}
             <div className="flex h-20 items-center justify-between border-b border-gray-200 px-6">
-              <h2 className="text-xs  text-primary">
-                <LogoCaelvi />
-              </h2>
+              <NavbarLogo />
               <button
                 onClick={onClose}
                 className="rounded-full p-3 text-gray-500 transition-colors hover:bg-gray-100 hover:text-primary"
@@ -110,21 +124,7 @@ const MobileNavMenu = ({ isOpen, onClose }: MobileNavMenuProps) => {
             </div>
 
             {/* Content */}
-            <div className="flex h-[calc(100vh-80px)] flex-col overflow-y-auto">
-              {/* Search */}
-              <div className="border-b border-gray-200 p-6">
-                <div className="relative flex items-center rounded-md border border-gray-300 px-4 py-3">
-                  <Search className="h-5 w-5 flex-shrink-0 text-gray-400" />
-                  <input
-                    type="text"
-                    value={searchValue}
-                    onChange={e => setSearchValue(e.target.value)}
-                    placeholder="Search Gold Jewellery..."
-                    className="ml-3 flex-1 bg-transparent text-sm placeholder-gray-400 focus:outline-none"
-                  />
-                </div>
-              </div>
-
+            <div className="flex h-[calc(100vh-80px)] flex-col overflow-y-auto overscroll-contain">
               {/* Quick Links */}
               <div className="border-b border-gray-200 p-6">
                 <h3 className="mb-4 text-sm font-medium text-gray-700">
@@ -195,7 +195,7 @@ const MobileNavMenu = ({ isOpen, onClose }: MobileNavMenuProps) => {
                     <Heart className="h-4 w-4" />
                     Wishlist
                   </Link>
-                
+
                 </div>
               </div>
             </div>

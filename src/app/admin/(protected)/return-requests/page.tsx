@@ -198,27 +198,68 @@ export default function ReturnRequestsPage() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        {['pending', 'approved', 'rejected', 'processing', 'completed'].map((status) => {
-          const count = returnRequests.filter((r) => r.status === status).length;
-          return (
-            <div
-              key={status}
-              className="bg-white dark:bg-[#191919] border border-gray-200 dark:border-[#3a3a3a] rounded-lg p-4"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 capitalize">
-                    {status}
-                  </p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-                    {count}
-                  </p>
+        {(['pending', 'approved', 'rejected', 'processing', 'completed'] as ReturnRequest['status'][]).map(
+          status => {
+            const count = returnRequests.filter(r => r.status === status).length;
+
+            const iconConfig: Record<
+              ReturnRequest['status'],
+              { icon: typeof Clock; bg: string; text: string }
+            > = {
+              pending: {
+                icon: Clock,
+                bg: 'bg-yellow-50 dark:bg-yellow-900/20',
+                text: 'text-yellow-600 dark:text-yellow-300',
+              },
+              approved: {
+                icon: CheckCircle,
+                bg: 'bg-emerald-50 dark:bg-emerald-900/20',
+                text: 'text-emerald-600 dark:text-emerald-300',
+              },
+              rejected: {
+                icon: XCircle,
+                bg: 'bg-red-50 dark:bg-red-900/20',
+                text: 'text-red-600 dark:text-red-300',
+              },
+              processing: {
+                icon: Package,
+                bg: 'bg-blue-50 dark:bg-blue-900/20',
+                text: 'text-blue-600 dark:text-blue-300',
+              },
+              completed: {
+                icon: CheckCircle,
+                bg: 'bg-gray-100 dark:bg-gray-800',
+                text: 'text-gray-700 dark:text-gray-200',
+              },
+            };
+
+            const config = iconConfig[status] || iconConfig.pending;
+            const Icon = config.icon;
+
+            return (
+              <div
+                key={status}
+                className="bg-white dark:bg-[#191919] border border-gray-200 dark:border-[#3a3a3a] rounded-lg p-4"
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 capitalize">
+                      {status}
+                    </p>
+                    <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                      {count}
+                    </p>
+                  </div>
+                  <div
+                    className={`flex h-10 w-10 items-center justify-center rounded-full ${config.bg}`}
+                  >
+                    <Icon className={`h-5 w-5 ${config.text}`} />
+                  </div>
                 </div>
-                <RotateCcw className="h-8 w-8 text-gray-400 dark:text-gray-500" />
               </div>
-            </div>
-          );
-        })}
+            );
+          }
+        )}
       </div>
 
       {/* Return Requests List */}

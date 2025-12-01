@@ -5,9 +5,9 @@ import Container from './Container';
 import Link from 'next/link';
 import {
   FaFacebookF,
-  FaYoutube,
   FaInstagram,
-  FaXTwitter,
+  FaThreads,
+  FaLinkedinIn,
   FaEnvelope,
   FaPhone,
   FaLocationDot,
@@ -168,7 +168,9 @@ export default function Footer() {
                   whileTap={{ scale: 0.9 }}
                 >
                   <Link
-                    href="#"
+                    href="https://www.instagram.com/caelvi.store/#"
+                    target="_blank"
+                    rel="noreferrer"
                     className="bg-primary/10 hover:bg-primary/20 text-primary p-2 md:p-3 rounded-full transition-all duration-200 inline-flex items-center justify-center"
                     aria-label="Follow us on Instagram"
                   >
@@ -180,19 +182,9 @@ export default function Footer() {
                   whileTap={{ scale: 0.9 }}
                 >
                   <Link
-                    href="#"
-                    className="bg-primary/10 hover:bg-primary/20 text-primary p-2 md:p-3 rounded-full transition-all duration-200 inline-flex items-center justify-center"
-                    aria-label="Follow us on Twitter"
-                  >
-                    <FaXTwitter className="text-sm md:text-lg" />
-                  </Link>
-                </motion.div>
-                <motion.div
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                >
-                  <Link
-                    href="#"
+                    href="https://www.facebook.com/people/Caelvi/61579118266902/"
+                    target="_blank"
+                    rel="noreferrer"
                     className="bg-primary/10 hover:bg-primary/20 text-primary p-2 md:p-3 rounded-full transition-all duration-200 inline-flex items-center justify-center"
                     aria-label="Follow us on Facebook"
                   >
@@ -204,11 +196,27 @@ export default function Footer() {
                   whileTap={{ scale: 0.9 }}
                 >
                   <Link
-                    href="#"
+                    href="https://www.threads.com/@caelvi.store"
+                    target="_blank"
+                    rel="noreferrer"
                     className="bg-primary/10 hover:bg-primary/20 text-primary p-2 md:p-3 rounded-full transition-all duration-200 inline-flex items-center justify-center"
-                    aria-label="Follow us on YouTube"
+                    aria-label="Follow us on Threads"
                   >
-                    <FaYoutube className="text-sm md:text-lg" />
+                    <FaThreads className="text-sm md:text-lg" />
+                  </Link>
+                </motion.div>
+                <motion.div
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                >
+                  <Link
+                    href="https://www.linkedin.com/company/108648091/"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="bg-primary/10 hover:bg-primary/20 text-primary p-2 md:p-3 rounded-full transition-all duration-200 inline-flex items-center justify-center"
+                    aria-label="Connect with us on LinkedIn"
+                  >
+                    <FaLinkedinIn className="text-sm md:text-lg" />
                   </Link>
                 </motion.div>
               </div>
