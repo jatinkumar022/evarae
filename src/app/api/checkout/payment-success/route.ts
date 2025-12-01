@@ -7,6 +7,7 @@ import mongoose from 'mongoose';
 import jwt from 'jsonwebtoken';
 import { notifyOrderPlaced } from '@/lib/notify';
 import { clearKeys, cacheKeys } from '@/lib/cache';
+import { generateAndUploadInvoice } from '@/lib/invoiceGenerator';
 
 const USER_JWT_SECRET = process.env.USER_JWT_SECRET as string;
 
@@ -106,9 +107,9 @@ export async function POST(request: Request) {
       },
       { new: true }
     )
-      .select('_id user orderNumber items subtotalAmount taxAmount shippingAmount discountAmount totalAmount shippingAddress orderStatus createdAt paymentStatus')
+      .select('_id user orderNumber items subtotalAmount taxAmount shippingAmount discountAmount paymentChargesAmount totalAmount shippingAddress orderStatus createdAt paymentStatus invoiceUrl')
       .populate('user', 'name email')
-      .lean()) as LeanOrder & { paymentStatus?: string } | null;
+      .lean()) as LeanOrder & { paymentStatus?: string; paymentChargesAmount?: number; invoiceUrl?: string | null } | null;
 
     if (!order) {
       // Check if order exists but was already processed
@@ -253,6 +254,52 @@ export async function POST(request: Request) {
       orderId: order._id,
       orderNumber: order.orderNumber || String(order._id),
     });
+
+    // Generate and upload invoice PDF to Cloudinary (only if not already generated)
+    if (!order.invoiceUrl) {
+      try {
+        console.log('[payment-success] generating invoice PDF', { orderId: order._id });
+        const invoiceUrl = await generateAndUploadInvoice({
+          _id: String(order._id),
+          orderNumber: order.orderNumber,
+          items: (order.items || []).map(item => ({
+            name: item.name || 'Unknown Product',
+            price: item.price || 0,
+            quantity: item.quantity || 1,
+          })),
+          subtotalAmount: order.subtotalAmount || 0,
+          taxAmount: order.taxAmount || 0,
+          shippingAmount: order.shippingAmount || 0,
+          discountAmount: order.discountAmount || 0,
+          paymentChargesAmount: order.paymentChargesAmount || 0,
+          totalAmount: order.totalAmount || 0,
+          orderStatus: order.orderStatus || 'processing',
+          paymentStatus: order.paymentStatus || 'paid',
+          shippingAddress: order.shippingAddress,
+          createdAt: order.createdAt,
+          paidAt: new Date(),
+        });
+
+        // Update order with invoice URL
+        await Order.updateOne(
+          { _id: order._id },
+          { $set: { invoiceUrl } }
+        );
+        console.log('[payment-success] invoice generated and uploaded', {
+          orderId: order._id,
+          invoiceUrl,
+        });
+      } catch (invoiceError) {
+        console.error('[payment-success] failed to generate invoice', invoiceError);
+        // Don't fail the payment success if invoice generation fails
+        // Invoice can be regenerated later if needed
+      }
+    } else {
+      console.log('[payment-success] invoice already exists', {
+        orderId: order._id,
+        invoiceUrl: order.invoiceUrl,
+      });
+    }
 
     return NextResponse.json({ ok: true });
   } catch (error) {

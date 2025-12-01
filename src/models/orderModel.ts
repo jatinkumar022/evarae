@@ -87,6 +87,7 @@ const orderSchema = new mongoose.Schema(
     couponCode: { type: String, default: null },
     notes: { type: String, default: null },
     paidAt: { type: Date, default: null },
+    invoiceUrl: { type: String, default: null },
   },
   { timestamps: true }
 );

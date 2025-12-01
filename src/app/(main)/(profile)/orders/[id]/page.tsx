@@ -15,6 +15,7 @@ import {
   RotateCcw,
   ArrowLeft,
   Copy,
+  Eye,
   ExternalLink,
   CreditCard,
   CheckCircle2,
@@ -29,6 +30,7 @@ import { downloadInvoiceWithProgress } from '@/app/(main)/utils/invoiceDownload'
 import PageLoader from '@/app/(main)/components/layouts/PageLoader';
 import ReturnRequestModal from '@/app/(main)/components/ui/ReturnRequestModal';
 import { ReturnStatusModal } from '@/app/(main)/components/ui/ReturnStatusModal';
+import InvoiceModal from '@/app/(main)/components/ui/InvoiceModal';
 
 // Strict types for order data
 type OrderItem = {
@@ -235,6 +237,7 @@ export default function OrderDetailsPage() {
   const [selectedItem, setSelectedItem] = useState<OrderItem | null>(null);
   const [returnStatusModalOpen, setReturnStatusModalOpen] = useState(false);
   const [selectedItemForStatus, setSelectedItemForStatus] = useState<OrderItem | null>(null);
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false);
 
   const { returnRequestsMap, checkReturnRequestsForOrder, fetchReturnRequests, returnRequests: storeReturnRequests } = useReturnRequestStore();
   const hasFetchedReturnRequestsRef = useRef<string | null>(null);
@@ -413,6 +416,7 @@ export default function OrderDetailsPage() {
       setDownloadProgress(0);
     }
   };
+
 
   const handleCopyTrackingNumber = (trackingNumber: string) => {
     navigator.clipboard.writeText(trackingNumber);
@@ -918,13 +922,22 @@ export default function OrderDetailsPage() {
                     </button>
                   )}
 
-                  <button
-                    onClick={() => handleDownloadInvoice(order)}
-                    className="px-6 py-3 bg-white text-primary border border-primary/20 rounded-xl hover:bg-primary/5 hover:border-primary/40 transition-all duration-300 font-medium flex items-center gap-2"
-                  >
-                    <Download className="w-4 h-4" />
-                    Download Invoice
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setShowInvoiceModal(true)}
+                      className="px-6 py-3 bg-white text-primary border border-primary/20 rounded-xl hover:bg-primary/5 hover:border-primary/40 transition-all duration-300 font-medium flex items-center gap-2"
+                    >
+                      <Eye className="w-4 h-4" />
+                      Show Invoice
+                    </button>
+                    <button
+                      onClick={() => handleDownloadInvoice(order)}
+                      className="px-6 py-3 bg-white text-primary border border-primary/20 rounded-xl hover:bg-primary/5 hover:border-primary/40 transition-all duration-300 font-medium flex items-center gap-2"
+                    >
+                      <Download className="w-4 h-4" />
+                      Download Invoice
+                    </button>
+                  </div>
 
                   {order.orderStatus === 'delivered' && (
                     <>
@@ -1101,6 +1114,14 @@ export default function OrderDetailsPage() {
         orderId={order?._id || ''}
         orderItemSku={selectedItemForStatus?.sku || ''}
       />
+      {order && (
+        <InvoiceModal
+          isOpen={showInvoiceModal}
+          onClose={() => setShowInvoiceModal(false)}
+          orderId={order.orderNumber || order._id}
+          orderNumber={order.orderNumber}
+        />
+      )}
     </>
   );
 }

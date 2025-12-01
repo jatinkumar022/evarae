@@ -55,6 +55,12 @@ const nextConfig: NextConfig = {
       ],
     });
 
+    // PDF.js worker handling
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      canvas: false,
+    };
+
     return config;
   },
 

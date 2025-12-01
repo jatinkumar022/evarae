@@ -2,7 +2,11 @@ import { NextResponse } from 'next/server';
 import { connect } from '@/dbConfig/dbConfig';
 import jwt from 'jsonwebtoken';
 import Order from '@/models/orderModel';
-import puppeteer from 'puppeteer';
+import { generateAndUploadInvoice } from '@/lib/invoiceGenerator';
+
+// Ensure this route runs in the Node.js runtime (not Edge),
+// which is required for PDF generation.
+export const runtime = 'nodejs';
 
 const ADMIN_JWT_SECRET = process.env.ADMIN_JWT_SECRET as string;
 
@@ -26,24 +30,22 @@ function getAdminId(request: Request): string | null {
   }
 }
 
-const money = (n: number) => `₹${Number(n || 0).toLocaleString()}`;
-
-type HtmlOrderItem = {
-  name: string;
-  quantity: number;
-  price: number;
-};
-
 type HtmlOrder = {
   _id: string;
   orderNumber?: string;
-  items: HtmlOrderItem[];
+  items: Array<{
+    name?: string;
+    quantity?: number;
+    price?: number;
+  }>;
   subtotalAmount?: number;
   discountAmount?: number;
   taxAmount?: number;
   shippingAmount?: number;
   paymentChargesAmount?: number;
   totalAmount?: number;
+  orderStatus?: string;
+  paymentStatus?: string;
   shippingAddress?: {
     fullName?: string;
     phone?: string;
@@ -56,145 +58,9 @@ type HtmlOrder = {
   };
   trackingNumber?: string | null;
   paidAt?: string | Date | null;
+  createdAt?: string | Date;
+  invoiceUrl?: string | null;
 };
-
-function buildHtml(order: HtmlOrder) {
-  const subtotal = order.subtotalAmount || 0;
-  const discount = order.discountAmount || 0;
-  const gst = order.taxAmount || 0;
-  const shipping = order.shippingAmount || 0;
-  const paymentCharges = order.paymentChargesAmount || 0;
-  const total = order.totalAmount || 0;
-
-  const addr = order.shippingAddress || {};
-
-  const rows = (order.items || [])
-    .map(
-      (it: HtmlOrderItem, idx: number) => `
-      <tr class="row ${idx % 2 === 0 ? 'zebra' : ''}">
-        <td class="item">${escapeHtml(it.name || '')}</td>
-        <td class="qty">${it.quantity || 0}</td>
-        <td class="price">${money(it.price || 0)}</td>
-        <td class="amount">${money((it.price || 0) * (it.quantity || 1))}</td>
-      </tr>`
-    )
-    .join('');
-
-  return `<!doctype html>
-<html>
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<style>
-  * { box-sizing: border-box; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, 'Noto Sans', 'Liberation Sans', sans-serif; color: #111; margin: 0; }
-  .container { padding: 24px; }
-  .header { display: flex; justify-content: space-between; gap: 24px; align-items: flex-start; }
-  .brand-wrap { flex: 1; }
-  .brand { font-size: 20px; font-weight: 700; }
-  .brand-sub { color: #666; margin-top: 2px; font-size: 12px; }
-  .company { margin-top: 8px; font-size: 11px; color: #444; line-height: 1.35; }
-  .meta { min-width: 260px; border: 1px solid #e5e5e5; border-radius: 8px; padding: 12px; }
-  .row { display: flex; justify-content: space-between; align-items: center; width: 100%; }
-  .label { color: #666; }
-  .value { font-weight: 600; }
-  .muted { color: #666; }
-  .table { width: 100%; border-collapse: collapse; margin-top: 16px; }
-  .th { background: #f6f6f7; font-weight: 700; }
-  .table th, .table td { padding: 9px 10px; border-bottom: 1px solid #efeff0; text-align: right; font-size: 12px; }
-  .table th.item, .table td.item { text-align: left; width: 60%; }
-  .table th.qty, .table td.qty { width: 10%; }
-  .table th.price, .table td.price { width: 15%; }
-  .table th.amount, .table td.amount { width: 15%; }
-  tr.zebra { background: #fbfbfc; }
-  .summary { width: 320px; margin-left: auto; margin-top: 14px; border: 1px solid #e5e5e5; border-radius: 8px; overflow: hidden; }
-  .summary .line { display: flex; justify-content: space-between; padding: 9px 12px; border-bottom: 1px solid #f0f0f0; }
-  .summary .line:last-child { border-bottom: 0; }
-  .summary .total { background: #fff6e6; font-weight: 800; }
-  .footer { margin-top: 18px; color: #666; font-size: 11px; }
-</style>
-</head>
-<body>
-  <div class="container">
-    <div class="header">
-      <div class="brand-wrap">
-        <div class="brand">Caelvi Jewellery</div>
-        <div class="brand-sub">Luxury Imitation Jewellery</div>
-        <div class="company">
-          Caelvi Pvt. Ltd.<br/>
-          123 artisan park, Mumbai, MH 400001, IN<br/>
-          GSTIN: 27AAAPC1234A1Z5
-        </div>
-      </div>
-      <div class="meta">
-        <div class="row"><div>Invoice</div><div class="value">${escapeHtml(
-          order.orderNumber || order._id
-        )}</div></div>
-        <div class="row"><div class="label">Date</div><div class="value">${escapeHtml(
-          order.paidAt
-            ? new Date(order.paidAt).toLocaleDateString('en-IN', {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric',
-              })
-            : new Date().toLocaleDateString('en-IN', {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric',
-              })
-        )}</div></div>
-        ${order.trackingNumber ? `<div class="row"><div class="label">Tracking</div><div class="value">${escapeHtml(order.trackingNumber)}</div></div>` : ''}
-      </div>
-    </div>
-    <div>
-      <div style="margin-top: 16px; font-size: 12px; color: #666;">
-        <div><strong>Bill To:</strong></div>
-        <div style="margin-top: 4px;">
-          ${escapeHtml(addr.fullName || '')}<br/>
-          ${escapeHtml(addr.line1 || '')}<br/>
-          ${addr.line2 ? escapeHtml(addr.line2) + '<br/>' : ''}
-          ${escapeHtml(addr.city || '')}, ${escapeHtml(addr.state || '')} ${escapeHtml(addr.postalCode || '')}<br/>
-          ${escapeHtml(addr.country || '')}<br/>
-          ${escapeHtml(addr.phone || '')}
-        </div>
-      </div>
-    </div>
-    <table class="table">
-      <thead class="th">
-        <tr>
-          <th class="item">Item</th>
-          <th class="qty">Qty</th>
-          <th class="price">Price</th>
-          <th class="amount">Amount</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${rows}
-      </tbody>
-    </table>
-    <div class="summary">
-      ${subtotal > 0 ? `<div class="line"><div>Subtotal</div><div>${money(subtotal)}</div></div>` : ''}
-      ${discount > 0 ? `<div class="line"><div>Discount</div><div>-${money(discount)}</div></div>` : ''}
-      ${gst > 0 ? `<div class="line"><div>GST</div><div>${money(gst)}</div></div>` : ''}
-      ${shipping > 0 ? `<div class="line"><div>Shipping</div><div>${money(shipping)}</div></div>` : ''}
-      ${paymentCharges > 0 ? `<div class="line"><div>Payment Charges</div><div>${money(paymentCharges)}</div></div>` : ''}
-      <div class="line total"><div>Total</div><div>${money(total)}</div></div>
-    </div>
-    <div class="footer">Thank you for shopping with Caelvi. This is a computer-generated invoice. No signature required.</div>
-  </div>
-</body>
-</html>`;
-}
-
-function escapeHtml(str: string | null | undefined) {
-  if (!str) return '';
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-}
 
 export async function GET(
   request: Request,
@@ -216,73 +82,117 @@ export async function GET(
       key.startsWith('ORD-')
         ? { orderNumber: key }
         : { _id: key }
-    ).lean()) as unknown as HtmlOrder | null;
+    )
+      .select('_id orderNumber items subtotalAmount taxAmount shippingAmount discountAmount paymentChargesAmount totalAmount orderStatus paymentStatus shippingAddress createdAt trackingNumber paidAt invoiceUrl')
+      .lean()) as unknown as HtmlOrder | null;
 
     if (!order) {
       return NextResponse.json({ error: 'Order not found' }, { status: 404 });
     }
 
+    // Check if invoice URL already exists in order
+    if (order.invoiceUrl) {
+      // Return existing invoice URL
+      const fileName = `invoice-${order.orderNumber || order._id}.pdf`;
+      return NextResponse.json(
+        {
+          url: order.invoiceUrl,
+          fileName,
+          cached: true,
+        },
+        {
+          status: 200,
+          headers: {
+            'Cache-Control': 'private, no-store, no-cache, must-revalidate',
+          },
+        }
+      );
+    }
+
+    // If invoice doesn't exist, generate and upload it
     // Ensure all required fields have default values
-    const normalizedOrder: HtmlOrder = {
-      _id: order._id,
+    const normalizedOrder = {
+      _id: String(order._id),
       orderNumber: order.orderNumber,
-      items: order.items || [],
-      subtotalAmount: order.subtotalAmount || 0,
-      discountAmount: order.discountAmount || 0,
-      taxAmount: order.taxAmount || 0,
-      shippingAmount: order.shippingAmount || 0,
-      paymentChargesAmount: order.paymentChargesAmount || 0,
-      totalAmount: order.totalAmount || 0,
-      shippingAddress: order.shippingAddress,
-      trackingNumber: order.trackingNumber,
-      paidAt: order.paidAt,
+      items: (order.items || []).map(item => {
+        // Validate item data
+        const itemName = item.name || 'Unknown Product';
+        const itemPrice = typeof item.price === 'number' ? item.price : 0;
+        const itemQuantity = typeof item.quantity === 'number' && item.quantity > 0 ? item.quantity : 1;
+        
+        if (!itemName || itemPrice < 0 || itemQuantity < 1) {
+          console.warn('[admin/orders/[id]/invoice] Invalid item data', item);
+        }
+        
+        return {
+          name: itemName,
+          price: itemPrice,
+          quantity: itemQuantity,
+        };
+      }),
+      subtotalAmount: typeof order.subtotalAmount === 'number' ? order.subtotalAmount : 0,
+      taxAmount: typeof order.taxAmount === 'number' ? order.taxAmount : 0,
+      shippingAmount: typeof order.shippingAmount === 'number' ? order.shippingAmount : 0,
+      discountAmount: typeof order.discountAmount === 'number' ? order.discountAmount : 0,
+      paymentChargesAmount: typeof order.paymentChargesAmount === 'number' ? order.paymentChargesAmount : 0,
+      totalAmount: typeof order.totalAmount === 'number' ? order.totalAmount : 0,
+      orderStatus: order.orderStatus || 'pending',
+      paymentStatus: order.paymentStatus || 'pending',
+      shippingAddress: order.shippingAddress || {},
+      createdAt: order.createdAt || new Date(),
+      paidAt: order.paidAt || new Date(),
     };
 
-    const html = buildHtml(normalizedOrder);
+    // Validate order has items
+    if (!normalizedOrder.items || normalizedOrder.items.length === 0) {
+      console.error('[admin/orders/[id]/invoice] Order has no items', { orderId: order._id });
+      return NextResponse.json(
+        { error: 'Order has no items to generate invoice' },
+        { status: 400 }
+      );
+    }
 
-    // Optimize browser launch with faster settings
-    const browser = await puppeteer.launch({
-      headless: 'new',
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-gpu',
-        '--disable-software-rasterizer',
-        '--disable-extensions',
-      ],
+    console.log('[admin/orders/[id]/invoice] Generating invoice', {
+      orderId: normalizedOrder._id,
+      itemsCount: normalizedOrder.items.length,
+      totalAmount: normalizedOrder.totalAmount,
     });
-    const page = await browser.newPage();
-    
-    // Optimize page settings for faster rendering
-    await page.setViewport({ width: 1200, height: 1600 });
-    await page.setContent(html, { waitUntil: 'domcontentloaded' }); // Faster than networkidle0
-    
-    const pdfBuffer = await page.pdf({
-      format: 'A4',
-      margin: { top: '20mm', right: '15mm', bottom: '20mm', left: '15mm' },
-      printBackground: true,
-      preferCSSPageSize: false, // Faster rendering
-    });
-    
-    await page.close();
-    await browser.close();
 
+    // Generate and upload invoice
+    const invoiceUrl = await generateAndUploadInvoice(normalizedOrder);
+
+    // Save invoice URL to order for future use
+    await Order.updateOne(
+      { _id: order._id },
+      { $set: { invoiceUrl } }
+    ).catch(err => console.error('[admin/orders/[id]/invoice] Failed to save invoice URL:', err));
+
+    // Return Cloudinary URL
     const fileName = `invoice-${normalizedOrder.orderNumber || normalizedOrder._id}.pdf`;
-    return new NextResponse(pdfBuffer as unknown as BodyInit, {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="${fileName}"`,
-        'Cache-Control': 'private, no-store, no-cache, must-revalidate',
+    return NextResponse.json(
+      {
+        url: invoiceUrl,
+        fileName,
+        cached: false,
       },
-    });
+      {
+        status: 200,
+        headers: {
+          'Cache-Control': 'private, no-store, no-cache, must-revalidate',
+        },
+      }
+    );
   } catch (error) {
     console.error('[admin/orders/[id]/invoice GET] Error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorDetails = error instanceof Error ? error.stack : String(error);
+    console.error('[admin/orders/[id]/invoice GET] Error details:', errorDetails);
     return NextResponse.json(
-      { error: 'Unable to generate invoice. Please try again later' },
+      { 
+        error: 'Unable to generate invoice. Please try again later',
+        details: process.env.NODE_ENV === 'development' ? errorMessage : undefined,
+      },
       { status: 500 }
     );
   }
 }
-

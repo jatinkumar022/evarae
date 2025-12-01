@@ -53,11 +53,11 @@ export default function CheckoutPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [initialData, setInitialData] = useState<Partial<AddressType>>({});
   const { addresses, isLoading: addressesLoading, refetch } = useAddressData();
-  const [coupon, setCoupon] = useState('');
+  // const [coupon, setCoupon] = useState(''); // Temporarily commented out - will add back later
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [razorpayAvailable, setRazorpayAvailable] = useState(true);
-  const [couponApplying, setCouponApplying] = useState(false);
+  // const [couponApplying, setCouponApplying] = useState(false); // Temporarily commented out - will add back later
   const router = useRouter();
 
   // Map cart store items to checkout format
@@ -193,7 +193,7 @@ export default function CheckoutPage() {
         credentials: 'include',
         body: JSON.stringify({
           addressId: selectedAddressId || undefined,
-          couponCode: coupon || undefined,
+          // couponCode: coupon || undefined, // Temporarily commented out - will add back later
         }),
       });
 
@@ -359,21 +359,22 @@ export default function CheckoutPage() {
     }
   };
 
-  const handleApplyCoupon = () => {
-    if (couponApplying) return;
-    setCouponApplying(true);
-    const code = coupon.trim().toUpperCase();
-    if (code === 'SAVE10') {
-      toastApi.success('Coupon applied', '10% discount applied');
-    } else if (code === 'SAVE5') {
-      toastApi.success('Coupon applied', '5% discount applied');
-    } else if (code) {
-      toastApi.error('Invalid coupon', 'Please enter a valid code');
-    }
-    setTimeout(() => {
-      setCouponApplying(false);
-    }, 400);
-  };
+  // Temporarily commented out - will add back later
+  // const handleApplyCoupon = () => {
+  //   if (couponApplying) return;
+  //   setCouponApplying(true);
+  //   const code = coupon.trim().toUpperCase();
+  //   if (code === 'SAVE10') {
+  //     toastApi.success('Coupon applied', '10% discount applied');
+  //   } else if (code === 'SAVE5') {
+  //     toastApi.success('Coupon applied', '5% discount applied');
+  //   } else if (code) {
+  //     toastApi.error('Invalid coupon', 'Please enter a valid code');
+  //   }
+  //   setTimeout(() => {
+  //     setCouponApplying(false);
+  //   }, 400);
+  // };
 
   const openAddModal = () => {
     setEditingId(null);
@@ -598,7 +599,8 @@ export default function CheckoutPage() {
               Order Summary
             </h3>
 
-            <div className="flex gap-2 mb-4 flex-wrap">
+            {/* Temporarily commented out - will add back later */}
+            {/* <div className="flex gap-2 mb-4 flex-wrap">
               <input
                 value={coupon}
                 onChange={e => setCoupon(e.target.value)}
@@ -620,7 +622,7 @@ export default function CheckoutPage() {
               <div className="text-[11px] text-gray-600 w-full">
                 Tip: Use SAVE10 for 10% off select items
               </div>
-            </div>
+            </div> */}
 
             <div className="space-y-2 sm:space-y-3 text-xs sm:text-sm">
               <div className="flex items-center justify-between">

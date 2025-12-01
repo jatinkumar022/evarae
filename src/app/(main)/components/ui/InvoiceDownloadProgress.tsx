@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useLayoutEffect } from 'react';
 import { X, Download } from 'lucide-react';
 
 interface InvoiceDownloadProgressProps {
@@ -16,34 +16,54 @@ export function InvoiceDownloadProgress({
   progress,
   message = 'Generating invoice...',
 }: InvoiceDownloadProgressProps) {
-  useEffect(() => {
+  // Use useLayoutEffect for scroll locking to prevent scrollbar flash
+  useLayoutEffect(() => {
     if (isOpen) {
-      // Save original overflow value
-      const originalOverflow = document.body.style.overflow;
-      const originalHtmlOverflow = document.documentElement.style.overflow;
-      
-      // Lock scroll
+      // Save original styles
+      const originalBodyOverflow = window.getComputedStyle(document.body).overflow;
+      const originalHtmlOverflow = window.getComputedStyle(document.documentElement).overflow;
+      const originalBodyPosition = document.body.style.position;
+      const originalBodyTop = document.body.style.top;
+      const originalBodyWidth = document.body.style.width;
+
+      // Get current scroll position
+      const scrollY = window.scrollY;
+
+      // Disable scrolling on both body and html immediately
       document.body.style.overflow = 'hidden';
       document.documentElement.style.overflow = 'hidden';
-      
-      const handleEscape = (e: KeyboardEvent) => {
-        if (e.key === 'Escape' && progress >= 100) {
-          onClose();
-        }
-      };
-      document.addEventListener('keydown', handleEscape);
-      
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
+
       return () => {
-        // Restore original overflow values
-        document.body.style.overflow = originalOverflow;
+        // Restore original styles
+        document.body.style.overflow = originalBodyOverflow;
         document.documentElement.style.overflow = originalHtmlOverflow;
-        document.removeEventListener('keydown', handleEscape);
+        document.body.style.position = originalBodyPosition;
+        document.body.style.top = originalBodyTop;
+        document.body.style.width = originalBodyWidth;
+
+        // Restore scroll position
+        window.scrollTo(0, scrollY);
       };
-    } else {
-      // Ensure scroll is unlocked when modal closes
-      document.body.style.overflow = '';
-      document.documentElement.style.overflow = '';
     }
+  }, [isOpen]);
+
+  // Handle ESC key separately with useEffect
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && progress >= 100) {
+        onClose();
+      }
+    };
+    document.addEventListener('keydown', handleEscape);
+
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+    };
   }, [isOpen, progress, onClose]);
 
   if (!isOpen) return null;

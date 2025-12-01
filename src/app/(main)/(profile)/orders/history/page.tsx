@@ -25,6 +25,7 @@ import { InvoiceDownloadProgress } from '@/app/(main)/components/ui/InvoiceDownl
 import { downloadInvoiceWithProgress } from '@/app/(main)/utils/invoiceDownload';
 import { useOrdersStore } from '@/lib/data/mainStore/ordersStore';
 import PageLoader from '@/app/(main)/components/layouts/PageLoader';
+import InvoiceModal from '@/app/(main)/components/ui/InvoiceModal';
 
 // Strict types for order data
 type OrderItem = {
@@ -159,6 +160,8 @@ export default function OrdersHistoryPage() {
   const [dateFilter, setDateFilter] = useState<string>('all');
   const [showProgress, setShowProgress] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false);
+  const [selectedOrderForInvoice, setSelectedOrderForInvoice] = useState<OrderDoc | null>(null);
   const { orders: storeOrders, fetchOrders, status: ordersStatus } = useOrdersStore();
 
   // Ensure this page always starts at the top to avoid inheriting scroll from previous route
@@ -274,6 +277,11 @@ export default function OrdersHistoryPage() {
       setShowProgress(false);
       setDownloadProgress(0);
     }
+  };
+
+  const handleShowInvoice = (order: OrderDoc) => {
+    setSelectedOrderForInvoice(order);
+    setShowInvoiceModal(true);
   };
 
   const handleCopyTrackingNumber = (trackingNumber: string) => {
@@ -492,11 +500,18 @@ export default function OrdersHistoryPage() {
                         )}
 
                       <button
+                        onClick={() => handleShowInvoice(order)}
+                        className="btn btn-outline flex items-center gap-2 text-sm"
+                      >
+                        <Eye className="w-4 h-4" />
+                        Show Invoice
+                      </button>
+                      <button
                         onClick={() => handleDownloadInvoice(order)}
                         className="btn btn-outline flex items-center gap-2 text-sm"
                       >
                         <Download className="w-4 h-4" />
-                        Invoice
+                        Download Invoice
                       </button>
 
                       {['delivered', 'cancelled'].includes(order.orderStatus) && (
@@ -542,6 +557,17 @@ export default function OrdersHistoryPage() {
         }}
         progress={downloadProgress}
       />
+      {selectedOrderForInvoice && (
+        <InvoiceModal
+          isOpen={showInvoiceModal}
+          onClose={() => {
+            setShowInvoiceModal(false);
+            setSelectedOrderForInvoice(null);
+          }}
+          orderId={selectedOrderForInvoice.orderNumber || selectedOrderForInvoice._id}
+          orderNumber={selectedOrderForInvoice.orderNumber}
+        />
+      )}
     </>
   );
 }

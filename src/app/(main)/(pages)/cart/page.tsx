@@ -20,8 +20,8 @@ import PageLoader from '@/app/(main)/components/layouts/PageLoader';
 export default function CartPage() {
   const { items, savedItems, status, load, update, remove, save, unsave } =
     useCartStore();
-  const [couponCode, setCouponCode] = useState('');
-  const [couponRate, setCouponRate] = useState(0);
+  // const [couponCode, setCouponCode] = useState('');
+  // const [couponRate, setCouponRate] = useState(0);
   const [quantityLoadingId, setQuantityLoadingId] = useState<string | null>(null);
   const [moveToWishlistLoadingId, setMoveToWishlistLoadingId] =
     useState<string | null>(null);
@@ -30,7 +30,7 @@ export default function CartPage() {
     useState<string | null>(null);
   const [savedRemoveLoadingId, setSavedRemoveLoadingId] =
     useState<string | null>(null);
-  const [couponApplying, setCouponApplying] = useState(false);
+  // const [couponApplying, setCouponApplying] = useState(false);
 
   // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
   useEffect(() => {
@@ -119,8 +119,10 @@ export default function CartPage() {
       return sum + original * (item.quantity || 1);
     }, 0);
     const savings = Math.max(0, originalSubtotal - subtotal);
-    const couponDiscount = Math.floor(subtotal * couponRate);
-    const discountedSubtotal = Math.max(0, subtotal - couponDiscount);
+    // const couponDiscount = Math.floor(subtotal * couponRate);
+    // const discountedSubtotal = Math.max(0, subtotal - couponDiscount);
+    const couponDiscount = 0; // Temporarily disabled
+    const discountedSubtotal = subtotal; // Temporarily disabled
 
     // 3% GST on discounted subtotal
     const gst = Math.round(discountedSubtotal * 0.03);
@@ -145,7 +147,7 @@ export default function CartPage() {
       shipping,
       total,
     };
-  }, [items, couponRate]);
+  }, [items]); // couponRate removed temporarily
 
   const updateQuantity = async (productId: string, delta: number) => {
     setQuantityLoadingId(productId);
@@ -222,16 +224,17 @@ export default function CartPage() {
     }
   };
 
-  const applyCoupon = () => {
-    setCouponApplying(true);
-    const code = couponCode.trim().toUpperCase();
-    if (code === 'SAVE10') setCouponRate(0.1);
-    else if (code === 'SAVE5') setCouponRate(0.05);
-    else {
-      setCouponRate(0);
-    }
-    setTimeout(() => setCouponApplying(false), 300);
-  };
+  // Temporarily commented out - will add back later
+  // const applyCoupon = () => {
+  //   setCouponApplying(true);
+  //   const code = couponCode.trim().toUpperCase();
+  //   if (code === 'SAVE10') setCouponRate(0.1);
+  //   else if (code === 'SAVE5') setCouponRate(0.05);
+  //   else {
+  //     setCouponRate(0);
+  //   }
+  //   setTimeout(() => setCouponApplying(false), 300);
+  // };
 
 
   type CartProductData = Partial<Product> & {
@@ -537,7 +540,8 @@ export default function CartPage() {
             <h3 className="text-base sm:text-lg md:text-xl font-semibold text-primary-dark mb-4">
               Order Summary
             </h3>
-            <div className="flex gap-2 mb-4 flex-wrap">
+            {/* Temporarily commented out - will add back later */}
+            {/* <div className="flex gap-2 mb-4 flex-wrap">
               <input
                 value={couponCode}
                 onChange={e => setCouponCode(e.target.value)}
@@ -556,7 +560,7 @@ export default function CartPage() {
                   </span>
                 )}
               </button>
-            </div>
+            </div> */}
             <div className="space-y-2 sm:space-y-3 text-xs sm:text-sm">
               <div className="flex items-center justify-between">
                 <span className="text-dark">Original Subtotal</span>
@@ -573,14 +577,15 @@ export default function CartPage() {
                   </span>
                 </div>
               )}
-              {totals.couponDiscount > 0 && (
+              {/* Temporarily commented out - will add back later */}
+              {/* {totals.couponDiscount > 0 && (
                 <div className="flex items-center justify-between">
                   <span className="text-dark">Coupon</span>
                   <span className="text-green-600">
                     - ₹{totals.couponDiscount.toLocaleString()}
                   </span>
                 </div>
-              )}
+              )} */}
 
               <div className="flex items-center justify-between">
                 <span className="text-dark">Discounted Subtotal</span>

@@ -1,16 +1,17 @@
 'use client';
 
-import { useEffect, useState, Suspense } from 'react';
+import { useEffect, useState, Suspense, useRef } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import Container from '@/app/(main)/components/layouts/Container';
-import { CheckCircle, Package, Truck, Clock, AlertCircle, Download } from 'lucide-react';
+import { CheckCircle, Package, Truck, Clock, AlertCircle, Download, Eye } from 'lucide-react';
 import { InvoiceDownloadProgress } from '@/app/(main)/components/ui/InvoiceDownloadProgress';
 import { downloadInvoiceWithProgress } from '@/app/(main)/utils/invoiceDownload';
 import { useCartStore } from '@/lib/data/mainStore/cartStore';
 import { useCartCountStore } from '@/lib/data/mainStore/cartCountStore';
 import PageLoader from '@/app/(main)/components/layouts/PageLoader';
 import ReturnRequestModal from '@/app/(main)/components/ui/ReturnRequestModal';
+import InvoiceModal from '@/app/(main)/components/ui/InvoiceModal';
 import Image from '@/app/(main)/components/ui/FallbackImage';
 
 type OrderItem = {
@@ -41,8 +42,10 @@ function PaymentSuccessInner() {
   const [isLoading, setIsLoading] = useState(true);
   const [returnModalOpen, setReturnModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<OrderItem | null>(null);
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false);
   const loadCart = useCartStore(state => state.load);
   const syncCartCount = useCartCountStore(state => state.syncWithCart);
+  const hasFetchedRef = useRef<string | null>(null);
 
   // Ensure page always starts at the top when this screen is opened
   useEffect(() => {
@@ -64,34 +67,49 @@ function PaymentSuccessInner() {
 
   useEffect(() => {
     const orderId = searchParams.get('orderId');
-    if (orderId) {
-      setIsLoading(true);
-      fetch(`/api/orders/${orderId}`)
-        .then(res => {
-          if (!res.ok) {
-            throw new Error('Failed to fetch order details');
-          }
-          return res.json();
-        })
-        .then((data: { order?: SuccessOrder; error?: string }) => {
-          if (data.error) {
-            throw new Error(data.error);
-          }
-          if (data.order) {
-            setOrderDetails(data.order);
-          } else {
-            throw new Error('Order not found');
-          }
-        })
-        .catch(() => {
-          setError('Unable to load order details');
-        })
-        .finally(() => {
-          setIsLoading(false);
-        });
-    } else {
+
+    if (!orderId) {
       setIsLoading(false);
+      return;
     }
+
+    // Prevent multiple fetches for the same orderId
+    if (hasFetchedRef.current === orderId) {
+      return;
+    }
+
+    hasFetchedRef.current = orderId;
+    setIsLoading(true);
+    setError(null);
+
+    fetch(`/api/orders/${orderId}`, {
+      headers: {
+        'x-skip-global-loader': 'true',
+      },
+    })
+      .then(res => {
+        if (!res.ok) {
+          throw new Error('Failed to fetch order details');
+        }
+        return res.json();
+      })
+      .then((data: { order?: SuccessOrder; error?: string }) => {
+        if (data.error) {
+          throw new Error(data.error);
+        }
+        if (data.order) {
+          setOrderDetails(data.order);
+        } else {
+          throw new Error('Order not found');
+        }
+      })
+      .catch(() => {
+        setError('Unable to load order details');
+        hasFetchedRef.current = null; // Allow retry on error
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   }, [searchParams]);
 
   const downloadInvoice = async () => {
@@ -115,6 +133,7 @@ function PaymentSuccessInner() {
       setDownloadProgress(0);
     }
   };
+
 
   // Show loader while fetching order details
   if (isLoading) {
@@ -235,8 +254,15 @@ function PaymentSuccessInner() {
               </div>
             )}
 
-            {/* Download Invoice */}
-            <div className="mt-4 sm:mt-5">
+            {/* Invoice Actions */}
+            <div className="mt-4 sm:mt-5 flex flex-col sm:flex-row gap-2 sm:gap-3">
+              <button
+                onClick={() => setShowInvoiceModal(true)}
+                className="w-full sm:w-auto text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2 rounded-md font-medium text-primary border border-primary hover:bg-primary/5 transition-colors duration-200 active:scale-[0.98] flex items-center justify-center gap-1.5 sm:gap-2"
+              >
+                <Eye className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                <span className="whitespace-nowrap">Show Invoice</span>
+              </button>
               <button
                 onClick={downloadInvoice}
                 className="w-full sm:w-auto text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2 rounded-md font-medium text-white bg-primary hover:bg-primary-dark transition-colors duration-200 active:scale-[0.98] flex items-center justify-center gap-1.5 sm:gap-2"
@@ -326,6 +352,16 @@ function PaymentSuccessInner() {
         }}
         progress={downloadProgress}
       />
+
+      {/* Invoice Modal */}
+      {orderDetails && (
+        <InvoiceModal
+          isOpen={showInvoiceModal}
+          onClose={() => setShowInvoiceModal(false)}
+          orderId={orderDetails.orderNumber || orderDetails._id}
+          orderNumber={orderDetails.orderNumber}
+        />
+      )}
 
       {/* Return Request Modal */}
       <ReturnRequestModal
