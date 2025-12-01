@@ -2,7 +2,12 @@ import { NextResponse } from 'next/server';
 import { connect } from '@/dbConfig/dbConfig';
 import jwt from 'jsonwebtoken';
 import Order from '@/models/orderModel';
-import puppeteer from 'puppeteer';
+import chromium from '@sparticuz/chromium';
+import puppeteer from 'puppeteer-core';
+
+// Ensure this route runs in the Node.js runtime (not Edge),
+// which is required for Puppeteer / Chromium.
+export const runtime = 'nodejs';
 
 const USER_JWT_SECRET = process.env.USER_JWT_SECRET as string;
 
@@ -256,31 +261,27 @@ export async function GET(
 
     const html = buildHtml(normalizedOrder);
 
-    // Optimize browser launch with faster settings
+    // Launch Chromium in a serverless-friendly way using puppeteer-core + @sparticuz/chromium
     const browser = await puppeteer.launch({
-      headless: 'new',
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-gpu',
-        '--disable-software-rasterizer',
-        '--disable-extensions',
-      ],
+      args: chromium.args,
+      defaultViewport: chromium.defaultViewport,
+      executablePath: await chromium.executablePath,
+      headless: chromium.headless,
     });
+
     const page = await browser.newPage();
-    
+
     // Optimize page settings for faster rendering
     await page.setViewport({ width: 1200, height: 1600 });
     await page.setContent(html, { waitUntil: 'domcontentloaded' }); // Faster than networkidle0
-    
+
     const pdfBuffer = await page.pdf({
       format: 'A4',
       margin: { top: '20mm', right: '15mm', bottom: '20mm', left: '15mm' },
       printBackground: true,
       preferCSSPageSize: false, // Faster rendering
     });
-    
+
     await page.close();
     await browser.close();
 
