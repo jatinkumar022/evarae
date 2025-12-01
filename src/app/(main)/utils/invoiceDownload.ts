@@ -61,46 +61,34 @@ export async function downloadInvoiceWithProgress(
 
     onProgress(100);
 
-    // For both mobile and desktop: Download from Cloudinary URL with proper filename
-    // Fetch the PDF as blob to ensure proper download with extension
-    const response = await fetch(pdfUrl);
-    if (!response.ok) {
-      throw new Error('Failed to fetch PDF from Cloudinary');
-    }
+    // Use download endpoint for both mobile and desktop
+    // This endpoint sets Content-Disposition header with proper filename
+    const downloadApiPath = isAdmin
+      ? `/api/admin/orders/${orderId}/invoice/download`
+      : `/api/orders/${orderId}/invoice/download`;
     
-    const blob = await response.blob();
-    
-    // Verify it's a PDF blob
-    if (!blob.type.includes('pdf') && blob.type !== 'application/octet-stream') {
-      console.warn('[invoiceDownload] Unexpected blob type:', blob.type);
-    }
-    
-    // Create a blob URL with proper MIME type to ensure .pdf extension
-    const blobUrl = window.URL.createObjectURL(
-      new Blob([blob], { type: 'application/pdf' })
-    );
-    
-    const a = document.createElement('a');
-    a.href = blobUrl;
-    a.download = fileName; // This ensures the .pdf extension is used
-    a.style.display = 'none';
-    document.body.appendChild(a);
+    // Create download link
+    const link = document.createElement('a');
+    link.href = downloadApiPath;
+    link.download = fileName; // Fallback filename (works if browser supports it)
+    link.style.display = 'none';
+    document.body.appendChild(link);
     
     try {
-      a.click();
+      // Trigger download
+      link.click();
     } catch (error) {
-      // If click fails (some mobile browsers), try opening in new tab as fallback
-      console.warn('[invoiceDownload] Click failed, opening in new tab:', error);
-      window.open(blobUrl, '_blank');
+      console.warn('[invoiceDownload] Link click failed, using window.open:', error);
+      // Fallback: open in new tab (user can download from browser)
+      window.open(downloadApiPath, '_blank');
     }
     
-    // Clean up after a short delay
+    // Clean up after delay
     setTimeout(() => {
-      if (document.body.contains(a)) {
-        document.body.removeChild(a);
+      if (document.body.contains(link)) {
+        document.body.removeChild(link);
       }
-      window.URL.revokeObjectURL(blobUrl);
-    }, 1000);
+    }, 2000);
   } catch (error) {
     clearInterval(progressInterval);
     throw error;

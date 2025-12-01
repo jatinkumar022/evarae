@@ -46,6 +46,8 @@ export default function PDFViewer({ file, onError }: PDFViewerProps) {
   const pdfDocRef = useRef<PDFDocument | null>(null);
   const numPagesRef = useRef<number>(0);
   const [containerHeight, setContainerHeight] = useState<number>(0);
+  const [useFallback, setUseFallback] = useState(false);
+  const [fallbackError, setFallbackError] = useState<string | null>(null);
 
   // Load PDF.js from CDN
   useEffect(() => {
@@ -56,18 +58,46 @@ export default function PDFViewer({ file, onError }: PDFViewerProps) {
       return;
     }
 
+    // Check if script already exists
+    const existingScript = document.querySelector('script[src*="pdf.min.js"]');
+    if (existingScript) {
+      // Wait a bit for it to load
+      const checkInterval = setInterval(() => {
+        if (window.pdfjsLib) {
+          window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+          setScriptLoaded(true);
+          clearInterval(checkInterval);
+        }
+      }, 100);
+
+      // Timeout after 5 seconds
+      setTimeout(() => {
+        clearInterval(checkInterval);
+        if (!window.pdfjsLib) {
+          console.error('[PDFViewer] PDF.js script exists but not loaded');
+          setError('Failed to load PDF viewer');
+        }
+      }, 5000);
+
+      return () => clearInterval(checkInterval);
+    }
+
     const script = document.createElement('script');
     script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
     script.async = true;
+    script.crossOrigin = 'anonymous';
     script.onload = () => {
       if (window.pdfjsLib) {
         window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
         setScriptLoaded(true);
+      } else {
+        console.error('[PDFViewer] PDF.js loaded but pdfjsLib not available');
+        setError('Failed to initialize PDF viewer');
       }
     };
     script.onerror = () => {
       console.error('[PDFViewer] Failed to load PDF.js script');
-      setError('Failed to load PDF viewer');
+      setError('Failed to load PDF viewer. Please try again.');
     };
     document.head.appendChild(script);
 
@@ -89,10 +119,28 @@ export default function PDFViewer({ file, onError }: PDFViewerProps) {
         setIsLoading(true);
         setError(null);
 
-        const response = await fetch(file);
+        // Fetch PDF with better error handling for mobile
+        const response = await fetch(file, {
+          method: 'GET',
+          credentials: 'include',
+          headers: {
+            'Accept': 'application/pdf',
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch PDF: ${response.status} ${response.statusText}`);
+        }
+
         const arrayBuffer = await response.arrayBuffer();
 
-        const pdfDoc = await window.pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        if (!arrayBuffer || arrayBuffer.byteLength === 0) {
+          throw new Error('PDF file is empty');
+        }
+
+        const pdfDoc = await window.pdfjsLib.getDocument({
+          data: arrayBuffer,
+        }).promise;
         const numPages = pdfDoc.numPages;
         pdfDocRef.current = pdfDoc;
         numPagesRef.current = numPages;
@@ -102,6 +150,17 @@ export default function PDFViewer({ file, onError }: PDFViewerProps) {
       } catch (err) {
         console.error('[PDFViewer] Error loading PDF:', err);
         const errorMessage = err instanceof Error ? err.message : 'Failed to load PDF';
+
+        // On mobile, try fallback to iframe
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        if (isMobile && !useFallback) {
+          console.log('[PDFViewer] PDF.js failed on mobile, using iframe fallback');
+          setUseFallback(true);
+          setError(null);
+          setIsLoading(false);
+          return;
+        }
+
         setError(errorMessage);
         onError?.(new Error(errorMessage));
         setIsLoading(false);
@@ -167,7 +226,20 @@ export default function PDFViewer({ file, onError }: PDFViewerProps) {
 
       let finalScale = currentScale;
       const screenWidth = window.innerWidth;
-      if (viewport.width > screenWidth * 2) {
+      const isMobile = screenWidth < 768;
+
+      // Better mobile scaling - ensure PDF fits on screen
+      if (isMobile) {
+        // On mobile, scale to fit screen width with some padding
+        const maxWidth = screenWidth - 32; // Account for padding
+        if (viewport.width > maxWidth) {
+          finalScale = (maxWidth / viewport.width) * currentScale;
+          const adjustedViewport = page.getViewport({ scale: finalScale });
+          viewport.width = adjustedViewport.width;
+          viewport.height = adjustedViewport.height;
+        }
+      } else if (viewport.width > screenWidth * 2) {
+        // Desktop scaling
         finalScale = ((screenWidth * 1.5) / viewport.width) * currentScale;
         const adjustedViewport = page.getViewport({ scale: finalScale });
         viewport.width = adjustedViewport.width;
@@ -218,16 +290,69 @@ export default function PDFViewer({ file, onError }: PDFViewerProps) {
     );
   }
 
+  // Fallback to iframe for mobile devices if PDF.js fails
+  if (useFallback && file) {
+    return (
+      <div className="w-full h-full flex flex-col min-h-0">
+        <iframe
+          src={file}
+          className="w-full h-full border-0"
+          style={{
+            minHeight: '500px',
+          }}
+          title="PDF Viewer"
+          onError={() => {
+            setFallbackError('Failed to load PDF in iframe');
+          }}
+        />
+        {fallbackError && (
+          <div className="flex flex-col items-center justify-center p-4 bg-red-50 dark:bg-red-900/20">
+            <p className="text-red-600 dark:text-red-400 mb-4">{fallbackError}</p>
+            <button
+              onClick={() => {
+                setUseFallback(false);
+                setFallbackError(null);
+                setError(null);
+                setIsLoading(true);
+              }}
+              className="px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-primary-dark rounded-lg"
+            >
+              Retry with PDF Viewer
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] p-4">
         <p className="text-red-600 dark:text-red-400 mb-4">{error}</p>
-        <button
-          onClick={() => window.location.reload()}
-          className="px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-primary-dark rounded-lg"
-        >
-          Retry
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => {
+              setError(null);
+              setIsLoading(true);
+              setUseFallback(false);
+            }}
+            className="px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-primary-dark rounded-lg"
+          >
+            Retry
+          </button>
+          {file && (
+            <button
+              onClick={() => {
+                setUseFallback(true);
+                setError(null);
+                setIsLoading(false);
+              }}
+              className="px-4 py-2 text-sm font-medium text-primary border border-primary rounded-lg"
+            >
+              Open in Browser
+            </button>
+          )}
+        </div>
       </div>
     );
   }
@@ -310,12 +435,33 @@ export default function PDFViewer({ file, onError }: PDFViewerProps) {
             flex: containerHeight > 0 ? 'none' : '1 1 0',
             minHeight: 0,
             overscrollBehavior: 'contain',
-            touchAction: 'pan-x pan-y',
+            touchAction: 'pan-x pan-y pinch-zoom',
             WebkitOverflowScrolling: 'touch',
+            // Ensure smooth scrolling on mobile
+            scrollBehavior: 'smooth',
           }}
-          onTouchStart={(e) => e.stopPropagation()}
-          onTouchMove={(e) => e.stopPropagation()}
-          onWheel={(e) => e.stopPropagation()}
+          // Allow touch events to propagate for scrolling
+          onTouchStart={(e) => {
+            // Only stop propagation if it's a pinch gesture
+            if (e.touches.length > 1) {
+              e.stopPropagation();
+            }
+          }}
+          onTouchMove={(e) => {
+            // Allow single touch scrolling
+            if (e.touches.length === 1) {
+              // Let it scroll naturally
+              return;
+            }
+            // Stop multi-touch gestures
+            if (e.touches.length > 1) {
+              e.stopPropagation();
+            }
+          }}
+          onWheel={(e) => {
+            // Prevent wheel events from propagating to modal
+            e.stopPropagation();
+          }}
         />
       </div>
     </>

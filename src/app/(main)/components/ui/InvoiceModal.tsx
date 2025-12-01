@@ -63,14 +63,19 @@ export default function InvoiceModal({
       const blob = await viewRes.blob();
 
       // Verify it's a PDF
-      if (!blob.type.includes('pdf')) {
+      if (!blob.type.includes('pdf') && blob.type !== 'application/octet-stream') {
         console.warn('[InvoiceModal] Response is not a PDF, type:', blob.type);
+      }
+
+      // Check blob size
+      if (blob.size === 0) {
+        throw new Error('PDF file is empty');
       }
 
       const blobUrl = URL.createObjectURL(blob);
       setInvoiceBlobUrl(blobUrl);
 
-      console.log('[InvoiceModal] PDF blob created, size:', blob.size, 'type:', blob.type);
+      console.log('[InvoiceModal] PDF blob created, size:', blob.size, 'type:', blob.type, 'url:', blobUrl.substring(0, 50) + '...');
     } catch (err) {
       console.error('Failed to fetch invoice:', err);
       setError(err instanceof Error ? err.message : 'Unable to load invoice');
@@ -130,6 +135,10 @@ export default function InvoiceModal({
       document.body.style.width = '100%';
       document.body.style.height = '100%';
 
+      // Prevent touch scrolling on mobile
+      document.body.style.touchAction = 'none';
+      document.documentElement.style.touchAction = 'none';
+
       return () => {
         // Restore original styles
         document.body.style.overflow = originalBodyOverflow;
@@ -138,6 +147,10 @@ export default function InvoiceModal({
         document.body.style.top = originalBodyTop;
         document.body.style.width = originalBodyWidth;
         document.body.style.height = originalBodyHeight;
+
+        // Restore touch action
+        document.body.style.touchAction = '';
+        document.documentElement.style.touchAction = '';
 
         // Restore scroll position
         window.scrollTo(0, scrollY);
@@ -174,6 +187,10 @@ export default function InvoiceModal({
       <div
         className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
         onClick={onClose}
+        onTouchStart={(e) => {
+          // Prevent backdrop touch from scrolling background
+          e.preventDefault();
+        }}
         aria-hidden="true"
       />
 
@@ -183,6 +200,10 @@ export default function InvoiceModal({
         <div
           className="relative z-50 w-full max-w-4xl max-h-[98vh] sm:max-h-[95vh] flex flex-col pointer-events-auto bg-white dark:bg-[#242424] shadow-2xl border border-gray-200 dark:border-[#2f2f2f] rounded-lg sm:rounded-xl overflow-hidden transform transition-all duration-300 ease-out"
           onClick={(e) => e.stopPropagation()}
+          onTouchStart={(e) => {
+            // Prevent modal touch from closing modal
+            e.stopPropagation();
+          }}
         >
           {/* Header */}
           <div className="flex items-center justify-between gap-2 sm:gap-3 px-3 sm:px-6 py-3 sm:py-4 border-b border-gray-200 dark:border-[#2f2f2f] bg-gray-50 dark:bg-[#1e1e1e]">
