@@ -11,7 +11,6 @@ import {
   Shield,
   Users,
   Timer,
-  Play,
   Instagram,
 } from 'lucide-react';
 import { worldOne } from '@/app/(main)/assets/Home/World';

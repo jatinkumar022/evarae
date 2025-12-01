@@ -3,7 +3,6 @@ import Image from '@/app/(main)/components/ui/FallbackImage';
 import Link from 'next/link';
 import { StaticImageData } from 'next/image';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { one, two, three } from '@/app/(main)/assets/Home/CAROUSEL';
 
 export interface DailywearProduct {
   id: string;
@@ -57,7 +56,7 @@ const DailywearCarousel: React.FC<DailywearCarouselProps> = ({
         const mapped: DailywearProduct[] = apiProducts.slice(0, 7).map(p => ({
           id: p.slug,
           name: p.name,
-          image: (p.images && p.images[0]) || one,
+          image: (p.images && p.images[0]) || '/favicon.ico',
           href: `/product/${p.slug}`,
         }));
 
