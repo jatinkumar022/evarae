@@ -53,7 +53,7 @@ export async function GET() {
         .lean(),
       Product.aggregate([
         { $match: { status: 'active' } },
-        { $sample: { size: 10 } },
+        { $sample: { size: 6 } }, // limit to 6 bestsellers
         {
           $project: {
             name: 1,

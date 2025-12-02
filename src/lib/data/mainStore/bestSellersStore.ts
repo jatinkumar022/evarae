@@ -59,7 +59,7 @@ export const useBestSellersStore = create<BestSellersState>()(
           if (!res.ok) throw new Error('Failed to fetch best sellers');
           const data: { products?: BestSellerProduct[] } = await res.json();
           set({
-            products: data.products || [],
+            products: (data.products || []).slice(0, 6),
             status: 'success',
             lastFetched: now,
           });
