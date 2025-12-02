@@ -121,14 +121,16 @@ export async function GET(
       throw new Error('Generated PDF buffer is empty');
     }
     
-    if (pdfBuffer.length < 5000) {
-      throw new Error(`Generated PDF is too small (${pdfBuffer.length} bytes). Expected at least 5KB.`);
-    }
-    
-    // Validate PDF header
+    // Validate PDF header first - this is the most important check
     const pdfHeader = pdfBuffer.toString('ascii', 0, 4);
     if (pdfHeader !== '%PDF') {
       throw new Error(`Invalid PDF header: ${pdfHeader}. PDF may be corrupted.`);
+    }
+    
+    // Check if PDF is suspiciously small (less than 1KB is definitely wrong)
+    // Simple invoices can be 2-3KB, so we use a lower threshold
+    if (pdfBuffer.length < 1000) {
+      throw new Error(`Generated PDF is too small (${pdfBuffer.length} bytes). Expected at least 1KB.`);
     }
 
     console.log('[orders/[id]/invoice/download] PDF generated successfully', {
