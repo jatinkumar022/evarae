@@ -20,7 +20,6 @@ import { toastApi } from '@/lib/toast';
 import InlineSpinner from '@/app/admin/components/InlineSpinner';
 import { InvoiceDownloadProgress } from '@/app/(main)/components/ui/InvoiceDownloadProgress';
 import { downloadInvoiceWithProgress } from '@/app/(main)/utils/invoiceDownload';
-import InvoiceModal from '@/app/(main)/components/ui/InvoiceModal';
 
 export default function OrdersPage() {
   const {
@@ -39,8 +38,6 @@ export default function OrdersPage() {
   const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null);
   const [showProgress, setShowProgress] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
-  const [showInvoiceModal, setShowInvoiceModal] = useState(false);
-  const [selectedOrderForInvoice, setSelectedOrderForInvoice] = useState<{ orderId: string; orderNumber?: string } | null>(null);
   const buttonRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
 
   // Fetch orders from API
@@ -510,26 +507,6 @@ export default function OrdersPage() {
                   <Eye className="h-4 w-4 mr-2 flex-shrink-0" /> View Details
                 </Link>
                 <button
-                  onClick={() => {
-                    if (!openDropdownId) return;
-                    const order = orders.find(o => o._id === openDropdownId);
-                    if (!order) {
-                      toastApi.error('Order not found', 'Unable to show invoice');
-                      return;
-                    }
-                    setSelectedOrderForInvoice({
-                      orderId: order.orderNumber || order._id,
-                      orderNumber: order.orderNumber,
-                    });
-                    setShowInvoiceModal(true);
-                    setOpenDropdownId(null);
-                    setDropdownPosition(null);
-                  }}
-                  className="w-full flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#525252] whitespace-nowrap"
-                >
-                  <Eye className="h-4 w-4 mr-2 flex-shrink-0" /> Show Invoice
-                </button>
-                <button
                   onClick={async () => {
                     if (!openDropdownId) return;
                     const order = orders.find(o => o._id === openDropdownId);
@@ -634,18 +611,6 @@ export default function OrdersPage() {
         }}
         progress={downloadProgress}
       />
-      {selectedOrderForInvoice && (
-        <InvoiceModal
-          isOpen={showInvoiceModal}
-          onClose={() => {
-            setShowInvoiceModal(false);
-            setSelectedOrderForInvoice(null);
-          }}
-          orderId={selectedOrderForInvoice.orderId}
-          orderNumber={selectedOrderForInvoice.orderNumber}
-          isAdmin={true}
-        />
-      )}
     </>
   );
 }

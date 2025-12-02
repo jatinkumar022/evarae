@@ -4,14 +4,13 @@ import { useEffect, useState, Suspense, useRef } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import Container from '@/app/(main)/components/layouts/Container';
-import { CheckCircle, Package, Truck, Clock, AlertCircle, Download, Eye } from 'lucide-react';
+import { CheckCircle, Package, Truck, Clock, AlertCircle, Download } from 'lucide-react';
 import { InvoiceDownloadProgress } from '@/app/(main)/components/ui/InvoiceDownloadProgress';
 import { downloadInvoiceWithProgress } from '@/app/(main)/utils/invoiceDownload';
 import { useCartStore } from '@/lib/data/mainStore/cartStore';
 import { useCartCountStore } from '@/lib/data/mainStore/cartCountStore';
 import PageLoader from '@/app/(main)/components/layouts/PageLoader';
 import ReturnRequestModal from '@/app/(main)/components/ui/ReturnRequestModal';
-import InvoiceModal from '@/app/(main)/components/ui/InvoiceModal';
 import Image from '@/app/(main)/components/ui/FallbackImage';
 
 type OrderItem = {
@@ -42,7 +41,6 @@ function PaymentSuccessInner() {
   const [isLoading, setIsLoading] = useState(true);
   const [returnModalOpen, setReturnModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<OrderItem | null>(null);
-  const [showInvoiceModal, setShowInvoiceModal] = useState(false);
   const loadCart = useCartStore(state => state.load);
   const syncCartCount = useCartCountStore(state => state.syncWithCart);
   const hasFetchedRef = useRef<string | null>(null);
@@ -257,13 +255,6 @@ function PaymentSuccessInner() {
             {/* Invoice Actions */}
             <div className="mt-4 sm:mt-5 flex flex-col sm:flex-row gap-2 sm:gap-3">
               <button
-                onClick={() => setShowInvoiceModal(true)}
-                className="w-full sm:w-auto text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2 rounded-md font-medium text-primary border border-primary hover:bg-primary/5 transition-colors duration-200 active:scale-[0.98] flex items-center justify-center gap-1.5 sm:gap-2"
-              >
-                <Eye className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                <span className="whitespace-nowrap">Show Invoice</span>
-              </button>
-              <button
                 onClick={downloadInvoice}
                 className="w-full sm:w-auto text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2 rounded-md font-medium text-white bg-primary hover:bg-primary-dark transition-colors duration-200 active:scale-[0.98] flex items-center justify-center gap-1.5 sm:gap-2"
               >
@@ -352,16 +343,6 @@ function PaymentSuccessInner() {
         }}
         progress={downloadProgress}
       />
-
-      {/* Invoice Modal */}
-      {orderDetails && (
-        <InvoiceModal
-          isOpen={showInvoiceModal}
-          onClose={() => setShowInvoiceModal(false)}
-          orderId={orderDetails.orderNumber || orderDetails._id}
-          orderNumber={orderDetails.orderNumber}
-        />
-      )}
 
       {/* Return Request Modal */}
       <ReturnRequestModal
