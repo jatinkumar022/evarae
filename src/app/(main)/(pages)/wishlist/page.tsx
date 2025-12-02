@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState, useMemo } from 'react';
 import dynamic from 'next/dynamic';
-import { Heart, Share2, Trash2 } from 'lucide-react';
+import { Heart, Trash2 } from 'lucide-react';
 import Container from '@/app/(main)/components/layouts/Container';
 import { FilterOptions, SortOption, Product } from '@/lib/types/product';
 import Image from '@/app/(main)/components/ui/FallbackImage';
@@ -193,15 +193,6 @@ export default function WishlistPage() {
                   {wishlistProducts.length} Precious {wishlistProducts.length === 1 ? 'Item' : 'Items'}
                 </span>
               </div>
-              {wishlistProducts.length > 0 && (
-                <div className="flex items-center gap-3 bg-white/60 backdrop-blur-xl px-6 py-3 rounded-full shadow-lg border border-white/20 hover:bg-white/70 transition-all duration-300 cursor-pointer">
-                  <div className="w-2 h-2 rounded-full bg-gradient-to-r from-purple-400 to-pink-400"></div>
-                  <span className="font-light text-gray-700 tracking-wide flex items-center gap-2">
-                    <Share2 className="h-4 w-4" />
-                    Share Collection
-                  </span>
-                </div>
-              )}
             </div>
           </div>
         </div>

@@ -160,24 +160,24 @@ export default function HeroCarousel() {
           </AnimatePresence>
 
           {/* Navigation Arrows */}
-          <div className="absolute top-1/2 -translate-y-1/2 w-full px-4 flex justify-between items-center z-10">
+          <div className="absolute top-1/2 -translate-y-1/2 w-full px-2 sm:px-4 flex justify-between items-center z-10">
             <motion.button
               onClick={() => paginate(-1)}
               aria-label="Previous"
-              className="bg-background/70 hover:bg-background/90 backdrop-blur-sm rounded-full p-3 transition-colors duration-200 shadow-lg"
+              className="bg-background/70 hover:bg-background/90 backdrop-blur-sm rounded-full p-2 sm:p-3 transition-colors duration-200 shadow-lg"
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
             >
-              <ChevronLeft className="w-5 h-5 text-foreground" />
+              <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 text-foreground" />
             </motion.button>
             <motion.button
               onClick={() => paginate(1)}
               aria-label="Next"
-              className="bg-background/70 hover:bg-background/90 backdrop-blur-sm rounded-full p-3 transition-colors duration-200 shadow-lg"
+              className="bg-background/70 hover:bg-background/90 backdrop-blur-sm rounded-full p-2 sm:p-3 transition-colors duration-200 shadow-lg"
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
             >
-              <ChevronRight className="w-5 h-5 text-foreground" />
+              <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-foreground" />
             </motion.button>
           </div>
         </div>
