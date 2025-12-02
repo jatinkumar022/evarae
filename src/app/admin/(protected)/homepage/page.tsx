@@ -42,7 +42,7 @@ interface HomepageData {
 
 export default function HomepagePage() {
   const { collections, fetchCollections } = useCollectionStore();
-  const { uploadFile } = useUploadStore();
+  const { uploadFile, resetUpload } = useUploadStore();
 
   const [homepageData, setHomepageData] = useState<HomepageData>({
     heroImages: [],
@@ -142,48 +142,75 @@ export default function HomepagePage() {
     e: React.ChangeEvent<HTMLInputElement>,
     field: string
   ) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
 
-    if (!file.type.startsWith('image/')) {
-      toastApi.error('Invalid file type', 'Please upload an image file');
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      toastApi.error('File too large', 'Please upload an image under 5MB');
-      return;
-    }
+    // For non-hero fields we still only allow a single image
+    const filesToProcess =
+      field === 'heroImages' ? files : files.slice(0, 1);
 
     setUploadingImages(prev => ({ ...prev, [field]: true }));
+
     try {
-      await uploadFile(file);
-      const uploadState = useUploadStore.getState();
-      if (uploadState.error) {
-        toastApi.error('Upload failed', uploadState.error);
-        return;
-      }
-      if (uploadState.fileUrl) {
-        if (field === 'heroImages') {
-          setHomepageData(prev => ({
-            ...prev,
-            heroImages: [...prev.heroImages, uploadState.fileUrl!],
-          }));
-        } else {
-          setHomepageData(prev => ({
-            ...prev,
-            freshlyMinted: {
-              ...prev.freshlyMinted,
-              [field]: uploadState.fileUrl!,
-            },
-          }));
+      const newUrls: string[] = [];
+
+      for (const file of filesToProcess) {
+        if (!file.type.startsWith('image/')) {
+          toastApi.error('Invalid file type', 'Please upload an image file');
+          continue;
         }
-        toastApi.success('Image uploaded successfully', '');
+        if (file.size > 5 * 1024 * 1024) {
+          toastApi.error(
+            'File too large',
+            'Please upload an image under 5MB'
+          );
+          continue;
+        }
+
+        // Reset upload state before each file
+        resetUpload();
+        await uploadFile(file);
+        const uploadState = useUploadStore.getState();
+        if (uploadState.error) {
+          toastApi.error('Upload failed', uploadState.error);
+          continue;
+        }
+        if (uploadState.fileUrl) {
+          newUrls.push(uploadState.fileUrl);
+        }
       }
+
+      if (newUrls.length === 0) return;
+
+      if (field === 'heroImages') {
+        setHomepageData(prev => ({
+          ...prev,
+          heroImages: [...prev.heroImages, ...newUrls],
+        }));
+      } else {
+        // For other fields we only use the first successfully uploaded image
+        setHomepageData(prev => ({
+          ...prev,
+          freshlyMinted: {
+            ...prev.freshlyMinted,
+            [field]: newUrls[0],
+          },
+        }));
+      }
+
+      toastApi.success(
+        'Image uploaded successfully',
+        field === 'heroImages' && newUrls.length > 1
+          ? `${newUrls.length} images added to hero carousel`
+          : ''
+      );
     } catch (error) {
       console.error('Upload error:', error);
       toastApi.error('Upload failed', 'Please try again');
     } finally {
       setUploadingImages(prev => ({ ...prev, [field]: false }));
+      // Clear the file input so the same files can be selected again if needed
+      e.target.value = '';
     }
   };
 
@@ -293,6 +320,7 @@ export default function HomepagePage() {
                   <input
                     type="file"
                     accept="image/*"
+                    multiple
                     onChange={e => handleImageUpload(e, 'heroImages')}
                     className="hidden"
                     disabled={uploadingImages['heroImages']}
