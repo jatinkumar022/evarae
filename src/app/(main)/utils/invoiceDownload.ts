@@ -57,29 +57,23 @@ export async function downloadInvoiceWithProgress(
     fileName = `${fileName}.pdf`;
     fileName = fileName.replace(/[^a-zA-Z0-9._-]/g, '_');
 
-    // Use file-saver for more reliable downloads across browsers
-    try {
-      const { saveAs } = await import('file-saver');
-      saveAs(blob, fileName);
-    } catch {
-      // Fallback: manual link download if file-saver is unavailable
-      const blobUrl = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = blobUrl;
-      link.download = fileName;
-      link.style.display = 'none';
-      document.body.appendChild(link);
+    // Trigger download using a temporary link and blob URL
+    const blobUrl = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = blobUrl;
+    link.download = fileName;
+    link.style.display = 'none';
+    document.body.appendChild(link);
 
-      try {
-        link.click();
-      } finally {
-        setTimeout(() => {
-          URL.revokeObjectURL(blobUrl);
-          if (document.body.contains(link)) {
-            document.body.removeChild(link);
-          }
-        }, 2000);
-      }
+    try {
+      link.click();
+    } finally {
+      setTimeout(() => {
+        URL.revokeObjectURL(blobUrl);
+        if (document.body.contains(link)) {
+          document.body.removeChild(link);
+        }
+      }, 2000);
     }
   } catch (error) {
     clearInterval(progressInterval);
