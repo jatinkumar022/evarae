@@ -88,11 +88,15 @@ export async function GET(
       return NextResponse.json({ error: 'Order not found' }, { status: 404 });
     }
 
-    // Check if invoice URL exists, if not generate it
+    // Check for force regeneration query parameter
+    const url = new URL(request.url);
+    const forceRegenerate = url.searchParams.get('regenerate') === 'true';
+    
+    // Check if invoice URL exists, if not generate it (or force regenerate)
     let invoiceUrl = order.invoiceUrl;
     
-    if (!invoiceUrl) {
-      // Generate invoice if it doesn't exist
+    if (!invoiceUrl || forceRegenerate) {
+      // Generate invoice if it doesn't exist or if forced to regenerate
       const normalizedOrder = {
         _id: String(order._id),
         orderNumber: order.orderNumber,
