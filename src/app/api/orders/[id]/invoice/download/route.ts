@@ -136,7 +136,7 @@ export async function GET(
       console.error(`[orders/[id]/invoice/download] PDF buffer is too small: ${pdfBuffer.byteLength} bytes`);
       throw new Error('PDF file appears to be corrupted or incomplete');
     }
-    
+
     // Ensure filename always has .pdf extension
     let fileName = `invoice-${order.orderNumber || order._id}`;
     fileName = fileName.replace(/\.(pdf|PDF)$/, '');
