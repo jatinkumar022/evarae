@@ -152,16 +152,21 @@ export async function GET(
     const buffer = new Uint8Array(pdfBuffer);
 
     // Return PDF with proper headers for mobile compatibility
-    // Ensure Content-Length matches actual buffer size
+    // Mobile browsers need 'inline' instead of 'attachment' for better compatibility
+    // Also ensure proper Content-Type and encoding
     return new NextResponse(buffer, {
       status: 200,
       headers: {
-        'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="${safeFileName}"; filename*=UTF-8''${encodeURIComponent(fileName)}`,
+        'Content-Type': 'application/pdf; charset=binary',
+        'Content-Disposition': `inline; filename="${safeFileName}"; filename*=UTF-8''${encodeURIComponent(fileName)}`,
         'Content-Length': buffer.length.toString(),
         'Accept-Ranges': 'bytes',
+        'Content-Transfer-Encoding': 'binary',
         'Cache-Control': 'private, no-store, no-cache, must-revalidate',
         'X-Content-Type-Options': 'nosniff',
+        // Mobile-specific headers
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET',
       },
     });
   } catch (error) {

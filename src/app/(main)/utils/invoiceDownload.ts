@@ -69,22 +69,48 @@ export async function downloadInvoiceWithProgress(
     fileName = fileName.replace(/[^a-zA-Z0-9._-]/g, '_');
 
     // Trigger download using a temporary link and blob URL
+    // Mobile browsers need special handling
     const blobUrl = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = blobUrl;
     link.download = fileName;
     link.style.display = 'none';
-    document.body.appendChild(link);
-
-    try {
-      link.click();
-    } finally {
-      setTimeout(() => {
-        URL.revokeObjectURL(blobUrl);
-        if (document.body.contains(link)) {
-          document.body.removeChild(link);
-        }
-      }, 2000);
+    
+    // For mobile browsers, try opening in new tab if download doesn't work
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    
+    if (isMobile) {
+      // On mobile, open in new window/tab for better compatibility
+      const newWindow = window.open(blobUrl, '_blank');
+      if (!newWindow) {
+        // If popup blocked, fall back to download
+        document.body.appendChild(link);
+        link.click();
+        setTimeout(() => {
+          if (document.body.contains(link)) {
+            document.body.removeChild(link);
+          }
+          URL.revokeObjectURL(blobUrl);
+        }, 100);
+      } else {
+        // Clean up after a delay
+        setTimeout(() => {
+          URL.revokeObjectURL(blobUrl);
+        }, 1000);
+      }
+    } else {
+      // Desktop: use standard download
+      document.body.appendChild(link);
+      try {
+        link.click();
+      } finally {
+        setTimeout(() => {
+          URL.revokeObjectURL(blobUrl);
+          if (document.body.contains(link)) {
+            document.body.removeChild(link);
+          }
+        }, 2000);
+      }
     }
   } catch (error) {
     clearInterval(progressInterval);
