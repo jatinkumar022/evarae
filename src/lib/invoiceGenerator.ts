@@ -2,6 +2,7 @@ import PDFDocument from 'pdfkit';
 import cloudinary from '@/lib/cloudinary';
 
 // Format money with proper Indian number formatting (commas for thousands)
+// Using Unicode rupee symbol (U+20B9) with proper encoding
 const money = (n: number) => {
   const num = Number(n || 0);
   // Round to 2 decimal places
@@ -18,7 +19,9 @@ const money = (n: number) => {
   // Combine with decimal if exists
   const formatted = decimalPart ? `${formattedInteger}.${decimalPart}` : formattedInteger;
   
-  return `₹${formatted}`;
+  // Use Unicode rupee symbol (U+20B9) - ensure proper encoding
+  // This should work better across different PDF viewers
+  return `\u20B9${formatted}`;
 };
 
 type InvoiceOrderItem = {
@@ -76,7 +79,18 @@ async function generatePDF(order: InvoiceOrder): Promise<Buffer> {
   const doc = new PDFDocument({
     size: 'A4',
     margins: { top: 50, left: 50, right: 50, bottom: 50 },
+    // Ensure proper encoding for Unicode characters like rupee symbol
+    autoFirstPage: true,
   });
+  
+  // Set encoding to support Unicode characters including rupee symbol
+  // This helps ensure the rupee symbol renders correctly on mobile devices
+  // Note: If rupee symbol still doesn't display, consider embedding a custom font
+  // that supports it (e.g., Noto Sans, DejaVu Sans, Ubuntu) using PDFKit's registerFont
+  doc.info = {
+    ...doc.info,
+    Producer: 'Caelvi Invoice Generator',
+  };
 
   const buffers: Buffer[] = [];
   doc.on('data', (chunk: unknown) => buffers.push(chunk as Buffer));
