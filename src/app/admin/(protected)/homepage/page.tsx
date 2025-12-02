@@ -72,6 +72,7 @@ export default function HomepagePage() {
   const [uploadingImages, setUploadingImages] = useState<{
     [key: string]: boolean;
   }>({});
+  const [draggedHeroIndex, setDraggedHeroIndex] = useState<number | null>(null);
 
   useEffect(() => {
     fetchCollections();
@@ -221,6 +222,28 @@ export default function HomepagePage() {
     }));
   };
 
+  const handleHeroDragStart = (index: number) => {
+    setDraggedHeroIndex(index);
+  };
+
+  const handleHeroDragOver = (e: React.DragEvent<HTMLDivElement>, index: number) => {
+    e.preventDefault();
+    if (draggedHeroIndex === null || draggedHeroIndex === index) return;
+  };
+
+  const handleHeroDrop = (index: number) => {
+    if (draggedHeroIndex === null || draggedHeroIndex === index) return;
+
+    setHomepageData(prev => {
+      const updated = [...prev.heroImages];
+      const [moved] = updated.splice(draggedHeroIndex, 1);
+      updated.splice(index, 0, moved);
+      return { ...prev, heroImages: updated };
+    });
+
+    setDraggedHeroIndex(null);
+  };
+
   const handleCollectionSelection = (
     collectionIds: string[],
     type: 'signature' | 'world' | 'story'
@@ -300,7 +323,14 @@ export default function HomepagePage() {
               </label>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                 {homepageData.heroImages.map((image, index) => (
-                  <div key={index} className="relative group">
+                  <div
+                    key={index}
+                    className="relative group cursor-move"
+                    draggable
+                    onDragStart={() => handleHeroDragStart(index)}
+                    onDragOver={e => handleHeroDragOver(e, index)}
+                    onDrop={() => handleHeroDrop(index)}
+                  >
                     <Image
                       src={image}
                       alt={`Hero ${index + 1}`}
@@ -308,6 +338,9 @@ export default function HomepagePage() {
                       height={128}
                       className="w-full h-32 object-cover rounded-lg"
                     />
+                    <span className="absolute top-2 left-2 inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-black/70 text-white">
+                      #{index + 1}
+                    </span>
                     <button
                       onClick={() => removeHeroImage(index)}
                       className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
