@@ -1,5 +1,4 @@
 import PDFDocument from 'pdfkit';
-import cloudinary from '@/lib/cloudinary';
 
 // Format money with proper Indian number formatting (commas for thousands)
 // Using "Rs." prefix instead of rupee symbol for better compatibility across all devices
@@ -70,7 +69,8 @@ function generateInvoiceDate(order: InvoiceOrder): string {
     : '';
 }
 
-async function generatePDF(order: InvoiceOrder): Promise<Buffer> {
+// Export generatePDF so it can be used directly without Cloudinary
+export async function generatePDF(order: InvoiceOrder): Promise<Buffer> {
   const invoiceNumber = order.orderNumber || order._id;
   const invoiceDate = generateInvoiceDate(order);
   const status = `${order.orderStatus} • ${order.paymentStatus}`;
@@ -97,8 +97,33 @@ async function generatePDF(order: InvoiceOrder): Promise<Buffer> {
   doc.on('data', (chunk: unknown) => buffers.push(chunk as Buffer));
 
   const done = new Promise<Buffer>((resolve, reject) => {
-    doc.on('end', () => resolve(Buffer.concat(buffers)));
-    doc.on('error', (err: unknown) => reject(err));
+    let hasEnded = false;
+    let hasErrored = false;
+    
+    doc.on('end', () => {
+      if (hasErrored) return;
+      hasEnded = true;
+      const fullBuffer = Buffer.concat(buffers);
+      // Validate PDF buffer - should start with PDF header
+      if (fullBuffer.length < 100 || !fullBuffer.toString('ascii', 0, 4).startsWith('%PDF')) {
+        reject(new Error(`Invalid PDF generated: size=${fullBuffer.length}, header=${fullBuffer.toString('ascii', 0, 10)}`));
+        return;
+      }
+      resolve(fullBuffer);
+    });
+    
+    doc.on('error', (err: unknown) => {
+      hasErrored = true;
+      reject(err);
+    });
+    
+    // Timeout safety - if PDF doesn't complete in 10 seconds, something is wrong
+    setTimeout(() => {
+      if (!hasEnded && !hasErrored) {
+        hasErrored = true;
+        reject(new Error('PDF generation timeout - document did not complete'));
+      }
+    }, 10000);
   });
 
   // Header - Company info
@@ -296,115 +321,5 @@ async function generatePDF(order: InvoiceOrder): Promise<Buffer> {
   return done;
 }
 
-/**
- * Generate invoice PDF and upload to Cloudinary
- * Returns the Cloudinary URL
- */
-export async function generateAndUploadInvoice(order: InvoiceOrder): Promise<string> {
-  try {
-    // Validate required fields
-    if (!order._id) {
-      throw new Error('Order ID is required');
-    }
-    if (!order.items || order.items.length === 0) {
-      throw new Error('Order must have at least one item');
-    }
-
-    // Validate Cloudinary configuration
-    if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
-      throw new Error('Cloudinary configuration is missing. Please check environment variables.');
-    }
-
-    console.log('[generateAndUploadInvoice] Starting invoice generation', {
-      orderId: order._id,
-      orderNumber: order.orderNumber,
-      itemsCount: order.items?.length || 0,
-      hasCloudinaryConfig: !!(process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY),
-    });
-
-    // Generate PDF
-    const pdfBuffer = await generatePDF(order);
-    console.log('[generateAndUploadInvoice] PDF generated', {
-      orderId: order._id,
-      bufferSize: pdfBuffer.length,
-    });
-
-    if (!pdfBuffer || pdfBuffer.length === 0) {
-      throw new Error('Generated PDF buffer is empty');
-    }
-
-    // Upload to Cloudinary using the same pattern as the existing upload route
-    const fileName = `invoice-${order.orderNumber || order._id}`;
-    console.log('[generateAndUploadInvoice] Uploading to Cloudinary', {
-      fileName,
-      folder: 'invoices',
-    });
-
-    // Add timeout to Cloudinary upload (30 seconds)
-    const uploadPromise = new Promise<{ secure_url: string; public_id: string }>(
-      (resolve, reject) => {
-        try {
-          const uploadStream = cloudinary.uploader.upload_stream(
-            {
-              folder: 'invoices',
-              resource_type: 'raw',
-              public_id: fileName,
-              // Don't specify format - let Cloudinary detect it from the buffer
-            },
-            (error, result) => {
-              if (error) {
-                console.error('[generateAndUploadInvoice] Cloudinary upload error', {
-                  error: error.message || error,
-                  stack: error instanceof Error ? error.stack : undefined,
-                  code: (error as { code?: string })?.code,
-                });
-                reject(error);
-              } else if (!result || !result.secure_url) {
-                console.error('[generateAndUploadInvoice] Invalid Cloudinary response', result);
-                reject(new Error('Invalid response from Cloudinary'));
-              } else {
-                console.log('[generateAndUploadInvoice] Upload successful', {
-                  public_id: result.public_id,
-                  secure_url: result.secure_url,
-                });
-                resolve({
-                  secure_url: result.secure_url,
-                  public_id: result.public_id || fileName,
-                });
-              }
-            }
-          );
-
-          // Use .end() method directly with buffer (same as existing upload route)
-          uploadStream.end(pdfBuffer);
-        } catch (streamError) {
-          console.error('[generateAndUploadInvoice] Stream creation error', streamError);
-          reject(streamError);
-        }
-      }
-    );
-
-    // Add timeout
-    const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => {
-        reject(new Error('Cloudinary upload timeout after 30 seconds'));
-      }, 30000);
-    });
-
-    const uploadResult = await Promise.race([uploadPromise, timeoutPromise]);
-
-    if (!uploadResult.secure_url) {
-      throw new Error('Failed to get secure URL from Cloudinary');
-    }
-
-    console.log('[generateAndUploadInvoice] Invoice uploaded successfully', {
-      orderId: order._id,
-      invoiceUrl: uploadResult.secure_url,
-    });
-
-    return uploadResult.secure_url;
-  } catch (error) {
-    console.error('[generateAndUploadInvoice] Error:', error);
-    throw error;
-  }
-}
+// Note: generateAndUploadInvoice function removed - PDFs are now generated on-demand
+// No Cloudinary storage needed. Use generatePDF() directly when needed.

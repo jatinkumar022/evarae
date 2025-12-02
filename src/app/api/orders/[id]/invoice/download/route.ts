@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { connect } from '@/dbConfig/dbConfig';
 import jwt from 'jsonwebtoken';
 import Order from '@/models/orderModel';
-import { generateAndUploadInvoice } from '@/lib/invoiceGenerator';
+import { generatePDF } from '@/lib/invoiceGenerator';
 
 export const runtime = 'nodejs';
 
@@ -56,7 +56,6 @@ type HtmlOrder = {
   courierName?: string | null;
   trackingNumber?: string | null;
   paidAt?: string | Date | null;
-  invoiceUrl?: string | null;
 };
 
 export async function GET(
@@ -80,66 +79,63 @@ export async function GET(
         ? { orderNumber: key, user: uid }
         : { _id: key, user: uid }
     )
-      .select('_id orderNumber items subtotalAmount taxAmount shippingAmount discountAmount paymentChargesAmount totalAmount orderStatus paymentStatus shippingAddress createdAt courierName trackingNumber paidAt invoiceUrl')
-      .lean()) as unknown as HtmlOrder & { invoiceUrl?: string | null } | null;
+      .select('_id orderNumber items subtotalAmount taxAmount shippingAmount discountAmount paymentChargesAmount totalAmount orderStatus paymentStatus shippingAddress createdAt courierName trackingNumber paidAt')
+      .lean()) as unknown as HtmlOrder | null;
 
     if (!order) {
       return NextResponse.json({ error: 'Order not found' }, { status: 404 });
     }
 
-    // Check for force regeneration query parameter
-    const url = new URL(request.url);
-    const forceRegenerate = url.searchParams.get('regenerate') === 'true';
-    
-    // Check if invoice URL exists, if not generate it (or force regenerate)
-    let invoiceUrl = (order as HtmlOrder & { invoiceUrl?: string | null }).invoiceUrl;
-    
-    if (!invoiceUrl || forceRegenerate) {
-      // Generate invoice if it doesn't exist or if forced to regenerate
-      const normalizedOrder = {
-        _id: String(order._id),
-        orderNumber: order.orderNumber,
-        items: (order.items || []).map(item => ({
-          name: item.name || 'Unknown Product',
-          price: typeof item.price === 'number' ? item.price : 0,
-          quantity: typeof item.quantity === 'number' && item.quantity > 0 ? item.quantity : 1,
-        })),
-        subtotalAmount: typeof order.subtotalAmount === 'number' ? order.subtotalAmount : 0,
-        taxAmount: typeof order.taxAmount === 'number' ? order.taxAmount : 0,
-        shippingAmount: typeof order.shippingAmount === 'number' ? order.shippingAmount : 0,
-        discountAmount: typeof order.discountAmount === 'number' ? order.discountAmount : 0,
-        paymentChargesAmount: typeof order.paymentChargesAmount === 'number' ? order.paymentChargesAmount : 0,
-        totalAmount: typeof order.totalAmount === 'number' ? order.totalAmount : 0,
-        orderStatus: order.orderStatus || 'pending',
-        paymentStatus: order.paymentStatus || 'pending',
-        shippingAddress: order.shippingAddress || {},
-        createdAt: order.createdAt || new Date(),
-        paidAt: order.paidAt || new Date(),
-      };
+    // Generate PDF on-demand (no Cloudinary storage needed)
+    console.log('[orders/[id]/invoice/download] Generating PDF on-demand', {
+      orderId: order._id,
+      orderNumber: order.orderNumber,
+    });
 
-      invoiceUrl = await generateAndUploadInvoice(normalizedOrder);
-      
-      // Save invoice URL to order
-      await Order.updateOne(
-        { _id: order._id },
-        { $set: { invoiceUrl } }
-      ).catch(err => console.error('[orders/[id]/invoice/download] Failed to save invoice URL:', err));
+    const normalizedOrder = {
+      _id: String(order._id),
+      orderNumber: order.orderNumber,
+      items: (order.items || []).map(item => ({
+        name: item.name || 'Unknown Product',
+        price: typeof item.price === 'number' ? item.price : 0,
+        quantity: typeof item.quantity === 'number' && item.quantity > 0 ? item.quantity : 1,
+      })),
+      subtotalAmount: typeof order.subtotalAmount === 'number' ? order.subtotalAmount : 0,
+      taxAmount: typeof order.taxAmount === 'number' ? order.taxAmount : 0,
+      shippingAmount: typeof order.shippingAmount === 'number' ? order.shippingAmount : 0,
+      discountAmount: typeof order.discountAmount === 'number' ? order.discountAmount : 0,
+      paymentChargesAmount: typeof order.paymentChargesAmount === 'number' ? order.paymentChargesAmount : 0,
+      totalAmount: typeof order.totalAmount === 'number' ? order.totalAmount : 0,
+      orderStatus: order.orderStatus || 'pending',
+      paymentStatus: order.paymentStatus || 'pending',
+      shippingAddress: order.shippingAddress || {},
+      createdAt: order.createdAt || new Date(),
+      paidAt: order.paidAt || new Date(),
+    };
+
+    // Generate PDF directly
+    const pdfBuffer = await generatePDF(normalizedOrder);
+    
+    // Validate PDF buffer
+    if (!pdfBuffer || pdfBuffer.length === 0) {
+      throw new Error('Generated PDF buffer is empty');
+    }
+    
+    if (pdfBuffer.length < 5000) {
+      throw new Error(`Generated PDF is too small (${pdfBuffer.length} bytes). Expected at least 5KB.`);
+    }
+    
+    // Validate PDF header
+    const pdfHeader = pdfBuffer.toString('ascii', 0, 4);
+    if (pdfHeader !== '%PDF') {
+      throw new Error(`Invalid PDF header: ${pdfHeader}. PDF may be corrupted.`);
     }
 
-    // Fetch PDF from Cloudinary
-    const pdfResponse = await fetch(invoiceUrl);
-    if (!pdfResponse.ok) {
-      throw new Error('Failed to fetch PDF from Cloudinary');
-    }
-
-    // Get the full PDF buffer - ensure we read the complete response
-    const pdfBuffer = await pdfResponse.arrayBuffer();
-    
-    // Validate buffer size - if it's suspiciously small, there might be an issue
-    if (!pdfBuffer || pdfBuffer.byteLength < 1000) {
-      console.error(`[orders/[id]/invoice/download] PDF buffer is too small: ${pdfBuffer.byteLength} bytes`);
-      throw new Error('PDF file appears to be corrupted or incomplete');
-    }
+    console.log('[orders/[id]/invoice/download] PDF generated successfully', {
+      orderId: order._id,
+      bufferSize: pdfBuffer.length,
+      header: pdfHeader,
+    });
 
     // Ensure filename always has .pdf extension
     let fileName = `invoice-${order.orderNumber || order._id}`;
@@ -149,8 +145,8 @@ export async function GET(
     // Sanitize filename for Content-Disposition header
     const safeFileName = fileName.replace(/[^a-zA-Z0-9._-]/g, '_');
 
-    // Convert ArrayBuffer to Buffer for NextResponse
-    const buffer = Buffer.from(pdfBuffer);
+    // Convert Buffer to Uint8Array for NextResponse compatibility
+    const buffer = new Uint8Array(pdfBuffer);
 
     // Return PDF with proper headers for mobile compatibility
     // Ensure Content-Length matches actual buffer size

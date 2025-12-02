@@ -22,10 +22,10 @@ export async function downloadInvoiceWithProgress(
   }, 300);
 
   try {
-    // Build the download endpoint path with force regeneration to ensure latest format
+    // Build the download endpoint path - PDF is generated on-demand
     const downloadApiPath = isAdmin
-      ? `/api/admin/orders/${orderId}/invoice/download?regenerate=true`
-      : `/api/orders/${orderId}/invoice/download?regenerate=true`;
+      ? `/api/admin/orders/${orderId}/invoice/download`
+      : `/api/orders/${orderId}/invoice/download`;
     // Fetch PDF and trigger blob download without navigation
     const res = await fetch(downloadApiPath, {
       method: 'GET',
