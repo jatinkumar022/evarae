@@ -51,6 +51,17 @@ export async function downloadInvoiceWithProgress(
     clearInterval(progressInterval);
     onProgress(100);
 
+    // Validate blob size - ensure we got the full PDF
+    const contentLength = res.headers.get('Content-Length');
+    if (contentLength && blob.size !== parseInt(contentLength, 10)) {
+      console.warn(`[invoiceDownload] Blob size mismatch: expected ${contentLength}, got ${blob.size}`);
+    }
+    
+    // Ensure blob is not suspiciously small (PDFs should be at least a few KB)
+    if (blob.size < 2000) {
+      throw new Error(`PDF file appears to be incomplete (${blob.size} bytes). Please try again.`);
+    }
+
     // Build a safe filename
     let fileName = `invoice-${orderId}`;
     fileName = fileName.replace(/\.(pdf|PDF)$/, '');

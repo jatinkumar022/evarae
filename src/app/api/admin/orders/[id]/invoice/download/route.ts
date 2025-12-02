@@ -129,7 +129,15 @@ export async function GET(
       throw new Error('Failed to fetch PDF from Cloudinary');
     }
 
+    // Get the full PDF buffer - ensure we read the complete response
     const pdfBuffer = await pdfResponse.arrayBuffer();
+    
+    // Validate buffer size - if it's suspiciously small, there might be an issue
+    if (!pdfBuffer || pdfBuffer.byteLength < 1000) {
+      console.error(`[admin/orders/[id]/invoice/download] PDF buffer is too small: ${pdfBuffer.byteLength} bytes`);
+      throw new Error('PDF file appears to be corrupted or incomplete');
+    }
+    
     // Ensure filename always has .pdf extension
     let fileName = `invoice-${order.orderNumber || order._id}`;
     fileName = fileName.replace(/\.(pdf|PDF)$/, '');
@@ -138,14 +146,18 @@ export async function GET(
     // Sanitize filename for Content-Disposition header
     const safeFileName = fileName.replace(/[^a-zA-Z0-9._-]/g, '_');
 
-    // Return PDF with Content-Disposition: attachment to force download with proper filename
-    // Use both filename and filename* for maximum browser compatibility
-    return new NextResponse(pdfBuffer, {
+    // Convert ArrayBuffer to Buffer for NextResponse
+    const buffer = Buffer.from(pdfBuffer);
+
+    // Return PDF with proper headers for mobile compatibility
+    // Ensure Content-Length matches actual buffer size
+    return new NextResponse(buffer, {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
         'Content-Disposition': `attachment; filename="${safeFileName}"; filename*=UTF-8''${encodeURIComponent(fileName)}`,
-        'Content-Length': pdfBuffer.byteLength.toString(),
+        'Content-Length': buffer.length.toString(),
+        'Accept-Ranges': 'bytes',
         'Cache-Control': 'private, no-store, no-cache, must-revalidate',
         'X-Content-Type-Options': 'nosniff',
       },

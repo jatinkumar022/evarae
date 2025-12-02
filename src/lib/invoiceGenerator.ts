@@ -2,7 +2,8 @@ import PDFDocument from 'pdfkit';
 import cloudinary from '@/lib/cloudinary';
 
 // Format money with proper Indian number formatting (commas for thousands)
-// Using Unicode rupee symbol (U+20B9) with proper encoding
+// Using "Rs." prefix instead of rupee symbol for better compatibility across all devices
+// Helvetica font doesn't support the rupee symbol, so using "Rs." ensures it displays correctly
 const money = (n: number) => {
   const num = Number(n || 0);
   // Round to 2 decimal places
@@ -19,9 +20,8 @@ const money = (n: number) => {
   // Combine with decimal if exists
   const formatted = decimalPart ? `${formattedInteger}.${decimalPart}` : formattedInteger;
   
-  // Use Unicode rupee symbol (U+20B9) - ensure proper encoding
-  // This should work better across different PDF viewers
-  return `\u20B9${formatted}`;
+  // Use "Rs." prefix for better compatibility across all PDF viewers and mobile devices
+  return `Rs. ${formatted}`;
 };
 
 type InvoiceOrderItem = {
@@ -79,18 +79,19 @@ async function generatePDF(order: InvoiceOrder): Promise<Buffer> {
   const doc = new PDFDocument({
     size: 'A4',
     margins: { top: 50, left: 50, right: 50, bottom: 50 },
-    // Ensure proper encoding for Unicode characters like rupee symbol
+    // Optimize for mobile viewing
     autoFirstPage: true,
+    // Set PDF metadata for better mobile viewing
+    info: {
+      Title: `Invoice ${order.orderNumber || order._id}`,
+      Author: 'Caelvi Jewellery',
+      Subject: 'Invoice',
+      Producer: 'Caelvi Invoice Generator',
+    },
   });
   
-  // Set encoding to support Unicode characters including rupee symbol
-  // This helps ensure the rupee symbol renders correctly on mobile devices
-  // Note: If rupee symbol still doesn't display, consider embedding a custom font
-  // that supports it (e.g., Noto Sans, DejaVu Sans, Ubuntu) using PDFKit's registerFont
-  doc.info = {
-    ...doc.info,
-    Producer: 'Caelvi Invoice Generator',
-  };
+  // Note: PDFKit doesn't directly support setting viewer preferences
+  // The PDF will be optimized through proper sizing and font choices
 
   const buffers: Buffer[] = [];
   doc.on('data', (chunk: unknown) => buffers.push(chunk as Buffer));
@@ -168,6 +169,7 @@ async function generatePDF(order: InvoiceOrder): Promise<Buffer> {
   doc.moveDown(1.5);
 
   // Items table header
+  // Increased font sizes for better mobile readability
   const tableTop = doc.y;
   const colItemX = 50;
   const colQtyX = 330;
@@ -176,7 +178,7 @@ async function generatePDF(order: InvoiceOrder): Promise<Buffer> {
 
   doc
     .font('Helvetica-Bold')
-    .fontSize(10)
+    .fontSize(11) // Increased from 10 for better mobile readability
     .text('Item', colItemX, tableTop)
     .text('Qty', colQtyX, tableTop, { width: 40, align: 'center' })
     .text('Price', colPriceX, tableTop, { width: 60, align: 'right' })
@@ -191,8 +193,9 @@ async function generatePDF(order: InvoiceOrder): Promise<Buffer> {
     .stroke();
 
   // Table rows
+  // Increased font size for better mobile readability
   let rowY = tableTop + 22;
-  doc.font('Helvetica').fontSize(9).strokeColor('#eeeeee').lineWidth(0.5);
+  doc.font('Helvetica').fontSize(10).strokeColor('#eeeeee').lineWidth(0.5); // Increased from 9
 
   (order.items || []).forEach((item) => {
     const lineHeight = 14;
@@ -235,11 +238,11 @@ async function generatePDF(order: InvoiceOrder): Promise<Buffer> {
   const addSummaryRow = (label: string, value: string) => {
     doc
       .font('Helvetica')
-      .fontSize(9)
+      .fontSize(10) // Increased from 9 for better mobile readability
       .fillColor('#000000')
       .text(label, summaryX, summaryY, { width: 120, align: 'left' })
       .text(value, summaryX + 120, summaryY, { width: 100, align: 'right' });
-    summaryY += 14;
+    summaryY += 15; // Slightly increased spacing
   };
 
   addSummaryRow('Subtotal:', money(order.subtotalAmount || 0));
@@ -263,9 +266,10 @@ async function generatePDF(order: InvoiceOrder): Promise<Buffer> {
   summaryY += 10;
 
   // Total
+  // Increased font size for better mobile visibility
   doc
     .font('Helvetica-Bold')
-    .fontSize(12)
+    .fontSize(13) // Increased from 12 for better mobile visibility
     .text('Total:', summaryX, summaryY, { width: 120, align: 'left' })
     .text(money(order.totalAmount || 0), summaryX + 120, summaryY, {
       width: 100,
