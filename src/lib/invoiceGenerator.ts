@@ -1,5 +1,4 @@
-import puppeteer from 'puppeteer-core';
-import chromium from '@sparticuz/chromium';
+import PDFDocument from 'pdfkit';
 import cloudinary from '@/lib/cloudinary';
 
 // Format money with proper Indian number formatting (commas for thousands)
@@ -58,347 +57,225 @@ type InvoiceOrder = {
   paidAt?: string | Date | null;
 };
 
-function generateInvoiceHTML(order: InvoiceOrder): string {
-  const invoiceNumber = order.orderNumber || order._id;
-  const invoiceDate = order.createdAt
+function generateInvoiceDate(order: InvoiceOrder): string {
+  return order.createdAt
     ? new Date(order.createdAt).toLocaleDateString('en-IN', {
         year: 'numeric',
         month: 'long',
         day: 'numeric',
       })
     : '';
-  const status = `${order.orderStatus} • ${order.paymentStatus}`;
-  const addr = order.shippingAddress || {};
-
-  return `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Invoice ${invoiceNumber}</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    body {
-      font-family: 'Helvetica', 'Arial', sans-serif;
-      font-size: 12px;
-      line-height: 1.6;
-      color: #333;
-      padding: 50px;
-      background: white;
-    }
-    .header {
-      margin-bottom: 40px;
-    }
-    .company-name {
-      font-size: 24px;
-      font-weight: bold;
-      margin-bottom: 5px;
-      color: #1a1a1a;
-    }
-    .company-tagline {
-      font-size: 12px;
-      color: #666;
-      margin-bottom: 5px;
-    }
-    .company-details {
-      font-size: 10px;
-      color: #666;
-      line-height: 1.8;
-    }
-    .invoice-header {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 30px;
-    }
-    .invoice-info {
-      text-align: right;
-      font-size: 10px;
-    }
-    .invoice-title {
-      font-size: 14px;
-      font-weight: bold;
-      margin-bottom: 10px;
-    }
-    .invoice-details {
-      line-height: 1.8;
-    }
-    .address-section {
-      margin-bottom: 30px;
-    }
-    .address-title {
-      font-size: 12px;
-      font-weight: bold;
-      margin-bottom: 10px;
-    }
-    .address-content {
-      font-size: 10px;
-      line-height: 1.8;
-    }
-    .items-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-bottom: 30px;
-    }
-    .items-table th {
-      text-align: left;
-      font-size: 10px;
-      font-weight: bold;
-      padding-bottom: 10px;
-      border-bottom: 1px solid #333;
-    }
-    .items-table th.amount {
-      text-align: right;
-    }
-    .items-table td {
-      font-size: 9px;
-      padding: 8px 0;
-      border-bottom: 1px solid #eee;
-    }
-    .items-table td.item-name {
-      width: 50%;
-    }
-    .items-table td.qty {
-      width: 10%;
-      text-align: center;
-    }
-    .items-table td.price {
-      width: 15%;
-      text-align: right;
-    }
-    .items-table td.amount {
-      width: 15%;
-      text-align: right;
-    }
-    .summary {
-      margin-top: 20px;
-      margin-left: auto;
-      width: 300px;
-    }
-    .summary-row {
-      display: flex;
-      justify-content: space-between;
-      font-size: 9px;
-      margin-bottom: 10px;
-    }
-    .summary-label {
-      font-weight: normal;
-    }
-    .summary-value {
-      text-align: right;
-    }
-    .summary-divider {
-      border-top: 1px solid #333;
-      margin: 10px 0;
-    }
-    .summary-total {
-      font-size: 12px;
-      font-weight: bold;
-      margin-top: 10px;
-    }
-    .footer {
-      margin-top: 50px;
-      text-align: center;
-      font-size: 8px;
-      color: #666;
-    }
-  </style>
-</head>
-<body>
-  <div class="header">
-    <div class="company-name">Caelvi Jewellery</div>
-    <div class="company-tagline">Luxury Imitation Jewellery</div>
-    <div class="company-details">
-      Caelvi Pvt. Ltd.<br>
-      123 artisan park, Mumbai, MH 400001, IN<br>
-      GSTIN: 27AAAPC1234A1Z5
-    </div>
-  </div>
-
-  <div class="invoice-header">
-    <div></div>
-    <div class="invoice-info">
-      <div class="invoice-title">Invoice</div>
-      <div class="invoice-details">
-        ${invoiceNumber}<br>
-        Date: ${invoiceDate}<br>
-        Status: ${status}
-      </div>
-    </div>
-  </div>
-
-  <div class="address-section">
-    <div class="address-title">Billing / Shipping</div>
-    <div class="address-content">
-      ${addr.fullName || ''}<br>
-      ${addr.line1 || ''}<br>
-      ${addr.line2 ? addr.line2 + '<br>' : ''}
-      ${addr.city || ''}, ${addr.state || ''} ${addr.postalCode || ''}<br>
-      ${addr.country || ''}<br>
-      ${addr.phone ? 'Phone: ' + addr.phone : ''}
-    </div>
-  </div>
-
-  <table class="items-table">
-    <thead>
-      <tr>
-        <th class="item-name">Item</th>
-        <th class="qty">Qty</th>
-        <th class="price">Price</th>
-        <th class="amount">Amount</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${(order.items || [])
-        .map(
-          (item) => `
-        <tr>
-          <td class="item-name">${item.name || ''}</td>
-          <td class="qty">${item.quantity || 0}</td>
-          <td class="price">${money(item.price || 0)}</td>
-          <td class="amount">${money((item.price || 0) * (item.quantity || 0))}</td>
-        </tr>
-      `
-        )
-        .join('')}
-    </tbody>
-  </table>
-
-  <div class="summary">
-    <div class="summary-row">
-      <span class="summary-label">Subtotal:</span>
-      <span class="summary-value">${money(order.subtotalAmount || 0)}</span>
-    </div>
-    ${(order.discountAmount || 0) > 0
-      ? `
-    <div class="summary-row">
-      <span class="summary-label">Discount:</span>
-      <span class="summary-value">-${money(order.discountAmount || 0)}</span>
-    </div>
-    `
-      : ''}
-    <div class="summary-row">
-      <span class="summary-label">GST (3%):</span>
-      <span class="summary-value">${money(order.taxAmount || 0)}</span>
-    </div>
-    <div class="summary-row">
-      <span class="summary-label">Payment Charges:</span>
-      <span class="summary-value">${money(order.paymentChargesAmount || 0)}</span>
-    </div>
-    <div class="summary-row">
-      <span class="summary-label">Shipping:</span>
-      <span class="summary-value">${money(order.shippingAmount || 0)}</span>
-    </div>
-    <div class="summary-divider"></div>
-    <div class="summary-row summary-total">
-      <span>Total:</span>
-      <span>${money(order.totalAmount || 0)}</span>
-    </div>
-  </div>
-
-  <div class="footer">
-    Thank you for shopping with Caelvi. This is a computer-generated invoice. No signature required.
-  </div>
-</body>
-</html>
-  `.trim();
 }
 
 async function generatePDF(order: InvoiceOrder): Promise<Buffer> {
-  const html = generateInvoiceHTML(order);
+  const invoiceNumber = order.orderNumber || order._id;
+  const invoiceDate = generateInvoiceDate(order);
+  const status = `${order.orderStatus} • ${order.paymentStatus}`;
+  const addr = order.shippingAddress || {};
 
-  // Determine if we're in a serverless environment
-  const isServerless = !!(process.env.AWS_LAMBDA_FUNCTION_NAME || 
-                          process.env.VERCEL || 
-                          process.env.NETLIFY);
+  const doc = new PDFDocument({
+    size: 'A4',
+    margins: { top: 50, left: 50, right: 50, bottom: 50 },
+  });
 
-  let launchOptions: Parameters<typeof puppeteer.launch>[0];
+  const buffers: Buffer[] = [];
+  doc.on('data', (chunk: unknown) => buffers.push(chunk as Buffer));
 
-  if (isServerless) {
-    // Use @sparticuz/chromium for serverless environments
-    launchOptions = {
-      args: chromium.args,
-      defaultViewport: chromium.defaultViewport,
-      executablePath: await chromium.executablePath(),
-      headless: chromium.headless ?? true,
-    };
-  } else {
-    // For local development, try to find Chrome in common locations
-    const fs = await import('fs');
-    
-    const possiblePaths = [
-      process.env.CHROME_PATH,
-      process.env.PUPPETEER_EXECUTABLE_PATH,
-      'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
-      'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
-      'C:\\Program Files\\Chromium\\Application\\chrome.exe',
-      '/usr/bin/google-chrome',
-      '/usr/bin/chromium',
-      '/usr/bin/chromium-browser',
-      '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
-    ].filter(Boolean) as string[];
+  const done = new Promise<Buffer>((resolve, reject) => {
+    doc.on('end', () => resolve(Buffer.concat(buffers)));
+    doc.on('error', (err: unknown) => reject(err));
+  });
 
-    let executablePath: string | undefined;
-    for (const chromePath of possiblePaths) {
-      try {
-        if (fs.existsSync(chromePath)) {
-          executablePath = chromePath;
-          console.log('[generatePDF] Found Chrome at:', chromePath);
-          break;
-        }
-      } catch {
-        // Continue searching
-      }
-    }
+  // Header - Company info
+  doc
+    .font('Helvetica-Bold')
+    .fontSize(24)
+    .fillColor('#1a1a1a')
+    .text('Caelvi Jewellery', { align: 'left' });
 
-    if (!executablePath) {
-      throw new Error(
-        'Chrome/Chromium not found. Please install Google Chrome or set CHROME_PATH environment variable.\n' +
-        'Common locations:\n' +
-        'Windows: C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe\n' +
-        'Linux: /usr/bin/google-chrome\n' +
-        'Mac: /Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
+  doc
+    .moveDown(0.3)
+    .font('Helvetica')
+    .fontSize(12)
+    .fillColor('#666666')
+    .text('Luxury Imitation Jewellery');
+
+  doc
+    .moveDown(0.2)
+    .fontSize(10)
+    .text('Caelvi Pvt. Ltd.')
+    .text('123 artisan park, Mumbai, MH 400001, IN')
+    .text('GSTIN: 27AAAPC1234A1Z5');
+
+  doc.moveDown(1.5);
+
+  // Invoice header (right side)
+  const headerTop = doc.y;
+  doc
+    .font('Helvetica-Bold')
+    .fontSize(14)
+    .text('Invoice', 320, headerTop, { align: 'left' });
+
+  doc
+    .moveDown(0.3)
+    .font('Helvetica')
+    .fontSize(10)
+    .text(`Invoice No: ${invoiceNumber}`)
+    .text(`Date: ${invoiceDate}`)
+    .text(`Status: ${status}`);
+
+  doc.moveDown(2);
+
+  // Address section
+  doc
+    .font('Helvetica-Bold')
+    .fontSize(12)
+    .fillColor('#000000')
+    .text('Billing / Shipping');
+
+  doc
+    .moveDown(0.5)
+    .font('Helvetica')
+    .fontSize(10);
+
+  const addressLines: string[] = [];
+  if (addr.fullName) addressLines.push(addr.fullName);
+  if (addr.line1) addressLines.push(addr.line1);
+  if (addr.line2) addressLines.push(addr.line2);
+  const cityLine = [addr.city, addr.state, addr.postalCode]
+    .filter(Boolean)
+    .join(', ');
+  if (cityLine) addressLines.push(cityLine);
+  if (addr.country) addressLines.push(addr.country);
+  if (addr.phone) addressLines.push(`Phone: ${addr.phone}`);
+
+  addressLines.forEach((line) => doc.text(line));
+
+  doc.moveDown(1.5);
+
+  // Items table header
+  const tableTop = doc.y;
+  const colItemX = 50;
+  const colQtyX = 330;
+  const colPriceX = 390;
+  const colAmountX = 470;
+
+  doc
+    .font('Helvetica-Bold')
+    .fontSize(10)
+    .text('Item', colItemX, tableTop)
+    .text('Qty', colQtyX, tableTop, { width: 40, align: 'center' })
+    .text('Price', colPriceX, tableTop, { width: 60, align: 'right' })
+    .text('Amount', colAmountX, tableTop, { width: 80, align: 'right' });
+
+  // Divider line under header
+  doc
+    .moveTo(colItemX, tableTop + 14)
+    .lineTo(colAmountX + 80, tableTop + 14)
+    .strokeColor('#333333')
+    .lineWidth(1)
+    .stroke();
+
+  // Table rows
+  let rowY = tableTop + 22;
+  doc.font('Helvetica').fontSize(9).strokeColor('#eeeeee').lineWidth(0.5);
+
+  (order.items || []).forEach((item) => {
+    const lineHeight = 14;
+
+    doc
+      .fillColor('#000000')
+      .text(item.name || '', colItemX, rowY, {
+        width: colQtyX - colItemX - 10,
+      })
+      .text(String(item.quantity || 0), colQtyX, rowY, {
+        width: 40,
+        align: 'center',
+      })
+      .text(money(item.price || 0), colPriceX, rowY, {
+        width: 60,
+        align: 'right',
+      })
+      .text(
+        money((item.price || 0) * (item.quantity || 0)),
+        colAmountX,
+        rowY,
+        { width: 80, align: 'right' }
       );
-    }
 
-    launchOptions = {
-      headless: true,
-      executablePath,
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-accelerated-2d-canvas',
-        '--disable-gpu',
-      ],
-    };
+    // Row divider
+    doc
+      .moveTo(colItemX, rowY + lineHeight)
+      .lineTo(colAmountX + 80, rowY + lineHeight)
+      .stroke();
+
+    rowY += lineHeight + 2;
+  });
+
+  doc.moveDown(2);
+
+  // Summary section on right side
+  const summaryX = 300;
+  let summaryY = doc.y;
+
+  const addSummaryRow = (label: string, value: string) => {
+    doc
+      .font('Helvetica')
+      .fontSize(9)
+      .fillColor('#000000')
+      .text(label, summaryX, summaryY, { width: 120, align: 'left' })
+      .text(value, summaryX + 120, summaryY, { width: 100, align: 'right' });
+    summaryY += 14;
+  };
+
+  addSummaryRow('Subtotal:', money(order.subtotalAmount || 0));
+
+  if ((order.discountAmount || 0) > 0) {
+    addSummaryRow('Discount:', `-${money(order.discountAmount || 0)}`);
   }
 
-  const browser = await puppeteer.launch(launchOptions);
+  addSummaryRow('GST (3%):', money(order.taxAmount || 0));
+  addSummaryRow('Payment Charges:', money(order.paymentChargesAmount || 0));
+  addSummaryRow('Shipping:', money(order.shippingAmount || 0));
 
-  try {
-    const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: 'networkidle0' });
+  // Divider
+  summaryY += 6;
+  doc
+    .moveTo(summaryX, summaryY)
+    .lineTo(summaryX + 220, summaryY)
+    .strokeColor('#333333')
+    .lineWidth(1)
+    .stroke();
+  summaryY += 10;
 
-    const pdfBuffer = await page.pdf({
-      format: 'A4',
-      margin: {
-        top: '50px',
-        right: '50px',
-        bottom: '50px',
-        left: '50px',
-      },
-      printBackground: true,
+  // Total
+  doc
+    .font('Helvetica-Bold')
+    .fontSize(12)
+    .text('Total:', summaryX, summaryY, { width: 120, align: 'left' })
+    .text(money(order.totalAmount || 0), summaryX + 120, summaryY, {
+      width: 100,
+      align: 'right',
     });
 
-    return Buffer.from(pdfBuffer);
-  } finally {
-    await browser.close();
-  }
+  // Footer
+  doc.moveDown(4);
+  doc
+    .font('Helvetica')
+    .fontSize(8)
+    .fillColor('#666666')
+    .text(
+      'Thank you for shopping with Caelvi. This is a computer-generated invoice. No signature required.',
+      50,
+      doc.page.height - 80,
+      {
+        width: doc.page.width - 100,
+        align: 'center',
+      }
+    );
+
+  doc.end();
+  return done;
 }
 
 /**
