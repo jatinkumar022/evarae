@@ -224,7 +224,11 @@ const isWithinReturnWindow = (paidAt: string | null): boolean => {
 export default function OrderDetailsPage() {
   const params = useParams();
   const router = useRouter();
-  const orderId = params.id as string;
+  // Memoize orderId to prevent unnecessary re-renders
+  const orderId = useMemo(() => {
+    const id = params.id as string;
+    return id && typeof id === 'string' ? id.trim() : '';
+  }, [params.id]);
 
   const [order, setOrder] = useState<OrderDoc | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -239,6 +243,8 @@ export default function OrderDetailsPage() {
   const { returnRequestsMap, checkReturnRequestsForOrder, fetchReturnRequests, returnRequests: storeReturnRequests } = useReturnRequestStore();
   const hasFetchedReturnRequestsRef = useRef<string | null>(null);
   const returnRequestsFetchedRef = useRef<boolean>(false);
+  const orderFetchInProgressRef = useRef<boolean>(false);
+  const lastFetchedOrderIdRef = useRef<string | null>(null);
 
   // Ensure this page always starts at the top to avoid inheriting scroll from previous route
   useEffect(() => {
@@ -278,13 +284,36 @@ export default function OrderDetailsPage() {
   }, []);
 
   useEffect(() => {
+    // Guard: Don't fetch if orderId is invalid
+    if (!orderId || orderId.length === 0) {
+      return;
+    }
+
+    // Guard: Prevent duplicate fetches for the same orderId
+    if (orderFetchInProgressRef.current && lastFetchedOrderIdRef.current === orderId) {
+      return;
+    }
+
+    // Guard: If we already have the order for this ID and it's loaded, don't fetch again
+    if (order?._id === orderId && status === 'loaded') {
+      return;
+    }
+
     let isMounted = true;
+    orderFetchInProgressRef.current = true;
+    lastFetchedOrderIdRef.current = orderId;
+    
     setStatus('loading');
     setError(null);
-    setOrder(null);
+    // Only clear order if orderId actually changed
+    if (order?._id !== orderId) {
+      setOrder(null);
+    }
     // Reset the refs when orderId changes
-    hasFetchedReturnRequestsRef.current = null;
-    returnRequestsFetchedRef.current = false;
+    if (hasFetchedReturnRequestsRef.current !== orderId) {
+      hasFetchedReturnRequestsRef.current = null;
+      returnRequestsFetchedRef.current = false;
+    }
 
     (async () => {
       try {
@@ -297,23 +326,31 @@ export default function OrderDetailsPage() {
           throw new Error(data?.error || 'Order not found');
         }
 
-        if (isMounted) {
+        if (isMounted && lastFetchedOrderIdRef.current === orderId) {
           setOrder(data.order);
           setStatus('loaded');
         }
       } catch (e: unknown) {
-        if (isMounted) {
+        if (isMounted && lastFetchedOrderIdRef.current === orderId) {
           const message =
             e instanceof Error ? e.message : 'Failed to load order';
           setError(message);
           setStatus('error');
+          toastApi.error('Failed to load order');
         }
-        toastApi.error('Failed to load order');
+      } finally {
+        if (isMounted && lastFetchedOrderIdRef.current === orderId) {
+          orderFetchInProgressRef.current = false;
+        }
       }
     })();
 
     return () => {
       isMounted = false;
+      // Only reset if this is the current orderId
+      if (lastFetchedOrderIdRef.current === orderId) {
+        orderFetchInProgressRef.current = false;
+      }
     };
   }, [orderId]);
 
@@ -520,17 +557,28 @@ export default function OrderDetailsPage() {
                     >
                       {/* Product Image */}
                       <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-primary/10 to-accent/10 rounded-xl flex items-center justify-center text-primary/60 flex-shrink-0 mx-auto sm:mx-0">
-                        {item.image ? (
-                          <Image
-                            src={item.image}
-                            alt={item.name}
-                            width={96}
-                            height={96}
-                            className="w-full h-full object-cover rounded-xl"
-                          />
-                        ) : (
-                          <Package className="w-6 h-6 sm:w-8 sm:h-8" />
-                        )}
+                        {(() => {
+                          // Robust validation: check if image is a valid non-empty string
+                          const isValidImage = 
+                            item.image && 
+                            typeof item.image === 'string' && 
+                            item.image.trim().length > 0 &&
+                            !item.image.startsWith('{') && // Reject JSON strings that are objects
+                            item.image !== '{}' &&
+                            item.image !== 'null';
+                          
+                          return isValidImage ? (
+                            <Image
+                              src={item.image}
+                              alt={item.name}
+                              width={96}
+                              height={96}
+                              className="w-full h-full object-cover rounded-xl"
+                            />
+                          ) : (
+                            <Package className="w-6 h-6 sm:w-8 sm:h-8" />
+                          );
+                        })()}
                       </div>
 
                       {/* Product Details */}

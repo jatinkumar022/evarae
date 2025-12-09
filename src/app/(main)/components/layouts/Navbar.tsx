@@ -572,7 +572,6 @@ export default function Navbar() {
       href: '/orders',
       submenu: [
         { icon: Clock, label: 'Order History', href: '/orders/history' },
-        { icon: Truck, label: 'Track Orders', href: '/orders/tracking' },
         { icon: Package, label: 'Returns & Refunds', href: '/orders/returns' },
       ],
     },

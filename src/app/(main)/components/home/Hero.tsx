@@ -185,7 +185,7 @@ export default function HeroCarousel() {
 
       {/* Dot Indicators */}
       {images.length > 1 && (
-        <div className="mt-6 flex justify-center gap-2">
+        <div className="mt-4 mb-2 flex justify-center gap-2">
           {images.map((_, i) => (
             <motion.button
               key={i}

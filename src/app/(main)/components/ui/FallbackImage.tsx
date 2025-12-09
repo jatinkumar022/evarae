@@ -41,18 +41,32 @@ const coerceSrc = (src?: ImageSource): ImageSource | undefined => {
     return undefined;
   }
 
+  // Handle string sources
   if (typeof src === 'string') {
     const trimmed = src.trim();
-    return trimmed.length > 0 ? trimmed : undefined;
+    // Reject empty strings, JSON object strings, or invalid values
+    if (trimmed.length === 0 || trimmed === '{}' || trimmed === 'null' || trimmed === 'undefined') {
+      return undefined;
+    }
+    return trimmed;
   }
 
+  // Handle object sources
   if (typeof src === 'object' && src !== null) {
+    // Check if it's StaticImageData
     if (isStaticImageData(src)) {
       const staticSrc = typeof src.src === 'string' ? src.src.trim() : '';
       return staticSrc.length > 0 ? src : undefined;
     }
 
-    const possibleKeys = ['url', 'uri', 'image', 'imageUrl', 'secure_url', 'path'];
+    // Check if it's an empty object
+    const keys = Object.keys(src);
+    if (keys.length === 0) {
+      return undefined;
+    }
+
+    // Try to extract a valid image URL from common properties
+    const possibleKeys = ['url', 'uri', 'image', 'imageUrl', 'secure_url', 'path', 'src'];
     const record = src as unknown as Record<string, unknown>;
     for (const key of possibleKeys) {
       const value = record[key];
@@ -61,6 +75,7 @@ const coerceSrc = (src?: ImageSource): ImageSource | undefined => {
       }
     }
 
+    // If no valid image property found, return undefined
     return undefined;
   }
 
@@ -76,17 +91,41 @@ const FallbackImage = ({
   ...rest
 }: FallbackImageProps) => {
   const safeFallback = useMemo(() => fallbackSrc ?? NoImagePlaceholder, [fallbackSrc]);
-  const [currentSrc, setCurrentSrc] = useState<ImageSource>(() => coerceSrc(src) ?? safeFallback);
+  
+  // Improved initial state - ensure we never start with an invalid src
+  const [currentSrc, setCurrentSrc] = useState<ImageSource>(() => {
+    const coerced = coerceSrc(src);
+    // If coerceSrc returns undefined or an empty object, use fallback
+    if (!coerced) {
+      return safeFallback;
+    }
+    // Double-check for empty objects
+    if (typeof coerced === 'object' && !isStaticImageData(coerced) && Object.keys(coerced).length === 0) {
+      return safeFallback;
+    }
+    return coerced;
+  });
 
   useEffect(() => {
-    const nextSrc = coerceSrc(src) ?? safeFallback;
+    const coerced = coerceSrc(src);
+    // Ensure we never set an empty object or invalid src
+    const nextSrc = coerced ?? safeFallback;
+    
+    // Double-check: if nextSrc is an empty object, use fallback
+    const isValidSrc = nextSrc && (
+      typeof nextSrc === 'string' ||
+      isStaticImageData(nextSrc) ||
+      (typeof nextSrc === 'object' && Object.keys(nextSrc).length > 0 && isStaticImageData(nextSrc as StaticImageData))
+    );
+    
+    const finalSrc = isValidSrc ? nextSrc : safeFallback;
 
     setCurrentSrc((prev) => {
-      if (areSourcesEqual(prev, nextSrc)) {
+      if (areSourcesEqual(prev, finalSrc)) {
         return prev;
       }
 
-      return nextSrc;
+      return finalSrc;
     });
   }, [safeFallback, src]);
 
@@ -114,15 +153,42 @@ const FallbackImage = ({
 
   // Ensure we always have a valid src (fallback to safeFallback if currentSrc is invalid)
   const finalSrc = useMemo(() => {
+    // Handle null/undefined
     if (!currentSrc) {
       return safeFallback;
     }
-    // If currentSrc is an empty object (not StaticImageData), use fallback
-    if (typeof currentSrc === 'object' && !isStaticImageData(currentSrc)) {
-      if (Object.keys(currentSrc).length === 0) {
+
+    // Handle empty object {}
+    if (typeof currentSrc === 'object' && currentSrc !== null) {
+      // Check if it's StaticImageData (has 'src' property)
+      if (isStaticImageData(currentSrc)) {
+        const staticSrc = typeof currentSrc.src === 'string' ? currentSrc.src.trim() : '';
+        return staticSrc.length > 0 ? currentSrc : safeFallback;
+      }
+      
+      // If it's a plain object, check if it's empty or has no valid image properties
+      const keys = Object.keys(currentSrc);
+      if (keys.length === 0) {
+        return safeFallback;
+      }
+      
+      // Check for common image URL properties
+      const possibleKeys = ['url', 'uri', 'image', 'imageUrl', 'secure_url', 'path', 'src'];
+      const hasValidImageProp = possibleKeys.some(key => {
+        const value = (currentSrc as Record<string, unknown>)[key];
+        return typeof value === 'string' && value.trim().length > 0;
+      });
+      
+      if (!hasValidImageProp) {
         return safeFallback;
       }
     }
+
+    // Handle string - ensure it's not empty
+    if (typeof currentSrc === 'string') {
+      return currentSrc.trim().length > 0 ? currentSrc : safeFallback;
+    }
+
     return currentSrc;
   }, [currentSrc, safeFallback]);
 

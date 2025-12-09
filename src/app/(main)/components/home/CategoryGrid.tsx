@@ -70,10 +70,11 @@ export default function CategoriesGrid() {
   // Homepage data is loaded centrally in Home page
 
   // Use categories from homepage if available, otherwise use store
-  const categories = data?.categories && data.categories.length > 0 
-    ? data.categories 
-    : storeCategories;
-  
+  const categories =
+    data?.categories && data.categories.length > 0
+      ? data.categories
+      : storeCategories;
+
   const topCategories = categories.slice(0, 9);
   return (
     <section className="">

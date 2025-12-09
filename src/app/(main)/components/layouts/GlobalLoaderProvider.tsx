@@ -38,7 +38,10 @@ export default function GlobalLoaderProvider({
         const bodyOverflow = window.getComputedStyle(document.body).overflow;
         if (bodyOverflow === 'hidden') {
           // Only unlock if page is already loaded
-          if (document.readyState === 'complete' || document.readyState === 'interactive') {
+          if (
+            document.readyState === 'complete' ||
+            document.readyState === 'interactive'
+          ) {
             document.body.style.overflow = '';
             document.body.style.height = '';
             document.documentElement.style.overflow = '';
@@ -69,13 +72,18 @@ export default function GlobalLoaderProvider({
     };
 
     // Check if page is already loaded
-    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    if (
+      document.readyState === 'complete' ||
+      document.readyState === 'interactive'
+    ) {
       // Page is already loaded, complete immediately
       completeInitialLoad();
     } else {
       // Wait for DOMContentLoaded first (faster than load event)
       if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', completeInitialLoad, { once: true });
+        document.addEventListener('DOMContentLoaded', completeInitialLoad, {
+          once: true,
+        });
       }
 
       // Also wait for load event as backup
@@ -121,7 +129,8 @@ export default function GlobalLoaderProvider({
       pathnameRef.current !== navigationStartPathRef.current;
 
     // Fallback: ensure loader doesn't get stuck if navigation was cancelled
-    if (!hasPathChanged && elapsed > 10000) {
+    // Reduced timeout to 3 seconds for faster recovery from errors
+    if (!hasPathChanged && elapsed > 3000) {
       setNavigating(false);
       navigationStartTimeRef.current = null;
       navigationStartPathRef.current = null;
@@ -147,6 +156,155 @@ export default function GlobalLoaderProvider({
       }
     }
   }, [isInitialLoad, pathname, setNavigating]);
+
+  // Handle browser back/forward navigation (popstate events)
+  // This is critical for fixing infinite loading when errors occur and user presses back
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handlePopState = () => {
+      // When back/forward button is pressed, ensure navigation state is properly managed
+      const currentPath = window.location.pathname;
+      const previousPath = pathnameRef.current;
+
+      // Update pathname ref immediately
+      if (currentPath !== pathnameRef.current) {
+        const oldPath = pathnameRef.current;
+        pathnameRef.current = currentPath;
+
+        // If we're already navigating, ensure we have proper tracking
+        if (isNavigating) {
+          // Navigation is already in progress, just ensure we track it
+          if (!navigationStartTimeRef.current) {
+            navigationStartTimeRef.current = Date.now();
+          }
+          if (!navigationStartPathRef.current) {
+            navigationStartPathRef.current = oldPath || currentPath;
+          }
+        } else if (previousPath && currentPath !== previousPath) {
+          // New navigation via back/forward button
+          navigationStartTimeRef.current = Date.now();
+          navigationStartPathRef.current = previousPath;
+          setTimeout(() => setNavigating(true), 0);
+        }
+      }
+
+      // Critical: Always ensure navigation state clears after popstate
+      // This handles cases where pathname changed but navigation state wasn't cleared
+      setTimeout(() => {
+        if (isNavigating && pathnameRef.current === currentPath) {
+          const elapsed = navigationStartTimeRef.current
+            ? Date.now() - navigationStartTimeRef.current
+            : 0;
+          if (elapsed >= minLoaderTimeRef.current) {
+            setNavigating(false);
+            navigationStartTimeRef.current = null;
+            navigationStartPathRef.current = null;
+          }
+        }
+      }, minLoaderTimeRef.current);
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [isNavigating, setNavigating]);
+
+  // Enhanced pathname change detection - always clear navigation on pathname change
+  // This ensures that even if navigation was started but pathname changes (including errors),
+  // we properly clear the loading state
+  useEffect(() => {
+    // Update pathname ref when it changes
+    if (pathnameRef.current !== pathname) {
+      const previousPath = pathnameRef.current;
+      pathnameRef.current = pathname;
+
+      // If we're navigating and pathname has changed, ensure we clear navigation state
+      if (isNavigating && previousPath !== null && previousPath !== pathname) {
+        // Pathname changed - navigation completed (even if it's an error page)
+        // Set a timeout to clear navigation state after minimum display time
+        const elapsed = navigationStartTimeRef.current
+          ? Date.now() - navigationStartTimeRef.current
+          : 0;
+        const remainingTime = Math.max(minLoaderTimeRef.current - elapsed, 0);
+
+        const clearNavigation = () => {
+          setNavigating(false);
+          navigationStartTimeRef.current = null;
+          navigationStartPathRef.current = null;
+        };
+
+        if (remainingTime <= 0) {
+          clearNavigation();
+        } else {
+          const timer = setTimeout(clearNavigation, remainingTime);
+          return () => clearTimeout(timer);
+        }
+      }
+    }
+  }, [pathname, isNavigating, setNavigating]);
+
+  // Safety mechanism: Clear navigation state when page is ready (including error pages)
+  // This handles cases where pathname doesn't change but page has loaded
+  // This is especially important for error pages and back button navigation
+  useEffect(() => {
+    if (typeof window === 'undefined' || !isNavigating) return;
+
+    // Check if page is ready
+    const checkPageReady = () => {
+      if (
+        document.readyState === 'complete' ||
+        document.readyState === 'interactive'
+      ) {
+        // Page is ready - give it a moment for React to render, then clear navigation
+        const elapsed = navigationStartTimeRef.current
+          ? Date.now() - navigationStartTimeRef.current
+          : 0;
+        const minTime = Math.max(minLoaderTimeRef.current - elapsed, 0);
+
+        setTimeout(() => {
+          // Only clear if we're still navigating and enough time has passed
+          // This ensures navigation state is always cleared, even on error pages
+          if (isNavigating) {
+            setNavigating(false);
+            navigationStartTimeRef.current = null;
+            navigationStartPathRef.current = null;
+          }
+        }, minTime);
+      }
+    };
+
+    // Check immediately if already ready
+    if (
+      document.readyState === 'complete' ||
+      document.readyState === 'interactive'
+    ) {
+      checkPageReady();
+    } else {
+      // Wait for page to be ready
+      window.addEventListener('load', checkPageReady, { once: true });
+      document.addEventListener('DOMContentLoaded', checkPageReady, {
+        once: true,
+      });
+
+      // Aggressive fallback: clear after 2 seconds max to prevent infinite loading
+      // This is critical for error pages where pathname might not change properly
+      const fallbackTimer = setTimeout(() => {
+        if (isNavigating) {
+          setNavigating(false);
+          navigationStartTimeRef.current = null;
+          navigationStartPathRef.current = null;
+        }
+      }, 2000);
+
+      return () => {
+        window.removeEventListener('load', checkPageReady);
+        document.removeEventListener('DOMContentLoaded', checkPageReady);
+        clearTimeout(fallbackTimer);
+      };
+    }
+  }, [isNavigating, setNavigating]);
 
   // Intercept all Link clicks globally to show loader immediately
   useEffect(() => {
@@ -185,7 +343,11 @@ export default function GlobalLoaderProvider({
       }
 
       // Only intercept internal Next.js links
-      if (href.startsWith('/') || href.startsWith('./') || href.startsWith('../')) {
+      if (
+        href.startsWith('/') ||
+        href.startsWith('./') ||
+        href.startsWith('../')
+      ) {
         // Normalize the href to compare with current pathname
         const normalizedHref = href.split('?')[0].split('#')[0]; // Remove query and hash
         const currentPath = pathnameRef.current || pathname;
@@ -205,6 +367,8 @@ export default function GlobalLoaderProvider({
 
     // Intercept router.push calls by wrapping Next.js router
     const originalPush = window.history.pushState;
+    const originalReplace = window.history.replaceState;
+
     window.history.pushState = function (...args) {
       // Check if it's a navigation (not just state change)
       const url = args[2];
@@ -224,10 +388,25 @@ export default function GlobalLoaderProvider({
       return originalPush.apply(window.history, args);
     };
 
+    // Also intercept replaceState for router.replace calls
+    window.history.replaceState = function (...args) {
+      // For replaceState, we don't show loader but we should track pathname changes
+      const url = args[2];
+      if (url && typeof url === 'string' && url.startsWith('/')) {
+        const normalizedUrl = url.split('?')[0].split('#')[0];
+        // Update pathname ref but don't trigger navigation loader
+        if (normalizedUrl !== pathnameRef.current) {
+          pathnameRef.current = normalizedUrl;
+        }
+      }
+      return originalReplace.apply(window.history, args);
+    };
+
     document.addEventListener('click', handleLinkClick, true);
     return () => {
       document.removeEventListener('click', handleLinkClick, true);
       window.history.pushState = originalPush;
+      window.history.replaceState = originalReplace;
     };
   }, [pathname, setNavigating]);
 
@@ -247,7 +426,6 @@ export default function GlobalLoaderProvider({
     };
 
     if (isLoaderActive) {
-
       // Disable scrolling on both body and html (Safari fix)
       document.body.style.overflow = 'hidden';
       document.body.style.height = '100%';
@@ -298,11 +476,15 @@ export default function GlobalLoaderProvider({
       if (!isLoaderActive) {
         // Check if scroll is locked when it shouldn't be
         const bodyOverflow = window.getComputedStyle(document.body).overflow;
-        const htmlOverflow = window.getComputedStyle(document.documentElement).overflow;
+        const htmlOverflow = window.getComputedStyle(
+          document.documentElement
+        ).overflow;
 
         // Only unlock if scroll is locked AND no visible modal/overlay is present
         // Check for common modal patterns: fixed position elements covering viewport
-        const hasVisibleOverlay = Array.from(document.querySelectorAll('body > *')).some((el) => {
+        const hasVisibleOverlay = Array.from(
+          document.querySelectorAll('body > *')
+        ).some(el => {
           if (!(el instanceof HTMLElement)) return false;
           const styles = window.getComputedStyle(el);
           const rect = el.getBoundingClientRect();
@@ -321,7 +503,10 @@ export default function GlobalLoaderProvider({
 
         // Only unlock if no modal/overlay is visible
         // This prevents interfering with open modals while still fixing stuck scroll
-        if ((bodyOverflow === 'hidden' || htmlOverflow === 'hidden') && !hasVisibleOverlay) {
+        if (
+          (bodyOverflow === 'hidden' || htmlOverflow === 'hidden') &&
+          !hasVisibleOverlay
+        ) {
           // Force unlock scroll only when safe to do so
           document.body.style.overflow = '';
           document.body.style.height = '';

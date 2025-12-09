@@ -82,7 +82,7 @@ export default function Home() {
         <Hero />
       </div>
       <Container>
-        <div className="my-16 md:hidden">
+        <div className="my-4 md:my-6 md:hidden">
           <Devider className="w-full " />
         </div>
 

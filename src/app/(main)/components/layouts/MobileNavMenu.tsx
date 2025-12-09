@@ -8,7 +8,6 @@ import { BsInboxes } from 'react-icons/bs';
 import {
   Store,
   New,
-  Heart,
   User,
 } from '@/app/(main)/assets/Navbar';
 import { usePublicCategoryStore } from '@/lib/data/mainStore/categoryStore';
@@ -123,10 +122,10 @@ const MobileNavMenu = ({ isOpen, onClose }: MobileNavMenuProps) => {
               </button>
             </div>
 
-            {/* Content */}
-            <div className="flex h-[calc(100vh-80px)] flex-col overflow-y-auto overscroll-contain">
-              {/* Quick Links */}
-              <div className="border-b border-gray-200 p-6">
+            {/* Content - Fixed Layout: Quick Links (top), Categories (scrollable middle), Account (bottom) */}
+            <div className="flex h-[calc(100vh-80px)] flex-col">
+              {/* Quick Links - Fixed at Top */}
+              <div className="flex-shrink-0 border-b border-gray-200 p-6">
                 <h3 className="mb-4 text-sm font-medium text-gray-700">
                   Quick Links
                 </h3>
@@ -145,8 +144,8 @@ const MobileNavMenu = ({ isOpen, onClose }: MobileNavMenuProps) => {
                 </div>
               </div>
 
-              {/* Main Navigation */}
-              <div className="flex-1 p-6">
+              {/* Categories - Scrollable Middle Section */}
+              <div className="flex-1 overflow-y-auto overscroll-contain p-6">
                 <h3 className="mb-4 text-sm font-medium text-gray-700">
                   Categories
                 </h3>
@@ -174,8 +173,8 @@ const MobileNavMenu = ({ isOpen, onClose }: MobileNavMenuProps) => {
                 </div>
               </div>
 
-              {/* User Actions */}
-              <div className="border-t border-gray-200 p-6">
+              {/* Account - Fixed at Bottom */}
+              <div className="flex-shrink-0 border-t border-gray-200 p-6">
                 <h3 className="mb-4 text-sm font-medium text-gray-700">
                   Account
                 </h3>
@@ -183,19 +182,11 @@ const MobileNavMenu = ({ isOpen, onClose }: MobileNavMenuProps) => {
                   <Link href={'/account/profile?tab=profile'}
                     className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 hover:text-primary"
                     aria-label="My Account - Sign in or manage your account"
+                    onClick={onClose}
                   >
                     <User className="h-4 w-4" />
                     My Account
                   </Link>
-                  <Link
-                    href={'/wishlist'}
-                    className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 hover:text-primary"
-                    aria-label="Wishlist - View your saved items"
-                  >
-                    <Heart className="h-4 w-4" />
-                    Wishlist
-                  </Link>
-
                 </div>
               </div>
             </div>

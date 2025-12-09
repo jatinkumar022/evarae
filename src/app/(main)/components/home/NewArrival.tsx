@@ -10,9 +10,14 @@ function NewArrival() {
   const { data } = useHomepageStore();
 
   const freshlyMinted = data?.freshlyMinted;
-  
+
   // Don't show section if no content
-  if (!freshlyMinted || (!freshlyMinted.backgroundImage && !freshlyMinted.topImage1 && !freshlyMinted.topImage2)) {
+  if (
+    !freshlyMinted ||
+    (!freshlyMinted.backgroundImage &&
+      !freshlyMinted.topImage1 &&
+      !freshlyMinted.topImage2)
+  ) {
     return null;
   }
 
@@ -46,7 +51,7 @@ function NewArrival() {
           <div className="text-white text-center lg:text-left">
             <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 mb-4">
               <FaRegGem className="h-4 w-4" />
-              <span className="text-sm font-medium">500+ New Items</span>
+              <span className="text-sm font-medium">50+ New Items</span>
             </div>
             <h2 className="font-heading text-4xl lg:text-5xl font-bold">
               Freshly Minted
