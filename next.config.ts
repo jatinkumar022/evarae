@@ -2,9 +2,8 @@ import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   // Ensure certain Node-only packages are not bundled so their internal files (like fonts) work correctly on Vercel
-  experimental: {
-    serverComponentsExternalPackages: ['pdfkit'],
-  },
+  // In Next.js 16, serverComponentsExternalPackages is renamed to serverExternalPackages and moved to top level
+  serverExternalPackages: ['pdfkit'],
 
   // Performance optimizations
   poweredByHeader: false,

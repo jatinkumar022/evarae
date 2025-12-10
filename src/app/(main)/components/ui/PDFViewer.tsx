@@ -169,13 +169,16 @@ export default function PDFViewer({ file, onError }: PDFViewerProps) {
 
     loadPDF();
 
+    // Store ref value for cleanup to avoid stale closure
+    const container = containerRef.current;
+
     return () => {
-      const container = containerRef.current;
       if (container) {
         container.innerHTML = '';
       }
     };
-  }, [file, scriptLoaded, onError, scale]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [file, scriptLoaded, onError, scale]); // useFallback intentionally excluded to prevent loops
 
   // Calculate container height
   useLayoutEffect(() => {

@@ -64,8 +64,13 @@ export default function AllJewelleryPage() {
 
   const mappedProducts: UiProduct[] = useMemo(() => {
     return products.map(p => {
-      const mainImage = (p.images && p.images[0]) || '/favicon.ico';
-      const hoverImage = p.images && p.images[1] ? p.images[1] : undefined;
+      // Ensure images are valid non-empty strings
+      const mainImage = (p.images && p.images[0] && typeof p.images[0] === 'string' && p.images[0].trim().length > 0)
+        ? p.images[0]
+        : '/favicon.ico';
+      const hoverImage = (p.images && p.images[1] && typeof p.images[1] === 'string' && p.images[1].trim().length > 0)
+        ? p.images[1]
+        : undefined;
       const hasDiscount =
         p.discountPrice != null && p.price != null && p.discountPrice < p.price;
       const sku = (p as { sku?: string }).sku;

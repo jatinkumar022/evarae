@@ -40,7 +40,6 @@ import {
   Heart as MenuHeart,
   Star,
   Clock,
-  Truck,
   X,
 } from 'lucide-react';
 import { useCartStore } from '@/lib/data/mainStore/cartStore';
@@ -1071,7 +1070,6 @@ export default function Navbar() {
                       {/* Google Sign-In */}
                       {loginStep !== 'done' && (
                         <div className="mt-3">
-                          {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
                           <a
                             href="/api/auth/google"
                             className="w-full flex items-center justify-center gap-2 rounded-lg border border-[oklch(0.84_0.04_10.35)] bg-white px-3 py-2 text-xs text-[oklch(0.39_0.09_17.83)] hover:bg-[oklch(0.93_0.03_12.01)] transition-all"

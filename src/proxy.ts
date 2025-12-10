@@ -1,4 +1,4 @@
-// /middleware.ts
+// /proxy.ts (Next.js 16: middleware.ts renamed to proxy.ts)
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { jwtVerify } from 'jose';
@@ -25,7 +25,7 @@ async function isValidUserToken(token: string | undefined): Promise<boolean> {
   }
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   try {
     const token = request.cookies.get('token')?.value;
     const adminToken = request.cookies.get('adminToken')?.value;
@@ -74,3 +74,4 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: ['/((?!api|_next|.*\\..*|favicon.ico).*)'],
 };
+

@@ -352,7 +352,8 @@ export default function OrderDetailsPage() {
         orderFetchInProgressRef.current = false;
       }
     };
-  }, [orderId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orderId]); // order and status intentionally excluded to prevent infinite loops
 
   const handleTrackOrder = (trackingNumber: string) => {
     toastApi.info(`Opening tracking page for: ${trackingNumber}`);
@@ -559,17 +560,18 @@ export default function OrderDetailsPage() {
                       <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-primary/10 to-accent/10 rounded-xl flex items-center justify-center text-primary/60 flex-shrink-0 mx-auto sm:mx-0">
                         {(() => {
                           // Robust validation: check if image is a valid non-empty string
+                          const imageStr = item.image;
                           const isValidImage = 
-                            item.image && 
-                            typeof item.image === 'string' && 
-                            item.image.trim().length > 0 &&
-                            !item.image.startsWith('{') && // Reject JSON strings that are objects
-                            item.image !== '{}' &&
-                            item.image !== 'null';
+                            imageStr && 
+                            typeof imageStr === 'string' && 
+                            imageStr.trim().length > 0 &&
+                            !imageStr.startsWith('{') && // Reject JSON strings that are objects
+                            imageStr !== '{}' &&
+                            imageStr !== 'null';
                           
                           return isValidImage ? (
                             <Image
-                              src={item.image}
+                              src={imageStr as string}
                               alt={item.name}
                               width={96}
                               height={96}

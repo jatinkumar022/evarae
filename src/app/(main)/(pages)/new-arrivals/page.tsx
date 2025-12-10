@@ -65,8 +65,12 @@ export default function EnhancedNewArrivalsPage() {
   // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
   // Load new arrivals once on mount
   useEffect(() => {
-    if (status === 'idle') fetchNewArrivals();
-  }, [status, fetchNewArrivals]);
+    if (status === 'idle') {
+      fetchNewArrivals();
+    }
+    // fetchNewArrivals is stable from Zustand, but we only want to run when status changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status]);
 
   // Map new arrivals to UiProduct format
   const allProducts = useMemo(() => {
@@ -77,8 +81,13 @@ export default function EnhancedNewArrivalsPage() {
         p.discountPrice != null &&
         p.price != null &&
         p.discountPrice < p.price;
-      const primaryImage = p.images?.[0] || '/favicon.ico';
-      const secondaryImage = p.images?.[1];
+      // Ensure images are valid non-empty strings
+      const primaryImage = (p.images?.[0] && typeof p.images[0] === 'string' && p.images[0].trim().length > 0) 
+        ? p.images[0] 
+        : '/favicon.ico';
+      const secondaryImage = (p.images?.[1] && typeof p.images[1] === 'string' && p.images[1].trim().length > 0)
+        ? p.images[1]
+        : undefined;
       return {
         id: p.slug,
         name: p.name,
@@ -310,7 +319,9 @@ export default function EnhancedNewArrivalsPage() {
                   >
                     <div className="relative aspect-square overflow-hidden rounded-lg sm:rounded-xl lg:rounded-2xl bg-white shadow-lg hover:shadow-xl transition-all duration-500 border border-gray-100">
                       <Image
-                        src={String(product.images[0] || '/favicon.ico')}
+                        src={(product.images[0] && typeof product.images[0] === 'string' && product.images[0].trim().length > 0) 
+                          ? product.images[0] 
+                          : '/favicon.ico'}
                         alt={product.name}
                         fill
                         className="object-cover group-hover:scale-110 transition-transform duration-700"

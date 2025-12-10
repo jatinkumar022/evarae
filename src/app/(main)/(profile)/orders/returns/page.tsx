@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import {
-  Package,
   RotateCcw,
   Clock,
   CheckCircle2,

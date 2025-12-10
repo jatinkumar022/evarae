@@ -115,7 +115,7 @@ const FallbackImage = ({
     const isValidSrc = nextSrc && (
       typeof nextSrc === 'string' ||
       isStaticImageData(nextSrc) ||
-      (typeof nextSrc === 'object' && Object.keys(nextSrc).length > 0 && isStaticImageData(nextSrc as StaticImageData))
+      (typeof nextSrc === 'object' && nextSrc !== null && Object.keys(nextSrc).length > 0 && ('src' in nextSrc || 'default' in nextSrc))
     );
     
     const finalSrc = isValidSrc ? nextSrc : safeFallback;
@@ -175,7 +175,7 @@ const FallbackImage = ({
       // Check for common image URL properties
       const possibleKeys = ['url', 'uri', 'image', 'imageUrl', 'secure_url', 'path', 'src'];
       const hasValidImageProp = possibleKeys.some(key => {
-        const value = (currentSrc as Record<string, unknown>)[key];
+        const value = (currentSrc as unknown as Record<string, unknown>)[key];
         return typeof value === 'string' && value.trim().length > 0;
       });
       
@@ -192,10 +192,49 @@ const FallbackImage = ({
     return currentSrc;
   }, [currentSrc, safeFallback]);
 
+  // Final safety check: Never pass empty string to Next.js Image
+  const safeSrc = useMemo(() => {
+    if (!finalSrc) return safeFallback;
+    
+    // Handle string sources - reject empty strings
+    if (typeof finalSrc === 'string') {
+      const trimmed = finalSrc.trim();
+      if (trimmed.length === 0 || 
+          trimmed === '""' || 
+          trimmed === "''" ||
+          trimmed === 'null' ||
+          trimmed === 'undefined') {
+        return safeFallback;
+      }
+      return trimmed;
+    }
+    
+    // Handle StaticImageData
+    if (isStaticImageData(finalSrc)) {
+      const staticSrc = typeof finalSrc.src === 'string' ? finalSrc.src.trim() : '';
+      if (staticSrc.length === 0) {
+        return safeFallback;
+      }
+      return finalSrc;
+    }
+    
+    return finalSrc;
+  }, [finalSrc, safeFallback]);
+
+  // Final validation - ensure we never pass empty string
+  if (!safeSrc) {
+    return null;
+  }
+  
+  // Double-check for empty strings
+  if (typeof safeSrc === 'string' && safeSrc.trim().length === 0) {
+    return null;
+  }
+
   return (
     <Image
       {...rest}
-      src={finalSrc}
+      src={safeSrc}
       alt={rest.alt || ''}
       onError={handleError}
       onLoadingComplete={handleLoadingComplete}

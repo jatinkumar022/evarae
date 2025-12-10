@@ -3,7 +3,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Image from '@/app/(main)/components/ui/FallbackImage';
 import { GoHeart } from 'react-icons/go';
-import { motion, AnimatePresence } from 'framer-motion';
 import { GiCrystalShine } from 'react-icons/gi';
 import Link from 'next/link';
 import { useHomepageStore } from '@/lib/data/mainStore/homepageStore';

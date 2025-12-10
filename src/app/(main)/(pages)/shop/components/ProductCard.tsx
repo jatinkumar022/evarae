@@ -137,9 +137,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                 >
                   <Image
                     src={
-                      isHovered && hoverMedia
+                      (isHovered && hoverMedia && typeof hoverMedia === 'string' && hoverMedia.trim().length > 0)
                         ? hoverMedia
-                        : product.images[0]
+                        : (product.images[0] && typeof product.images[0] === 'string' && product.images[0].trim().length > 0)
+                        ? product.images[0]
+                        : '/favicon.ico'
                     }
                     alt={product.name}
                     className="w-full h-full object-cover aspect-square rounded-t-lg"
