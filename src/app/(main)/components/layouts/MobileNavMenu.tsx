@@ -5,11 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { RxCross2 } from 'react-icons/rx';
 import { BsInboxes } from 'react-icons/bs';
-import {
-  Store,
-  New,
-  User,
-} from '@/app/(main)/assets/Navbar';
+import { Store, New, User } from '@/app/(main)/assets/Navbar';
 import { usePublicCategoryStore } from '@/lib/data/mainStore/categoryStore';
 import { NavbarLogo } from './Navbar/NavbarLogo';
 
@@ -46,7 +42,8 @@ const MobileNavMenu = ({ isOpen, onClose }: MobileNavMenuProps) => {
       // Prevent body scroll when sidebar is open
       const originalStyle = window.getComputedStyle(document.body).overflow;
       const originalPaddingRight = document.body.style.paddingRight;
-      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+      const scrollbarWidth =
+        window.innerWidth - document.documentElement.clientWidth;
 
       document.body.style.overflow = 'hidden';
       document.body.style.paddingRight = `${scrollbarWidth}px`;
@@ -107,7 +104,7 @@ const MobileNavMenu = ({ isOpen, onClose }: MobileNavMenuProps) => {
             className="fixed left-0 top-0 z-[70] h-screen w-80 max-w-[85vw] bg-white shadow-2xl lg:hidden"
             style={{
               position: 'fixed',
-              willChange: 'transform'
+              willChange: 'transform',
             }}
           >
             {/* Header */}
@@ -122,10 +119,10 @@ const MobileNavMenu = ({ isOpen, onClose }: MobileNavMenuProps) => {
               </button>
             </div>
 
-            {/* Content - Fixed Layout: Quick Links (top), Categories (scrollable middle), Account (bottom) */}
-            <div className="flex h-[calc(100vh-80px)] flex-col">
-              {/* Quick Links - Fixed at Top */}
-              <div className="flex-shrink-0 border-b border-gray-200 p-6">
+            {/* Content - Fully Scrollable */}
+            <div className="h-[calc(100vh-80px)] overflow-y-auto overscroll-contain">
+              {/* Quick Links */}
+              <div className="border-b border-gray-200 p-6">
                 <h3 className="mb-4 text-sm font-medium text-gray-700">
                   Quick Links
                 </h3>
@@ -144,42 +141,41 @@ const MobileNavMenu = ({ isOpen, onClose }: MobileNavMenuProps) => {
                 </div>
               </div>
 
-              {/* Categories - Scrollable Middle Section */}
-              <div className="flex-1 overflow-y-auto overscroll-contain p-6">
+              {/* Categories */}
+              <div className="border-b border-gray-200 p-6">
                 <h3 className="mb-4 text-sm font-medium text-gray-700">
                   Categories
                 </h3>
                 <div className="space-y-1">
-                  <div className="space-y-1">
-                    {status === 'success' &&
-                      categories.slice(0, 8).map(item => (
-                        <Link
-                          key={item.slug}
-                          href={`/shop/${item.slug}`}
-                          className="block rounded-md px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 hover:text-primary"
-                          onClick={onClose}
-                        >
-                          {item.name}
-                        </Link>
-                      ))}
-                    <Link
-                      href={'/categories'}
-                      className="block rounded-md px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 hover:text-primary"
-                      onClick={onClose}
-                    >
-                      All Categories
-                    </Link>
-                  </div>
+                  {status === 'success' &&
+                    categories.slice(0, 8).map(item => (
+                      <Link
+                        key={item.slug}
+                        href={`/shop/${item.slug}`}
+                        className="block rounded-md px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 hover:text-primary"
+                        onClick={onClose}
+                      >
+                        {item.name}
+                      </Link>
+                    ))}
+                  <Link
+                    href={'/categories'}
+                    className="block rounded-md px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 hover:text-primary"
+                    onClick={onClose}
+                  >
+                    All Categories
+                  </Link>
                 </div>
               </div>
 
-              {/* Account - Fixed at Bottom */}
-              <div className="flex-shrink-0 border-t border-gray-200 p-6">
+              {/* Account */}
+              <div className="border-t border-gray-200 p-6">
                 <h3 className="mb-4 text-sm font-medium text-gray-700">
                   Account
                 </h3>
                 <div className="space-y-2">
-                  <Link href={'/account/profile?tab=profile'}
+                  <Link
+                    href={'/account/profile?tab=profile'}
                     className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 hover:text-primary"
                     aria-label="My Account - Sign in or manage your account"
                     onClick={onClose}
