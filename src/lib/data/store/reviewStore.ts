@@ -133,9 +133,16 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
   },
 
   setFilters: (newFilters) =>
-    set((state) => ({
-      filters: { ...state.filters, ...newFilters, page: 1 },
-    })),
+    set((state) => {
+      // Only reset page to 1 if it's not explicitly provided in newFilters
+      // This allows pagination to work correctly
+      const updatedFilters = { ...state.filters, ...newFilters };
+      // If page is not in newFilters and other filters changed, reset to page 1
+      if (!('page' in newFilters) && Object.keys(newFilters).some(key => key !== 'page')) {
+        updatedFilters.page = 1;
+      }
+      return { filters: updatedFilters };
+    }),
 
   fetchReviews: async () => {
     const { filters, reviewType } = get();

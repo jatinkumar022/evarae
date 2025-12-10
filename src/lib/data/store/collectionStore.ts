@@ -84,12 +84,15 @@ export const useCollectionStore = create<CollectionState>(set => ({
 
   fetchProducts: async () => {
     try {
+      // Fetch all products by using a very high limit
+      // The API will return all products up to this limit
       const response = await apiFetch<{ products: Product[] }>(
-        '/api/admin/products'
+        '/api/admin/products?limit=10000&status=active'
       );
       set({ allProducts: response.products });
     } catch (error: unknown) {
       console.error('Failed to fetch products', error);
+      set({ allProducts: [] });
     }
   },
 

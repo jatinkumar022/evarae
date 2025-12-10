@@ -11,14 +11,16 @@ export async function GET(request: Request) {
 
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '10');
+    const limitParam = searchParams.get('limit');
+    // Support fetching all products when limit is very high (for product selection modals)
+    const limit = limitParam ? parseInt(limitParam) : 10;
     const search = searchParams.get('search') || '';
     const category = searchParams.get('category') || '';
     const status = searchParams.get('status') || '';
     const sortBy = searchParams.get('sortBy') || 'createdAt';
     const sortOrder = searchParams.get('sortOrder') || 'desc';
 
-    const skip = (page - 1) * limit;
+    const skip = limit > 1000 ? 0 : (page - 1) * limit; // Skip pagination for large limits
 
     // Build filter
     const filter: Record<string, unknown> = {};
@@ -45,17 +47,18 @@ export async function GET(request: Request) {
       .lean();
 
     const total = await Product.countDocuments(filter);
-    const totalPages = Math.ceil(total / limit);
+    // For large limits (fetching all), set totalPages to 1
+    const totalPages = limit > 1000 ? 1 : Math.ceil(total / limit);
 
     return NextResponse.json({
       products,
       pagination: {
-        page,
+        page: limit > 1000 ? 1 : page,
         limit,
         total,
         totalPages,
-        hasNext: page < totalPages,
-        hasPrev: page > 1,
+        hasNext: limit > 1000 ? false : page < totalPages,
+        hasPrev: limit > 1000 ? false : page > 1,
       },
     });
   } catch (error) {

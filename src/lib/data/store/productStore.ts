@@ -92,9 +92,16 @@ export const useProductStore = create<ProductState>((set, get) => ({
   productsByCategory: {},
 
   setFilters: newFilters =>
-    set(state => ({
-      filters: { ...state.filters, ...newFilters, page: 1 },
-    })),
+    set(state => {
+      // Only reset page to 1 if it's not explicitly provided in newFilters
+      // This allows pagination to work correctly
+      const updatedFilters = { ...state.filters, ...newFilters };
+      // If page is not in newFilters and other filters changed, reset to page 1
+      if (!('page' in newFilters) && Object.keys(newFilters).some(key => key !== 'page')) {
+        updatedFilters.page = 1;
+      }
+      return { filters: updatedFilters };
+    }),
 
   fetchProducts: async () => {
     const { filters } = get();
